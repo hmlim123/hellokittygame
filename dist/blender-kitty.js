@@ -3,7 +3,7 @@ import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {DOLLS} from './state.js';
 
 export async function loadBlenderKitty(){
-  const gltf=await new GLTFLoader().loadAsync(new URL('./assets/hello-kitty.glb',import.meta.url).href);
+  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL('./assets/hello-kitty.glb',import.meta.url).href);
   // Blender exports each animated object's action separately. Combine them so
   // the head, face, paws, bouquet and feet always play on the same clock.
   const full=new THREE.AnimationClip('Blender performance',-1,gltf.animations.flatMap(a=>a.tracks));

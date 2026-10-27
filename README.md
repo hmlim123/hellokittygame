@@ -32,6 +32,26 @@ The WebGL renderer is preferred. A software compatibility renderer uses the
 same imported model and camera when WebGL2 is unavailable, at lower performance.
 Reduced motion replaces moving reactions with a brief, static wink.
 
+## Play without Terminal
+
+Download `play.html` from this repository and open it in a desktop browser.
+It contains the complete game, Three.js, and the Blender model in one file;
+no server, account, or Internet requests are needed for gameplay. File-based
+browser storage varies, so saves are best-effort and separate from the hosted
+site's saves. The self-contained HTML was verified in an isolated browser
+document, including the eight-bow hunt, with zero HTTP requests. Direct
+`file://` navigation could not be tested because this cloud browser blocks it.
+
+Regenerate the standalone file after changing the game:
+
+```sh
+npm exec --yes --package=esbuild@0.28.2 -- esbuild dist/app.js --bundle --format=esm --target=es2022 --minify --outfile=/tmp/kitty-standalone.js
+python scripts/build_standalone.py /tmp/kitty-standalone.js play.html
+```
+
+`play.html` is a downloadable artifact, not a published website or ChatGPT
+playable card. For hosting, upload the contents of `dist/` to a static host.
+
 ## The Blender model
 
 `dist/assets/hello-kitty.glb` is exported from
