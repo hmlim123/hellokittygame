@@ -1,0 +1,11 @@
+{
+  "source_repository": "https://github.com/hmlim123/hellokitty3D",
+  "source_commit": "1fee5d514ba101055d1bb1c6e6957830aa3be646",
+  "source_file": "hello_kitty_animated.blend",
+  "fps": 24,
+  "frames": [
+    1,
+    144
+  ],
+  "notes": "Actual character meshes and control animation exported from the shared Blender model. Studio excluded; web meshes reduced. Wink visibility converted to glTF morph targets."
+}

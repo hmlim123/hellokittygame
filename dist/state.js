@@ -1,5 +1,5 @@
 export const DOLLS = [
-  {id:0,name:'Classic sweetheart',short:'Classic',color:'#dc5678',accent:'#c72e57',tag:'The original little love'},
+  {id:0,name:'Classic sweetheart',short:'Classic',color:'#e896b0',accent:'#dc789d',tag:'The original little love'},
   {id:1,name:'Strawberry milk',short:'Strawberry',color:'#eda5b8',accent:'#df7799',tag:'Sweet as a pink daydream'},
   {id:2,name:'Lavender cloud',short:'Lavender',color:'#b6a2da',accent:'#997bc5',tag:'For the softest kind of days'},
   {id:3,name:'Honey sunshine',short:'Honey',color:'#eaca77',accent:'#d9a84c',tag:'A pocketful of golden happy'},

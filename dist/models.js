@@ -2,9 +2,8 @@ import * as THREE from 'three';
 import { DOLLS } from './state.js';
 let sphereGeo=new THREE.SphereGeometry(1,28,20),boxGeo=new THREE.BoxGeometry(1,1,1);
 export function useSoftwareDetail(){sphereGeo=new THREE.SphereGeometry(1,16,12);boxGeo=new THREE.BoxGeometry(1,1,1);}
-let fabric;
-function fabricMap(){if(fabric)return fabric;const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const data=x.createImageData(128,128);for(let i=0;i<data.data.length;i+=4){const n=135+Math.floor(Math.random()*95);data.data[i]=data.data[i+1]=data.data[i+2]=n;data.data[i+3]=255;}x.putImageData(data,0,0);fabric=new THREE.CanvasTexture(c);fabric.wrapS=fabric.wrapT=THREE.RepeatWrapping;fabric.repeat.set(5,5);return fabric;}
-export function material(color,plush=false){return new THREE.MeshStandardMaterial({color,roughness:plush?.96:.78,metalness:0,...(plush?{bumpMap:fabricMap(),bumpScale:.022}: {})});}
+// Smooth pastel room surfaces, without random fabric bump noise.
+export function material(color,plush=false){return new THREE.MeshStandardMaterial({color,roughness:plush?.82:.65,metalness:0});}
 export function mesh(geo,mat,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
 export function ball(parent,mat,x,y,z,sx,sy=sx,sz=sx){const m=mesh(sphereGeo,mat,parent,x,y,z);m.scale.set(sx,sy,sz);return m;}
 export function box(parent,mat,x,y,z,sx,sy,sz){const m=mesh(boxGeo,mat,parent,x,y,z);m.scale.set(sx,sy,sz);return m;}

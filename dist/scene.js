@@ -5,24 +5,25 @@ import {CanvasFallback} from './CanvasFallback.js';
 import {soften,blinkAmount,expressionTarget} from './expression.js';
 import {avatarPose} from './chat.js';
 import {THEMES} from './state.js';
+import {makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
 export class KittyRoom{
-  constructor(container,{onSlot=()=>{},onKitty=()=>{},onGift=()=>{},onFrame=()=>{}}={}){
-    this.container=container;this.onSlot=onSlot;this.onKitty=onKitty;this.onGift=onGift;this.onFrame=onFrame;
-    this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#f5ece5');
+  constructor(container,{asset=null,onSlot=()=>{},onKitty=()=>{},onGift=()=>{},onFrame=()=>{}}={}){
+    this.asset=asset;this.container=container;this.onSlot=onSlot;this.onKitty=onKitty;this.onGift=onGift;this.onFrame=onFrame;
+    this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#f6dce5');
     const probe=document.createElement('canvas'),gl=probe.getContext('webgl2',{antialias:true});
     if(gl){this.renderer=new THREE.WebGLRenderer({canvas:probe,context:gl,antialias:true,alpha:false,powerPreference:'high-performance'});}else{useSoftwareDetail();this.renderer=new CanvasFallback();}
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.18;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));this.renderer.shadowMap.enabled=false;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.18;
     this.renderer.domElement.setAttribute('aria-label','Interactive 3D Hello Kitty room. Drag to rotate, scroll or pinch to zoom.');this.renderer.domElement.tabIndex=0;container.prepend(this.renderer.domElement);
     this.camera=new THREE.PerspectiveCamera(37,1,.1,80);this.camera.position.set(10,8.2,12.3);
     this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.target.set(0,1.45,0);this.controls.enableDamping=true;this.controls.dampingFactor=.08;this.controls.enablePan=false;this.controls.minDistance=8;this.controls.maxDistance=23;this.controls.minPolarAngle=.48;this.controls.maxPolarAngle=1.3;this.controls.minAzimuthAngle=-.18;this.controls.maxAzimuthAngle=1.15;this.controls.rotateSpeed=.65;
     this.ambient=new THREE.HemisphereLight('#fff8ef','#b8a5a6',2.15);this.scene.add(this.ambient);
-    this.sun=new THREE.DirectionalLight('#fff1d5',3.1);this.sun.position.set(-3,9,6);this.sun.castShadow=true;this.sun.shadow.mapSize.set(1024,1024);Object.assign(this.sun.shadow.camera,{left:-8,right:8,top:9,bottom:-8,near:1,far:25});this.sun.shadow.normalBias=.035;this.sun.shadow.bias=-.0001;this.scene.add(this.sun);
+    this.sun=new THREE.DirectionalLight('#fff1d5',3.1);this.sun.position.set(-3,9,6);this.sun.castShadow=false;this.sun.shadow.mapSize.set(1024,1024);Object.assign(this.sun.shadow.camera,{left:-8,right:8,top:9,bottom:-8,near:1,far:25});this.sun.shadow.normalBias=.035;this.sun.shadow.bias=-.0001;this.scene.add(this.sun);
     this.fill=new THREE.DirectionalLight('#f9d4e0',.8);this.fill.position.set(5,3,0);this.scene.add(this.fill);
     this.lampLight=new THREE.PointLight('#ffd2a1',0,8,1.8);this.lampLight.position.set(-2.9,2.7,1.8);this.scene.add(this.lampLight);
     if(!this.renderer.software){this.backdropMat=material('#f4eae2');const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(200,200),this.backdropMat);backdrop.rotation.x=-Math.PI/2;backdrop.position.y=-.4;backdrop.receiveShadow=true;this.scene.add(backdrop);}
     this.room=new THREE.Group();this.scene.add(this.room);this.wallMat=material('#f0d5d8');this.rugMat=material('#d49aab',true);this.accentMat=material('#df9cae',true);
-    this.white=material('#fff7e9');this.wood=material('#d4ae8b');this.darkWood=material('#b18c70');this.buildRoom();
-    this.hero=makeKitty(0);this.hero.position.set(-.12,.08,.65);this.hero.rotation.y=.3;this.hero.scale.setScalar(1.25);this.room.add(this.hero);this.heroCache=new Map([[0,this.hero]]);
+    this.white=material('#fff7e9');this.wood=material('#d4ae8b');this.darkWood=material('#b18c70');this.buildRoom();this.gifts.forEach(g=>g.visible=false);
+    this.hero=this.createKitty(0);this.hero.position.set(-.12,.08,.65);this.hero.rotation.y=.3;this.hero.scale.setScalar(1.25);this.room.add(this.hero);this.heroCache=new Map([[0,this.hero]]);
     this.shelfDolls=[];this.shelfCache=new Map();this.slots=[[-.44,.65,-2.65],[1.0,.65,-2.65],[2.44,.65,-2.65],[-.44,2.01,-2.65],[1,2.01,-2.65],[2.44,2.01,-2.65]];this.slotTargets=[];
     const slotmat=new THREE.MeshBasicMaterial({color:'#f6ca75',transparent:true,opacity:0,depthWrite:false});
     this.slots.forEach((p,i)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.25,1.18,.7),slotmat.clone());m.position.set(p[0],p[1]+.55,p[2]);m.userData={kind:'slot',index:i};this.room.add(m);this.slotTargets.push(m)});
@@ -32,6 +33,7 @@ export class KittyRoom{
     let down;this.renderer.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});this.renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>7)return;this.pick(e);down=null;});
     this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(container);this.resize();this.clock=new THREE.Clock();this.renderer.setAnimationLoop(()=>this.frame());
   }
+  createKitty(id){return this.asset?makeBlenderKitty(this.asset,id):makeKitty(id);}
   buildRoom(){const r=this.room,w=this.white,wood=this.wood;
     box(r,material('#ecd9c3'),0,-.15,0,9.2,.38,7.8);
     box(r,material('#f1dfc8'),0,.055,0,9,.08,7.6);
@@ -78,8 +80,8 @@ export class KittyRoom{
   }
   flowerPot(parent,x,y,z,s){const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(s);parent.add(g);cylinder(g,material('#cfaa8b'),0,.17,0,.23,.34,.17);const green=material('#8fa287');for(let i=0;i<5;i++){const a=i*2.4;const px=Math.cos(a)*.19,pz=Math.sin(a)*.19;tube(g,[[0,.3,0],[px,.52,pz],[px,.8+(i%2)*.15,pz]],.014,green);const yy=.8+(i%2)*.15;for(let k=0;k<5;k++)ball(g,material(i%2?'#eabcc6':'#fff1d4'),px+Math.cos(k*1.256)*.09,yy+Math.sin(k*1.256)*.09,pz,.07,.07,.035);ball(g,material('#d7b664'),px,yy,pz+.02,.035);const leaf=ball(g,green,px*.5,.54,pz,.12,.035,.05);leaf.rotation.z=a;}return g;}
   resize(){const w=this.container.clientWidth,h=this.container.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();if(!this.inspect){const distance=w/h<.85?20.5:16.5;this.camera.position.copy(new THREE.Vector3(10,8.2,12.3).normalize().multiplyScalar(distance));this.controls.target.set(0,1.6,0);}this.controls.update();}
-  updateShelf(slots){for(const d of this.shelfDolls)d.visible=false;this.shelfDolls=[];slots.forEach((id,i)=>{if(id===null)return;let k=this.shelfCache.get(id);if(!k){k=makeKitty(id);k.scale.setScalar(.51);this.shelfCache.set(id,k);this.room.add(k);}k.visible=true;k.position.set(...this.slots[i]);k.userData.slot=i;this.shelfDolls.push(k);});}
-  setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=makeKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
+  updateShelf(slots){for(const d of this.shelfDolls)d.visible=false;this.shelfDolls=[];slots.forEach((id,i)=>{if(id===null)return;let k=this.shelfCache.get(id);if(!k){k=this.createKitty(id);k.scale.setScalar(.51);this.shelfCache.set(id,k);this.room.add(k);}k.visible=true;k.position.set(...this.slots[i]);k.userData.slot=i;this.shelfDolls.push(k);});}
+  setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
   setRewardGifts(equipped={},baseTheme='rose'){
     this.rewardEquipped={...equipped};this.baseRewardTheme=baseTheme;
     const colors={sky:['#dce7f2','#b4abd5','#9cbacb'],gold:['#f5e6b9','#d8b56e','#e2c582'],twilight:['#d9d0e9','#9b8dba','#b9a1cc']}[equipped.theme];
@@ -103,13 +105,13 @@ export class KittyRoom{
     }
     this.hero.userData.head.add(this.rewardCrown);this.rewardCrown.visible=equipped.accessory==='crown';
   }
-  react(emotion){this.emotion=emotion;this.reaction={emotion,elapsed:0};this.waveTime=0;this.nextHello=14;}
+  react(emotion){if(this.asset){reactBlender(this.hero,emotion,this.reduced);return;}this.emotion=emotion;this.reaction={emotion,elapsed:0};this.waveTime=0;this.nextHello=14;}
   setChat(active){this.chatting=active;if(active){this.inspectKitty();this.react('wave');}else{this.reaction=null;this.resetView();}}
   setTheme(theme){const t=THEMES[theme]||THEMES.rose;this.wallMat.color.set(t.wall);this.rugMat.color.set(t.rug);this.accentMat.color.set(t.accent);}
-  setNight(night){this.night=night;this.renderer.night=night;if(this.backdropMat)this.backdropMat.color.set(night?'#343449':'#f4eae2');this.scene.background.set(night?'#343449':'#f5ece5');this.ambient.intensity=night?.9:2.15;this.sun.intensity=night?.65:3.1;this.sun.color.set(night?'#bbc5e5':'#fff1d5');this.fill.intensity=night?.35:.8;this.lampLight.intensity=night?4:0;this.renderer.toneMappingExposure=night?1:1.18;}
+  setNight(night){this.night=night;this.renderer.night=night;if(this.backdropMat)this.backdropMat.color.set(night?'#343449':'#f4eae2');this.scene.background.set(night?'#343449':'#f5ece5');this.ambient.intensity=night?.9:2.6;this.sun.intensity=night?.65:2.3;this.sun.color.set(night?'#bbc5e5':'#fff1d5');this.fill.intensity=night?.35:.8;this.lampLight.intensity=night?4:0;this.renderer.toneMappingExposure=night?1:1.18;}
   selectSlot(active){this.selected=active;this.slotTargets.forEach(m=>m.material.opacity=active?.15:0);}
   resetView(){this.inspect=false;this.controls.minDistance=8;this.controls.maxDistance=23;this.controls.target.set(0,1.45,0);this.camera.position.set(10,8.2,12.3);this.resize();}
-  inspectKitty(){this.inspect=true;this.controls.target.set(-.12,1.35,.65);this.controls.minDistance=3.3;this.controls.maxDistance=10;this.camera.position.set(3.4,3.2,6.8);this.controls.update();this.waveTime=1.5;}
+  inspectKitty(){this.inspect=true;this.controls.target.set(-.12,1.35,.65);this.controls.minDistance=3.3;this.controls.maxDistance=10;this.camera.position.set(2.1,2.8,6.5);this.controls.update();this.waveTime=1.5;}
   rotate(delta){const p=this.camera.position.clone().sub(this.controls.target),s=new THREE.Spherical().setFromVector3(p);s.theta=THREE.MathUtils.clamp(s.theta+delta,this.controls.minAzimuthAngle+.01,this.controls.maxAzimuthAngle-.01);this.camera.position.copy(new THREE.Vector3().setFromSpherical(s).add(this.controls.target));this.controls.update();}
   showHunt(active){this.hunting=active;this.bows.forEach((b,i)=>{b.visible=active;if(active){this.bowIndices[i]=i;this.moveBow(i)}});if(active)this.resetView();}
   moveBow(i){const used=this.bowIndices.filter((_,j)=>j!==i);let choices=this.bowPositions.map((_,j)=>j).filter(j=>!used.includes(j)&&j!==this.bowIndices[i]);const next=choices[Math.floor(Math.random()*choices.length)];this.bowIndices[i]=next;this.bows[i].position.set(...this.bowPositions[next]);}
@@ -121,11 +123,14 @@ export class KittyRoom{
     this.hero.add(this.treat);this.treat.visible=true;this.treatTime=0;
   }
   pick(e){const r=this.renderer.domElement.getBoundingClientRect();this.pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);if(this.selected){const hit=this.ray.intersectObjects(this.slotTargets,false)[0];if(hit){this.onSlot(hit.object.userData.index);return;}}
-    const candidates=[this.hero,...this.shelfDolls,...this.gifts];const hit=this.ray.intersectObjects(candidates,true)[0];if(!hit)return;let p=hit.object;while(p&&!p.userData.kind)p=p.parent;if(p?.userData.kind==='kitty'){this.waveTime=1.6;this.onKitty(p.userData.id,p===this.hero);}else if(p?.userData.kind==='gift')this.onGift();}
-  frame(){const elapsed=this.clock.getDelta(),dt=Math.min(elapsed,.05),t=this.clock.elapsedTime;this.controls.update();if(!this.reduced){this.hero.position.y=.08+Math.sin(t*1.7)*.015;this.hero.userData.head.rotation.z=Math.sin(t*.8)*.025;this.gifts.forEach((g,i)=>g.rotation.y=(i?-.2:.12)+Math.sin(t+i)*.025);}
+    const candidates=[this.hero,...this.shelfDolls,...this.gifts.filter(g=>g.visible)];const hit=this.ray.intersectObjects(candidates,true)[0];if(!hit)return;let p=hit.object;while(p&&!p.userData.kind)p=p.parent;if(p?.userData.kind==='kitty'){this.waveTime=1.6;this.onKitty(p.userData.id,p===this.hero);}else if(p?.userData.kind==='gift')this.onGift();}
+  frame(){const elapsed=this.clock.getDelta(),dt=Math.min(elapsed,.05),t=this.clock.elapsedTime;const u=this.hero.userData;this.controls.update();if(this.asset){
+      updateBlender(this.hero,elapsed);
+    }else{
+    if(!this.reduced){this.hero.position.y=.08+Math.sin(t*1.7)*.015;this.hero.userData.head.rotation.z=Math.sin(t*.8)*.025;this.gifts.forEach((g,i)=>g.rotation.y=(i?-.2:.12)+Math.sin(t+i)*.025);}
     if(this.chatting&&!this.reaction&&!this.reduced&&this.emotion!=='sleepy'){this.nextHello-=elapsed;if(this.nextHello<=0)this.react('wave');}
     if(this.reaction)this.reaction.elapsed+=elapsed;
-    const pose=avatarPose(this.reaction?.emotion,this.reaction?.elapsed??-1,this.reduced),u=this.hero.userData;
+    const pose=avatarPose(this.reaction?.emotion,this.reaction?.elapsed??-1,this.reduced);
     if(this.reaction&&!pose.active)this.reaction=null;
     const emotion=this.reaction?.emotion||(this.chatting?this.emotion:null);
     const target=expressionTarget(emotion,pose.active,this.reaction?.elapsed??0);
@@ -140,6 +145,7 @@ export class KittyRoom{
     this.hero.position.y=.08+motion.lift+(this.reduced?0:Math.sin(t*1.7)*.012);this.hero.rotation.y=.3+motion.turn;this.hero.scale.set(1.25,1.25*motion.squash,1.25);
     u.head.rotation.z=motion.tilt+(this.reduced?0:Math.sin(t*.8)*.016);u.head.rotation.x=this.reduced?0:Math.sin(t*1.6)*.008+this.faceState.joy*.025;
     u.armL.rotation.z=motion.left;u.armR.rotation.z=motion.right;
+    }
     this.bows.forEach((b,i)=>{if(b.visible){const base=this.bowPositions[this.bowIndices[i]];b.position.y=base[1]+(this.reduced?0:Math.sin(t*1.6+i)*.12);b.rotation.y=.45+Math.sin(t+i)*.25;b.rotation.z=Math.sin(t*1.1+i)*.12;}});
     for(let i=this.confetti.length-1;i>=0;i--){const c=this.confetti[i];c.userData.life-=dt;c.position.addScaledVector(c.userData.velocity,dt);if(!c.userData.heart)c.userData.velocity.y-=3*dt;if(c.userData.life<=0){this.scene.remove(c);c.geometry.dispose();c.material.dispose();this.confetti.splice(i,1);}}
     if(this.treat?.visible){this.treatTime+=elapsed;const age=this.treatTime,p=Math.min(1,age/1.1),ease=p*p*(3-2*p);this.treat.position.set(.65*(1-ease),.65+.55*ease,.58);this.treat.rotation.z=-.2+Math.sin(age*5)*.06;this.treat.scale.setScalar(Math.max(.01,1-Math.max(0,age-1.5)));if(!this.reduced)u.head.rotation.x+=Math.sin(age*11)*.025*ease;if(age>2.5)this.treat.visible=false;}
