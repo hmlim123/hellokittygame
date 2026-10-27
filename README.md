@@ -144,11 +144,24 @@ Chromium executable. This test writes the documented screenshots into `docs/`.
 
 ## Hosting
 
-Deploy the contents of `dist/` to a static host with its directory structure
-intact. The existing ChatGPT Sites deployment is hosted separately: pushing
-this repository does **not** update that live site or enable GitHub Pages.
-This version has been verified locally; a separate deployment is needed to
-replace the published game. Keep the repositories private as requested.
+GitHub Pages deployment is configured in `.github/workflows/pages.yml`.
+In repository **Settings → Pages**, keep **Source: GitHub Actions** selected.
+The workflow uploads only `dist/`, including the actual Blender GLB, and deploys
+it to the `github-pages` environment. It runs on pushes changing the game or
+workflow on `master`, and can also be started manually from the Actions tab.
+No deploy key or extra secret is required; GitHub's built-in workflow token
+uses Pages and OIDC permissions.
+
+Expected public game address: `https://hmlim123.github.io/hellokittygame/`.
+Check the **Publish Hello Kitty game** run in GitHub Actions and use the URL
+reported by the deployment. A successful push alone does not confirm deployment.
+The environment may require an approval if repository protection rules say so.
+Keep the repository private; Pages availability depends on the account plan.
+
+The old ChatGPT Sites deployment is separate and is not updated by this workflow.
+Moving to the new GitHub Pages address starts a separate browser save; older
+progress remains stored at the old website. The self-contained download also
+has separate saves.
 
 ## Attribution
 
