@@ -1,0 +1,11 @@
+{
+  "name": "hello-kitty-plushie-room",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs tests/game.test.cjs"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  }
+}

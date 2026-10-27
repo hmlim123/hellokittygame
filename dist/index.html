@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fcf8f3"><meta name="description" content="A cozy 3D Hello Kitty room. Hunt for bows, collect six plushies, decorate your shelves, and open a little love note."><title>Nancy’s Hello Kitty · Her Happy Little Room</title>
+<link rel="stylesheet" href="./room.css"><link rel="stylesheet" href="./rewards.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="bow-icon" viewBox="0 0 80 48"><path d="M36 17C13-4 1 4 5 25S23 48 38 31M44 17C67-4 79 4 75 25S57 48 42 31" fill="currentColor" stroke="currentColor" stroke-width="2.5"/><ellipse cx="40" cy="24" rx="10" ry="11" fill="currentColor" stroke="#fff5ee" stroke-width="2"/></symbol><symbol id="heart-icon" viewBox="0 0 24 24"><path d="M12 20C-5 9 7-2 12 7 17-2 29 9 12 20Z" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol></defs></svg>
+<main>
+<header class="topbar"><a class="brand" href="./" aria-label="Hello Kitty room home"><svg aria-hidden="true"><use href="#bow-icon"/></svg><span>hello kitty<small>THE LITTLE ROOM COLLECTION</small></span></a><div class="top-actions"><span class="made-with">Made with love, just for you <span>♡</span></span><button id="personalize" class="soft-button"><svg aria-hidden="true"><use href="#heart-icon"/></svg> Make it hers</button></div></header>
+<section class="heading"><div><div class="eyebrow" id="dedication">A LITTLE ROOM FOR NANCY</div><h1><span id="roomOwner">Nancy’s</span> happy little <em>room.</em></h1><p>A soft place to play, collect, and make your own.</p></div><div class="edition-stamp"><span>hello, happiness</span><strong>3D</strong><small>PLAY • COLLECT • DECORATE</small></div></section>
+<div class="workspace">
+<div class="room-column">
+<section class="room-frame" aria-label="Interactive 3D room">
+<div id="stage" class="stage"><div id="loading" class="loading"><svg aria-hidden="true"><use href="#bow-icon"/></svg><p>Fluffing the pillows…</p><small>Your little room is almost ready.</small></div>
+<div class="scene-label"><span class="live-dot"></span><span id="sceneLabel">THE PLUSHIE ROOM</span></div>
+<div class="scene-tools"><button id="sound" class="round-button" aria-label="Turn sound on" aria-pressed="false">♫</button><button id="night" class="round-button" aria-label="Switch to evening" aria-pressed="false">☾</button></div>
+<div id="kittySpeech" class="kitty-speech" hidden><span id="kittyMood">Waving hello</span><p id="kittyWords"></p></div>
+<div id="bowTargets" class="targets"></div><div id="slotTargets" class="targets"></div>
+<div id="huntHud" class="hunt-hud" hidden><span><b id="hits">0</b> / 8 bows</span><span id="time">0:45</span><button id="pause" aria-label="Pause bow hunt">Ⅱ</button></div>
+<div id="pausePanel" class="pause-panel" hidden><div><span class="eyebrow">A LITTLE TEA BREAK</span><h2>Your bows can wait.</h2><p>Come back whenever you're ready.</p><button id="resume" class="primary">Keep playing <span>♡</span></button></div></div>
+<div class="scene-bottom"><div id="sceneHint" class="scene-hint">Drag to look around <span>·</span> Scroll or pinch to zoom</div><div class="camera-tools"><button id="rotateLeft" aria-label="Rotate room left">↶</button><button id="resetCamera" aria-label="Reset room view">⌂</button><button id="rotateRight" aria-label="Rotate room right">↷</button><span></span><button id="inspect" class="inspect-button">Meet Kitty ↗</button><button id="chatToggle" class="inspect-button chat-toggle" aria-expanded="false" aria-controls="chatPanel" disabled>Chat with Kitty ♡</button></div></div>
+<div id="toast" class="toast" role="status"></div>
+<div id="webglError" class="error-panel" hidden><h2>A tiny technical hiccup.</h2><p>Your browser couldn't start the 3D room. Try reloading, or enjoy the original picnic game.</p><button id="reload" class="primary">Try again</button><a href="./picnic.html">Play the picnic game ↗</a></div>
+</div>
+<div class="room-settings"><div class="palette"><span>Room mood</span><button data-theme="rose" style="--swatch:#e8bfca" aria-label="Rose milk room" aria-pressed="true"></button><button data-theme="lavender" style="--swatch:#c8b8df" aria-label="Lavender room" aria-pressed="false"></button><button data-theme="peach" style="--swatch:#e8ccb0" aria-label="Peach cream room" aria-pressed="false"></button><button data-theme="mint" style="--swatch:#bfceba" aria-label="Mint tea room" aria-pressed="false"></button><small id="themeName">Rose milk</small></div><span class="saved" id="saveStatus">✓ Your room saves itself</span></div>
+</section>
+<div id="careHomeMount"><section id="carePanel" class="care-panel" aria-label="Little moments with Kitty">
+<div class="care-title"><span>Little moments <span aria-hidden="true">♡</span></span><span id="careHearts">0 happy hearts</span></div>
+<div class="care-actions"><button id="petKitty" disabled>♡ Pet Kitty</button><button id="feedKitty" disabled>🍓 Strawberry</button><button id="dailyGift" disabled>🎁 Daily surprise</button></div>
+<div class="care-scrapbook"><span>Her tiny treasures</span><div id="careStickers" aria-label="Daily surprise sticker collection"></div></div>
+<small id="careHint">Little hugs, sweet treats, and a surprise each day.</small>
+</section></div>
+<section class="play-card"><div class="play-icon"><svg aria-hidden="true"><use href="#bow-icon"/></svg></div><div class="play-copy"><div class="eyebrow">A LITTLE GAME, A LITTLE GIFT</div><h2>Eight bows. One new bestie.</h2><p id="playDescription">Find 8 floating bows in 45 seconds to unwrap a new plushie.</p></div><button class="primary" id="startHunt" disabled>Play bow hunt <span>↗</span></button><button class="text-button" id="endHunt" hidden>End hunt</button></section>
+<section class="play-card picnic-card"><div class="play-icon" aria-hidden="true">🍓</div><div class="play-copy"><div class="eyebrow">THE ORIGINAL PLUSHIE PICNIC</div><h2>A picnic with your little friends.</h2><p>Catch falling plushies in 60 seconds. Bring them home to this shelf and earn bows for gifts.</p></div><a class="primary" data-adventure-link href="./picnic.html">Play plushie picnic ↗</a></section>
+</div>
+<aside class="sidebar">
+<section id="chatPanel" class="chat-panel" hidden aria-label="Chat with Kitty">
+<div class="chat-heading"><div><span class="eyebrow">A LITTLE HELLO, JUST FOR YOU</span><h2>Kitty &amp; <span id="chatName">Nancy</span></h2></div><button id="closeChat" class="text-button" aria-label="Close Kitty chat">Back to room ↙</button></div>
+<p class="chat-caption">A playful chat with little scripted replies. Try a greeting, a feeling, or an action.</p>
+<div id="careChatMount"></div>
+<div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation with Kitty"></div>
+<div class="chat-quick" aria-label="Things to say to Kitty"><button data-chat="Hi Kitty!">Wave hello 👋</button><button data-chat="I'm happy!">Smile ♡</button><button data-chat="Give me a hug">A little hug</button><button data-chat="Let's dance!">Dance ♫</button><button data-chat="Jump!">Happy jumps ✨</button></div>
+<form id="chatForm" class="chat-form"><label class="sr-only" for="chatInput">Your message to Kitty</label><input id="chatInput" maxlength="200" placeholder="Say hello to Kitty…" autocomplete="off" required><button class="primary" type="submit">Send ♡</button></form>
+<small class="chat-privacy">Just for this visit. Your messages stay in this browser tab.</small>
+</section>
+
+<section class="collection-card"><div class="section-title"><div><span class="eyebrow">THE LITTLE THINGS</span><h2>Your collection</h2></div><span class="collection-count" id="collectionCount">1 / 6</span></div><p class="section-caption">A room can never have too many.</p><div class="collection-grid" id="collection"></div><div class="selected-details"><span id="selectedName">Classic sweetheart</span><small id="selectedTag">The original little love</small></div><button id="arrange" class="outline-button" disabled>Arrange her shelf <span>↗</span></button><div id="placement" class="placement" hidden><p>Choose a spot. Plushies will swap places.</p><div id="slotButtons"></div><button id="finishArrange" class="text-button">All done ✓</button></div><div class="collection-foot"><span id="bestScore">First little adventure awaits</span><span>♡</span></div></section>
+<button class="note-card" id="openNote"><span class="envelope" aria-hidden="true">♡</span><span><strong>A little note for you</strong><small>Some things are better with love.</small></span><b aria-hidden="true">↗</b></button>
+<p class="sidebar-tip"><span>✧</span> Tap a collected plushie to meet her.<br>Make the shelf look just like yours.</p>
+</aside></div>
+<div id="adventureRewards"></div>
+<footer><span>For the girl with a room full of plushies, and a heart full of love. ♡</span><div><a id="picnicLink" href="./picnic.html">Original picnic game ↗</a><span>Unofficial fan-made game · Hello Kitty © Sanrio</span></div></footer>
+<div class="sr-only" id="announce" role="status" aria-live="polite"></div>
+</main>
+<dialog id="rewardModal" class="modal reward-modal"><button class="close" data-close="rewardModal" aria-label="Close result">×</button><div class="reward-art" id="rewardArt"></div><span class="eyebrow" id="rewardEyebrow">A NEW LITTLE FRIEND</span><h2 id="rewardTitle">Hello, sweetheart.</h2><p id="rewardText"></p><button id="rewardDone" class="primary">Meet her in your room <span>♡</span></button></dialog>
+<dialog id="noteModal" class="modal"><button class="close" data-close="noteModal" aria-label="Close love note">×</button><div class="note-heart">♡</div><h2 id="noteTitle">For Nancy,</h2><p id="noteBody" class="letter"></p><div class="signature">With all my love ♡</div></dialog>
+<dialog id="giftModal" class="modal"><button class="close" data-close="giftModal" aria-label="Close personalization">×</button><span class="eyebrow">A GIFT WITH HER NAME ON IT</span><h2>A little more hers.</h2><p>Add her nickname and your own note. Then send her a room full of happy.</p><label for="giftName">Her name or nickname</label><input id="giftName" maxlength="32" placeholder="My sweet girl" autocomplete="off"><label for="giftNote">Your little love note</label><textarea id="giftNote" rows="5" maxlength="600"></textarea><button id="copyGift" class="primary">Save & copy her game link ♡</button><small class="privacy-note">The link includes your message. Share it with someone you love.</small><div id="giftFeedback" role="status"></div><input id="fallbackLink" readonly hidden aria-label="Personalized game link"></dialog>
+<script src="./rewards.js"></script><script src="./reward-panel.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
