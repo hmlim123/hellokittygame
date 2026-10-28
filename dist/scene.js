@@ -6,7 +6,7 @@ import {soften,blinkAmount,expressionTarget} from './expression.js';
 import {avatarPose} from './chat.js';
 import {THEMES} from './state.js';
 import {FriendArrival} from './friend-arrival.js';
-import {makeStrawberry,setHeldGift} from './gifts.js';
+import {makeStrawberry,setHeldGift,playHeldItem,updateHeldItem} from './gifts.js';
 import {makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from './blender-kitty.js';
 export class KittyRoom{
   constructor(container,{asset=null,onSlot=()=>{},onKitty=()=>{},onGift=()=>{},onFrame=()=>{}}={}){
@@ -145,6 +145,7 @@ export class KittyRoom{
     }
     this.hero.userData.head.add(this.rewardCrown);this.rewardCrown.visible=equipped.accessory==='crown';
   }
+  playItem(){const result=playHeldItem(this.hero,this.reduced);if(result.accepted)this.react(this.heldGift==='teddy'?'hug':'pet');return result;}
   setGift(id){this.heldGift=id;if(this.asset)setHeldGift(this.hero,id);}
   react(emotion){if(this.asset){reactBlender(this.hero,emotion,this.reduced);return;}this.emotion=emotion;this.reaction={emotion,elapsed:0};this.waveTime=0;this.nextHello=14;}
   setChat(active){this.chatting=active;if(active){this.inspectKitty();this.react('wave');}else{this.reaction=null;this.resetView();}}
@@ -176,6 +177,7 @@ export class KittyRoom{
     const candidates=[this.hero,...this.shelfDolls,...this.gifts.filter(g=>g.visible)];const hit=this.ray.intersectObjects(candidates,true).find(h=>{for(let o=h.object;o;o=o.parent)if(!o.visible)return false;return true;});if(!hit)return;let p=hit.object;while(p&&!p.userData.kind)p=p.parent;if(p?.userData.kind==='kitty'){this.waveTime=1.6;this.onKitty(p.userData.id,p===this.hero,blenderTouchPart(hit.object));}else if(p?.userData.kind==='gift')this.onGift();}
   frame(){const elapsed=this.clock.getDelta(),dt=Math.min(elapsed,.05),t=this.clock.elapsedTime;const u=this.hero.userData;this.controls.update();if(this.asset){
       updateBlender(this.hero,elapsed,{reduced:this.reduced,idle:!this.hunting&&!this.arrival});
+      updateHeldItem(this.hero,elapsed);
       this.updateArrival(elapsed);
     }else{
     if(!this.reduced){this.hero.position.y=.08+Math.sin(t*1.7)*.015;this.hero.userData.head.rotation.z=Math.sin(t*.8)*.025;this.gifts.forEach((g,i)=>g.rotation.y=(i?-.2:.12)+Math.sin(t+i)*.025);}

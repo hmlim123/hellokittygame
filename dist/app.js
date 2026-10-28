@@ -4,9 +4,11 @@ import {loadBlenderKitty} from './blender-kitty.js';
 import {RoomSound} from './sound.js';
 import {MISSIONS,KEEPSAKES,createMission,tickMission,actMission,replayMemory,normalizeJournal,recordMission} from './missions.js';
 import {GIFTS} from './gifts.js';
+import {LOVE_LETTER} from './letter.js';
+import {bindPicnicBoard} from './item-play.js';
 
 const $=id=>document.getElementById(id), KEY='kitty-room-3d-v1';
-function read(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{return {};}}
+function read(key){try{const value=JSON.parse(localStorage.getItem(key)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return {};}}
 const state=normalizeState(read(KEY),read('kitty-picnic-v1'));
 let room=null,hunt=null,ready=false,handled=false,toastLeft=0,celebrating=false,lastTouch=-Infinity;
 const sound=new RoomSound(),preferences=read('kitty-room-preferences-v1');
@@ -19,7 +21,9 @@ document.querySelectorAll('[data-recipient]').forEach(el=>el.textContent=recipie
 $('roomMessage').textContent=`No rush, ${recipient}. This little happy place is yours. ♡`;
 let journal=normalizeJournal(read('kitty-nancy-missions-v1'));
 let heldGift=GIFTS.some(g=>g.id===preferences.heldGift)?preferences.heldGift:'flowers';
+function updateGiftAction(){const gift=GIFTS.find(g=>g.id===heldGift);$('playGift').textContent=gift.action;$('giftFeedback').textContent=gift.description;}
 function renderAdventures(){
+  updateGiftAction();$('readLetter').textContent=preferences.letterOpened?'Read your letter again':'Open your letter';
   $('missionCards').innerHTML=MISSIONS.map(m=>`<button data-mission="${m.id}" class="mission-card"><span aria-hidden="true">${m.icon}</span><strong>${m.title}</strong><small>${m.description}</small><em>${journal.completed[m.id]?`${journal.completed[m.id]} completed`:'A keepsake to discover'}</em></button>`).join('');
   $('giftChoices').innerHTML=GIFTS.map(g=>`<button data-gift="${g.id}" aria-pressed="${heldGift===g.id}"><span aria-hidden="true">${g.icon}</span><strong>${g.name}</strong></button>`).join('');
   $('keepsakes').replaceChildren();
@@ -33,10 +37,51 @@ function openAdventures(){if(!ready||hunt?.active||celebrating)return;renderAdve
 for(const key of ['missions','gifts','nancy'])$('tab-'+key).onclick=()=>selectTab(key);
 document.querySelector('.adventure-tabs').onkeydown=e=>{const tabs=['missions','gifts','nancy'];let index=tabs.findIndex(t=>$('tab-'+t)===document.activeElement);if(index<0)return;if(e.key==='ArrowRight')index=(index+1)%3;else if(e.key==='ArrowLeft')index=(index+2)%3;else if(e.key==='Home')index=0;else if(e.key==='End')index=2;else return;e.preventDefault();selectTab(tabs[index],true);};
 $('missionCards').onclick=e=>{const b=e.target.closest('[data-mission]');if(b)start(b.dataset.mission);};
-$('giftChoices').onclick=e=>{const b=e.target.closest('[data-gift]');if(!b||!ready)return;heldGift=b.dataset.gift;preferences.heldGift=heldGift;room.setGift(heldGift);document.querySelectorAll('[data-gift]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.gift===heldGift)));try{localStorage.setItem('kitty-room-preferences-v1',JSON.stringify(preferences));$('giftFeedback').textContent=`${GIFTS.find(g=>g.id===heldGift).name}, ready for ${recipient}. ♡`;}catch{$('giftFeedback').textContent='Your choice will stay for this visit.';}};
+$('giftChoices').onclick=e=>{const b=e.target.closest('[data-gift]');if(!b||!ready)return;heldGift=b.dataset.gift;preferences.heldGift=heldGift;room.setGift(heldGift);updateGiftAction();document.querySelectorAll('[data-gift]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.gift===heldGift)));try{localStorage.setItem('kitty-room-preferences-v1',JSON.stringify(preferences));$('giftFeedback').textContent=`${GIFTS.find(g=>g.id===heldGift).name}, ready for ${recipient}. ♡`;}catch{$('giftFeedback').textContent='Your choice will stay for this visit.';}};
 for(const id of ['closeAdventures','backToKitty'])$(id).onclick=()=>$('adventureModal').close();
 $('adventureModal').addEventListener('close',()=>$('startHunt').focus());
 renderAdventures();
+
+function openLetter(){
+  if($('adventureModal').open)$('adventureModal').close();
+  $('letterCover').hidden=false;$('letterPaper').hidden=true;$('unsealLetter').textContent='Break the heart seal';$('unsealLetter').setAttribute('aria-expanded','false');
+  $('letterWords').replaceChildren();
+  const available=!LOVE_LETTER.pending&&LOVE_LETTER.paragraphs.length>0;
+  $('letterPending').hidden=available;
+  if(available)for(const words of LOVE_LETTER.paragraphs){const p=document.createElement('p');p.textContent=words;$('letterWords').append(p);}
+  $('letterSignoff').textContent=available?LOVE_LETTER.signoff:'';$('letterSignature').textContent=available?LOVE_LETTER.signature:'';
+  $('letterModal').showModal();
+}
+$('readLetter').onclick=openLetter;$('closeLetter').onclick=()=>$('letterModal').close();
+$('unsealLetter').onclick=()=>{
+  const open=$('letterPaper').hidden;$('letterPaper').hidden=!open;$('letterCover').hidden=open;
+  $('unsealLetter').textContent=open?'Fold the letter':'Break the heart seal';$('unsealLetter').setAttribute('aria-expanded',String(open));
+  if(open){$('letterGreeting').focus();preferences.letterOpened=true;$('readLetter').textContent='Read your letter again';try{localStorage.setItem('kitty-room-preferences-v1',JSON.stringify(preferences));}catch{}}
+};
+$('letterModal').addEventListener('close',()=>$('startHunt').focus());
+const picnic=bindPicnicBoard($('picnicBoard'),{
+  onPlace:count=>{hunt.hits=count;sound.chime('catch');},
+  onComplete:()=>{hunt.complete=true;hunt.active=false;$('picnicModal').close();finish();}
+});
+function startPicnic(){
+  if(!ready||hunt?.active||celebrating)return;
+  if($('adventureModal').open)$('adventureModal').close();
+  hunt=createMission('picnic');handled=false;room.react(null);picnic.reset();controls();$('picnicModal').showModal();
+}
+function leavePicnic(){if(!$('picnicModal').open)return;$('picnicModal').close();picnic.reset();if(hunt?.id==='picnic'&&hunt.active){hunt.active=false;finish();}}
+$('closePicnic').onclick=leavePicnic;$('picnicModal').addEventListener('cancel',e=>{e.preventDefault();leavePicnic();});
+function playGift(){
+  if(!ready||hunt?.active||celebrating)return;
+  if($('adventureModal').open)$('adventureModal').close();
+  if(heldGift==='letter'){room.react('offer');openLetter();return;}
+  if(heldGift==='flowers'){startPicnic();return;}
+  const result=room.playItem();
+  if(result.busy){say('One little moment at a time. ♡');return;}
+  if(!result.accepted)return;
+  if(heldGift==='teddy'){room.heartBurst();say(`A little teddy cuddle for ${recipient}. ♡`);}
+  else{say(result.finishedBites?'All gone! A happy Kitty and a fresh strawberry for next time. ♡':`Little bite ${result.bite} of 3. Tap the strawberry for another nibble.`);if(result.finishedBites)room.heartBurst();}
+}
+$('playGift').onclick=playGift;
 
 function save(){
   // Merge collections before writing, including progress earned in another tab.
@@ -94,6 +139,7 @@ function collect(i){
 function start(id='bows'){
   if(!ready||celebrating)return;
   if(hunt?.active){hunt.active=false;finish();return;}
+  if(id==='picnic'){startPicnic();return;}
   if($('adventureModal').open)$('adventureModal').close();
   hunt=createMission(id,{relaxed:preferences.relaxed===true});handled=false;lastCatch.fill(-Infinity);room.react(null);room.showMission(id,true);
   $('huntHud').hidden=false;$('hits').textContent='0';$('missionGoal').textContent=hunt.goal;$('missionItem').textContent={bows:'bows',strawberries:'berries',hearts:'hearts'}[id];
@@ -139,7 +185,7 @@ function finish(){
   controls();$('rewardModal').showModal();
 }
 function pause(force){
-  if(!hunt?.active)return;hunt.paused=typeof force==='boolean'?force:!hunt.paused;
+  if(!hunt?.active||hunt.id==='picnic')return;hunt.paused=typeof force==='boolean'?force:!hunt.paused;
   $('pausePanel').hidden=!hunt.paused;targets.forEach(b=>b.hidden=hunt.paused);
   if(hunt.paused)$('resume').focus();else $('pause').focus();
 }
@@ -149,6 +195,7 @@ $('rewardModal').addEventListener('close',()=>$('startHunt').focus());
 $('reload').onclick=()=>location.reload();
 document.addEventListener('visibilitychange',()=>{if(document.hidden){pause(true);sound.suspend();}else sound.resume();});
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&$('picnicModal').open){e.preventDefault();leavePicnic();return;}
   if(e.key==='Escape'&&celebrating){e.preventDefault();room.finishArrival();return;}
   if(e.key==='Escape'&&hunt?.active){e.preventDefault();pause();}
   if(e.key===' '&&e.target.tagName==='CANVAS'&&hunt?.active){e.preventDefault();pause();}
@@ -170,6 +217,7 @@ try{
   room=new KittyRoom($('stage'),{asset,onKitty:(id,hero,part)=>{
     if(!hunt?.active&&!celebrating&&hero){
       const now=performance.now();if(now-lastTouch<650)return;lastTouch=now;
+      if(part==='offer'){playGift();return;}
       room.react(part);
       if(part==='pet'){room.heartBurst();say('A gentle head pat. A little love back. ♡');}
       else if(part==='tilt')say('A bow, a little tilt, and a hello. ♡');
@@ -177,7 +225,7 @@ try{
     }
   },onFrame:(dt)=>{
     if(toastLeft>0){toastLeft-=dt;if(toastLeft<=0)$('toast').classList.remove('visible');}
-    if(!room||!hunt?.active)return;
+    if(!room||!hunt?.active||hunt.id==='picnic')return;
     tickMission(hunt,hunt.phase==='show'?Math.min(dt,.2):dt);updateMissionUI();
     if(!hunt.active){finish();return;}
     if(!hunt.paused)room.bows.forEach((b,i)=>{

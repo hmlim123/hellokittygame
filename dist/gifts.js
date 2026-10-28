@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 export const GIFTS=[
- {id:'flowers',name:'Little flowers',icon:'🌼',message:'A little bouquet, just for'},
- {id:'teddy',name:'Cuddle teddy',icon:'🧸',message:'A tiny teddy hug for'},
- {id:'strawberry',name:'Sweet strawberry',icon:'🍓',message:'The sweetest little strawberry for'},
- {id:'letter',name:'Love letter',icon:'💌',message:'A little love note for'}
+ {id:'flowers',name:'Little flowers',icon:'🌼',action:'Set up a picnic',description:'Arrange a little picnic with all four gifts.',message:'A little bouquet, just for'},
+ {id:'teddy',name:'Cuddle teddy',icon:'🧸',action:'Cuddle the teddy',description:'Give the teddy a gentle squeeze together.',message:'A tiny teddy hug for'},
+ {id:'strawberry',name:'Sweet strawberry',icon:'🍓',action:'Feed Kitty',description:'Tap for three little strawberry bites.',message:'The sweetest little strawberry for'},
+ {id:'letter',name:'Love letter',icon:'💌',action:'Open your letter',description:'Unseal a real letter written for Nancy.',message:'A little love note for'}
 ];
 const sphere=new THREE.SphereGeometry(1,24,16);
 const mat=color=>new THREE.MeshStandardMaterial({color,roughness:.8});
@@ -34,6 +34,7 @@ export function makeGift(id){
 }
 export function setHeldGift(hero,id){
  const b=hero.userData.blender;if(!b)return;
+ if(b.itemPlay){restoreProp(b.itemPlay);b.itemPlay=null;}
  id=GIFTS.some(g=>g.id===id)?id:'flowers';
  b.gifts??={original:[...b.model.getObjectByName('CTRL_Bouquet').children],cache:new Map()};
  for(const o of b.gifts.original)o.visible=id==='flowers';
@@ -41,5 +42,32 @@ export function setHeldGift(hero,id){
  if(id!=='flowers'){
   let prop=b.gifts.cache.get(id);if(!prop){prop=makeGift(id);b.model.getObjectByName('CTRL_Bouquet').add(prop);b.gifts.cache.set(id,prop);}prop.visible=true;
  }
- b.gift=id;
+ b.gift=id;b.bites=0;for(const prop of b.gifts.cache.values())prop.scale.setScalar(1);
+}
+
+function restoreProp(play){play.prop.position.copy(play.position);play.prop.scale.copy(play.scale);play.prop.rotation.copy(play.rotation);}
+export function playHeldItem(hero,reduced=false){
+ const b=hero.userData.blender;
+ if(!['teddy','strawberry'].includes(b.gift))return {accepted:false};
+ if(b.itemPlay)return {accepted:false,busy:true};
+ const prop=b.gifts.cache.get(b.gift),bite=b.gift==='strawberry'?(b.bites||0)+1:0;
+ if(bite)b.bites=bite;
+ b.itemPlay={prop,id:b.gift,time:0,duration:reduced ? .35 : 1.35,bite,position:prop.position.clone(),scale:prop.scale.clone(),rotation:prop.rotation.clone(),reduced};
+ return {accepted:true,bite,finishedBites:bite===3};
+}
+export function updateHeldItem(hero,dt){
+ const b=hero.userData.blender,p=b.itemPlay;if(!p)return;
+ p.time+=Number.isFinite(dt)?Math.max(0,dt):0;restoreProp(p);
+ const t=Math.min(1,p.time/p.duration),pulse=Math.sin(t*Math.PI);
+ if(!p.reduced){
+  if(p.id==='teddy'){p.prop.scale.multiplyScalar(1-pulse*.07);p.prop.position.z-=pulse*.12;}
+  else{p.prop.position.y+=pulse*.9;p.prop.position.x*=1-pulse;p.prop.scale.multiplyScalar(1-(p.bite/3)*Math.min(1,t*1.8));}
+ }
+ if(t===1){
+  restoreProp(p);b.itemPlay=null;
+  if(p.id==='strawberry'){
+   if(p.bite===3){b.bites=0;p.prop.scale.setScalar(1);}
+   else p.prop.scale.setScalar(1-p.bite*.18);
+  }
+ }
 }

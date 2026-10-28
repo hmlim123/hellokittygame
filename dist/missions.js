@@ -1,12 +1,14 @@
 export const MISSIONS=[
   {id:'bows',title:'Bow Hunt',icon:'🎀',description:'Find eight little bows around the room.',goal:8,seconds:45},
   {id:'strawberries',title:'Strawberry Picnic',icon:'🍓',description:'Gather six strawberries for a sweet little picnic.',goal:6,seconds:40},
-  {id:'hearts',title:'Memory Hearts',icon:'♡',description:'Watch four hearts light up, then repeat their order.',goal:4,seconds:null}
+  {id:'hearts',title:'Memory Hearts',icon:'♡',description:'Watch four hearts light up, then repeat their order.',goal:4,seconds:null},
+  {id:'picnic',title:'A Picnic for Nancy',icon:'🧺',description:'Place four gifts in their cozy picnic spots.',goal:4,seconds:null}
 ];
 export const KEEPSAKES={
  bows:{title:'A pocket full of happy',note:'A little reminder for Nancy: you are loved, in all the small moments too. ♡'},
  strawberries:{title:'The sweetest little moments',note:'For Nancy — a tiny picnic, a happy memory, and a little love to carry into your day. ♡'},
- hearts:{title:'A heart to keep',note:'Nancy, this little happy place was made just for you. There is always a little love waiting here. ♡'}
+ hearts:{title:'A heart to keep',note:'Nancy, this little happy place was made just for you. There is always a little love waiting here. ♡'},
+ picnic:{title:'A little place for us',note:'For Nancy — a teddy, something sweet, and a little love letter. The nicest part of a picnic is sharing it with you. ♡'}
 };
 export function createMission(id,{relaxed=false,random=Math.random}={}){
  const m=MISSIONS.find(m=>m.id===id);if(!m)throw new Error('Unknown mission');

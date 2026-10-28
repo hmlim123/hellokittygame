@@ -12,6 +12,7 @@ dance**, and **Play a mission**. The mission button opens one tidy panel with
 | Bow Hunt | Find the floating bows | 8 bows; 45 seconds or relaxed mode |
 | Strawberry Picnic | Gather the 3D strawberries | 6 berries; 40 seconds or relaxed mode |
 | Memory Hearts | Watch four numbered hearts light up, then repeat their order | Correct 4-heart sequence; no timer |
+| A Picnic for Nancy | Drag or tap the four gifts into their cozy spots | All four placed; no timer |
 
 Memory Hearts accepts input only after the cue sequence. A wrong answer replays
 the same sequence, with no penalty. **Watch again** resets the current attempt;
@@ -20,14 +21,32 @@ collecting missions. A completed mission brings another friend home until all
 six are collected; replaying remains available afterwards.
 
 Every mission’s first completion opens one keepsake note for Nancy in **For
-Nancy**. The panel also contains a personal love note. There are no streaks,
+Nancy**. The panel also links to her sealed letter. There are no streaks,
 deadlines, currencies, or chores attached to the keepsakes.
 
 ## Little gifts and moments
 
 In **Play a mission → Gifts**, choose **flowers**, a **cuddle teddy**, a **sweet
 strawberry**, or a **heart-sealed love letter**. Tap the present in Kitty’s paws
-to have her offer it to Nancy. The choice saves and follows the selected friend.
+to play with it. The choice saves and follows the selected friend:
+
+- Teddy: a gentle squeeze with the actual Blender arms moving into a cuddle.
+- Strawberry: three tap-to-feed bites, then a fresh serving. Repeated taps wait
+  for the current bite to finish; switching items clears transient play.
+- Letter: opens a sealed envelope. Break the heart seal to read it and fold it
+  again whenever you like. It also opens from the **For Nancy** tab.
+- Flowers: starts the picnic activity, with all four gifts to arrange.
+
+The picnic supports a real pointer drag or selecting an item and then a spot
+by tap/keyboard. Wrong spots give a hint, with no penalty. Only placing all four
+awards a friend and keepsake. Leaving early preserves earned collections but
+resets the current picnic. Reduced motion skips the friend entrance as before.
+
+The letter's text is reserved for the user's own message. `dist/letter.js` has
+`pending: true` and no invented draft. Until the message is supplied, the paper
+shows a clear “being written” placeholder. Set `pending: false`, the paragraph
+array, sign-off and signature when the author provides the actual words. Letter
+content is rendered as text. Opening the seal is remembered in preferences.
 The original flowers are part of the Blender model; the additional lightweight
 3D gift props attach to the same exported bouquet controller. The character
 itself remains the actual Blender mesh and rig.
@@ -146,10 +165,11 @@ npm ci
 npm test
 ```
 
-43 automated checks cover the Blender asset, real paw and wink playback, pose
+48 automated checks cover the Blender asset, real paw and wink playback, pose
 reset, continuous gesture switching, bounded attention, blinking, touch targets,
 friend arrivals, opt-in audio, relaxed hunts, gift replacement, timed/memory
-mission rules, keepsake persistence, reduced motion, independent model instances,
+mission rules, keepsake persistence, picnic placement, item play, the reserved
+letter, reduced motion, independent model instances,
 collection migration, bow
 hunt rules, saved progress, and the retained legacy modules.
 
@@ -160,7 +180,9 @@ phone layout, touch raycasts, optional sound, relaxed-mode persistence, and
 ownership saved before the visible arrival finishes. The compatibility renderer
 was also checked with WebGL disabled. The mission browser checks exercise all
 four gift choices, gift persistence, a full Strawberry Picnic, memory cues,
-wrong-answer replay and completion, Nancy’s notes, keyboard tabs and mobile gifts.
+wrong-answer replay and completion, Nancy’s notes, keyboard tabs and mobile gifts. Item-play checks cover the actual 3D feeding taps, the teddy
+cuddle, letter seal/fold controls, pointer dragging, keyboard placement, reward
+persistence, cancellation, and touch placement on a phone.
 Preview screenshots are in `docs/simple-room-*.png`.
 
 The browser smoke test is also saved in `tests/browser-smoke.py`. With the local
@@ -169,6 +191,7 @@ server on port 8012, Python Playwright and its Chromium installed, run:
 ```sh
 python tests/browser-smoke.py
 python tests/missions-browser.py
+python tests/items-browser.py
 ```
 
 Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
@@ -184,7 +207,9 @@ Chromium executable. This test writes the documented screenshots into `docs/`.
 | `dist/friend-arrival.js` | Arrival timing and shelf placement |
 | `dist/sound.js` | Opt-in synthesized music and chimes |
 | `dist/missions.js` | Mission state, memory cues, and Nancy’s keepsakes |
-| `dist/gifts.js` | Optional held props on the actual Blender rig |
+| `dist/gifts.js` | Held props, cuddle and feeding play on the Blender rig |
+| `dist/item-play.js` | Picnic placement rules and pointer/tap controls |
+| `dist/letter.js` | User-authored letter content (pending) |
 | `dist/assets/hello-kitty.glb` | Actual exported Blender character |
 | `dist/scene.js` | Three.js room, camera, and interactions |
 | `scripts/export_blender.py` | Reproducible Blender-to-game export |

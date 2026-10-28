@@ -28,7 +28,10 @@ with sync_playwright() as p:
     }''')
     for point,expected in zip(targets,['A bow','A little bouquet','A gentle head pat']):
         page.mouse.click(point['x'],point['y']);page.wait_for_timeout(200)
-        assert page.locator('#toast').inner_text().startswith(expected),page.locator('#toast').inner_text()
+        if expected=='A little bouquet':
+            assert page.locator('#picnicModal').is_visible();page.locator('#closePicnic').click();page.locator('#rewardDone').click()
+        else:
+            assert page.locator('#toast').inner_text().startswith(expected),page.locator('#toast').inner_text()
         page.mouse.move(0,0);page.wait_for_timeout(1400)
     page.locator('#wave').click();page.wait_for_timeout(1000)
     page.screenshot(path=str(out/'simple-room-wink.png'),full_page=True)

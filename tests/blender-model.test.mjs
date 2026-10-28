@@ -77,3 +77,20 @@ test('gift choices replace only the bouquet and remain attached to its Blender c
   setHeldGift(hero,'flowers');assert.ok(b.gifts.original.every(o=>o.visible));assert.equal(head.geometry,geometry);
   setHeldGift(hero,'unknown');assert.equal(b.gift,'flowers');
 });
+
+test('a teddy cuddle moves the real rig gently and returns its additive arms to rest',()=>{
+ const hero=makeBlenderKitty(asset),b=hero.userData.blender;
+ reactBlender(hero,'hug');updateBlender(hero,.65);assert.ok(b.armIdle[0].rotation.z>.3);assert.ok(b.armIdle[1].rotation.z<-.3);
+ updateBlender(hero,1);updateBlender(hero,.1);assert.ok(b.armIdle.every(a=>a.rotation.z===0));
+});
+test('strawberry has three non-overlapping bites and switching props clears transient play',async()=>{
+ const {setHeldGift,playHeldItem,updateHeldItem}=await import('../dist/gifts.js');
+ const hero=makeBlenderKitty(asset),b=hero.userData.blender;setHeldGift(hero,'strawberry');
+ for(let bite=1;bite<=3;bite++){
+  const result=playHeldItem(hero);assert.equal(result.bite,bite);assert.equal(result.finishedBites,bite===3);assert.equal(playHeldItem(hero).busy,true);
+  const prop=b.gifts.cache.get('strawberry'),start=prop.position.y;updateHeldItem(hero,.6);assert.ok(prop.position.y>start+.5);
+  updateHeldItem(hero,1);assert.equal(b.itemPlay,null);
+ }
+ assert.equal(b.bites,0);assert.equal(b.gifts.cache.get('strawberry').scale.x,1);
+ playHeldItem(hero);setHeldGift(hero,'teddy');assert.equal(b.itemPlay,null);assert.equal(b.bites,0);
+});

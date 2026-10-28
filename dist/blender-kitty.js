@@ -32,6 +32,8 @@ export function makeBlenderKitty(asset,id=0){
     const parent=eye.parent,center=eye.localToWorld(eye.geometry.boundingBox.getCenter(new THREE.Vector3()));
     pivot.position.copy(parent.worldToLocal(center));parent.add(pivot);pivot.attach(eye);eyes.push(pivot);
   }
+  const armIdle=[];
+  for(const name of ['CTRL_Arm_L','CTRL_Arm_R']){const arm=model.getObjectByName(name),pivot=new THREE.Group();pivot.position.copy(arm.position);arm.parent.add(pivot);pivot.add(arm);arm.position.set(0,0,0);armIdle.push(pivot);}
   const mixer=new THREE.AnimationMixer(model),actions={};
   for(const [name,clip] of Object.entries(asset.clips)){
     actions[name]=mixer.clipAction(clip);actions[name].setLoop(THREE.LoopOnce,1);actions[name].clampWhenFinished=true;
@@ -45,7 +47,7 @@ export function makeBlenderKitty(asset,id=0){
     }
   };
   resetEyes(false);
-  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_animated.blend'};
+  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_animated.blend'};
   return hero;
 }
 export function setBlenderAttention(hero,x=0,y=0){
@@ -69,7 +71,7 @@ export function reactBlender(hero,emotion,reduced=false){
   b.current=null;b.reducedWink=false;b.gesture=null;b.age=0;
   if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(emotion==='wave'||emotion==='pet'){b.resetEyes(true);b.reducedWink=true;}return;}
   if(action){action.reset().fadeIn(.2).play();b.current=action;}
-  else if(['pet','tilt','catch'].includes(emotion))b.gesture=emotion;
+  else if(['pet','tilt','catch','hug'].includes(emotion))b.gesture=emotion;
 }
 export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idle=true}={}){
   const b=hero.userData.blender;dt=Number.isFinite(dt)?Math.max(0,dt):0;b.age+=dt;b.time+=dt;b.mixer.update(dt);
@@ -83,8 +85,10 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   const smooth=1-Math.exp(-dt*5),attentive=idle&&!reduced&&!b.current;
   b.look.lerp(attentive?b.target:new THREE.Vector2(),smooth);
   b.headIdle.rotation.set(-b.look.y*.065,b.look.x*.10,0);
+  b.armIdle.forEach(a=>a.rotation.z=0);
   if(b.gesture&&!reduced){
-    const p=Math.min(1,b.age/1.1),curve=Math.sin(Math.PI*p);
+    const p=Math.min(1,b.age/(b.gesture==='hug'?1.35:1.1)),curve=Math.sin(Math.PI*p);
+    if(b.gesture==='hug'){b.armIdle[0].rotation.z=curve*.45;b.armIdle[1].rotation.z=-curve*.45;}
     if(b.gesture==='tilt')b.headIdle.rotation.z+=curve*.15;
     else b.headIdle.rotation.x+=curve*.10;
     if(p===1)b.gesture=null;

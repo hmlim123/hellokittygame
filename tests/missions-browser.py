@@ -9,7 +9,7 @@ with sync_playwright() as p:
  page.goto(base);page.wait_for_function("!document.querySelector('#wave').disabled",timeout=60000)
  assert page.locator('h1').inner_text().startswith('Nancy')
  page.locator('#startHunt').click();page.screenshot(path=str(out/'nancy-missions.png'),full_page=True)
- assert page.locator('[data-mission]').count()==3
+ assert page.locator('[data-mission]').count()==4
  page.locator('#tab-missions').focus();page.keyboard.press('ArrowRight');assert page.locator('#tab-gifts').get_attribute('aria-selected')=='true'
  for gift in ['teddy','letter','strawberry','flowers','teddy']:
   page.locator('[data-gift="'+gift+'"]').click();assert page.locator('[data-gift="'+gift+'"]').get_attribute('aria-pressed')=='true'
@@ -44,14 +44,15 @@ with sync_playwright() as p:
  assert page.locator('#collectionCount').inner_text()=='3 of 6 friends'
  page.locator('#rewardDone').click();page.reload();page.wait_for_function("!document.querySelector('#wave').disabled")
  journal=page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-missions-v1'))")
- assert journal['completed']=={'bows':0,'strawberries':1,'hearts':1}
+ assert journal['completed']=={'bows':0,'strawberries':1,'hearts':1,'picnic':0}
  page.locator('#startHunt').click();page.locator('#tab-nancy').click()
  assert page.locator('#keepsakes article:not(.locked)').count()==2
- assert page.locator('#keepsakes article').count()==3
+ assert page.locator('#keepsakes article').count()==4
  page.screenshot(path=str(out/'nancy-keepsakes.png'),full_page=True)
  page.locator('#closeAdventures').click();assert not errors,errors
+ page.close()
  phone=b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce')
- m=phone.new_page();m.on('pageerror',lambda e:errors.append(str(e)));m.goto(base);m.wait_for_function("!document.querySelector('#wave').disabled")
+ m=phone.new_page();m.on('pageerror',lambda e:errors.append(str(e)));m.goto(base);m.wait_for_function("!document.querySelector('#wave').disabled",timeout=60000)
  m.locator('#startHunt').tap();m.locator('#tab-gifts').tap();m.locator('[data-gift="letter"]').tap()
  assert m.evaluate('document.documentElement.scrollWidth<=innerWidth')
  m.screenshot(path=str(out/'nancy-gifts-mobile.png'),full_page=True)

@@ -24,7 +24,7 @@ test('memory pause freezes cues and replay resets only the current attempt',()=>
  m.paused=false;tickMission(m,4);actMission(m,m.sequence[0]);assert.equal(m.hits,1);assert.equal(replayMemory(m),true);assert.equal(m.hits,0);assert.equal(m.phase,'show');
 });
 test('keepsakes sanitize corrupt storage and remember first completion without duplicate notes',()=>{
- const j=normalizeJournal({completed:{bows:-9,strawberries:'100',hearts:Infinity,unknown:7}});assert.deepEqual(j.completed,{bows:0,strawberries:0,hearts:0});
+ const j=normalizeJournal({completed:{bows:-9,strawberries:'100',hearts:Infinity,unknown:7}});assert.deepEqual(j.completed,{bows:0,strawberries:0,hearts:0,picnic:0});
  assert.equal(recordMission(j,'hearts'),true);assert.equal(recordMission(j,'hearts'),false);assert.equal(j.completed.hearts,2);assert.equal(recordMission(j,'unknown'),false);
  assert.deepEqual(normalizeJournal(JSON.parse(JSON.stringify(j))),j);
 });
