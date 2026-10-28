@@ -17,29 +17,55 @@ export function normalizeAdventure(raw={}){
 export function questText(s){
  if(s.complete)return 'Moonflower restored! A little happy ending for Nancy.';
  if(!s.accepted)return 'Talk to Momo, the teddy by the village fountain.';
- if(s.map==='village')return 'Enter the pink arch in the northeast corner.';
+ if(s.map==='village')return 'Enter Moonflower Garden, the dungeon through the pink arch in the upper-right.';
  if(s.charms.length<3)return `Open the three treasure chests: ${s.charms.length} / 3 moon charms.`;
  if(!s.guardian)return 'Help the cloud guardian beside the moon gate.';
  if(!s.gate)return 'Open the moon gate in the northern wall.';
  return 'Reach the moonflower shrine beyond the gate.';
 }
+function enterPath(s,tile){
+ if(tile==='D'){
+  if(!s.accepted)return {moved:false,message:'Momo has a little adventure for you. Talk to the teddy first. ♡'};
+  s.map='garden';[s.x,s.z]=MAPS.garden.spawn;
+ }else{s.map='village';[s.x,s.z]=[12,3];}
+ return {moved:true,changedMap:true};
+}
 export function moveAdventure(s,direction){
  const delta=DIRECTIONS[direction];if(!delta)return {moved:false};s.facing=direction;
  const [dx,dz]=delta,x=s.x+dx,z=s.z+dz;if(!walkable(s,x,z))return {moved:false};
  const tile=MAPS[s.map].rows[z][x];
- if(tile==='D'){
-  if(!s.accepted)return {moved:false,message:'Momo has a little adventure for you. Talk to the teddy first. ♡'};
-  s.map='garden';[s.x,s.z]=MAPS.garden.spawn;return {moved:true,changedMap:true};
- }
- if(tile==='E'){s.map='village';[s.x,s.z]=[12,3];return {moved:true,changedMap:true};}
+ if(tile==='D'||tile==='E')return enterPath(s,tile);
  s.x=x;s.z=z;return {moved:true};
 }
 export function nearbyObject(s){
  const [dx,dz]=DIRECTIONS[s.facing];
  return MAPS[s.map].objects.find(o=>o.x===s.x+dx&&o.z===s.z+dz)||MAPS[s.map].objects.find(o=>Math.abs(o.x-s.x)+Math.abs(o.z-s.z)===1||o.type==='H'&&Math.max(Math.abs(o.x-s.x),Math.abs(o.z-s.z))===2);
 }
+// Give the next walkable step, including when the entrance is outside the camera.
+export function villageDirections(s){
+ if(s.map!=='village')return '';
+ const target=MAPS.village.objects.find(o=>o.type===(s.accepted?'D':'M'));
+ const name=s.accepted?'Dungeon entrance':'Momo';
+ const queue=[{x:s.x,z:s.z,first:null,steps:0}],seen=new Set([`${s.x},${s.z}`]);
+ for(let i=0;i<queue.length;i++){
+  const p=queue[i];
+  if(Math.abs(p.x-target.x)+Math.abs(p.z-target.z)===1){
+   if(!p.steps)return s.accepted?'Pink arch · press Enter dungeon to go inside':'Momo is beside you · press Talk to Momo';
+   return `${{up:'↑',down:'↓',left:'←',right:'→'}[p.first]} ${name} · ${p.steps} ${p.steps===1?'step':'steps'} away`;
+  }
+  for(const [d,[dx,dz]] of Object.entries(DIRECTIONS)){
+   const x=p.x+dx,z=p.z+dz,key=`${x},${z}`;
+   if(!seen.has(key)&&walkable(s,x,z)){seen.add(key);queue.push({x,z,first:p.first||d,steps:p.steps+1});}
+  }
+ }
+ return `${name} · follow the cream path`;
+}
 export function interactAdventure(s,choice){
  const o=nearbyObject(s);if(!o)return {speaker:'Kitty',text:'Let’s look around. Walk next to a friend, a chest, or a sign, then interact.'};
+ if(o.type==='D'||o.type==='E'){
+  const result=enterPath(s,o.type);
+  return result.changedMap?result:{speaker:'Dungeon entrance',text:result.message};
+ }
  if(o.type==='M'){
   if(choice==='accept')s.accepted=true;
   return {speaker:'Momo',text:s.complete?'The garden is glowing again. You brought a little kindness to this world, Nancy. ♡':s.accepted?'Three moon charms are hidden in the garden chests. Enter the pink arch in the northeast. The cloud by the gate could use a kind friend, too.':'Nancy, the moonflower has lost its glow. Will you help me find its three moon charms?',choices:s.accepted?[]:[{id:'accept',label:'Let’s help!'}]};

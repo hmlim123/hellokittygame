@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MAPS,normalizeAdventure,walkable,moveAdventure,interactAdventure,claimAdventureReward,questText} from '../dist/adventure-state.js';
+import {MAPS,normalizeAdventure,walkable,moveAdventure,interactAdventure,claimAdventureReward,questText,villageDirections} from '../dist/adventure-state.js';
 function route(s,x,z){
  const queue=[[s.x,s.z,[]]],seen=new Set([`${s.x},${s.z}`]);
  for(let i=0;i<queue.length;i++){const [a,b,path]=queue[i];if(a===x&&b===z)return path;for(const [d,dx,dz] of [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]]){const nx=a+dx,nz=b+dz,k=`${nx},${nz}`;if(!seen.has(k)&&walkable(s,nx,nz)){seen.add(k);queue.push([nx,nz,[...path,d]]);}}}return null;
@@ -34,4 +34,24 @@ test('completion reward is one atomic room save and preserves existing collectio
 });
 test('completed saves round-trip and returning through the garden path reaches the village',()=>{
  const s=complete();assert.deepEqual(normalizeAdventure(JSON.parse(JSON.stringify(s))),s);go(s,7,12);assert.equal(s.map,'village');assert.equal(walkable(s,s.x,s.z),true);
+});
+test('interacting beside either entrance travels between maps and keeps the quest prerequisite',()=>{
+ for(const [x,z] of [[12,3],[11,2],[13,2],[12,1]]){
+  const s=normalizeAdventure({x,z});
+  assert.match(interactAdventure(s).text,/Talk to the teddy first/);assert.equal(s.map,'village');
+  s.accepted=true;assert.equal(interactAdventure(s).changedMap,true);assert.equal(s.map,'garden');assert.deepEqual([s.x,s.z],MAPS.garden.spawn);
+  go(s,7,11);assert.equal(interactAdventure(s).changedMap,true);assert.equal(s.map,'village');assert.deepEqual([s.x,s.z],[12,3]);
+ }
+});
+test('village hints lead around obstacles to Momo and then to the off-screen dungeon entrance',()=>{
+ const s=normalizeAdventure();
+ const dirs={'↑':'up','↓':'down','←':'left','→':'right'};
+ for(const accepted of [false,true]){
+  s.accepted=accepted;
+  let steps=0;
+  while(dirs[villageDirections(s)[0]]){assert.equal(moveAdventure(s,dirs[villageDirections(s)[0]]).moved,true);assert.ok(++steps<40);}
+  assert.match(villageDirections(s),accepted?/press Enter dungeon/:/press Talk to Momo/);
+  assert.equal(s.map,'village');assert.equal(steps>0,true);
+ }
+ interactAdventure(s);assert.equal(s.map,'garden');assert.equal(villageDirections(s),'');
 });

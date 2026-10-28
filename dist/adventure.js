@@ -3,7 +3,7 @@ import {CanvasFallback} from './CanvasFallback.js';
 import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
 import {makeGift,setHeldGift} from './gifts.js';
 import {RoomSound} from './sound.js';
-import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward} from './adventure-state.js';
+import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections} from './adventure-state.js';
 const $=id=>document.getElementById(id),KEY='kitty-nancy-adventure-v1';
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{return {};}}
 const state=normalizeAdventure(read(KEY)),sound=new RoomSound();
@@ -17,11 +17,15 @@ function notice(text){$('notice').textContent=text;$('notice').classList.add('vi
 function modal(){return $('story').open||$('inventory').open;}
 function refreshUI(){
  $('quest').textContent=questText(state);$('area').textContent=MAPS[state.map].title;
- const o=nearbyObject(state);$('interact').textContent=({'M':'Talk to Momo','C':'Open chest','G':'Moon gate','Q':'Cloud guardian','S':'Moonflower shrine','F':'Make a little wish','o':'Little flowers','H':'Cozy cottage','T':'Little lantern'})[o?.type]||'Talk / inspect ♡';
+ const o=nearbyObject(state);$('interact').textContent=({'M':'Talk to Momo','D':'Enter dungeon','E':'Back to village','C':'Open chest','G':'Moon gate','Q':'Cloud guardian','S':'Moonflower shrine','F':'Make a little wish','o':'Little flowers','H':'Cozy cottage','T':'Little lantern'})[o?.type]||'Talk / inspect ♡';
+ $('wayfinder').textContent=villageDirections(state);$('wayfinder').hidden=state.map!=='village';
  $('interact').disabled=!ready||!!motion||modal();
  for(const {object,mesh} of rendered){if(object.type==='G')mesh.visible=!state.gate;if(object.type==='C')mesh.children[0].rotation.x=state.charms.includes(object.id)?-.55:0;}
 }
 function showStory(result){
+ if(result.changedMap){
+  pressed=queued=null;buildWorld();player.position.set(state.x,0,state.z);followCamera(true);save();refreshUI();renderer.domElement.focus();return;
+ }
  pressed=queued=null;$('speaker').textContent=result.speaker;$('storyWords').textContent=result.text;
  $('storyChoices').replaceChildren();
  for(const choice of result.choices||[]){const button=document.createElement('button');button.textContent=choice.label;button.onclick=()=>showStory(interactAdventure(state,choice.id));$('storyChoices').append(button);}
@@ -112,7 +116,7 @@ function buildWorld(){
    mesh(g,cube,mats.pink,0,.17,0,.61,.31,.45);mesh(g,cube,mats.cream,0,.24,.235,.12,.17,.025);
   }
   if(object.type==='G'){arch(g);mesh(g,cube,mats.gold,0,.55,0,.7,.75,.08);label('Moon gate',object.x,1.5,object.z);}
-  if(object.type==='D'||object.type==='E'){arch(g);mesh(g,cube,mats.cream,0,.015,0,.8,.04,.8);label(object.type==='D'?'Garden path':'Village path',object.x,1.45,object.z);}
+  if(object.type==='D'||object.type==='E'){arch(g);mesh(g,cube,mats.cream,0,.015,0,.8,.04,.8);label(object.type==='D'?'Dungeon entrance':'Village path',object.x,1.45,object.z);}
   if(object.type==='F'){
    mesh(g,new THREE.CylinderGeometry(.55,.55,.25,20),mats.cream,0,.12,0);mesh(g,new THREE.CylinderGeometry(.45,.45,.02,20),mats.water,0,.26,0);mesh(g,new THREE.CylinderGeometry(.10,.14,.65,12),mats.cream,0,.45,0);
   }

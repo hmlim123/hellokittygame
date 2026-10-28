@@ -73,6 +73,11 @@ open three treasure chests, help the cloud guardian in a three-turn conversation
 open the moon gate, and restore Nancy’s moonflower at the shrine. The current
 chapter has one village, one dungeon, and a complete ending. There is no timer.
 
+To reach the dungeon, stand beside Momo and choose **Talk to Momo → Let’s help!**.
+Follow the direction hint to the upper-right pink arch, then choose **Enter
+dungeon**, press Enter/Space, or walk through it. The same entrance works from
+either side of the arch. The hint stays visible when the entrance is off-screen.
+
 Use arrow keys/WASD to walk and Enter/Space to interact. A direction pad and an
 interaction button support touch. **Bag & quest** shows the objective and three
 charms. The camera follows Kitty, with reduced-motion support. House/hedge tiles
