@@ -7,7 +7,7 @@ export async function loadBlenderKitty(){
   // Blender exports each animated object's action separately. Combine them so
   // the head, face, paws, bouquet and feet always play on the same clock.
   const full=new THREE.AnimationClip('Blender performance',-1,gltf.animations.flatMap(a=>a.tracks));
-  return {scene:gltf.scene,clips:{wave:THREE.AnimationUtils.subclip(full,'Wave and wink',48,96,24),dance:THREE.AnimationUtils.subclip(full,'Little dance',0,49,24)}};
+  return {scene:gltf.scene,clips:{wave:THREE.AnimationUtils.subclip(full,'Wave and wink',48,96,24),dance:THREE.AnimationUtils.subclip(full,'Little dance',0,49,24),offer:THREE.AnimationUtils.subclip(full,'Flowers for you',96,139,24)}};
 }
 export function makeBlenderKitty(asset,id=0){
   const hero=new THREE.Group(),model=asset.scene.clone(true);
@@ -21,6 +21,17 @@ export function makeBlenderKitty(asset,id=0){
     o.material=o.material.clone();
     if(id!==0&&o.material.name==='Strawberry pink satin')o.material.color.set(DOLLS[id].color);
   });
+  // Additive head/eye pivots preserve the exported controller animation.
+  const head=model.getObjectByName('CTRL_Head'),headIdle=new THREE.Group();
+  headIdle.name='Idle_head';headIdle.position.copy(head.position);head.parent.add(headIdle);headIdle.add(head);head.position.set(0,0,0);
+  model.updateMatrixWorld(true);
+  const eyes=[];
+  for(const name of ['Eye_left','Eye_right']){
+    const eye=model.getObjectByName(name);eye.geometry.computeBoundingBox();
+    const pivot=new THREE.Group();pivot.name='Blink_'+name;
+    const parent=eye.parent,center=eye.localToWorld(eye.geometry.boundingBox.getCenter(new THREE.Vector3()));
+    pivot.position.copy(parent.worldToLocal(center));parent.add(pivot);pivot.attach(eye);eyes.push(pivot);
+  }
   const mixer=new THREE.AnimationMixer(model),actions={};
   for(const [name,clip] of Object.entries(asset.clips)){
     actions[name]=mixer.clipAction(clip);actions[name].setLoop(THREE.LoopOnce,1);actions[name].clampWhenFinished=true;
@@ -34,22 +45,56 @@ export function makeBlenderKitty(asset,id=0){
     }
   };
   resetEyes(false);
-  hero.userData={kind:'kitty',id,blender:{model,mixer,actions,morphs,resetEyes,current:null,age:0,reducedWink:false},source:'hellokitty3D/hello_kitty_animated.blend'};
+  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_animated.blend'};
   return hero;
 }
-export function reactBlender(hero,emotion,reduced){
-  const b=hero.userData.blender;
-  b.mixer.stopAllAction();b.resetEyes(false);b.current=null;b.reducedWink=false;b.age=0;
-  if(!['wave','dance'].includes(emotion))return;
-  if(reduced){if(emotion==='wave'){b.resetEyes(true);b.reducedWink=true;}return;}
-  const action=b.actions[emotion];action.reset().fadeIn(.18).play();b.current=action;
+export function setBlenderAttention(hero,x=0,y=0){
+  hero.userData.blender.target.set(THREE.MathUtils.clamp(x,-1,1),THREE.MathUtils.clamp(y,-1,1));
 }
-export function updateBlender(hero,dt){
-  const b=hero.userData.blender;b.age+=dt;b.mixer.update(dt);
+export function blenderTouchPart(object){
+  let o=object;
+  while(o){
+    if(o.name.startsWith('Bow_'))return 'tilt';
+    if(/^(Pink_daisy|Yellow_daisy|Pink_flower|Yellow_flower|Bouquet_leaf|Leaf_vein)/.test(o.name))return 'offer';
+    o=o.parent;
+  }
+  return 'pet';
+}
+export function reactBlender(hero,emotion,reduced=false){
+  const b=hero.userData.blender,action=b.actions[emotion];b.reduced=reduced;
+  // Repeated taps don't restart a gesture mid-pose.
+  if(action&&b.current===action&&b.age<action.getClip().duration)return;
+  if(b.current){b.current.fadeOut(.2);b.fading.push({action:b.current,left:.22});}
+  b.current=null;b.reducedWink=false;b.gesture=null;b.age=0;
+  if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(emotion==='wave'||emotion==='pet'){b.resetEyes(true);b.reducedWink=true;}return;}
+  if(action){action.reset().fadeIn(.2).play();b.current=action;}
+  else if(['pet','tilt','catch'].includes(emotion))b.gesture=emotion;
+}
+export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idle=true}={}){
+  const b=hero.userData.blender;dt=Number.isFinite(dt)?Math.max(0,dt):0;b.age+=dt;b.time+=dt;b.mixer.update(dt);
+  for(let i=b.fading.length-1;i>=0;i--){const f=b.fading[i];f.left-=dt;if(f.left<=0){if(f.action!==b.current)f.action.stop();b.fading.splice(i,1);}}
   if(b.current){
     const end=b.current.getClip().duration;
     if(b.age>=end&&b.age-dt<end)b.current.fadeOut(.2);
     if(b.age>end+.22){b.current.stop();b.current=null;b.resetEyes(false);}
   }
   if(b.reducedWink&&b.age>1.2){b.resetEyes(false);b.reducedWink=false;}
+  const smooth=1-Math.exp(-dt*5),attentive=idle&&!reduced&&!b.current;
+  b.look.lerp(attentive?b.target:new THREE.Vector2(),smooth);
+  b.headIdle.rotation.set(-b.look.y*.065,b.look.x*.10,0);
+  if(b.gesture&&!reduced){
+    const p=Math.min(1,b.age/1.1),curve=Math.sin(Math.PI*p);
+    if(b.gesture==='tilt')b.headIdle.rotation.z+=curve*.15;
+    else b.headIdle.rotation.x+=curve*.10;
+    if(p===1)b.gesture=null;
+  }
+  if(reduced||!idle){b.headIdle.rotation.set(0,0,0);b.blink=-1;}
+  else{
+    b.nextBlink-=dt;
+    if(b.nextBlink<=0){b.blink=0;b.nextBlink=4.1;}
+    else if(b.blink>=0){b.blink+=dt;if(b.blink>.24)b.blink=-1;}
+  }
+  const blink=b.blink<0?0:Math.sin(Math.PI*b.blink/.24)**2;
+  b.eyes.forEach(p=>p.scale.y=1-blink*.96);
+  b.normalize.scale.y=b.baseScale*(1+(idle&&!reduced&&!b.current?Math.sin(b.time*1.6)*.005:0));
 }

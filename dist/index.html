@@ -14,12 +14,12 @@
 <div id="stage" class="stage">
 <div id="loading" class="loading" role="status">Getting cozy…</div>
 <span class="scene-label">KITTY’S LITTLE ROOM <span aria-hidden="true">♡</span></span>
-<button id="resetCamera" class="camera-reset" aria-label="Reset camera view">Reset view ↺</button>
+<div class="scene-tools"><button id="sound" class="camera-reset" aria-label="Turn sound on" aria-pressed="false">♫ Off</button><button id="resetCamera" class="camera-reset" aria-label="Reset camera view">Reset view ↺</button></div>
 <div id="huntHud" class="hunt-hud" hidden><span><b id="hits">0</b> / 8 bows</span><span id="time">0:45</span><button id="pause" aria-label="Pause bow hunt">Pause</button></div>
 <div id="bowTargets" class="targets"></div>
 <div id="pausePanel" class="pause-panel" hidden><div><span class="eyebrow">TAKE YOUR TIME</span><h2>A little pause.</h2><button id="resume" class="primary">Keep playing</button></div></div>
 <p id="toast" class="toast" role="status"></p>
-<span id="sceneHint" class="scene-hint">Drag to look around · Pinch or scroll to zoom</span>
+<span id="sceneHint" class="scene-hint">Tap her bow, flowers, or head · Drag to look around</span>
 <div id="webglError" class="error-panel" hidden><h2>Kitty needs a moment.</h2><p>The room couldn’t load. Please try reloading this page.</p><button id="reload" class="primary">Try again</button></div>
 </div>
 <div class="action-bar" aria-label="Play with Kitty">
@@ -29,7 +29,7 @@
 </div>
 </section>
 <p class="room-message" id="roomMessage" role="status">No rush. Kitty’s happy you’re here.</p>
-<details class="shelf-panel" id="shelfPanel"><summary><span>Your little shelf <small id="collectionCount">1 of 6 friends</small></span><span class="expand-icon" aria-hidden="true">+</span></summary><div class="shelf-content"><p>Find eight bows to bring another friend home. Choose a friend to play with.</p><div id="collection" class="collection-grid"></div><div class="room-settings"><span>Room color</span><div class="palette" aria-label="Room color"><button data-theme="rose" style="--swatch:#e8bfca" aria-label="Rose milk" aria-pressed="true"></button><button data-theme="lavender" style="--swatch:#c8b8df" aria-label="Lavender" aria-pressed="false"></button><button data-theme="peach" style="--swatch:#e8ccb0" aria-label="Peach cream" aria-pressed="false"></button><button data-theme="mint" style="--swatch:#bfceba" aria-label="Mint tea" aria-pressed="false"></button></div><small id="saveStatus">Your friends save here automatically.</small></div></div></details>
+<details class="shelf-panel" id="shelfPanel"><summary><span>Your little shelf <small id="collectionCount">1 of 6 friends</small></span><span class="expand-icon" aria-hidden="true">+</span></summary><div class="shelf-content"><p>Find eight bows to bring another friend home. Choose a friend to play with.</p><div id="collection" class="collection-grid"></div><div class="room-settings"><span>Room color</span><div class="palette" aria-label="Room color"><button data-theme="rose" style="--swatch:#e8bfca" aria-label="Rose milk" aria-pressed="true"></button><button data-theme="lavender" style="--swatch:#c8b8df" aria-label="Lavender" aria-pressed="false"></button><button data-theme="peach" style="--swatch:#e8ccb0" aria-label="Peach cream" aria-pressed="false"></button><button data-theme="mint" style="--swatch:#bfceba" aria-label="Mint tea" aria-pressed="false"></button></div><label class="relaxed-setting"><input type="checkbox" id="relaxed"> Relaxed hunt <small>No timer</small></label><small id="saveStatus">Your friends save here automatically.</small></div></div></details>
 <footer>A small, unofficial fan-made happy place. Hello Kitty © Sanrio.</footer>
 <dialog id="rewardModal"><button id="closeResult" class="close" aria-label="Close result">×</button><span class="result-heart" aria-hidden="true">♡</span><span class="eyebrow" id="rewardEyebrow">A LITTLE ADVENTURE</span><h2 id="rewardTitle">Lovely playing together.</h2><p id="rewardText"></p><button id="rewardDone" class="primary">Back to Kitty</button></dialog>
 </main><script type="module" src="./app.js"></script></body></html>

@@ -7,7 +7,22 @@ The home page has just three actions:
 - **Little dance:** the character’s exported bounce and sway.
 - **Find bows:** find eight bows in 45 seconds to bring one new friend home.
 
-The collection and room colors sit inside a single expandable shelf panel.
+Kitty gently breathes and blinks, follows nearby pointer movement, and blends
+between poses. Tap her bow to tilt her head, her bouquet to offer flowers, or
+her head to pet her. The interactions use the actual imported model meshes.
+
+When a new friend is unlocked, she enters the room, waves, then settles onto
+her shelf. Ownership is saved immediately before that celebration. Escape can
+skip the arrival. Reduced-motion mode settles the friend immediately.
+
+Optional music-box sound starts only when you turn it on. Catches and arrivals
+have little synthesized chimes; sound suspends when the tab is hidden. No audio
+files or services are required. A few slow petals float beside the window.
+
+The collection, room colors, and **Relaxed hunt (no timer)** setting sit inside
+a single expandable shelf panel. Relaxed hunts still require eight catches,
+and paused hunts accept no catches. The play-pace setting saves separately in
+`kitty-room-preferences-v1`; audio starts off on each visit.
 There is no chat, shop, wallet, daily checklist, personalization flow, or extra
 game navigation on the main page. All six friends use the imported Blender
 character, with outfit recolors for the collection variants.
@@ -93,8 +108,8 @@ does not unlock a new one.
 
 The older picnic remains at `picnic.html` for existing direct links. Its modules
 and tests remain in the repository, but it is no longer linked from the home
-page. Chat, care, and reward modules are retained for compatibility; the main
-page does not load them.
+page. Chat, care, and reward modules are retained for compatibility. Their interfaces
+are not part of the simplified page; the scene still shares some legacy helpers.
 
 Progress is local to the same browser and site address. Moving to another host,
 using another device, or clearing site data means a different save. Blocked
@@ -111,14 +126,17 @@ npm ci
 npm test
 ```
 
-29 automated checks cover the Blender asset, real paw and wink playback, pose
-reset, reduced motion, independent model instances, collection migration, bow
+37 automated checks cover the Blender asset, real paw and wink playback, pose
+reset, continuous gesture switching, bounded attention, blinking, touch targets,
+friend arrivals, opt-in audio, relaxed hunts, reduced motion, independent model instances, collection migration, bow
 hunt rules, saved progress, and the retained legacy modules.
 
 Browser checks exercised actual WebGL loading, wave/dance, a complete eight-bow
 hunt, pause/resume, partial completion, unlock persistence across reloads, old
 collection migration, saved theme and selection, untouched care/wallet saves,
-phone layout, and loading/reactions with WebGL disabled. Preview screenshots are in `docs/simple-room-*.png`.
+phone layout, touch raycasts, optional sound, relaxed-mode persistence, and
+ownership saved before the visible arrival finishes. The compatibility renderer
+was also checked with WebGL disabled. Preview screenshots are in `docs/simple-room-*.png`.
 
 The browser smoke test is also saved in `tests/browser-smoke.py`. With the local
 server on port 8012, Python Playwright and its Chromium installed, run:
@@ -136,7 +154,9 @@ Chromium executable. This test writes the documented screenshots into `docs/`.
 | --- | --- |
 | `dist/index.html`, `dist/simple.css` | Simplified responsive page |
 | `dist/app.js` | Three actions, bow hunt, collection, and saves |
-| `dist/blender-kitty.js` | GLB loading, model instances, Blender animation playback |
+| `dist/blender-kitty.js` | Imported model, pose blending, idle motion and touches |
+| `dist/friend-arrival.js` | Arrival timing and shelf placement |
+| `dist/sound.js` | Opt-in synthesized music and chimes |
 | `dist/assets/hello-kitty.glb` | Actual exported Blender character |
 | `dist/scene.js` | Three.js room, camera, and interactions |
 | `scripts/export_blender.py` | Reproducible Blender-to-game export |

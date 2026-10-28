@@ -24,6 +24,6 @@ export function placeDoll(state,id,index){
 }
 export function nextDoll(state){return DOLLS.find(d=>!state.owned.includes(d.id))||null;}
 export function rewardDoll(state){const doll=nextDoll(state);if(doll){state.owned.push(doll.id);const slot=state.slots.indexOf(null);if(slot!==-1)state.slots[slot]=doll.id;}state.rounds++;return doll;}
-export function createHunt(){return {active:true,paused:false,hits:0,time:45,complete:false};}
+export function createHunt({relaxed=false}={}){return {active:true,paused:false,hits:0,time:45,complete:false,relaxed:relaxed===true};}
 export function catchBow(hunt){if(!hunt?.active||hunt.paused)return false;hunt.hits++;if(hunt.hits>=8){hunt.active=false;hunt.complete=true;}return true;}
-export function tickHunt(hunt,dt){if(!hunt?.active||hunt.paused)return;hunt.time=Math.max(0,hunt.time-Math.max(0,Number.isFinite(dt)?dt:0));if(hunt.time===0)hunt.active=false;}
+export function tickHunt(hunt,dt){if(!hunt?.active||hunt.paused||hunt.relaxed)return;hunt.time=Math.max(0,hunt.time-Math.max(0,Number.isFinite(dt)?dt:0));if(hunt.time===0)hunt.active=false;}

@@ -5,7 +5,8 @@ import {CanvasFallback} from './CanvasFallback.js';
 import {soften,blinkAmount,expressionTarget} from './expression.js';
 import {avatarPose} from './chat.js';
 import {THEMES} from './state.js';
-import {makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
+import {FriendArrival} from './friend-arrival.js';
+import {makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from './blender-kitty.js';
 export class KittyRoom{
   constructor(container,{asset=null,onSlot=()=>{},onKitty=()=>{},onGift=()=>{},onFrame=()=>{}}={}){
     this.asset=asset;this.container=container;this.onSlot=onSlot;this.onKitty=onKitty;this.onGift=onGift;this.onFrame=onFrame;
@@ -30,7 +31,10 @@ export class KittyRoom{
     this.bows=[];this.bowPositions=[[-2.75,2.7,1],[2.5,2.1,1.7],[.5,3.8,-.6],[-1.5,1.2,2.4],[2.9,3.3,-.7],[-2.4,3.6,-1.2],[1.2,1.3,2.65],[-.7,3.1,1.2]];
     for(let i=0;i<4;i++){const bow=makeBow(['#df7799','#c99bce','#dbb76f','#9dbcb4'][i],.58);bow.userData={kind:'bow',index:i};bow.visible=false;this.room.add(bow);this.bows.push(bow)}this.bowIndices=[0,1,2,3];
     this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();this.confetti=[];this.faceState={joy:0,smile:0,sleepy:0,yawn:0,warmth:0};this.poseState={lift:0,tilt:0,turn:0,left:-.35,right:.35,squash:1};this.blinkTime=-1;this.nextBlink=2.5;this.waveTime=0;this.chatting=false;this.reaction=null;this.nextHello=12;this.selected=false;this.inspect=false;this.night=false;this.hunting=false;this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let down;this.renderer.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});this.renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>7)return;this.pick(e);down=null;});
+    this.arrival=null;
+    this.renderer.domElement.addEventListener('pointermove',e=>{const r=this.renderer.domElement.getBoundingClientRect();if(this.asset)setBlenderAttention(this.hero,(e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);});
+    this.renderer.domElement.addEventListener('pointerleave',()=>{if(this.asset)setBlenderAttention(this.hero);});
+    let down;this.renderer.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});this.renderer.domElement.addEventListener('pointercancel',()=>down=null);this.renderer.domElement.addEventListener('pointerup',e=>{const start=down;down=null;if(!start||Math.hypot(e.clientX-start.x,e.clientY-start.y)>7)return;this.pick(e);});
     this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(container);this.resize();this.clock=new THREE.Clock();this.renderer.setAnimationLoop(()=>this.frame());
   }
   createKitty(id){return this.asset?makeBlenderKitty(this.asset,id):makeKitty(id);}
@@ -61,6 +65,9 @@ export class KittyRoom{
     for(let x of[-1,0,1])box(windowGroup,w,x,0,.08,.075,2.25,.1);for(let y of[-1.1,0,1.1])box(windowGroup,w,0,y,.08,2.1,.075,.1);
     box(windowGroup,w,0,-1.15,.2,2.4,.12,.5);const curtainMat=material('#eed2cf',true);
     for(let side of[-1,1])for(let k=0;k<4;k++){const c=cylinder(windowGroup,curtainMat,side*(1.03+k*.075),0,.22,.11,2.48);c.scale.z=.5;}tube(windowGroup,[[-1.5,1.32,.15],[0,1.32,.15],[1.5,1.32,.15]],.035,wood);
+    // A few slow petals at the window, with no particles crossing the controls.
+    this.petals=[];
+    for(let i=0;i<5;i++){const p=ball(windowGroup,material(i%2?'#eed0da':'#fff3de'),0,0,.06,.035,.065,.012);p.userData.phase=i/5;this.petals.push(p);}
     // A pillowy reading chair.
     const chair=new THREE.Group();chair.position.set(-2.95,.2,-1.35);chair.rotation.y=.48;r.add(chair);
     const chairMat=material('#dfb4bb',true);ball(chair,chairMat,0,.65,0,.72,.22,.65);ball(chair,chairMat,0,1.16,-.38,.74,.65,.23);ball(chair,chairMat,-.64,.88,.03,.2,.32,.61);ball(chair,chairMat,.64,.88,.03,.2,.32,.61);
@@ -80,7 +87,32 @@ export class KittyRoom{
   }
   flowerPot(parent,x,y,z,s){const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(s);parent.add(g);cylinder(g,material('#cfaa8b'),0,.17,0,.23,.34,.17);const green=material('#8fa287');for(let i=0;i<5;i++){const a=i*2.4;const px=Math.cos(a)*.19,pz=Math.sin(a)*.19;tube(g,[[0,.3,0],[px,.52,pz],[px,.8+(i%2)*.15,pz]],.014,green);const yy=.8+(i%2)*.15;for(let k=0;k<5;k++)ball(g,material(i%2?'#eabcc6':'#fff1d4'),px+Math.cos(k*1.256)*.09,yy+Math.sin(k*1.256)*.09,pz,.07,.07,.035);ball(g,material('#d7b664'),px,yy,pz+.02,.035);const leaf=ball(g,green,px*.5,.54,pz,.12,.035,.05);leaf.rotation.z=a;}return g;}
   resize(){const w=this.container.clientWidth,h=this.container.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();if(!this.inspect){const distance=w/h<.85?20.5:16.5;this.camera.position.copy(new THREE.Vector3(10,8.2,12.3).normalize().multiplyScalar(distance));this.controls.target.set(0,1.6,0);}this.controls.update();}
-  updateShelf(slots){for(const d of this.shelfDolls)d.visible=false;this.shelfDolls=[];slots.forEach((id,i)=>{if(id===null)return;let k=this.shelfCache.get(id);if(!k){k=this.createKitty(id);k.scale.setScalar(.51);this.shelfCache.set(id,k);this.room.add(k);}k.visible=true;k.position.set(...this.slots[i]);k.userData.slot=i;this.shelfDolls.push(k);});}
+  updateShelf(slots,exclude=null){for(const d of this.shelfDolls)d.visible=false;this.shelfDolls=[];slots.forEach((id,i)=>{if(id===null||id===exclude)return;let k=this.shelfCache.get(id);if(!k){k=this.createKitty(id);k.scale.setScalar(.51);this.shelfCache.set(id,k);this.room.add(k);}k.visible=true;k.position.set(...this.slots[i]);k.userData.slot=i;this.shelfDolls.push(k);});}
+  welcomeFriend(id,slots,onComplete){
+    if(this.arrival)this.finishArrival();
+    if(this.reduced){this.updateShelf(slots);onComplete();return;}
+    this.updateShelf(slots,id);this.inspect=true;this.controls.minDistance=6;this.controls.maxDistance=16;this.controls.target.set(.4,1.5,.2);this.camera.position.set(5.5,4.3,8.5);this.controls.update();
+    const visitor=this.createKitty(id);visitor.rotation.y=.15;this.room.add(visitor);
+    this.arrival={visitor,slots:[...slots],clock:new FriendArrival(this.slots[slots.indexOf(id)]),waved:false,onComplete};
+  }
+  finishArrival(){
+    const a=this.arrival;if(!a)return;this.arrival=null;
+    reactBlender(a.visitor,null);a.visitor.userData.blender.mixer.stopAllAction();
+    this.shelfCache.set(a.visitor.userData.id,a.visitor);a.visitor.rotation.y=0;
+    this.updateShelf(a.slots);this.inspectKitty();a.onComplete();
+  }
+  updateArrival(dt){
+    const a=this.arrival;if(!a)return;
+    const pose=a.clock.advance(Math.min(dt,.5));a.visitor.position.set(...pose.position);a.visitor.scale.setScalar(pose.scale);
+    if(pose.phase==='wave'&&!a.waved){a.waved=true;reactBlender(a.visitor,'wave');}
+    updateBlender(a.visitor,dt,{idle:false});
+    if(pose.justFinished)this.finishArrival();
+  }
+  celebrateCatch(position){
+    if(this.reduced)return;
+    this.react('catch');
+    for(let i=0;i<4;i++){const h=heartMesh(i%2?'#e5a0b9':'#f2c5d3',.045);h.position.copy(position);h.userData={velocity:new THREE.Vector3((i-1.5)*.12,.35+i*.06,0),life:.75+i*.1,heart:true};this.scene.add(h);this.confetti.push(h);}
+  }
   setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
   setRewardGifts(equipped={},baseTheme='rose'){
     this.rewardEquipped={...equipped};this.baseRewardTheme=baseTheme;
@@ -123,9 +155,10 @@ export class KittyRoom{
     this.hero.add(this.treat);this.treat.visible=true;this.treatTime=0;
   }
   pick(e){const r=this.renderer.domElement.getBoundingClientRect();this.pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);if(this.selected){const hit=this.ray.intersectObjects(this.slotTargets,false)[0];if(hit){this.onSlot(hit.object.userData.index);return;}}
-    const candidates=[this.hero,...this.shelfDolls,...this.gifts.filter(g=>g.visible)];const hit=this.ray.intersectObjects(candidates,true)[0];if(!hit)return;let p=hit.object;while(p&&!p.userData.kind)p=p.parent;if(p?.userData.kind==='kitty'){this.waveTime=1.6;this.onKitty(p.userData.id,p===this.hero);}else if(p?.userData.kind==='gift')this.onGift();}
+    const candidates=[this.hero,...this.shelfDolls,...this.gifts.filter(g=>g.visible)];const hit=this.ray.intersectObjects(candidates,true)[0];if(!hit)return;let p=hit.object;while(p&&!p.userData.kind)p=p.parent;if(p?.userData.kind==='kitty'){this.waveTime=1.6;this.onKitty(p.userData.id,p===this.hero,blenderTouchPart(hit.object));}else if(p?.userData.kind==='gift')this.onGift();}
   frame(){const elapsed=this.clock.getDelta(),dt=Math.min(elapsed,.05),t=this.clock.elapsedTime;const u=this.hero.userData;this.controls.update();if(this.asset){
-      updateBlender(this.hero,elapsed);
+      updateBlender(this.hero,elapsed,{reduced:this.reduced,idle:!this.hunting&&!this.arrival});
+      this.updateArrival(elapsed);
     }else{
     if(!this.reduced){this.hero.position.y=.08+Math.sin(t*1.7)*.015;this.hero.userData.head.rotation.z=Math.sin(t*.8)*.025;this.gifts.forEach((g,i)=>g.rotation.y=(i?-.2:.12)+Math.sin(t+i)*.025);}
     if(this.chatting&&!this.reaction&&!this.reduced&&this.emotion!=='sleepy'){this.nextHello-=elapsed;if(this.nextHello<=0)this.react('wave');}
@@ -146,6 +179,7 @@ export class KittyRoom{
     u.head.rotation.z=motion.tilt+(this.reduced?0:Math.sin(t*.8)*.016);u.head.rotation.x=this.reduced?0:Math.sin(t*1.6)*.008+this.faceState.joy*.025;
     u.armL.rotation.z=motion.left;u.armR.rotation.z=motion.right;
     }
+    this.petals?.forEach((p,i)=>{const phase=(p.userData.phase+(this.reduced?0:t*.035))%1;p.position.set(Math.sin(phase*5+i)*.65,1.0-phase*2,.06);p.rotation.z=this.reduced?0:Math.sin(t*.5+i)*.35;});
     this.bows.forEach((b,i)=>{if(b.visible){const base=this.bowPositions[this.bowIndices[i]];b.position.y=base[1]+(this.reduced?0:Math.sin(t*1.6+i)*.12);b.rotation.y=.45+Math.sin(t+i)*.25;b.rotation.z=Math.sin(t*1.1+i)*.12;}});
     for(let i=this.confetti.length-1;i>=0;i--){const c=this.confetti[i];c.userData.life-=dt;c.position.addScaledVector(c.userData.velocity,dt);if(!c.userData.heart)c.userData.velocity.y-=3*dt;if(c.userData.life<=0){this.scene.remove(c);c.geometry.dispose();c.material.dispose();this.confetti.splice(i,1);}}
     if(this.treat?.visible){this.treatTime+=elapsed;const age=this.treatTime,p=Math.min(1,age/1.1),ease=p*p*(3-2*p);this.treat.position.set(.65*(1-ease),.65+.55*ease,.58);this.treat.rotation.z=-.2+Math.sin(age*5)*.06;this.treat.scale.setScalar(Math.max(.01,1-Math.max(0,age-1.5)));if(!this.reduced)u.head.rotation.x+=Math.sin(age*11)*.025*ease;if(age>2.5)this.treat.visible=false;}
