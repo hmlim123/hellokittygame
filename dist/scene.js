@@ -6,6 +6,7 @@ import {soften,blinkAmount,expressionTarget} from './expression.js';
 import {avatarPose} from './chat.js';
 import {THEMES} from './state.js';
 import {FriendArrival} from './friend-arrival.js';
+import {makeStrawberry,setHeldGift} from './gifts.js';
 import {makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from './blender-kitty.js';
 export class KittyRoom{
   constructor(container,{asset=null,onSlot=()=>{},onKitty=()=>{},onGift=()=>{},onFrame=()=>{}}={}){
@@ -30,6 +31,13 @@ export class KittyRoom{
     this.slots.forEach((p,i)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.25,1.18,.7),slotmat.clone());m.position.set(p[0],p[1]+.55,p[2]);m.userData={kind:'slot',index:i};this.room.add(m);this.slotTargets.push(m)});
     this.bows=[];this.bowPositions=[[-2.75,2.7,1],[2.5,2.1,1.7],[.5,3.8,-.6],[-1.5,1.2,2.4],[2.9,3.3,-.7],[-2.4,3.6,-1.2],[1.2,1.3,2.65],[-.7,3.1,1.2]];
     for(let i=0;i<4;i++){const bow=makeBow(['#df7799','#c99bce','#dbb76f','#9dbcb4'][i],.58);bow.userData={kind:'bow',index:i};bow.visible=false;this.room.add(bow);this.bows.push(bow)}this.bowIndices=[0,1,2,3];
+    this.huntPositions=this.bowPositions;this.memoryPositions=[[-2.2,2.4,1.2],[-.75,3.0,1.2],[.75,3.0,1.2],[2.2,2.4,1.2]];
+    this.missionGroups={bows:this.bows,strawberries:[],hearts:[]};
+    for(let i=0;i<4;i++){
+      const berry=makeStrawberry();berry.scale.setScalar(1.1);berry.visible=false;this.room.add(berry);this.missionGroups.strawberries.push(berry);
+      const h=heartMesh(['#d77b9e','#b6a2da','#eaca77','#94bdc9'][i],.25);h.visible=false;h.userData.baseScale=h.scale.clone();this.room.add(h);this.missionGroups.hearts.push(h);
+    }
+    this.missionKind='bows';this.missionFlash=-1;this.heldGift='flowers';
     this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();this.confetti=[];this.faceState={joy:0,smile:0,sleepy:0,yawn:0,warmth:0};this.poseState={lift:0,tilt:0,turn:0,left:-.35,right:.35,squash:1};this.blinkTime=-1;this.nextBlink=2.5;this.waveTime=0;this.chatting=false;this.reaction=null;this.nextHello=12;this.selected=false;this.inspect=false;this.night=false;this.hunting=false;this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.arrival=null;
     this.renderer.domElement.addEventListener('pointermove',e=>{const r=this.renderer.domElement.getBoundingClientRect();if(this.asset)setBlenderAttention(this.hero,(e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);});
@@ -113,7 +121,7 @@ export class KittyRoom{
     this.react('catch');
     for(let i=0;i<4;i++){const h=heartMesh(i%2?'#e5a0b9':'#f2c5d3',.045);h.position.copy(position);h.userData={velocity:new THREE.Vector3((i-1.5)*.12,.35+i*.06,0),life:.75+i*.1,heart:true};this.scene.add(h);this.confetti.push(h);}
   }
-  setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
+  setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;if(this.asset)setHeldGift(this.hero,this.heldGift);this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
   setRewardGifts(equipped={},baseTheme='rose'){
     this.rewardEquipped={...equipped};this.baseRewardTheme=baseTheme;
     const colors={sky:['#dce7f2','#b4abd5','#9cbacb'],gold:['#f5e6b9','#d8b56e','#e2c582'],twilight:['#d9d0e9','#9b8dba','#b9a1cc']}[equipped.theme];
@@ -137,6 +145,7 @@ export class KittyRoom{
     }
     this.hero.userData.head.add(this.rewardCrown);this.rewardCrown.visible=equipped.accessory==='crown';
   }
+  setGift(id){this.heldGift=id;if(this.asset)setHeldGift(this.hero,id);}
   react(emotion){if(this.asset){reactBlender(this.hero,emotion,this.reduced);return;}this.emotion=emotion;this.reaction={emotion,elapsed:0};this.waveTime=0;this.nextHello=14;}
   setChat(active){this.chatting=active;if(active){this.inspectKitty();this.react('wave');}else{this.reaction=null;this.resetView();}}
   setTheme(theme){const t=THEMES[theme]||THEMES.rose;this.wallMat.color.set(t.wall);this.rugMat.color.set(t.rug);this.accentMat.color.set(t.accent);}
@@ -145,7 +154,16 @@ export class KittyRoom{
   resetView(){this.inspect=false;this.controls.minDistance=8;this.controls.maxDistance=23;this.controls.target.set(0,1.45,0);this.camera.position.set(10,8.2,12.3);this.resize();}
   inspectKitty(){this.inspect=true;this.controls.target.set(-.12,1.35,.65);this.controls.minDistance=3.3;this.controls.maxDistance=10;this.camera.position.set(2.1,2.8,6.5);this.controls.update();this.waveTime=1.5;}
   rotate(delta){const p=this.camera.position.clone().sub(this.controls.target),s=new THREE.Spherical().setFromVector3(p);s.theta=THREE.MathUtils.clamp(s.theta+delta,this.controls.minAzimuthAngle+.01,this.controls.maxAzimuthAngle-.01);this.camera.position.copy(new THREE.Vector3().setFromSpherical(s).add(this.controls.target));this.controls.update();}
-  showHunt(active){this.hunting=active;this.bows.forEach((b,i)=>{b.visible=active;if(active){this.bowIndices[i]=i;this.moveBow(i)}});if(active)this.resetView();}
+  showHunt(active){this.showMission('bows',active);}
+  showMission(id,active){
+    Object.values(this.missionGroups).flat().forEach(o=>o.visible=false);
+    this.hunting=active;this.missionKind=id;this.missionFlash=-1;
+    this.bows=this.missionGroups[id]||this.missionGroups.bows;
+    this.bowPositions=id==='hearts'?this.memoryPositions:this.huntPositions;
+    this.bows.forEach((b,i)=>{b.visible=active;this.bowIndices[i]=i;if(active){if(id==='hearts')b.position.set(...this.bowPositions[i]);else this.moveBow(i);}});
+    if(active)this.resetView();
+  }
+  setMissionFlash(index){this.missionFlash=index;}
   moveBow(i){const used=this.bowIndices.filter((_,j)=>j!==i);let choices=this.bowPositions.map((_,j)=>j).filter(j=>!used.includes(j)&&j!==this.bowIndices[i]);const next=choices[Math.floor(Math.random()*choices.length)];this.bowIndices[i]=next;this.bows[i].position.set(...this.bowPositions[next]);}
   project(pos){const p=pos.clone().project(this.camera);return {x:(p.x*.5+.5)*this.container.clientWidth,y:(-.5*p.y+.5)*this.container.clientHeight,visible:p.z<1&&p.x>-1&&p.x<1&&p.y>-1&&p.y<1};}
   burst(position){const colors=['#e3a2b4','#ead296','#bca9d5','#b7ccb0'];for(let i=0;i<32;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.035,5,4),material(colors[i%4]));m.position.copy(position);m.userData={velocity:new THREE.Vector3((Math.random()-.5)*3,1+Math.random()*2,(Math.random()-.5)*2),life:1.2+Math.random()*.5};this.scene.add(m);this.confetti.push(m);}}
@@ -155,7 +173,7 @@ export class KittyRoom{
     this.hero.add(this.treat);this.treat.visible=true;this.treatTime=0;
   }
   pick(e){const r=this.renderer.domElement.getBoundingClientRect();this.pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);if(this.selected){const hit=this.ray.intersectObjects(this.slotTargets,false)[0];if(hit){this.onSlot(hit.object.userData.index);return;}}
-    const candidates=[this.hero,...this.shelfDolls,...this.gifts.filter(g=>g.visible)];const hit=this.ray.intersectObjects(candidates,true)[0];if(!hit)return;let p=hit.object;while(p&&!p.userData.kind)p=p.parent;if(p?.userData.kind==='kitty'){this.waveTime=1.6;this.onKitty(p.userData.id,p===this.hero,blenderTouchPart(hit.object));}else if(p?.userData.kind==='gift')this.onGift();}
+    const candidates=[this.hero,...this.shelfDolls,...this.gifts.filter(g=>g.visible)];const hit=this.ray.intersectObjects(candidates,true).find(h=>{for(let o=h.object;o;o=o.parent)if(!o.visible)return false;return true;});if(!hit)return;let p=hit.object;while(p&&!p.userData.kind)p=p.parent;if(p?.userData.kind==='kitty'){this.waveTime=1.6;this.onKitty(p.userData.id,p===this.hero,blenderTouchPart(hit.object));}else if(p?.userData.kind==='gift')this.onGift();}
   frame(){const elapsed=this.clock.getDelta(),dt=Math.min(elapsed,.05),t=this.clock.elapsedTime;const u=this.hero.userData;this.controls.update();if(this.asset){
       updateBlender(this.hero,elapsed,{reduced:this.reduced,idle:!this.hunting&&!this.arrival});
       this.updateArrival(elapsed);
@@ -180,7 +198,7 @@ export class KittyRoom{
     u.armL.rotation.z=motion.left;u.armR.rotation.z=motion.right;
     }
     this.petals?.forEach((p,i)=>{const phase=(p.userData.phase+(this.reduced?0:t*.035))%1;p.position.set(Math.sin(phase*5+i)*.65,1.0-phase*2,.06);p.rotation.z=this.reduced?0:Math.sin(t*.5+i)*.35;});
-    this.bows.forEach((b,i)=>{if(b.visible){const base=this.bowPositions[this.bowIndices[i]];b.position.y=base[1]+(this.reduced?0:Math.sin(t*1.6+i)*.12);b.rotation.y=.45+Math.sin(t+i)*.25;b.rotation.z=Math.sin(t*1.1+i)*.12;}});
+    this.bows.forEach((b,i)=>{if(b.visible){const base=this.bowPositions[this.bowIndices[i]];b.position.y=base[1]+(this.reduced||this.missionKind==='hearts'?0:Math.sin(t*1.6+i)*.12);if(this.missionKind==='hearts')b.scale.copy(b.userData.baseScale).multiplyScalar(this.missionFlash===i&&!this.reduced?1.3:1);b.rotation.y=.45+Math.sin(t+i)*.25;b.rotation.z=Math.sin(t*1.1+i)*.12;}});
     for(let i=this.confetti.length-1;i>=0;i--){const c=this.confetti[i];c.userData.life-=dt;c.position.addScaledVector(c.userData.velocity,dt);if(!c.userData.heart)c.userData.velocity.y-=3*dt;if(c.userData.life<=0){this.scene.remove(c);c.geometry.dispose();c.material.dispose();this.confetti.splice(i,1);}}
     if(this.treat?.visible){this.treatTime+=elapsed;const age=this.treatTime,p=Math.min(1,age/1.1),ease=p*p*(3-2*p);this.treat.position.set(.65*(1-ease),.65+.55*ease,.58);this.treat.rotation.z=-.2+Math.sin(age*5)*.06;this.treat.scale.setScalar(Math.max(.01,1-Math.max(0,age-1.5)));if(!this.reduced)u.head.rotation.x+=Math.sin(age*11)*.025*ease;if(age>2.5)this.treat.visible=false;}
     this.onFrame(elapsed,t);this.renderer.render(this.scene,this.camera);

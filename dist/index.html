@@ -2,34 +2,41 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#fff7f3"><meta name="description" content="A soft little Hello Kitty room. Wave, dance, or find eight bows to bring a new friend home.">
-<title>Hello Kitty · A little happy place</title>
+<meta name="theme-color" content="#fff7f3"><meta name="description" content="A little Hello Kitty world made for Nancy, with gentle missions, gifts, and keepsakes.">
+<title>Nancy’s Hello Kitty · A little happy place</title>
 <link rel="stylesheet" href="./simple.css">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body><main>
-<header><a class="brand" href="./" aria-label="Hello Kitty home"><svg viewBox="0 0 80 48" aria-hidden="true"><path d="M36 17C13-4 1 4 5 25S23 48 38 31M44 17C67-4 79 4 75 25S57 48 42 31" fill="currentColor"/><ellipse cx="40" cy="24" rx="10" ry="11" fill="currentColor"/></svg><span>hello kitty<small>A LITTLE HAPPY PLACE</small></span></a><span class="header-note">a little pause, just for you ♡</span></header>
-<section class="intro"><span class="eyebrow">SLOW DAYS. SMALL JOYS.</span><h1>Your little <em>happy place.</em></h1><p>A wave, a tiny dance, and a friend to bring home.</p></section>
+<header><a class="brand" href="./" aria-label="Hello Kitty home"><svg viewBox="0 0 80 48" aria-hidden="true"><path d="M36 17C13-4 1 4 5 25S23 48 38 31M44 17C67-4 79 4 75 25S57 48 42 31" fill="currentColor"/><ellipse cx="40" cy="24" rx="10" ry="11" fill="currentColor"/></svg><span>hello kitty<small>A LITTLE GIFT FOR <span data-recipient>Nancy</span></small></span></a><span class="header-note">made with love, for <span data-recipient>Nancy</span> ♡</span></header>
+<section class="intro"><span class="eyebrow">SLOW DAYS. SMALL JOYS.</span><h1><span data-recipient>Nancy</span>’s little <em>happy place.</em></h1><p>Little adventures, sweet surprises, and a room made just for you.</p></section>
 <section class="room-card" aria-label="Kitty’s room">
 <div id="stage" class="stage">
 <div id="loading" class="loading" role="status">Getting cozy…</div>
 <span class="scene-label">KITTY’S LITTLE ROOM <span aria-hidden="true">♡</span></span>
 <div class="scene-tools"><button id="sound" class="camera-reset" aria-label="Turn sound on" aria-pressed="false">♫ Off</button><button id="resetCamera" class="camera-reset" aria-label="Reset camera view">Reset view ↺</button></div>
-<div id="huntHud" class="hunt-hud" hidden><span><b id="hits">0</b> / 8 bows</span><span id="time">0:45</span><button id="pause" aria-label="Pause bow hunt">Pause</button></div>
+<div id="huntHud" class="hunt-hud" hidden><span><b id="hits">0</b> / <span id="missionGoal">8</span> <span id="missionItem">bows</span></span><span id="time">0:45</span><button id="replayMemory" hidden>Watch again</button><button id="pause" aria-label="Pause bow hunt">Pause</button></div>
 <div id="bowTargets" class="targets"></div>
 <div id="pausePanel" class="pause-panel" hidden><div><span class="eyebrow">TAKE YOUR TIME</span><h2>A little pause.</h2><button id="resume" class="primary">Keep playing</button></div></div>
 <p id="toast" class="toast" role="status"></p>
-<span id="sceneHint" class="scene-hint">Tap her bow, flowers, or head · Drag to look around</span>
+<span id="sceneHint" class="scene-hint" role="status">Tap her bow, present, or head · Drag to look around</span>
 <div id="webglError" class="error-panel" hidden><h2>Kitty needs a moment.</h2><p>The room couldn’t load. Please try reloading this page.</p><button id="reload" class="primary">Try again</button></div>
 </div>
 <div class="action-bar" aria-label="Play with Kitty">
 <button id="wave" class="action" disabled><span aria-hidden="true">♡</span><strong>Wave hello</strong><small>A paw &amp; a wink</small></button>
 <button id="dance" class="action" disabled><span aria-hidden="true">♫</span><strong>Little dance</strong><small>A happy wiggle</small></button>
-<button id="startHunt" class="action play" disabled><span aria-hidden="true">✧</span><strong id="huntButtonLabel">Find bows</strong><small id="huntButtonHint">8 bows, 1 new friend</small></button>
+<button id="startHunt" class="action play" disabled><span aria-hidden="true">✧</span><strong id="huntButtonLabel">Play a mission</strong><small id="huntButtonHint">Missions &amp; little gifts</small></button>
 </div>
 </section>
-<p class="room-message" id="roomMessage" role="status">No rush. Kitty’s happy you’re here.</p>
-<details class="shelf-panel" id="shelfPanel"><summary><span>Your little shelf <small id="collectionCount">1 of 6 friends</small></span><span class="expand-icon" aria-hidden="true">+</span></summary><div class="shelf-content"><p>Find eight bows to bring another friend home. Choose a friend to play with.</p><div id="collection" class="collection-grid"></div><div class="room-settings"><span>Room color</span><div class="palette" aria-label="Room color"><button data-theme="rose" style="--swatch:#e8bfca" aria-label="Rose milk" aria-pressed="true"></button><button data-theme="lavender" style="--swatch:#c8b8df" aria-label="Lavender" aria-pressed="false"></button><button data-theme="peach" style="--swatch:#e8ccb0" aria-label="Peach cream" aria-pressed="false"></button><button data-theme="mint" style="--swatch:#bfceba" aria-label="Mint tea" aria-pressed="false"></button></div><label class="relaxed-setting"><input type="checkbox" id="relaxed"> Relaxed hunt <small>No timer</small></label><small id="saveStatus">Your friends save here automatically.</small></div></div></details>
+<p class="room-message" id="roomMessage" role="status">No rush, Nancy. This little happy place is yours. ♡</p>
+<details class="shelf-panel" id="shelfPanel"><summary><span>Your little shelf <small id="collectionCount">1 of 6 friends</small></span><span class="expand-icon" aria-hidden="true">+</span></summary><div class="shelf-content"><p>Complete a mission to bring another friend home. Choose a friend to play with.</p><div id="collection" class="collection-grid"></div><div class="room-settings"><span>Room color</span><div class="palette" aria-label="Room color"><button data-theme="rose" style="--swatch:#e8bfca" aria-label="Rose milk" aria-pressed="true"></button><button data-theme="lavender" style="--swatch:#c8b8df" aria-label="Lavender" aria-pressed="false"></button><button data-theme="peach" style="--swatch:#e8ccb0" aria-label="Peach cream" aria-pressed="false"></button><button data-theme="mint" style="--swatch:#bfceba" aria-label="Mint tea" aria-pressed="false"></button></div><small id="saveStatus">Your friends save here automatically.</small></div></div></details>
 <footer>A small, unofficial fan-made happy place. Hello Kitty © Sanrio.</footer>
+<dialog id="adventureModal" class="adventure-modal" aria-labelledby="adventureTitle">
+<button id="closeAdventures" class="close" aria-label="Close adventures">×</button><span class="eyebrow">A LITTLE WORLD MADE FOR YOU</span><h2 id="adventureTitle"><span data-recipient>Nancy</span>’s little adventures</h2>
+<div class="adventure-tabs" role="tablist" aria-label="Adventures and gifts"><button id="tab-missions" role="tab" aria-selected="true" aria-controls="panel-missions">Missions</button><button id="tab-gifts" role="tab" aria-selected="false" aria-controls="panel-gifts" tabindex="-1">Gifts</button><button id="tab-nancy" role="tab" aria-selected="false" aria-controls="panel-nancy" tabindex="-1">For <span data-recipient>Nancy</span></button></div>
+<section id="panel-missions" role="tabpanel" aria-labelledby="tab-missions"><p>Pick a little adventure. Every completed mission can bring a new friend home.</p><div id="missionCards" class="mission-cards"></div><label class="relaxed-setting"><input type="checkbox" id="relaxed"> Relaxed hunt <small>No timer</small></label><p class="small-note">Take your time. Memory Hearts always has no timer.</p></section>
+<section id="panel-gifts" role="tabpanel" aria-labelledby="tab-gifts" hidden><p>Choose what Kitty holds. Tap her present in the room and she’ll offer it to you.</p><div id="giftChoices" class="gift-choices"></div><p id="giftFeedback" role="status"></p><button id="backToKitty" class="primary">Back to Kitty</button></section>
+<section id="panel-nancy" role="tabpanel" aria-labelledby="tab-nancy" hidden><article class="nancy-letter"><span aria-hidden="true">♡</span><h3>For <span data-recipient>Nancy</span>,</h3><p>This little room was made just for you. A soft place to smile, take a breath, and find a little happy whenever you need it.</p><p>A little adventure, a little surprise, and a whole lot of love.</p><p class="signature">With love, always ♡</p></article><h3 class="keepsake-heading">Your little keepsakes</h3><div id="keepsakes" class="keepsakes"></div><small id="journalStatus">Your memories save in this browser.</small></section>
+</dialog>
 <dialog id="rewardModal"><button id="closeResult" class="close" aria-label="Close result">×</button><span class="result-heart" aria-hidden="true">♡</span><span class="eyebrow" id="rewardEyebrow">A LITTLE ADVENTURE</span><h2 id="rewardTitle">Lovely playing together.</h2><p id="rewardText"></p><button id="rewardDone" class="primary">Back to Kitty</button></dialog>
 </main><script type="module" src="./app.js"></script></body></html>

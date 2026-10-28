@@ -54,6 +54,7 @@ export function setBlenderAttention(hero,x=0,y=0){
 export function blenderTouchPart(object){
   let o=object;
   while(o){
+    if(o.userData.interaction)return o.userData.interaction;
     if(o.name.startsWith('Bow_'))return 'tilt';
     if(/^(Pink_daisy|Yellow_daisy|Pink_flower|Yellow_flower|Bouquet_leaf|Leaf_vein)/.test(o.name))return 'offer';
     o=o.parent;

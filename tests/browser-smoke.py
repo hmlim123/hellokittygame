@@ -37,7 +37,7 @@ with sync_playwright() as p:
     page.locator('#shelfPanel summary').click()
     assert page.locator('[data-doll]').count()==6
     print('START',page.locator('#collectionCount').inner_text())
-    page.locator('#startHunt').click()
+    page.locator('#startHunt').click();page.locator('[data-mission="bows"]').click()
     assert page.locator('#huntHud').is_visible()
     page.locator('#pause').click();t=page.locator('#time').inner_text();page.wait_for_timeout(500)
     assert page.locator('#time').inner_text()==t
@@ -71,11 +71,11 @@ with sync_playwright() as p:
     assert page.evaluate("localStorage.getItem('kitty-adventures-v1')")=='{"balance":55}'
     assert page.evaluate("localStorage.getItem('kitty-care-v1')")=='{"hearts":8}'
     # Relaxed mode persists and never shows a countdown.
-    page.locator('#shelfPanel summary').click();page.locator('#relaxed').check()
+    page.locator('#startHunt').click();page.locator('#relaxed').check();page.locator('#closeAdventures').click()
     page.reload();page.wait_for_function("!document.querySelector('#wave').disabled")
     assert page.locator('#relaxed').is_checked()
     # A partial hunt never removes progress or creates a new doll.
-    page.locator('#startHunt').click();page.wait_for_timeout(500)
+    page.locator('#startHunt').click();page.locator('[data-mission="bows"]').click();page.wait_for_timeout(500)
     assert page.locator('#time').inner_text()=='No timer'
     page.locator('#startHunt').click();page.wait_for_function("document.querySelector('#rewardModal').open")
     assert page.locator('#collectionCount').inner_text()=='3 of 6 friends'
@@ -90,7 +90,7 @@ with sync_playwright() as p:
     assert mobile.locator('#collection').is_visible()
     assert page.locator('#chatPanel').count()==0
     assert page.locator('#adventureRewards').count()==0
-    assert mobile.locator('#relaxed').is_visible()
+    mobile.locator('#startHunt').tap();assert mobile.locator('#relaxed').is_visible();mobile.locator('#closeAdventures').tap()
     assert not errors,errors
     print('PASS: WebGL startup, wave/dance, bow hunt, pause, reward, replay/reload, legacy collections, save preservation, mobile and reduced-motion startup')
     browser.close()

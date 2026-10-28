@@ -65,3 +65,15 @@ test('touch targets use the actual bow and bouquet meshes; offering moves the bo
   const bouquet=b.model.getObjectByName('CTRL_Bouquet'),before=bouquet.position.clone();
   reactBlender(hero,'offer');updateBlender(hero,.8);assert.ok(bouquet.position.distanceTo(before)>.1);
 });
+
+test('gift choices replace only the bouquet and remain attached to its Blender controller',async()=>{
+  const {setHeldGift}=await import('../dist/gifts.js');
+  const hero=makeBlenderKitty(asset),b=hero.userData.blender,head=b.model.getObjectByName('Head'),geometry=head.geometry;
+  const bouquet=b.model.getObjectByName('CTRL_Bouquet');
+  setHeldGift(hero,'teddy');assert.equal(b.gift,'teddy');assert.ok(b.gifts.original.every(o=>!o.visible));
+  const teddy=b.gifts.cache.get('teddy');assert.equal(teddy.parent,bouquet);assert.equal(blenderTouchPart(teddy.children[0]),'offer');
+  setHeldGift(hero,'letter');assert.equal(teddy.visible,false);assert.equal(b.gifts.cache.get('letter').visible,true);
+  setHeldGift(hero,'strawberry');assert.equal(b.gifts.cache.get('strawberry').parent,bouquet);
+  setHeldGift(hero,'flowers');assert.ok(b.gifts.original.every(o=>o.visible));assert.equal(head.geometry,geometry);
+  setHeldGift(hero,'unknown');assert.equal(b.gift,'flowers');
+});

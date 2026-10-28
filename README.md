@@ -1,33 +1,47 @@
-# Hello Kitty · A little happy place
+# Nancy’s Hello Kitty · A little happy place
 
-A small browser game built around **our actual Blender Hello Kitty model**.
-The home page has just three actions:
+A small browser game made as a gift for Nancy, built around **our actual Blender
+Hello Kitty model**. The home page keeps three actions: **Wave hello**, **Little
+dance**, and **Play a mission**. The mission button opens one tidy panel with
+**Missions**, **Gifts**, and **For Nancy** tabs. The tabs support arrow-key navigation.
 
-- **Wave hello:** a raised, thumb-free paw and the Blender wink.
-- **Little dance:** the character’s exported bounce and sway.
-- **Find bows:** find eight bows in 45 seconds to bring one new friend home.
+## Nancy’s little adventures
 
-Kitty gently breathes and blinks, follows nearby pointer movement, and blends
-between poses. Tap her bow to tilt her head, her bouquet to offer flowers, or
-her head to pet her. The interactions use the actual imported model meshes.
+| Mission | How to play | Finish |
+| --- | --- | --- |
+| Bow Hunt | Find the floating bows | 8 bows; 45 seconds or relaxed mode |
+| Strawberry Picnic | Gather the 3D strawberries | 6 berries; 40 seconds or relaxed mode |
+| Memory Hearts | Watch four numbered hearts light up, then repeat their order | Correct 4-heart sequence; no timer |
 
-When a new friend is unlocked, she enters the room, waves, then settles onto
-her shelf. Ownership is saved immediately before that celebration. Escape can
-skip the arrival. Reduced-motion mode settles the friend immediately.
+Memory Hearts accepts input only after the cue sequence. A wrong answer replays
+the same sequence, with no penalty. **Watch again** resets the current attempt;
+pause freezes both cues and input. Relaxed mode removes the timer from the two
+collecting missions. A completed mission brings another friend home until all
+six are collected; replaying remains available afterwards.
 
-Optional music-box sound starts only when you turn it on. Catches and arrivals
-have little synthesized chimes; sound suspends when the tab is hidden. No audio
-files or services are required. A few slow petals float beside the window.
+Every mission’s first completion opens one keepsake note for Nancy in **For
+Nancy**. The panel also contains a personal love note. There are no streaks,
+deadlines, currencies, or chores attached to the keepsakes.
 
-The collection, room colors, and **Relaxed hunt (no timer)** setting sit inside
-a single expandable shelf panel. Relaxed hunts still require eight catches,
-and paused hunts accept no catches. The play-pace setting saves separately in
-`kitty-room-preferences-v1`; audio starts off on each visit.
-There is no chat, shop, wallet, daily checklist, personalization flow, or extra
-game navigation on the main page. All six friends use the imported Blender
-character, with outfit recolors for the collection variants.
+## Little gifts and moments
 
-![The simplified room with the imported Blender model](docs/simple-room-desktop.png)
+In **Play a mission → Gifts**, choose **flowers**, a **cuddle teddy**, a **sweet
+strawberry**, or a **heart-sealed love letter**. Tap the present in Kitty’s paws
+to have her offer it to Nancy. The choice saves and follows the selected friend.
+The original flowers are part of the Blender model; the additional lightweight
+3D gift props attach to the same exported bouquet controller. The character
+itself remains the actual Blender mesh and rig.
+
+Kitty breathes and blinks gently, follows nearby pointer movement, and blends
+between poses. Tap her bow for a head tilt or her head for a pet. New friends
+enter, wave, and settle onto the shelf. Ownership saves **before** the welcome;
+Escape skips it, and reduced motion settles the friend immediately.
+
+Optional music-box sound starts only when enabled, with chimes for catches and
+arrivals. Audio suspends when the tab is hidden. A few slow petals float by the
+window. The shelf and room colors remain in one expandable panel below the room.
+
+![Nancy’s room with her cuddle teddy](docs/nancy-teddy-room.png)
 
 ## Run locally
 
@@ -111,6 +125,12 @@ and tests remain in the repository, but it is no longer linked from the home
 page. Chat, care, and reward modules are retained for compatibility. Their interfaces
 are not part of the simplified page; the scene still shares some legacy helpers.
 
+Nancy’s mission counts and keepsake unlocks use `kitty-nancy-missions-v1`.
+The held gift and relaxed setting use `kitty-room-preferences-v1`. These keys
+are separate from the pre-existing collection, care, and wallet saves. Mission
+completion updates the journal and friend collection once; wrong memory answers,
+replays of the cues, and unfinished missions award neither a friend nor a keepsake.
+
 Progress is local to the same browser and site address. Moving to another host,
 using another device, or clearing site data means a different save. Blocked
 storage shows a saving warning. There are no accounts, remote chat requests,
@@ -126,9 +146,11 @@ npm ci
 npm test
 ```
 
-37 automated checks cover the Blender asset, real paw and wink playback, pose
+43 automated checks cover the Blender asset, real paw and wink playback, pose
 reset, continuous gesture switching, bounded attention, blinking, touch targets,
-friend arrivals, opt-in audio, relaxed hunts, reduced motion, independent model instances, collection migration, bow
+friend arrivals, opt-in audio, relaxed hunts, gift replacement, timed/memory
+mission rules, keepsake persistence, reduced motion, independent model instances,
+collection migration, bow
 hunt rules, saved progress, and the retained legacy modules.
 
 Browser checks exercised actual WebGL loading, wave/dance, a complete eight-bow
@@ -136,13 +158,17 @@ hunt, pause/resume, partial completion, unlock persistence across reloads, old
 collection migration, saved theme and selection, untouched care/wallet saves,
 phone layout, touch raycasts, optional sound, relaxed-mode persistence, and
 ownership saved before the visible arrival finishes. The compatibility renderer
-was also checked with WebGL disabled. Preview screenshots are in `docs/simple-room-*.png`.
+was also checked with WebGL disabled. The mission browser checks exercise all
+four gift choices, gift persistence, a full Strawberry Picnic, memory cues,
+wrong-answer replay and completion, Nancy’s notes, keyboard tabs and mobile gifts.
+Preview screenshots are in `docs/simple-room-*.png`.
 
 The browser smoke test is also saved in `tests/browser-smoke.py`. With the local
 server on port 8012, Python Playwright and its Chromium installed, run:
 
 ```sh
 python tests/browser-smoke.py
+python tests/missions-browser.py
 ```
 
 Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
@@ -157,6 +183,8 @@ Chromium executable. This test writes the documented screenshots into `docs/`.
 | `dist/blender-kitty.js` | Imported model, pose blending, idle motion and touches |
 | `dist/friend-arrival.js` | Arrival timing and shelf placement |
 | `dist/sound.js` | Opt-in synthesized music and chimes |
+| `dist/missions.js` | Mission state, memory cues, and Nancy’s keepsakes |
+| `dist/gifts.js` | Optional held props on the actual Blender rig |
 | `dist/assets/hello-kitty.glb` | Actual exported Blender character |
 | `dist/scene.js` | Three.js room, camera, and interactions |
 | `scripts/export_blender.py` | Reproducible Blender-to-game export |
