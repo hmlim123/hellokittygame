@@ -44,8 +44,9 @@ test('interacting beside either entrance travels between maps and keeps the ques
  }
 });
 test('village hints lead around obstacles to Momo and then to the off-screen dungeon entrance',()=>{
- const s=normalizeAdventure();
  const dirs={'↑':'up','↓':'down','←':'left','→':'right'};
+ for(const start of [{},{x:12,z:1}]){
+ const s=normalizeAdventure(start);
  for(const accepted of [false,true]){
   s.accepted=accepted;
   let steps=0;
@@ -54,4 +55,5 @@ test('village hints lead around obstacles to Momo and then to the off-screen dun
   assert.equal(s.map,'village');assert.equal(steps>0,true);
  }
  interactAdventure(s);assert.equal(s.map,'garden');assert.equal(villageDirections(s),'');
+ }
 });

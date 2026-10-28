@@ -55,7 +55,7 @@ export function villageDirections(s){
   }
   for(const [d,[dx,dz]] of Object.entries(DIRECTIONS)){
    const x=p.x+dx,z=p.z+dz,key=`${x},${z}`;
-   if(!seen.has(key)&&walkable(s,x,z)){seen.add(key);queue.push({x,z,first:p.first||d,steps:p.steps+1});}
+   if(!seen.has(key)&&walkable(s,x,z)&&MAPS.village.rows[z][x]!=='D'){seen.add(key);queue.push({x,z,first:p.first||d,steps:p.steps+1});}
   }
  }
  return `${name} · follow the cream path`;
