@@ -73,12 +73,24 @@ open three treasure chests, help the cloud guardian in a three-turn conversation
 open the moon gate, and restore Nancy’s moonflower at the shrine. The current
 chapter has one village, one dungeon, and a complete ending. There is no timer.
 
+Walk next to Momo to start the quest automatically, and approach a chest to collect
+its charm. Discoveries show an illustrated card without stopping movement or
+requiring a dismiss button. Charms rise above their chests with a small burst of
+hearts and stars; lids ease open. The cloud guardian starts talking on approach,
+with three deliberate conversation choices. The ready gate opens and the shrine
+finishes the quest on approach. Encounters do not immediately repeat after closing
+a conversation, and collected treasure never awards twice. The bag shows matching
+charm illustrations; the guardian and ending have illustrated portraits. Reduced
+motion keeps the images and removes moving particles.
+
+![A charm discovered automatically](docs/nancy-treasure-discovery.png)
+
 To reach the dungeon, walk through the upper-right pink arch, use **Enter dungeon**
 beside it, or tap the arch or its label. Entering starts the quest automatically;
 talking to Momo first is optional. The same entrance works from either side of
 the arch. Direction hints guide you to Momo and, after accepting the quest, the
 entrance even when it is off-screen.
-If a browser still shows the older entrance, open `adventure.html?v=dungeon-3`.
+If a browser still shows the older entrance, open `adventure.html?v=encounters-4`.
 The entry script, quest module and stylesheet also carry this release query so
 the browser requests the matching update without clearing Nancy’s saved progress.
 
@@ -224,6 +236,9 @@ persistence, cancellation, and touch placement on a phone. The adventure browser
 village/dungeon quest using real keyboard controls, reloads mid-quest, finishes
 the guardian/gate/shrine sequence, checks the room reward only arrives once, and
 checks phone movement and the bag.
+The quest-effects browser test checks automatic pickup, loaded illustrations,
+particle cleanup, no repeated pickup, and the phone software renderer with
+reduced motion.
 Preview screenshots are in `docs/simple-room-*.png`.
 
 The browser smoke test is also saved in `tests/browser-smoke.py`. With the local
@@ -234,6 +249,7 @@ python tests/browser-smoke.py
 python tests/missions-browser.py
 python tests/items-browser.py
 python tests/adventure-browser.py
+python tests/quest-effects-browser.py
 ```
 
 Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
@@ -254,6 +270,7 @@ Chromium executable. This test writes the documented screenshots into `docs/`.
 | `dist/letter.js` | User-authored letter content (pending) |
 | `dist/adventure.html`, `dist/adventure.js` | Separate RPG map and controls |
 | `dist/adventure-state.js` | Maps, collision, quests, save repair and reward rules |
+| `dist/adventure-effects.js`, `dist/assets/quest/` | Discovery effects and original vector illustrations |
 | `dist/assets/hello-kitty.glb` | Actual exported Blender character |
 | `dist/scene.js` | Three.js room, camera, and interactions |
 | `scripts/export_blender.py` | Reproducible Blender-to-game export |

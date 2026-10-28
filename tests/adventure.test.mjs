@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MAPS,normalizeAdventure,walkable,moveAdventure,interactAdventure,claimAdventureReward,questText,villageDirections,enterAdventurePath} from '../dist/adventure-state.js';
+import {MAPS,normalizeAdventure,walkable,moveAdventure,interactAdventure,claimAdventureReward,questText,villageDirections,enterAdventurePath,AdventureEncounters} from '../dist/adventure-state.js';
 function route(s,x,z){
  const queue=[[s.x,s.z,[]]],seen=new Set([`${s.x},${s.z}`]);
  for(let i=0;i<queue.length;i++){const [a,b,path]=queue[i];if(a===x&&b===z)return path;for(const [d,dx,dz] of [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]]){const nx=a+dx,nz=b+dz,k=`${nx},${nz}`;if(!seen.has(k)&&walkable(s,nx,nz)){seen.add(k);queue.push([nx,nz,[...path,d]]);}}}return null;
@@ -19,6 +19,22 @@ test('the village arch starts the quest automatically while the moon gate remain
  const s=normalizeAdventure();assert.equal(moveAdventure(s,'invalid').moved,false);
  s.x=12;s.z=3;assert.equal(moveAdventure(s,'up').changedMap,true);assert.equal(s.map,'garden');assert.equal(s.accepted,true);
  s.x=7;s.z=6;assert.equal(moveAdventure(s,'up').moved,false);
+});
+test('approaching starts the quest and opens chests once without interaction buttons',()=>{
+ const e=new AdventureEncounters(),s=normalizeAdventure({x:5,z:6});
+ const momo=e.take(s);assert.equal(momo.type,'M');interactAdventure(s,'accept',momo);assert.equal(s.accepted,true);assert.equal(e.take(s),undefined);
+ Object.assign(s,{map:'garden',x:3,z:8});const chest=e.take(s);assert.equal(chest.id,'rose');const reveal=interactAdventure(s,undefined,chest);
+ assert.equal(reveal.art,'rose');assert.equal(reveal.chime,true);assert.deepEqual(s.charms,['rose']);assert.equal(e.take(s),undefined);
+ s.x=4;s.z=9;e.take(s);s.x=3;s.z=8;assert.equal(e.take(s),undefined,'Collected treasure never triggers again');
+});
+test('encounters rearm only after leaving, and the guardian takes priority over a nearby locked gate',()=>{
+ const e=new AdventureEncounters(),s=normalizeAdventure({accepted:true,map:'garden',x:7,z:6,charms:['rose','honey','sky']});
+ const cloud=e.take(s);assert.equal(cloud.type,'Q');e.mark(s,MAPS.garden.objects.find(o=>o.type==='G'));assert.equal(e.take(s),undefined);
+ for(const choice of ['listen','story','wave'])interactAdventure(s,choice,cloud);
+ const gate=e.take(s);assert.equal(gate.type,'G');interactAdventure(s,undefined,gate);assert.equal(s.gate,true);assert.equal(e.take(s),undefined);
+ Object.assign(s,{x:7,z:3});const shrine=e.take(s);assert.equal(shrine.type,'S');interactAdventure(s,undefined,shrine);assert.equal(s.complete,true);assert.equal(e.take(s),undefined);
+ const hint=normalizeAdventure({accepted:true,map:'garden',x:8,z:7}),visits=new AdventureEncounters();assert.equal(visits.take(hint).type,'Q');assert.equal(visits.take(hint),undefined);
+ hint.z=9;visits.take(hint);hint.z=7;assert.equal(visits.take(hint).type,'Q');
 });
 test('chests never duplicate charms and corrupt progress cannot open the shrine',()=>{
  const s=normalizeAdventure({accepted:true,map:'garden',x:3,z:8,facing:'up'});interactAdventure(s);interactAdventure(s);assert.deepEqual(s.charms,['rose']);
@@ -56,7 +72,7 @@ test('village hints lead around obstacles to Momo and then to the off-screen dun
   s.accepted=accepted;
   let steps=0;
   while(dirs[villageDirections(s)[0]]){assert.equal(moveAdventure(s,dirs[villageDirections(s)[0]]).moved,true);assert.ok(++steps<40);}
-  assert.match(villageDirections(s),accepted?/press Enter dungeon/:/press Talk to Momo/);
+  assert.match(villageDirections(s),accepted?/walk through or tap/:/little quest awaits/);
   assert.equal(s.map,'village');assert.equal(steps>0,true);
  }
  interactAdventure(s);assert.equal(s.map,'garden');assert.equal(villageDirections(s),'');

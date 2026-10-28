@@ -12,10 +12,11 @@ with sync_playwright() as p:
  def stale_module(route):
   stale.append(route.request.url);route.fulfill(status=200,content_type='text/javascript',body='throw new Error("Old adventure script used");')
  for name in ['adventure.js','adventure-state.js']:page.route('**/'+name,stale_module)
- page.goto(base+'/adventure.html?v=dungeon-3');page.wait_for_function("document.querySelector('#loading').hidden",timeout=60000)
- assert page.locator('html').get_attribute('data-release')=='dungeon-3' and not stale
+ page.goto(base+'/adventure.html?v=encounters-4');page.wait_for_function("document.querySelector('#loading').hidden",timeout=60000)
+ assert page.locator('html').get_attribute('data-release')=='encounters-4' and not stale
  assert page.locator('#error').is_hidden()
- maps=page.evaluate("async()=>{const {MAPS}=await import('./adventure-state.js?v=dungeon-3');return MAPS;}")
+ page.evaluate("document.addEventListener('animationstart',e=>{if(e.animationName==='treasure-spark')document.documentElement.dataset.sparksSeen='true'})")
+ maps=page.evaluate("async()=>{const {MAPS}=await import('./adventure-state.js?v=encounters-4');return MAPS;}")
  def state():return page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'))")
  keys={'up':'ArrowUp','down':'ArrowDown','left':'ArrowLeft','right':'ArrowRight'}
  def move_to(x,z,touch=False):
@@ -36,27 +37,37 @@ with sync_playwright() as p:
    else:page.keyboard.press(keys[d])
    if rows[nz][nx] in 'DE':page.wait_for_function("arg=>JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).map!==arg",arg=s['map'])
    else:page.wait_for_function("p=>{const s=JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'));return s.x===p[0]&&s.z===p[1]}",arg=[nx,nz])
-  page.wait_for_function("!document.querySelector('#interact').disabled")
+  page.wait_for_function("!document.querySelector('#interact').disabled || document.querySelector('#story').open")
  def face(d):page.keyboard.press(keys[d]);page.wait_for_timeout(100)
  def talk():page.locator('#interact').click();page.wait_for_function("document.querySelector('#story').open")
  def close():page.locator('#closeStory').click()
  page.screenshot(path=str(out/'nancy-adventure-village.png'),full_page=True)
- move_to(5,6);talk();page.get_by_role('button',name='Let’s help!').click();assert state()['accepted'];close()
+ move_to(5,6);page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).accepted");assert page.locator('#story').is_hidden()
+ assert page.locator('#discoveryImage').get_attribute('src').endswith('momo.svg?v=encounters-4')
  assert 'Dungeon entrance' in page.locator('#wayfinder').inner_text()
- move_to(12,3);assert 'press Enter dungeon' in page.locator('#wayfinder').inner_text()
+ move_to(12,3);assert 'walk through or tap' in page.locator('#wayfinder').inner_text()
  page.get_by_role('button',name='Enter dungeon',exact=True).click();assert state()['map']=='garden'
  assert page.locator('#wayfinder').is_hidden() and page.locator('#story').is_hidden()
  page.screenshot(path=str(out/'nancy-adventure-garden.png'),full_page=True)
- for x,z in [(3,8),(11,8),(4,11)]:move_to(x,z);face('up');talk();close()
+ for i,(x,z) in enumerate([(3,8),(11,8),(4,11)]):
+  move_to(x,z);page.wait_for_function("n=>JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).charms.length>=n",arg=i+1)
+  assert page.locator('#story').is_hidden(),'Treasure must not require dismissing a dialogue'
+  assert page.locator('#discoveryImage').is_visible()
+  page.wait_for_function("document.querySelector('#discoveryImage').naturalWidth>0")
+ assert page.locator('html').get_attribute('data-sparks-seen')=='true'
+ page.screenshot(path=str(out/'nancy-treasure-discovery.png'),full_page=True)
  assert len(state()['charms'])==3
  page.reload();page.wait_for_function("document.querySelector('#loading').hidden");assert len(state()['charms'])==3
- move_to(7,6);face('right');talk()
- page.get_by_role('button',name='Listen',exact=True).click();page.get_by_role('button',name='Tell a story',exact=True).click();page.get_by_role('button',name='Wave hello',exact=True).click();assert state()['guardian'];close()
- face('up');talk();assert state()['gate'];close();move_to(7,3);face('up');talk()
+ move_to(7,6);page.wait_for_function("document.querySelector('#story').open")
+ assert page.locator('#storyImage').is_visible()
+ page.get_by_role('button',name='Listen',exact=True).click();page.get_by_role('button',name='Tell a story',exact=True).click();page.get_by_role('button',name='Wave hello',exact=True).click();assert state()['guardian']
+ page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).gate");assert page.locator('#story').is_hidden()
+ move_to(7,3);page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).complete")
  assert state()['complete']
  room=page.evaluate("JSON.parse(localStorage.getItem('kitty-room-3d-v1'))");assert room['adventureRewarded'] and len(room['owned'])==2
  page.screenshot(path=str(out/'nancy-adventure-ending.png'),full_page=True)
- close();talk();assert page.evaluate("JSON.parse(localStorage.getItem('kitty-room-3d-v1')).owned")==room['owned'];close()
+ close();page.wait_for_timeout(350);assert page.locator('#story').is_hidden(),'The same encounter must not reopen immediately'
+ talk();assert page.evaluate("JSON.parse(localStorage.getItem('kitty-room-3d-v1')).owned")==room['owned'];close()
  page.reload();page.wait_for_function("document.querySelector('#loading').hidden");assert state()['complete']
  page.locator('#bag').click();assert page.locator('#charms .missing').count()==0;page.locator('#backToWorld').click()
  page.goto(base);page.wait_for_function("!document.querySelector('#wave').disabled");assert page.locator('#collectionCount').inner_text()=='2 of 6 friends'
@@ -67,7 +78,7 @@ with sync_playwright() as p:
  assert m.evaluate('document.documentElement.scrollWidth<=innerWidth');m.screenshot(path=str(out/'nancy-adventure-mobile.png'),full_page=True)
  m.locator('#bag').tap();assert m.locator('#inventory').is_visible();m.locator('#backToWorld').tap();assert not errors,errors
  page=m
- move_to(12,3,touch=True);assert not state()['accepted']
+ move_to(12,3,touch=True)
  m.get_by_role('button',name='Enter dungeon',exact=True).tap();assert state()['map']=='garden' and state()['accepted']
  move_to(7,11,touch=True);m.get_by_role('button',name='Back to village',exact=True).tap();assert state()['map']=='village'
  m.get_by_role('button',name='Enter dungeon ↗',exact=True).tap();assert state()['map']=='garden'
@@ -75,6 +86,10 @@ with sync_playwright() as p:
  arch=m.get_by_role('button',name='Enter dungeon ↗',exact=True).bounding_box()
  m.touchscreen.tap(arch['x']+arch['width']/2,arch['y']+arch['height']+15)
  assert state()['map']=='garden','Tapping the arch geometry should enter, too'
+ move_to(4,11,touch=True);m.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).charms.includes('sky')")
+ assert m.locator('#story').is_hidden() and m.locator('#discoveryImage').is_visible()
+ assert m.locator('.discovery-burst').count()==0,'Reduced motion keeps the illustration without particles'
+ assert m.evaluate('document.documentElement.scrollWidth<=innerWidth')
  assert m.locator('#story').is_hidden() and not errors,errors
  print('PASS: keyboard and touch dungeon entry, direction hints, village dialogue, all dungeon chests, reload, guardian turns, gate, shrine, one reward, room integration and bag')
  b.close()

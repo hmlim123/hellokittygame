@@ -51,7 +51,7 @@ export function villageDirections(s){
  for(let i=0;i<queue.length;i++){
   const p=queue[i];
   if(Math.abs(p.x-target.x)+Math.abs(p.z-target.z)===1){
-   if(!p.steps)return s.accepted?'Pink arch · press Enter dungeon to go inside':'Momo is beside you · press Talk to Momo';
+   if(!p.steps)return s.accepted?'Pink arch · walk through or tap to enter':'Momo is beside you · a little quest awaits';
    return `${{up:'↑',down:'↓',left:'←',right:'→'}[p.first]} ${name} · ${p.steps} ${p.steps===1?'step':'steps'} away`;
   }
   for(const [d,[dx,dz]] of Object.entries(DIRECTIONS)){
@@ -61,8 +61,26 @@ export function villageDirections(s){
  }
  return `${name} · follow the cream path`;
 }
-export function interactAdventure(s,choice){
- const o=nearbyObject(s);if(!o)return {speaker:'Kitty',text:'Let’s look around. Walk next to a friend, a chest, or a sign, then interact.'};
+export class AdventureEncounters{
+ constructor(){this.contacts=new Set();}
+ key(s,o){return `${s.map}:${o.type}:${o.id||''}:${o.type==='G'&&s.guardian?'ready':o.type==='Q'&&s.charms.length===3?'ready':'waiting'}`;}
+ take(s){
+  const near=MAPS[s.map].objects.filter(o=>['M','C','Q','G','S'].includes(o.type)&&Math.abs(o.x-s.x)+Math.abs(o.z-s.z)<=1);
+  const keys=new Set(near.map(o=>this.key(s,o)));this.contacts=new Set([...this.contacts].filter(k=>keys.has(k)));
+  const eligible=o=>o.type==='M'?!s.accepted:o.type==='C'?!s.charms.includes(o.id):o.type==='Q'?!s.guardian:o.type==='G'?!s.gate:!s.complete&&s.gate;
+  const rank=o=>o.type==='Q'&&s.charms.length===3?5:o.type==='G'&&s.guardian?4:o.type==='C'||o.type==='S'?3:o.type==='M'?2:1;
+  const o=near.filter(o=>eligible(o)&&!this.contacts.has(this.key(s,o))).sort((a,b)=>rank(b)-rank(a))[0];
+  if(o)this.contacts.add(this.key(s,o));return o;
+ }
+ mark(s,o){if(o)this.contacts.add(this.key(s,o));}
+}
+export function interactAdventure(s,choice,target=nearbyObject(s)){
+ const o=MAPS[s.map].objects.includes(target)?target:null;
+ const result=interactObject(s,choice,o);
+ return {...result,source:o,art:({M:'momo',C:o?.id,Q:'cloud',G:'gate',S:'moonflower'})[o?.type]||null};
+}
+function interactObject(s,choice,o){
+ if(!o)return {speaker:'Kitty',text:'Let’s look around. Walk next to a friend, a chest, or a sign, then interact.'};
  if(o.type==='D'||o.type==='E'){
   return enterAdventurePath(s,o.type);
  }

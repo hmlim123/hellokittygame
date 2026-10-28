@@ -3,12 +3,15 @@ import {CanvasFallback} from './CanvasFallback.js';
 import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
 import {makeGift,setHeldGift} from './gifts.js';
 import {RoomSound} from './sound.js';
-import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath} from './adventure-state.js?v=dungeon-3';
+import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath,AdventureEncounters} from './adventure-state.js?v=encounters-4';
+import {DiscoveryEffects,questArt} from './adventure-effects.js?v=encounters-4';
 const $=id=>document.getElementById(id),KEY='kitty-nancy-adventure-v1';
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{return {};}}
 const state=normalizeAdventure(read(KEY)),sound=new RoomSound();
 const storage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const encounters=new AdventureEncounters(),effects=new DiscoveryEffects($('effects'),{reduced});
+let pendingEncounter=true,discoveryTime=0,storySource=null;
 let ready=false,player,renderer,camera,scene,world,clock,motion=null,pressed=null,queued=null,noticeTime=0,walkTime=0;
 const rendered=[],labels=[];
 const dirs={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
@@ -18,30 +21,42 @@ function modal(){return $('story').open||$('inventory').open;}
 function refreshUI(){
  $('quest').textContent=questText(state);$('area').textContent=MAPS[state.map].title;
  const o=nearbyObject(state);$('interact').textContent=({'M':'Talk to Momo','D':'Enter dungeon','E':'Back to village','C':'Open chest','G':'Moon gate','Q':'Cloud guardian','S':'Moonflower shrine','F':'Make a little wish','o':'Little flowers','H':'Cozy cottage','T':'Little lantern'})[o?.type]||'Talk / inspect ♡';
+ if(o?.type==='C'&&state.charms.includes(o.id))$('interact').textContent='View charm';
  $('wayfinder').textContent=villageDirections(state);$('wayfinder').hidden=state.map!=='village';
  $('interact').disabled=!ready||!!motion||modal();
- for(const {object,mesh} of rendered){if(object.type==='G')mesh.visible=!state.gate;if(object.type==='C')mesh.children[0].rotation.x=state.charms.includes(object.id)?-.55:0;}
+ for(const {object,mesh} of rendered){if(object.type==='G')mesh.visible=!state.gate;}
+}
+function showDiscovery(result){
+ const src=questArt(result.art);$('discoveryImage').hidden=!src;if(src)$('discoveryImage').src=src;
+ $('discoveryTitle').textContent=result.speaker;$('discoveryWords').textContent=result.text;
+ $('discoveryTag').textContent=result.source?.type==='C'?'A LITTLE TREASURE':result.source?.type==='M'?'A QUEST FOR NANCY':'A LITTLE DISCOVERY';
+ $('discovery').hidden=false;discoveryTime=7;
 }
 function showStory(result){
  if(result.changedMap){
-  pressed=queued=null;buildWorld();player.position.set(state.x,0,state.z);followCamera(true);save();refreshUI();renderer.domElement.focus();return;
+  pressed=queued=null;$('discovery').hidden=true;effects.clear();pendingEncounter=true;buildWorld();player.position.set(state.x,0,state.z);followCamera(true);save();refreshUI();renderer.domElement.focus();return;
  }
- pressed=queued=null;$('speaker').textContent=result.speaker;$('storyWords').textContent=result.text;
- $('storyChoices').replaceChildren();
- for(const choice of result.choices||[]){const button=document.createElement('button');button.textContent=choice.label;button.onclick=()=>showStory(interactAdventure(state,choice.id));$('storyChoices').append(button);}
- $('returnRoom').hidden=!result.complete;
- if(result.chime)sound.chime('arrival');if(result.wave)reactBlender(player,'wave',reduced);
+ if(result.chime){sound.chime('arrival');const o=result.source;if(o){const p=new THREE.Vector3(o.x,.7,o.z).project(camera);effects.burst((p.x*.5+.5)*$('world').clientWidth,(-p.y*.5+.5)*$('world').clientHeight,result.art);}}
+ if(result.wave)reactBlender(player,'wave',reduced);
  save();
- if(result.complete){const reward=claimAdventureReward(storage);if(reward.claimed)$('storyWords').textContent+=reward.name?` ${reward.name} is waiting on your shelf back in the room.`:' Your whole little family is cheering for you back in the room.';if(reward.saveFailed)$('storyWords').textContent+=' This browser could not save the room reward. You can return to the shrine to try again.';}
+ if(result.complete){const reward=claimAdventureReward(storage);if(reward.claimed)result.text+=reward.name?` ${reward.name} is waiting on your shelf back in the room.`:' Your whole little family is cheering for you back in the room.';if(reward.saveFailed)result.text+=' This browser could not save the room reward. You can return to the shrine to try again.';}
+ refreshUI();
+ if(!result.choices?.length&&!result.complete){if($('story').open)$('story').close();showDiscovery(result);return;}
+ pressed=queued=null;storySource=result.source;$('discovery').hidden=true;$('speaker').textContent=result.speaker;$('storyWords').textContent=result.text;
+ const art=questArt(result.art);$('storyImage').hidden=!art;if(art)$('storyImage').src=art;
+ $('storyChoices').replaceChildren();
+ for(const choice of result.choices||[]){const button=document.createElement('button');button.textContent=choice.label;button.onclick=()=>showStory(interactAdventure(state,choice.id,storySource));$('storyChoices').append(button);}
+ $('returnRoom').hidden=!result.complete;
  refreshUI();if(!$('story').open)$('story').showModal();
 }
-function interact(){if(!ready||motion||modal())return;reactBlender(player,'wave',reduced);showStory(interactAdventure(state));}
+function checkEncounter(){const o=encounters.take(state);if(o)showStory(interactAdventure(state,o.type==='M'?'accept':undefined,o));}
+function interact(){if(!ready||motion||modal())return;const o=nearbyObject(state);encounters.mark(state,o);reactBlender(player,'wave',reduced);showStory(interactAdventure(state,undefined,o));}
 function usePath(type){if(!ready||motion||modal())return;const result=enterAdventurePath(state,type);if(result.changedMap)showStory(result);}
 $('interact').onclick=interact;
-$('closeStory').onclick=()=>$('story').close();$('story').addEventListener('close',()=>{refreshUI();renderer?.domElement.focus();});
+$('closeStory').onclick=()=>$('story').close();$('story').addEventListener('close',()=>{pendingEncounter=true;refreshUI();renderer?.domElement.focus();});
 function openBag(){
  if(!ready)return;pressed=queued=null;$('bagQuest').textContent=questText(state);
- $('charms').replaceChildren();for(const [id,name,icon] of [['rose','Rose','🎀'],['honey','Honey','✧'],['sky','Sky','♡']]){const el=document.createElement('span');el.textContent=icon+' '+name;el.className=state.charms.includes(id)?'':'missing';el.setAttribute('aria-label',name+' charm'+(state.charms.includes(id)?', collected':', missing'));$('charms').append(el);}
+ $('charms').replaceChildren();for(const [id,name] of [['rose','Rose'],['honey','Honey'],['sky','Sky']]){const el=document.createElement('span'),img=document.createElement('img');img.src=questArt(id);img.alt='';el.append(img,document.createTextNode(name));el.className=state.charms.includes(id)?'':'missing';el.setAttribute('aria-label',name+' charm'+(state.charms.includes(id)?', collected':', missing'));$('charms').append(el);}
  $('questComplete').textContent=state.complete?'Moonflower restored. Your little story is saved. ♡':'Every little step counts. There is no timer.';$('inventory').showModal();
 }
 $('bag').onclick=openBag;for(const id of ['closeBag','backToWorld'])$(id).onclick=()=>$('inventory').close();$('inventory').addEventListener('close',()=>renderer?.domElement.focus());
@@ -50,10 +65,11 @@ $('retry').onclick=()=>location.reload();
 function step(direction){
  if(!ready||modal())return;if(motion){queued=direction;return;}
  const from=player.position.clone(),oldMap=state.map,result=moveAdventure(state,direction);
+ pendingEncounter=true;
  player.rotation.y={up:Math.PI,down:0,left:-Math.PI/2,right:Math.PI/2}[direction];
  if(result.message)notice(result.message);
  if(result.moved){
-  if(oldMap!==state.map){buildWorld();player.position.set(state.x,0,state.z);followCamera(true);}
+  if(oldMap!==state.map){$('discovery').hidden=true;effects.clear();buildWorld();player.position.set(state.x,0,state.z);followCamera(true);}
   else if(reduced)player.position.set(state.x,0,state.z);
   else motion={from,to:new THREE.Vector3(state.x,0,state.z),time:0};
   save();
@@ -115,6 +131,7 @@ function buildWorld(){
   if(object.type==='C'){
    const lid=new THREE.Group();lid.position.set(0,.32,-.22);g.add(lid);mesh(lid,cube,mats.gold,0,0,.22,.63,.12,.48);
    mesh(g,cube,mats.pink,0,.17,0,.61,.31,.45);mesh(g,cube,mats.cream,0,.24,.235,.12,.17,.025);
+   lid.rotation.x=state.charms.includes(object.id)?-.85:0;
   }
   if(object.type==='G'){arch(g);mesh(g,cube,mats.gold,0,.55,0,.7,.75,.08);label('Moon gate',object.x,1.5,object.z);}
   if(object.type==='D'||object.type==='E'){arch(g);mesh(g,cube,mats.cream,0,.015,0,.8,.04,.8);label(object.type==='D'?'Enter dungeon ↗':'Return to village ↗',object.x,1.45,object.z,()=>usePath(object.type));}
@@ -140,7 +157,7 @@ try{
  const probe=document.createElement('canvas'),gl=probe.getContext('webgl2',{antialias:true});
  renderer=gl?new THREE.WebGLRenderer({canvas:probe,context:gl,antialias:true}):new CanvasFallback();
  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.shadowMap.enabled=false;
- renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Moonflower Adventure. Arrow keys or WASD to walk; Enter or Space to interact.');$('world').prepend(renderer.domElement);
+ renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Moonflower Adventure. Walk up to friends and treasure to discover them automatically. Arrow keys or WASD to walk.');$('world').prepend(renderer.domElement);
  scene.add(new THREE.HemisphereLight('#fff4ef','#baa6cf',2.8));const light=new THREE.DirectionalLight('#fff1d2',2);light.position.set(-3,9,6);scene.add(light);
  camera=new THREE.OrthographicCamera(-6,6,4,-4,.1,60);
  renderer.domElement.addEventListener('click',e=>{
@@ -161,8 +178,11 @@ try{
  renderer.setAnimationLoop(()=>{
   const elapsed=clock.getDelta(),dt=Math.min(elapsed,.1);repeat+=dt;
   if(motion){motion.time+=dt;const p=Math.min(1,motion.time/.18);player.position.lerpVectors(motion.from,motion.to,p);player.position.y=Math.sin(p*Math.PI)*.045;player.rotation.z=Math.sin(p*Math.PI)*.02;if(p===1){motion=null;player.position.y=0;player.rotation.z=0;refreshUI();}}
+  if(!motion&&!modal()&&pendingEncounter){pendingEncounter=false;checkEncounter();}
   if(!motion&&!modal()){const dir=queued||pressed;if(dir&&(queued||repeat>.18)){queued=null;repeat=0;step(dir);}}
   updateBlender(player,elapsed,{reduced,idle:!motion&&!modal()});followCamera(false,dt);
+  for(const {object,mesh} of rendered)if(object.type==='C'){const lid=mesh.children[0],target=state.charms.includes(object.id)?-.85:0;lid.rotation.x=reduced?target:THREE.MathUtils.lerp(lid.rotation.x,target,1-Math.exp(-dt*9));}
+  effects.update(Math.min(elapsed,1));if(discoveryTime>0){discoveryTime-=Math.min(elapsed,1);if(discoveryTime<=0)$('discovery').hidden=true;}
   if(noticeTime>0){noticeTime-=dt;if(noticeTime<=0)$('notice').classList.remove('visible');}
   renderer.render(scene,camera);
  });
