@@ -3,7 +3,7 @@ import {CanvasFallback} from './CanvasFallback.js';
 import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
 import {makeGift,setHeldGift} from './gifts.js';
 import {RoomSound} from './sound.js';
-import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections} from './adventure-state.js';
+import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath} from './adventure-state.js?v=dungeon-3';
 const $=id=>document.getElementById(id),KEY='kitty-nancy-adventure-v1';
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{return {};}}
 const state=normalizeAdventure(read(KEY)),sound=new RoomSound();
@@ -36,6 +36,7 @@ function showStory(result){
  refreshUI();if(!$('story').open)$('story').showModal();
 }
 function interact(){if(!ready||motion||modal())return;reactBlender(player,'wave',reduced);showStory(interactAdventure(state));}
+function usePath(type){if(!ready||motion||modal())return;const result=enterAdventurePath(state,type);if(result.changedMap)showStory(result);}
 $('interact').onclick=interact;
 $('closeStory').onclick=()=>$('story').close();$('story').addEventListener('close',()=>{refreshUI();renderer?.domElement.focus();});
 function openBag(){
@@ -77,7 +78,7 @@ const material=color=>new THREE.MeshStandardMaterial({color,roughness:.9});
 const cube=new THREE.BoxGeometry(1,1,1),sphere=new THREE.SphereGeometry(1,14,10);
 function mesh(parent,geometry,mat,x,y,z,sx=1,sy=sx,sz=sx){const o=new THREE.Mesh(geometry,mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o;}
 const mats={grass:[material('#d7e4c1'),material('#d2dfba')],stone:[material('#d9d1e7'),material('#d3cbe2')],hedge:material('#b6c99f'),wall:material('#b8a9ce'),pink:material('#d992b3'),cream:material('#fff0da'),gold:material('#eed395'),water:material('#b8dce4'),ink:new THREE.MeshBasicMaterial({color:'#4a354b'})};
-function label(text,x,y,z){const el=document.createElement('span');el.textContent=text;el.className='world-label';$('world').append(el);labels.push({el,point:new THREE.Vector3(x,y,z)});}
+function label(text,x,y,z,action){const el=document.createElement(action?'button':'span');el.textContent=text;el.className='world-label';if(action){el.classList.add('world-action');el.onclick=action;}$('world').append(el);labels.push({el,point:new THREE.Vector3(x,y,z)});}
 function arch(parent){
  const g=new THREE.Group();parent.add(g);
  for(const x of [-.43,.43])mesh(g,new THREE.CylinderGeometry(.07,.07,.8,10),mats.pink,x,.4,0);
@@ -116,7 +117,7 @@ function buildWorld(){
    mesh(g,cube,mats.pink,0,.17,0,.61,.31,.45);mesh(g,cube,mats.cream,0,.24,.235,.12,.17,.025);
   }
   if(object.type==='G'){arch(g);mesh(g,cube,mats.gold,0,.55,0,.7,.75,.08);label('Moon gate',object.x,1.5,object.z);}
-  if(object.type==='D'||object.type==='E'){arch(g);mesh(g,cube,mats.cream,0,.015,0,.8,.04,.8);label(object.type==='D'?'Dungeon entrance':'Village path',object.x,1.45,object.z);}
+  if(object.type==='D'||object.type==='E'){arch(g);mesh(g,cube,mats.cream,0,.015,0,.8,.04,.8);label(object.type==='D'?'Enter dungeon ↗':'Return to village ↗',object.x,1.45,object.z,()=>usePath(object.type));}
   if(object.type==='F'){
    mesh(g,new THREE.CylinderGeometry(.55,.55,.25,20),mats.cream,0,.12,0);mesh(g,new THREE.CylinderGeometry(.45,.45,.02,20),mats.water,0,.26,0);mesh(g,new THREE.CylinderGeometry(.10,.14,.65,12),mats.cream,0,.45,0);
   }
@@ -132,6 +133,7 @@ function followCamera(snap=false,dt=.016){
  const map=MAPS[state.map],target=new THREE.Vector3(THREE.MathUtils.clamp(player.position.x,3,map.w-4),0,THREE.MathUtils.clamp(player.position.z,3,map.h-4));
  const desired=target.clone().add(new THREE.Vector3(0,8,6));
  camera.position.lerp(desired,snap||reduced?1:1-Math.exp(-dt*7));camera.lookAt(new THREE.Vector3(camera.position.x,0,camera.position.z-6));camera.updateMatrixWorld(true);
+ for(const l of labels){const p=l.point.clone().project(camera);l.el.hidden=p.x<-1||p.x>1||p.y<-1||p.y>1;l.el.style.left=(p.x*.5+.5)*$('world').clientWidth+'px';l.el.style.top=(-p.y*.5+.5)*$('world').clientHeight+'px';}
 }
 try{
  const asset=await loadBlenderKitty();scene=new THREE.Scene();world=new THREE.Group();scene.add(world);
@@ -141,6 +143,15 @@ try{
  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Moonflower Adventure. Arrow keys or WASD to walk; Enter or Space to interact.');$('world').prepend(renderer.domElement);
  scene.add(new THREE.HemisphereLight('#fff4ef','#baa6cf',2.8));const light=new THREE.DirectionalLight('#fff1d2',2);light.position.set(-3,9,6);scene.add(light);
  camera=new THREE.OrthographicCamera(-6,6,4,-4,.1,60);
+ renderer.domElement.addEventListener('click',e=>{
+  if(!ready||motion||modal())return;
+  const rect=renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1),camera);
+  for(const o of MAPS[state.map].objects.filter(o=>o.type==='D'||o.type==='E')){
+   const bounds=new THREE.Box3(new THREE.Vector3(o.x-.75,0,o.z-.5),new THREE.Vector3(o.x+.75,1.7,o.z+.5));
+   if(ray.ray.intersectBox(bounds,new THREE.Vector3())){usePath(o.type);break;}
+  }
+ });
  player=makeBlenderKitty(asset);player.scale.setScalar(.48);player.position.set(state.x,0,state.z);player.rotation.y={up:Math.PI,down:0,left:-Math.PI/2,right:Math.PI/2}[state.facing];scene.add(player);
  const gift=read('kitty-room-preferences-v1').heldGift;setHeldGift(player,gift||'flowers');
  const resize=()=>{const w=$('world').clientWidth,h=$('world').clientHeight;renderer.setSize(w,h,false);const half=w/h<1?4.0:4.4;camera.left=-half*w/h;camera.right=half*w/h;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix();};
@@ -152,7 +163,6 @@ try{
   if(motion){motion.time+=dt;const p=Math.min(1,motion.time/.18);player.position.lerpVectors(motion.from,motion.to,p);player.position.y=Math.sin(p*Math.PI)*.045;player.rotation.z=Math.sin(p*Math.PI)*.02;if(p===1){motion=null;player.position.y=0;player.rotation.z=0;refreshUI();}}
   if(!motion&&!modal()){const dir=queued||pressed;if(dir&&(queued||repeat>.18)){queued=null;repeat=0;step(dir);}}
   updateBlender(player,elapsed,{reduced,idle:!motion&&!modal()});followCamera(false,dt);
-  for(const l of labels){const p=l.point.clone().project(camera);l.el.hidden=p.x<-1||p.x>1||p.y<-1||p.y>1;l.el.style.left=(p.x*.5+.5)*$('world').clientWidth+'px';l.el.style.top=(-p.y*.5+.5)*$('world').clientHeight+'px';}
   if(noticeTime>0){noticeTime-=dt;if(noticeTime<=0)$('notice').classList.remove('visible');}
   renderer.render(scene,camera);
  });

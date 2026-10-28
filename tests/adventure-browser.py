@@ -7,9 +7,15 @@ out=Path(__file__).resolve().parents[1]/'docs'
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'),headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
  page=b.new_page(viewport={'width':1200,'height':1120});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
- page.goto(base+'/adventure.html');page.wait_for_function("document.querySelector('#loading').hidden",timeout=60000)
+ # An old cached module URL must never be used by the updated entry page.
+ stale=[]
+ def stale_module(route):
+  stale.append(route.request.url);route.fulfill(status=200,content_type='text/javascript',body='throw new Error("Old adventure script used");')
+ for name in ['adventure.js','adventure-state.js']:page.route('**/'+name,stale_module)
+ page.goto(base+'/adventure.html?v=dungeon-3');page.wait_for_function("document.querySelector('#loading').hidden",timeout=60000)
+ assert page.locator('html').get_attribute('data-release')=='dungeon-3' and not stale
  assert page.locator('#error').is_hidden()
- maps=page.evaluate("async()=>{const {MAPS}=await import('./adventure-state.js');return MAPS;}")
+ maps=page.evaluate("async()=>{const {MAPS}=await import('./adventure-state.js?v=dungeon-3');return MAPS;}")
  def state():return page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'))")
  keys={'up':'ArrowUp','down':'ArrowDown','left':'ArrowLeft','right':'ArrowRight'}
  def move_to(x,z,touch=False):
@@ -61,8 +67,14 @@ with sync_playwright() as p:
  assert m.evaluate('document.documentElement.scrollWidth<=innerWidth');m.screenshot(path=str(out/'nancy-adventure-mobile.png'),full_page=True)
  m.locator('#bag').tap();assert m.locator('#inventory').is_visible();m.locator('#backToWorld').tap();assert not errors,errors
  page=m
- move_to(5,6,touch=True);m.get_by_role('button',name='Talk to Momo',exact=True).tap();m.get_by_role('button',name='Let’s help!').tap();m.locator('#closeStory').tap()
- move_to(12,3,touch=True);m.get_by_role('button',name='Enter dungeon',exact=True).tap();assert state()['map']=='garden'
+ move_to(12,3,touch=True);assert not state()['accepted']
+ m.get_by_role('button',name='Enter dungeon',exact=True).tap();assert state()['map']=='garden' and state()['accepted']
+ move_to(7,11,touch=True);m.get_by_role('button',name='Back to village',exact=True).tap();assert state()['map']=='village'
+ m.get_by_role('button',name='Enter dungeon ↗',exact=True).tap();assert state()['map']=='garden'
+ move_to(7,11,touch=True);m.get_by_role('button',name='Back to village',exact=True).tap()
+ arch=m.get_by_role('button',name='Enter dungeon ↗',exact=True).bounding_box()
+ m.touchscreen.tap(arch['x']+arch['width']/2,arch['y']+arch['height']+15)
+ assert state()['map']=='garden','Tapping the arch geometry should enter, too'
  assert m.locator('#story').is_hidden() and not errors,errors
  print('PASS: keyboard and touch dungeon entry, direction hints, village dialogue, all dungeon chests, reload, guardian turns, gate, shrine, one reward, room integration and bag')
  b.close()

@@ -15,7 +15,7 @@ a=html.index('<script type="importmap">');b=html.index('</script>',a)+len('</scr
 html=html[:a]+html[b:]
 html=html.replace('<script type="module" src="./app.js"></script>', '<script>globalThis.KITTY_MODEL_URL='+json.dumps(model)+'</script><script type="module">'+bundle+'</script>')
 html=html.replace('href="./" aria-label="Hello Kitty home"','href="#" aria-label="Hello Kitty home"')
-html=html.replace('href="./adventure.html"','href="https://hmlim123.github.io/hellokittygame/adventure.html"').replace('Moonflower Adventure</strong>','Moonflower Adventure · online</strong>')
+html=html.replace('href="./adventure.html','href="https://hmlim123.github.io/hellokittygame/adventure.html').replace('Moonflower Adventure</strong>','Moonflower Adventure · online</strong>')
 html=html.replace('Your friends save here automatically.','Your friends save in this browser when file storage is available.')
 Path(sys.argv[2]).write_text(html)
 print('Standalone game written:',sys.argv[2],Path(sys.argv[2]).stat().st_size,'bytes')

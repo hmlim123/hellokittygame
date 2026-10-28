@@ -16,16 +16,17 @@ export function normalizeAdventure(raw={}){
 }
 export function questText(s){
  if(s.complete)return 'Moonflower restored! A little happy ending for Nancy.';
- if(!s.accepted)return 'Talk to Momo, the teddy by the village fountain.';
+ if(!s.accepted)return 'Meet Momo by the fountain, or enter the upper-right pink arch to begin.';
  if(s.map==='village')return 'Enter Moonflower Garden, the dungeon through the pink arch in the upper-right.';
  if(s.charms.length<3)return `Open the three treasure chests: ${s.charms.length} / 3 moon charms.`;
  if(!s.guardian)return 'Help the cloud guardian beside the moon gate.';
  if(!s.gate)return 'Open the moon gate in the northern wall.';
  return 'Reach the moonflower shrine beyond the gate.';
 }
-function enterPath(s,tile){
+export function enterAdventurePath(s,tile){
+ if(!MAPS[s.map].objects.some(o=>o.type===tile)||!['D','E'].includes(tile))return {moved:false};
  if(tile==='D'){
-  if(!s.accepted)return {moved:false,message:'Momo has a little adventure for you. Talk to the teddy first. ♡'};
+  s.accepted=true;
   s.map='garden';[s.x,s.z]=MAPS.garden.spawn;
  }else{s.map='village';[s.x,s.z]=[12,3];}
  return {moved:true,changedMap:true};
@@ -34,7 +35,7 @@ export function moveAdventure(s,direction){
  const delta=DIRECTIONS[direction];if(!delta)return {moved:false};s.facing=direction;
  const [dx,dz]=delta,x=s.x+dx,z=s.z+dz;if(!walkable(s,x,z))return {moved:false};
  const tile=MAPS[s.map].rows[z][x];
- if(tile==='D'||tile==='E')return enterPath(s,tile);
+ if(tile==='D'||tile==='E')return enterAdventurePath(s,tile);
  s.x=x;s.z=z;return {moved:true};
 }
 export function nearbyObject(s){
@@ -63,8 +64,7 @@ export function villageDirections(s){
 export function interactAdventure(s,choice){
  const o=nearbyObject(s);if(!o)return {speaker:'Kitty',text:'Let’s look around. Walk next to a friend, a chest, or a sign, then interact.'};
  if(o.type==='D'||o.type==='E'){
-  const result=enterPath(s,o.type);
-  return result.changedMap?result:{speaker:'Dungeon entrance',text:result.message};
+  return enterAdventurePath(s,o.type);
  }
  if(o.type==='M'){
   if(choice==='accept')s.accepted=true;
