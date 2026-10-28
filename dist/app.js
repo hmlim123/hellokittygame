@@ -86,6 +86,7 @@ $('playGift').onclick=playGift;
 function save(){
   // Merge collections before writing, including progress earned in another tab.
   const old=normalizeState(read(KEY),read('kitty-picnic-v1'));
+  state.adventureRewarded ||= old.adventureRewarded;
   const merged=normalizeState(state,{owned:old.owned});
   Object.assign(state,merged);
   try{localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='Your friends save here automatically.';}

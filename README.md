@@ -62,6 +62,32 @@ window. The shelf and room colors remain in one expandable panel below the room.
 
 ![Nancy’s room with her cuddle teddy](docs/nancy-teddy-room.png)
 
+## Moonflower Adventure — a small browser RPG chapter
+
+Open **Play a mission → Moonflower Adventure** or `adventure.html`. This is a
+cozy, classic Japanese-RPG-style browser mode, using our actual Blender Kitty;
+it is not a project requiring the RPG Maker application or its runtime.
+
+Explore Rosemilk Village, talk to Momo by the fountain, enter Moonflower Garden,
+open three treasure chests, help the cloud guardian in a three-turn conversation,
+open the moon gate, and restore Nancy’s moonflower at the shrine. The current
+chapter has one village, one dungeon, and a complete ending. There is no timer.
+
+Use arrow keys/WASD to walk and Enter/Space to interact. A direction pad and an
+interaction button support touch. **Bag & quest** shows the objective and three
+charms. The camera follows Kitty, with reduced-motion support. House/hedge tiles
+block movement and story interactions stop walking while their dialogue is open.
+
+Progress saves after steps and discoveries in `kitty-nancy-adventure-v1`. The
+quest can be resumed after reloading. At completion, one room friend is granted
+once, with an `adventureRewarded` marker in the same atomic room-state write.
+The marker is retained by the room’s save normalizer and merges. Existing picnic
+and room collections are preserved. If all friends are already owned, the chapter
+still completes without inventing a seventh collectible. The old room remains
+available through the header link.
+
+![Nancy’s village adventure](docs/nancy-adventure-village.png)
+
 ## Run locally
 
 Python 3 is enough to serve the game. No build step is required, and all assets,
@@ -84,7 +110,9 @@ Reduced motion replaces moving reactions with a brief, static wink.
 
 Download `play.html` from this repository and open it in a desktop browser.
 It contains the complete game, Three.js, and the Blender model in one file;
-no server, account, or Internet requests are needed for gameplay. File-based
+no server, account, or Internet requests are needed for the room and mini-games.
+The separate Moonflower Adventure link opens the online game and needs Internet
+access; it is not embedded into the single-file download. File-based
 browser storage varies, so saves are best-effort and separate from the hosted
 site's saves. The self-contained HTML was verified in an isolated browser
 document, including the eight-bow hunt, with zero HTTP requests. Direct
@@ -165,11 +193,12 @@ npm ci
 npm test
 ```
 
-48 automated checks cover the Blender asset, real paw and wink playback, pose
+53 automated checks cover the Blender asset, real paw and wink playback, pose
 reset, continuous gesture switching, bounded attention, blinking, touch targets,
 friend arrivals, opt-in audio, relaxed hunts, gift replacement, timed/memory
 mission rules, keepsake persistence, picnic placement, item play, the reserved
-letter, reduced motion, independent model instances,
+letter, full adventure reachability, quest order, save repair, exactly-once
+adventure rewards, reduced motion, independent model instances,
 collection migration, bow
 hunt rules, saved progress, and the retained legacy modules.
 
@@ -182,7 +211,10 @@ was also checked with WebGL disabled. The mission browser checks exercise all
 four gift choices, gift persistence, a full Strawberry Picnic, memory cues,
 wrong-answer replay and completion, Nancy’s notes, keyboard tabs and mobile gifts. Item-play checks cover the actual 3D feeding taps, the teddy
 cuddle, letter seal/fold controls, pointer dragging, keyboard placement, reward
-persistence, cancellation, and touch placement on a phone.
+persistence, cancellation, and touch placement on a phone. The adventure browser test plays the complete
+village/dungeon quest using real keyboard controls, reloads mid-quest, finishes
+the guardian/gate/shrine sequence, checks the room reward only arrives once, and
+checks phone movement and the bag.
 Preview screenshots are in `docs/simple-room-*.png`.
 
 The browser smoke test is also saved in `tests/browser-smoke.py`. With the local
@@ -192,6 +224,7 @@ server on port 8012, Python Playwright and its Chromium installed, run:
 python tests/browser-smoke.py
 python tests/missions-browser.py
 python tests/items-browser.py
+python tests/adventure-browser.py
 ```
 
 Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
@@ -210,6 +243,8 @@ Chromium executable. This test writes the documented screenshots into `docs/`.
 | `dist/gifts.js` | Held props, cuddle and feeding play on the Blender rig |
 | `dist/item-play.js` | Picnic placement rules and pointer/tap controls |
 | `dist/letter.js` | User-authored letter content (pending) |
+| `dist/adventure.html`, `dist/adventure.js` | Separate RPG map and controls |
+| `dist/adventure-state.js` | Maps, collision, quests, save repair and reward rules |
 | `dist/assets/hello-kitty.glb` | Actual exported Blender character |
 | `dist/scene.js` | Three.js room, camera, and interactions |
 | `scripts/export_blender.py` | Reproducible Blender-to-game export |

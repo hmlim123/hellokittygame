@@ -14,7 +14,7 @@ export function normalizeState(raw={},legacy={}){
   const slots=Array(6).fill(null),seen=new Set();
   if(Array.isArray(raw.slots))raw.slots.slice(0,6).forEach((id,i)=>{if(owned.includes(id)&&!seen.has(id)){slots[i]=id;seen.add(id)}});
   for(const id of owned)if(!seen.has(id)){slots[slots.indexOf(null)]=id;seen.add(id)}
-  return {owned,slots,selected:owned.includes(raw.selected)?raw.selected:0,theme:Object.hasOwn(THEMES,raw.theme)?raw.theme:'rose',night:raw.night===true,best:Number.isFinite(raw.best)?Math.max(0,raw.best):0,rounds:Number.isInteger(raw.rounds)?Math.max(0,raw.rounds):0};
+  return {owned,slots,selected:owned.includes(raw.selected)?raw.selected:0,theme:Object.hasOwn(THEMES,raw.theme)?raw.theme:'rose',night:raw.night===true,adventureRewarded:raw.adventureRewarded===true,best:Number.isFinite(raw.best)?Math.max(0,raw.best):0,rounds:Number.isInteger(raw.rounds)?Math.max(0,raw.rounds):0};
 }
 export function placeDoll(state,id,index){
   if(!state.owned.includes(id)||!Number.isInteger(index)||index<0||index>5)return false;
