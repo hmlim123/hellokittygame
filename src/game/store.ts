@@ -105,7 +105,7 @@ export interface GameState extends SaveState {
   result: { title: string; text: string } | null;
   messages: { role: "nancy" | "kitty"; text: string }[];
   heldDirection: Direction | null;
-  holdMove(dir: Direction): void;
+  holdMove(dir: Direction, options?: { restore?: boolean }): void;
   releaseMove(dir?: Direction): void;
   moving: boolean;
   moveCommand: { id: number; dir: Direction } | null;
@@ -590,7 +590,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           result: null,
           messages: [],
           heldDirection: null,
-          holdMove(dir) {
+          holdMove(dir, options = {}) {
             const s = get();
             if (
               s.mode !== "adventure" ||
@@ -604,7 +604,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               // ends. Holding itself adds no requests; finishMove continues it.
               set({
                 heldDirection: dir,
-                queuedDirection: dir,
+                ...(options.restore ? {} : { queuedDirection: dir }),
               });
             } else {
               set({ heldDirection: dir });
@@ -764,16 +764,21 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             a.facing = dir;
             if (!blocked) moveAdventure(a, dir);
             const changedMap = a.map !== s.adventure.map;
-            const queued =
-              blocked || changedMap
+            const buffered =
+              blocked && s.queuedDirection === dir ? null : s.queuedDirection;
+            const heldDirection =
+              changedMap || (blocked && s.heldDirection === dir && !buffered)
                 ? null
-                : s.heldDirection || s.queuedDirection;
+                : s.heldDirection;
+            // A wall cancels only movement into that wall. Keep a newer turn
+            // that arrived before the physics tick resolved the collision.
+            const queued = changedMap ? null : buffered || heldDirection;
             applyStory(a, autoEncounter(a), {
               moving: false,
               moveCommand: null,
               queuedDirection: null,
               physicsContacts: s.physicsContacts + (blocked ? 1 : 0),
-              ...(blocked || changedMap ? { heldDirection: null } : {}),
+              heldDirection,
             });
             if (queued && !get().dialogue) get().requestMove(queued);
           },

@@ -6,6 +6,9 @@ The room keeps three main buttons: **Wave hello**, **Little dance**, and
 panels. The same clothes, items, collection, and quests follow Kitty between her
 room, Moonflower Adventure, and Butterfly Glade.
 
+The agreed six-stage upgrade sequence and current milestone are tracked in
+[Nancy's production plan](docs/production-plan.md).
+
 ## Application stack
 
 | Technology | What it does in this game |
@@ -157,6 +160,9 @@ when its key is released. Holding two keys uses the most recent direction;
 releasing it returns to the key still held. Uppercase WASD works too. The touch
 pad has 48-pixel buttons and lets Nancy slide between arrows without lifting her
 finger, including turning away from a wall. Losing focus cancels pending input.
+Turning away remains responsive even if the new press arrives before a wall
+collision resolves. Touch capture is released when focus is lost, the tab is
+hidden, or a story/panel takes over, so the next touch starts cleanly.
 
 The adventure camera follows Kitty’s interpolated rendered position on every
 frame, including reduced-motion mode. Physics updates run before the camera,
@@ -300,6 +306,7 @@ the original rig. Shelf variants keep their own palettes.
 | File | Purpose |
 | --- | --- |
 | `src/App.tsx` | React navigation, menus, controls and dialogue |
+| `src/ui/DirectionPad.tsx` | Touch steering, pointer capture and safe input cancellation |
 | `src/ui/` | Inventory, chat, settings, missions and letter |
 | `src/game/store.ts` | Zustand actions, atomic rewards and persistence |
 | `src/game/chapter.ts` | New map, tool puzzles, storybook pages, progress repair and ending rules |

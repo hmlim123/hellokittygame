@@ -9,7 +9,7 @@ const Stage = lazy(() =>
 import { assetUrl } from "./game/assets";
 import { useGameStore } from "./game/store";
 import { directions, MAPS, questText } from "./game/domain";
-import type { Direction } from "./game/types";
+import { DirectionPad } from "./ui/DirectionPad";
 import { DirectionKeys, directionForKey } from "./game/direction-keys";
 import { Inventory } from "./ui/Inventory";
 import { Dialog } from "./ui/Dialog";
@@ -127,7 +127,8 @@ function useAdventureInput() {
     const up = (e: KeyboardEvent) => {
       const next = keys.release(e),
         s = useGameStore.getState();
-      if (next) s.holdMove(next);
+      // A still-held key resumes after the buffered tap, without erasing it.
+      if (next) s.holdMove(next, { restore: true });
       else if (next === null) s.releaseMove(directionForKey(e));
     };
     const blur = () => {
@@ -226,80 +227,13 @@ function Notification() {
 }
 function AdventureControls() {
   const state = useGameStore((s) => s.adventure),
-    request = useGameStore((s) => s.requestMove),
     interact = useGameStore((s) => s.interact),
     ready = useGameStore((s) => s.sceneReady),
-    moving = useGameStore((s) => s.moving),
-    held = useGameStore((s) => s.heldDirection);
-  const pointer = useRef<{ id: number; dir: Direction | null } | null>(null);
+    moving = useGameStore((s) => s.moving);
   const action = nearbyItemAction(state);
-  const stop = () => useGameStore.getState().releaseMove();
-  useEffect(() => stop, []);
   return (
     <div className="adventure-controls">
-      <div
-        className="dpad"
-        aria-label="Move Kitty"
-        onPointerMove={(e) => {
-          const active = pointer.current;
-          if (!active || active.id !== e.pointerId) return;
-          const button = document.elementFromPoint(e.clientX, e.clientY)
-            ?.closest<HTMLButtonElement>("button[data-direction]");
-          if (button && e.currentTarget.contains(button)) {
-            const dir = button.dataset.direction as Direction;
-            if (dir !== active.dir) {
-              active.dir = dir;
-              useGameStore.getState().holdMove(dir);
-            }
-          } else {
-            const r = e.currentTarget.getBoundingClientRect();
-            if (
-              e.clientX < r.left || e.clientX > r.right ||
-              e.clientY < r.top || e.clientY > r.bottom
-            ) {
-              active.dir = null;
-              stop();
-            }
-          }
-        }}
-        onPointerUp={(e) => {
-          if (pointer.current?.id !== e.pointerId) return;
-          useGameStore.getState().releaseMove(pointer.current.dir || undefined);
-          pointer.current = null;
-        }}
-        onPointerCancel={(e) => {
-          if (pointer.current?.id !== e.pointerId) return;
-          pointer.current = null;
-          stop();
-        }}
-        onLostPointerCapture={(e) => {
-          if (pointer.current?.id !== e.pointerId) return;
-          pointer.current = null;
-          stop();
-        }}
-      >
-        {(["up", "left", "down", "right"] as Direction[]).map((dir, i) => (
-          <button
-            key={dir}
-            data-direction={dir}
-            aria-label={`Walk ${dir}`}
-            aria-pressed={held === dir}
-            disabled={!ready}
-            onPointerDown={(e) => {
-              if (e.button !== 0 || pointer.current) return;
-              e.preventDefault();
-              pointer.current = { id: e.pointerId, dir };
-              e.currentTarget.parentElement!.setPointerCapture(e.pointerId);
-              useGameStore.getState().holdMove(dir);
-            }}
-            onClick={(e) => {
-              if (e.detail === 0) request(dir);
-            }}
-          >
-            {["↑", "←", "↓", "→"][i]}
-          </button>
-        ))}
-      </div>
+      <DirectionPad />
       <p>
         Arrow keys or WASD to walk.
         <br />

@@ -94,6 +94,44 @@ describe("continuous movement input", () => {
     expect(s.getState().moving).toBe(false);
     expect(s.getState().physicsContacts).toBe(1);
   });
+  it("keeps a quick turn away from a wall even if it arrives before the blocked step resolves", () => {
+    const s = store();
+    s.getState().holdMove("left");
+    s.getState().releaseMove("left");
+    s.getState().holdMove("up");
+    s.getState().releaseMove("up");
+    s.getState().finishMove(true);
+    expect(s.getState().moveCommand?.dir).toBe("up");
+    expect(s.getState().heldDirection).toBe(null);
+    s.getState().finishMove(false);
+    expect(s.getState().adventure).toMatchObject({ x: 7, z: 7 });
+    expect(s.getState().moving).toBe(false);
+  });
+  it("continues holding a new direction after the previous direction hits a wall", () => {
+    const s = store();
+    s.getState().holdMove("left");
+    s.getState().holdMove("up");
+    s.getState().finishMove(true);
+    expect(s.getState().heldDirection).toBe("up");
+    expect(s.getState().moveCommand?.dir).toBe("up");
+    s.getState().finishMove(false);
+    expect(s.getState().adventure.z).toBe(7);
+    expect(s.getState().moving).toBe(true);
+    s.getState().releaseMove("up");
+    s.getState().finishMove(false);
+    expect(s.getState().adventure.z).toBe(6);
+    expect(s.getState().moving).toBe(false);
+  });
+  it("discards a buffered repeat of the blocked direction instead of retrying forever", () => {
+    const s = store();
+    s.getState().holdMove("left");
+    s.getState().holdMove("left");
+    s.getState().releaseMove("left");
+    s.getState().finishMove(true);
+    expect(s.getState().moving).toBe(false);
+    expect(s.getState().queuedDirection).toBe(null);
+    expect(s.getState().physicsContacts).toBe(1);
+  });
   it("does not let release of an older key cancel the newer direction", () => {
     const s = store();
     s.getState().holdMove("up");
@@ -103,5 +141,32 @@ describe("continuous movement input", () => {
     s.getState().releaseMove();
     expect(s.getState().heldDirection).toBe(null);
     expect(s.getState().queuedDirection).toBe(null);
+  });
+  it("restoring a held key does not erase a quick turn that has not run yet", () => {
+    const s = store();
+    s.getState().holdMove("up");
+    s.getState().holdMove("right");
+    s.getState().holdMove("up", { restore: true });
+    s.getState().releaseMove("up");
+    s.getState().finishMove(false);
+    expect(s.getState().moveCommand?.dir).toBe("right");
+    s.getState().finishMove(false);
+    expect(s.getState().adventure).toMatchObject({ x: 8, z: 7 });
+    expect(s.getState().moving).toBe(false);
+  });
+  it("a buffered sidestep lets a still-held direction resume after a wall", () => {
+    const s = store();
+    s.getState().holdMove("up");
+    s.getState().holdMove("right");
+    s.getState().holdMove("up", { restore: true });
+    s.getState().finishMove(true);
+    expect(s.getState().heldDirection).toBe("up");
+    expect(s.getState().moveCommand?.dir).toBe("right");
+    s.getState().finishMove(false);
+    expect(s.getState().moveCommand?.dir).toBe("up");
+    s.getState().releaseMove("up");
+    s.getState().finishMove(false);
+    expect(s.getState().adventure).toMatchObject({ x: 8, z: 7 });
+    expect(s.getState().moving).toBe(false);
   });
 });
