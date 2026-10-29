@@ -27,7 +27,7 @@ Reuse existing quests, equipment, souvenirs, and storybook pages where possible.
 | Stage | Status | Scope | Acceptance |
 | --- | --- | --- | --- |
 | 1. Polished controls | Delivered (browser verified) | Keyboard/touch reliability, turning, camera, obstacles, focus loss and area transitions. | Quick taps are retained, holds are smooth, newer turns survive walls, and release/cancel/focus loss stop safely in desktop and phone browser checks. |
-| 2. One clear next goal | Queued next | One objective, nearby actions, missing-tool explanations, gentle optional hints. | A new player can find and revive the flowers using the game interface; record actual journey duration. |
+| 2. One clear next goal | Implemented; browser verified | One objective, nearby actions, missing-tool explanations, gentle optional hints. | A new player can find and revive the flowers using the game interface; record actual journey duration. |
 | 3. Satisfying discoveries | Queued | Watering/bloom/reward feedback, optional sound, Kitty celebrations, reward-to-inventory-to-room connection. | Each reward is understandable, granted once, wearable at home and in the adventure, and connected to a revisitable memory. |
 | 4. Consistent visual style | Queued | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity. | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene. |
 | 5. Comfortable phone play | Queued | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering. | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues. |
@@ -63,7 +63,8 @@ Verification completed on 2026-10-29:
 
 Release link: <https://hmlim123.github.io/hellokittygame/adventure.html?v=stage1-14>.
 The GitHub Pages workflow for this source revision is the deployment record.
-Stage 2 is the next implementation milestone; Stages 2–6 are not yet complete.
+The user authorized automatic continuation through Stage 6. Later milestones are
+tracked below and will ship together after the final release checks.
 This environment has Chromium and phone touch emulation. Safari/WebKit and
 physical iPhone/Mac testing are not available here; keep them on the device
 review checklist and do not claim they passed.
@@ -75,3 +76,15 @@ review checklist and do not claim they passed.
 3. Confirm saves and the existing three-button interface remain usable.
 4. Publish the tested release and confirm the GitHub Pages workflow succeeds.
 5. Record evidence and the next milestone here. Report any remaining device checks.
+
+## Stage 2 delivery record
+
+One current goal is now visible above the adventure. It explains the next tool
+and the nearby one-tap action; an optional folded hint shows the walking route.
+The hint gently offers help after inactivity without opening itself. Equipped
+lanterns continue to reveal later markers automatically.
+
+Validation: 3 guide-state tests pass; the production build and a fresh UI-driven
+glade → lantern trail → flowers → room souvenir → reload journey pass with zero
+page errors. The automated route took 6.1 seconds; a first-time human playtime
+measurement remains pending and is not inferred from that test.

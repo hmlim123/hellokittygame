@@ -8,8 +8,9 @@ const Stage = lazy(() =>
 );
 import { assetUrl } from "./game/assets";
 import { useGameStore } from "./game/store";
-import { directions, MAPS, questText } from "./game/domain";
+import { directions, MAPS } from "./game/domain";
 import { DirectionPad } from "./ui/DirectionPad";
+import { QuestGuide } from "./ui/QuestGuide";
 import { DirectionKeys, directionForKey } from "./game/direction-keys";
 import { Inventory } from "./ui/Inventory";
 import { Dialog } from "./ui/Dialog";
@@ -366,11 +367,9 @@ export default function App() {
             </>
           )}
         </h1>
-        <p role={mode === "adventure" ? "status" : undefined}>
-          {mode === "room"
-            ? "Little adventures, sweet surprises, and a room made just for you."
-            : questText(quest)}
-        </p>
+        {mode === "room" ? (
+          <p>Little adventures, sweet surprises, and a room made just for you.</p>
+        ) : <QuestGuide />}
       </section>
       <section className="room-card">
         <div className="scene-container">

@@ -1693,3 +1693,13 @@ legend {
 .travel-map {
   scroll-margin-top: 65px;
 }
+
+/* A single current goal; hints stay folded until Nancy asks. */
+.quest-guide { max-width: 670px; margin: 20px auto 0; padding: 18px 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); text-align: left; }
+.quest-guide h2 { margin: 7px 0; font-size: 19px; color: var(--ink); }
+.quest-guide p { color: var(--ink); }
+.quest-guide .guide-tool { margin-top: 7px; font-size: 12px; color: #77586a; }
+.quest-guide details { margin-top: 12px; font-size: 12px; }
+.quest-guide summary { color: #8c4168; cursor: pointer; width: fit-content; min-height: 32px; display: list-item; }
+.quest-guide details p { margin: 0 0 10px; }
+.quest-guide .hint-ready summary { font-weight: 700; }
