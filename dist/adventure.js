@@ -1,15 +1,16 @@
+import {renderQuestJournal,questJournal} from './adventure-quests.js?v=adventure-7';
 import * as THREE from 'three';
 import {CanvasFallback} from './CanvasFallback.js';
-import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
+import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js?v=adventure-7';
 import {makeGift} from './gifts.js';
 import {RoomSound} from './sound.js';
-import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath,AdventureEncounters} from './adventure-state.js?v=wardrobe-6';
-import {DiscoveryEffects,questArt} from './adventure-effects.js?v=wardrobe-6';
-import {EQUIPMENT_KEY,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=wardrobe-6';
-import {readWardrobe,saveEquipmentChoice} from './equipment-storage.js?v=wardrobe-6';
-import {applyEquipment} from './equipment-model.js?v=wardrobe-6';
-import {EquipmentPreview} from './equipment-preview.js?v=wardrobe-6';
-import {InventoryUI} from './inventory.js?v=wardrobe-6';
+import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath,AdventureEncounters} from './adventure-state.js?v=adventure-7';
+import {DiscoveryEffects,questArt} from './adventure-effects.js?v=adventure-7';
+import {EQUIPMENT_KEY,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=adventure-7';
+import {readWardrobe,saveEquipmentChoice} from './equipment-storage.js?v=adventure-7';
+import {applyEquipment} from './equipment-model.js?v=adventure-7';
+import {EquipmentPreview} from './equipment-preview.js?v=adventure-7';
+import {InventoryUI} from './inventory.js?v=adventure-7';
 const $=id=>document.getElementById(id),KEY='kitty-nancy-adventure-v1';
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{return {};}}
 const state=normalizeAdventure(read(KEY)),sound=new RoomSound();
@@ -27,7 +28,7 @@ function refreshEquipment(){
  if(player&&(player.userData.equipment?.outfit!==equipment.outfit||player.userData.equipment?.item!==equipment.item))applyEquipment(player,equipment);inventoryUI.render(equipment,wardrobe.quest);
  if(preview)preview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===equipment.item).name}`);
 }
-function syncEquipment(){wardrobe=readWardrobe(storage,{quest:state,equipment});Object.assign(equipment,wardrobe.equipment);refreshEquipment();}
+function syncEquipment(){wardrobe=readWardrobe(storage,{quest:state,equipment});state.trackedQuest=wardrobe.quest.trackedQuest;Object.assign(equipment,wardrobe.equipment);refreshEquipment();if(ready)refreshUI();if($('inventory').open&&inventoryUI.tab==='quest')openQuestJournal();}
 const inventoryUI=new InventoryUI((kind,id)=>{
  const result=saveEquipmentChoice(storage,kind,id,{equipment,quest:state});if(!result.accepted)return;
  wardrobe={quest:result.quest,equipment:result.equipment};Object.assign(equipment,result.equipment);refreshEquipment();
@@ -38,11 +39,11 @@ function notice(text){$('notice').textContent=text;$('notice').classList.add('vi
 function modal(){return $('story').open||$('inventory').open;}
 function refreshUI(){
  $('quest').textContent=questText(state);$('area').textContent=MAPS[state.map].title;
- const o=nearbyObject(state);$('interact').textContent=({'M':'Talk to Momo','D':'Enter dungeon','E':'Back to village','C':'Open chest','G':'Moon gate','Q':'Cloud guardian','S':'Moonflower shrine','F':'Make a little wish','o':'Little flowers','H':'Cozy cottage','T':'Little lantern'})[o?.type]||'Talk / inspect ♡';
+ const o=nearbyObject(state);$('interact').textContent=({'M':'Talk to Momo','D':'Enter dungeon','E':'Back to village','C':'Open chest','G':'Moon gate','Q':'Cloud guardian','S':'Moonflower shrine','F':'Make a little wish','o':'Little flowers','H':'Cozy cottage','T':'Little lantern','R':'Lost ribbon','B':'Picnic berries'})[o?.type]||'Talk / inspect ♡';
  if(o?.type==='C'&&state.charms.includes(o.id))$('interact').textContent='View charm';
- $('wayfinder').textContent=villageDirections(state);$('wayfinder').hidden=state.map!=='village';
+ $('wayfinder').textContent=villageDirections(state);$('wayfinder').hidden=!$('wayfinder').textContent;
  $('interact').disabled=!ready||!!motion||modal();
- for(const {object,mesh} of rendered){if(object.type==='G')mesh.visible=!state.gate;}
+ for(const {object,mesh} of rendered){if(object.type==='G')mesh.visible=!state.gate;if(object.type==='R')mesh.visible=!state.ribbons.includes(object.id);if(object.type==='T'){const lit=state.litLanterns.includes(object.id);mesh.children[1].material=lit?mats.glow:mats.gold;}if(object.type==='B')mesh.scale.setScalar(state.berries.includes(object.id)?.7:1);}
 }
 function showDiscovery(result){
  const src=questArt(result.art);$('discoveryImage').hidden=!src;if(src)$('discoveryImage').src=src;
@@ -56,32 +57,34 @@ function showStory(result){
  }
  if(result.chime){sound.chime('arrival');const o=result.source;if(o){const p=new THREE.Vector3(o.x,.7,o.z).project(camera);effects.burst((p.x*.5+.5)*$('world').clientWidth,(-p.y*.5+.5)*$('world').clientHeight,result.art);}}
  if(result.wave)reactBlender(player,'wave',reduced);
+ if(result.questComplete&&state.trackedQuest===result.questComplete)state.trackedQuest=questJournal(state).find(q=>!q.done)?.id||'moonflower';
  save();
  if(result.chime&&result.source?.id==='honey')result.text+=' The Honey picnic outfit is now in Inventory → Clothes!';
- if(result.complete)result.text+=' Your Moonlight dress is unlocked in Inventory → Clothes.';
+ if(result.complete)result.text+=' Your Moonlight dress is unlocked in Inventory → Clothes. Three more little quests are waiting in Inventory → Quest.';
  if(result.complete){const reward=claimAdventureReward(storage);if(reward.claimed)result.text+=reward.name?` ${reward.name} is waiting on your shelf back in the room.`:' Your whole little family is cheering for you back in the room.';if(reward.saveFailed)result.text+=' This browser could not save the room reward. You can return to the shrine to try again.';}
  refreshUI();
  if(!result.choices?.length&&!result.complete){if($('story').open)$('story').close();showDiscovery(result);return;}
  pressed=queued=null;storySource=result.source;$('discovery').hidden=true;$('speaker').textContent=result.speaker;$('storyWords').textContent=result.text;
  const art=questArt(result.art);$('storyImage').hidden=!art;if(art)$('storyImage').src=art;
  $('storyChoices').replaceChildren();
- for(const choice of result.choices||[]){const button=document.createElement('button');button.textContent=choice.label;button.onclick=()=>showStory(interactAdventure(state,choice.id,storySource));$('storyChoices').append(button);}
+ for(const choice of result.choices||[]){const button=document.createElement('button');button.textContent=choice.label;button.onclick=()=>showStory(interactAdventure(state,choice.id,storySource,equipment));$('storyChoices').append(button);}
  $('returnRoom').hidden=!result.complete;
  refreshUI();if(!$('story').open)$('story').showModal();
 }
-function checkEncounter(){const o=encounters.take(state);if(o)showStory(interactAdventure(state,o.type==='M'?'accept':undefined,o));}
-function interact(){if(!ready||motion||modal())return;const o=nearbyObject(state);encounters.mark(state,o);reactBlender(player,'wave',reduced);showStory(interactAdventure(state,undefined,o));}
+function checkEncounter(){const o=encounters.take(state,equipment);if(o)showStory(interactAdventure(state,o.type==='M'?'accept':undefined,o,equipment));}
+function interact(){if(!ready||motion||modal())return;const o=nearbyObject(state);encounters.mark(state,o,equipment);reactBlender(player,'wave',reduced);showStory(interactAdventure(state,undefined,o,equipment));}
 function usePath(type){if(!ready||motion||modal())return;const result=enterAdventurePath(state,type);if(result.changedMap)showStory(result);}
 $('interact').onclick=interact;
 $('closeStory').onclick=()=>$('story').close();$('story').addEventListener('close',()=>{pendingEncounter=true;refreshUI();renderer?.domElement.focus();});
+function openQuestJournal(){renderQuestJournal($('questJournal'),state,id=>{state.trackedQuest=id;save();refreshUI();openQuestJournal();});}
 function openBag(){
- if(!ready)return;pressed=queued=null;syncEquipment();$('bagQuest').textContent=questText(state);
+ if(!ready)return;pressed=queued=null;syncEquipment();openQuestJournal();$('bagQuest').textContent=questText(state);
  $('charms').replaceChildren();for(const [id,name] of [['rose','Rose'],['honey','Honey'],['sky','Sky']]){const el=document.createElement('span'),img=document.createElement('img');img.src=questArt(id);img.alt='';el.append(img,document.createTextNode(name));el.className=state.charms.includes(id)?'':'missing';el.setAttribute('aria-label',name+' charm'+(state.charms.includes(id)?', collected':', missing'));$('charms').append(el);}
  $('questComplete').textContent=state.complete?'Moonflower restored. Your little story is saved. ♡':'Every little step counts. There is no timer.';$('inventory').showModal();
  if(!preview)preview=new EquipmentPreview(loadedAsset,$('equipmentPreview'),{software:renderer.software,reduced});
  preview.resize();refreshEquipment();
 }
-$('bag').onclick=openBag;for(const id of ['closeBag','backToWorld'])$(id).onclick=()=>$('inventory').close();$('inventory').addEventListener('close',()=>renderer?.domElement.focus());
+$('bag').onclick=openBag;for(const id of ['closeBag','backToWorld'])$(id).onclick=()=>$('inventory').close();$('inventory').addEventListener('close',()=>{pendingEncounter=true;renderer?.domElement.focus();});
 $('sound').onclick=async()=>{const on=await sound.toggle();$('sound').textContent=on?'♫ On':'♫ Off';$('sound').setAttribute('aria-pressed',String(on));$('sound').setAttribute('aria-label',on?'Turn sound off':'Turn sound on');};
 $('retry').onclick=()=>location.reload();
 function step(direction){
@@ -97,6 +100,7 @@ function step(direction){
   save();
  }
  refreshUI();
+ if(!motion&&!modal()&&pendingEncounter){pendingEncounter=false;if(reduced)followCamera(true);checkEncounter();}
 }
 addEventListener('keydown',e=>{
  if(modal())return;const direction=dirs[e.key];
@@ -118,8 +122,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncEquipm
 const material=color=>new THREE.MeshStandardMaterial({color,roughness:.9});
 const cube=new THREE.BoxGeometry(1,1,1),sphere=new THREE.SphereGeometry(1,14,10);
 function mesh(parent,geometry,mat,x,y,z,sx=1,sy=sx,sz=sx){const o=new THREE.Mesh(geometry,mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o;}
-const mats={grass:[material('#d7e4c1'),material('#d2dfba')],stone:[material('#d9d1e7'),material('#d3cbe2')],hedge:material('#b6c99f'),wall:material('#b8a9ce'),pink:material('#d992b3'),cream:material('#fff0da'),gold:material('#eed395'),water:material('#b8dce4'),ink:new THREE.MeshBasicMaterial({color:'#4a354b'})};
-function label(text,x,y,z,action){const el=document.createElement(action?'button':'span');el.textContent=text;el.className='world-label';if(action){el.classList.add('world-action');el.onclick=action;}$('world').append(el);labels.push({el,point:new THREE.Vector3(x,y,z)});}
+const mats={grass:[material('#d7e4c1'),material('#d2dfba')],stone:[material('#d9d1e7'),material('#d3cbe2')],hedge:material('#b6c99f'),wall:material('#b8a9ce'),pink:material('#d992b3'),cream:material('#fff0da'),gold:material('#eed395'),glow:new THREE.MeshBasicMaterial({color:'#ffe9ac'}),water:material('#b8dce4'),ink:new THREE.MeshBasicMaterial({color:'#4a354b'})};
+function label(text,x,y,z,action,object){const el=document.createElement(action?'button':'span');el.textContent=text;el.className='world-label';if(action){el.classList.add('world-action');el.onclick=action;}$('world').append(el);labels.push({el,point:new THREE.Vector3(x,y,z),object});}
 function arch(parent){
  const g=new THREE.Group();parent.add(g);
  for(const x of [-.43,.43])mesh(g,new THREE.CylinderGeometry(.07,.07,.8,10),mats.pink,x,.4,0);
@@ -148,6 +152,8 @@ function buildWorld(){
   if(object.type==='T'){
    mesh(g,cube,mats.pink,0,.28,0,.15,.55,.15);mesh(g,sphere,mats.gold,0,.65,0,.17,.22,.17);mesh(g,new THREE.ConeGeometry(.24,.18,6),mats.cream,0,.92,0);
   }
+  if(object.type==='R'){const bow=new THREE.Group();for(const side of [-1,1])mesh(bow,sphere,mats.pink,side*.18,.34,0,.23,.16,.09);mesh(bow,sphere,mats.gold,0,.34,.05,.09);g.add(bow);label('Lost ribbon',object.x,.9,object.z,undefined,object);}
+  if(object.type==='B'){const bush=makeGift('strawberry');bush.scale.setScalar(1.5);g.add(bush);mesh(g,sphere,mats.hedge,0,.06,0,.4,.12,.3);label('Picnic berries',object.x,1.0,object.z);}
   if(object.type==='M'){const teddy=makeGift('teddy');teddy.scale.setScalar(1.5);teddy.position.y=.25;g.add(teddy);label('Momo',object.x,1.5,object.z);}
   if(object.type==='Q'){
    for(const [x,y,s] of [[-.28,.65,.29],[0,.78,.37],[.29,.65,.27]])mesh(g,sphere,mats.cream,x,y,0,s,s*.8,s*.7);
@@ -175,7 +181,7 @@ function followCamera(snap=false,dt=.016){
  const map=MAPS[state.map],target=new THREE.Vector3(THREE.MathUtils.clamp(player.position.x,3,map.w-4),0,THREE.MathUtils.clamp(player.position.z,3,map.h-4));
  const desired=target.clone().add(new THREE.Vector3(0,8,6));
  camera.position.lerp(desired,snap||reduced?1:1-Math.exp(-dt*7));camera.lookAt(new THREE.Vector3(camera.position.x,0,camera.position.z-6));camera.updateMatrixWorld(true);
- for(const l of labels){const p=l.point.clone().project(camera);l.el.hidden=p.x<-1||p.x>1||p.y<-1||p.y>1;l.el.style.left=(p.x*.5+.5)*$('world').clientWidth+'px';l.el.style.top=(-p.y*.5+.5)*$('world').clientHeight+'px';}
+ for(const l of labels){const p=l.point.clone().project(camera);l.el.hidden=(l.object?.type==='R'&&state.ribbons.includes(l.object.id))||p.x<-1||p.x>1||p.y<-1||p.y>1;l.el.style.left=(p.x*.5+.5)*$('world').clientWidth+'px';l.el.style.top=(-p.y*.5+.5)*$('world').clientHeight+'px';}
 }
 try{
  const asset=await loadBlenderKitty();loadedAsset=asset;scene=new THREE.Scene();world=new THREE.Group();scene.add(world);

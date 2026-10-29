@@ -108,3 +108,12 @@ test('equipping clothes changes the actual Blender dress and bow, adds rigged de
  for(let i=0;i<8;i++)applyEquipment(hero,{outfit:'sailor',item:'flowers'});assert.equal(b.wardrobe.cache.size,3);assert.ok(b.gifts.original.every(o=>o.visible));
  applyEquipment(hero,{outfit:'classic',item:'flowers'});assert.ok([...b.wardrobe.cache.values()].every(o=>!o.visible));reactBlender(hero,'wave');updateBlender(hero,.8);assert.ok(b.current);
 });
+
+test('tickles and kisses animate gently and settle; high five uses the Blender paw animation',()=>{
+ for(const kind of ['tickle','kiss']){
+  const hero=makeBlenderKitty(asset),b=hero.userData.blender;reactBlender(hero,kind);updateBlender(hero,.35);assert.ok(Math.abs(b.headIdle.rotation.x)+Math.abs(b.headIdle.rotation.y)+Math.abs(b.headIdle.rotation.z)>0);
+  updateBlender(hero,2);updateBlender(hero,.1);assert.equal(b.gesture,null);assert.ok(b.armIdle.every(a=>Math.abs(a.rotation.z)<1e-6));
+  reactBlender(hero,kind,true);updateBlender(hero,.3,{reduced:true});assert.equal(b.gesture,null);assert.ok(b.armIdle.every(a=>a.rotation.z===0));
+ }
+ const hero=makeBlenderKitty(asset);reactBlender(hero,'highfive');assert.equal(hero.userData.blender.current,hero.userData.blender.actions.wave);
+});

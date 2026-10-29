@@ -1,17 +1,18 @@
+import {renderQuestJournal} from './adventure-quests.js?v=adventure-7';
 import {DOLLS,normalizeState,nextDoll,rewardDoll} from './state.js';
-import {KittyRoom} from './scene.js?v=wardrobe-6';
-import {loadBlenderKitty} from './blender-kitty.js';
+import {KittyRoom} from './scene.js?v=adventure-7';
+import {loadBlenderKitty} from './blender-kitty.js?v=adventure-7';
 import {RoomSound} from './sound.js';
 import {MISSIONS,KEEPSAKES,createMission,tickMission,actMission,replayMemory,normalizeJournal,recordMission} from './missions.js';
 import {GIFTS} from './gifts.js';
 import {LOVE_LETTER} from './letter.js';
 import {bindPicnicBoard} from './item-play.js';
-import {EQUIPMENT_KEY,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=wardrobe-6';
-import {readWardrobe,saveEquipmentChoice} from './equipment-storage.js?v=wardrobe-6';
-import {InventoryUI} from './inventory.js?v=wardrobe-6';
-import {EquipmentPreview} from './equipment-preview.js?v=wardrobe-6';
-import {questText} from './adventure-state.js?v=wardrobe-6';
-import {questArt} from './adventure-effects.js?v=wardrobe-6';
+import {EQUIPMENT_KEY,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=adventure-7';
+import {readWardrobe,saveEquipmentChoice} from './equipment-storage.js?v=adventure-7';
+import {InventoryUI} from './inventory.js?v=adventure-7';
+import {EquipmentPreview} from './equipment-preview.js?v=adventure-7';
+import {questText} from './adventure-state.js?v=adventure-7';
+import {questArt} from './adventure-effects.js?v=adventure-7';
 
 const $=id=>document.getElementById(id), KEY='kitty-room-3d-v1';
 function read(key){try{const value=JSON.parse(localStorage.getItem(key)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return {};}}
@@ -32,12 +33,14 @@ let journal=normalizeJournal(read('kitty-nancy-missions-v1'));
 let heldGift=equipment.item;
 function updateGiftAction(){const gift=GIFTS.find(g=>g.id===heldGift);$('playGift').textContent=gift?.action||'Choose a little gift';$('giftFeedback').textContent=gift?.description||'Kitty’s paws are free. Choose a present in Inventory → Items.';}
 function renderRoomQuest(){
+  renderQuestJournal($('questJournal'),wardrobe.quest,id=>{const latest=readWardrobe(wardrobeStorage);latest.quest.trackedQuest=id;try{wardrobeStorage.setItem('kitty-nancy-adventure-v1',JSON.stringify(latest.quest));syncEquipment();}catch{say('This quest will stay for this visit.');}});
   $('bagQuest').textContent=questText(wardrobe.quest);$('charms').replaceChildren();
   for(const [id,name] of [['rose','Rose'],['honey','Honey'],['sky','Sky']]){const el=document.createElement('span'),img=document.createElement('img');img.src=questArt(id);img.alt='';el.append(img,document.createTextNode(name));el.className=wardrobe.quest.charms.includes(id)?'':'missing';el.setAttribute('aria-label',name+' charm'+(wardrobe.quest.charms.includes(id)?', collected':', missing'));$('charms').append(el);}
   $('questComplete').textContent=wardrobe.quest.complete?'Moonflower restored. Your earned clothes are home with you. ♡':'Earn more outfits on your Moonflower Adventure.';
 }
 function syncEquipment(){
   wardrobe=readWardrobe(wardrobeStorage,{equipment,quest:wardrobe.quest});Object.assign(equipment,wardrobe.equipment);heldGift=equipment.item;
+  if(room)room.setAdventureRewards(wardrobe.quest);
   if(room&&JSON.stringify(room.equipment)!==JSON.stringify(equipment))room.setEquipment(equipment);
   wardrobeUI.render(equipment,wardrobe.quest);renderRoomQuest();
   if(wardrobePreview)wardrobePreview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===heldGift).name}`);
@@ -57,7 +60,7 @@ function openWardrobe(tab='clothes'){
   wardrobePreview.resize();wardrobePreview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===heldGift).name}`);
 }
 $('openWardrobe').onclick=()=>openWardrobe();for(const id of ['closeBag','backToWorld'])$(id).onclick=()=>$('inventory').close();
-$('inventory').addEventListener('close',()=>{if(room)room.inventoryOpen=false;$('openWardrobe').focus();});
+$('inventory').addEventListener('close',()=>{if(room)room.inventoryOpen=false;if(document.activeElement===document.body||$('inventory').contains(document.activeElement))$('openWardrobe').focus();});
 function renderAdventures(){
   updateGiftAction();$('readLetter').textContent=preferences.letterOpened?'Read your letter again':'Open your letter';
   $('missionCards').innerHTML=MISSIONS.map(m=>`<button data-mission="${m.id}" class="mission-card"><span aria-hidden="true">${m.icon}</span><strong>${m.title}</strong><small>${m.description}</small><em>${journal.completed[m.id]?`${journal.completed[m.id]} completed`:'A keepsake to discover'}</em></button>`).join('');
@@ -119,6 +122,14 @@ function playGift(){
   else{say(result.finishedBites?'All gone! A happy Kitty and a fresh strawberry for next time. ♡':`Little bite ${result.bite} of 3. Tap the strawberry for another nibble.`);if(result.finishedBites)room.heartBurst();}
 }
 $('playGift').onclick=playGift;
+let lastTogether=-Infinity;
+function playTogether(kind){
+  if(!ready||hunt?.active||celebrating||performance.now()-lastTogether<700)return;
+  lastTogether=performance.now();if($('adventureModal').open)$('adventureModal').close();room.react(kind);room.heartBurst();sound.chime('catch');
+  say({hug:`A soft little cuddle for ${recipient}. ♡`,highfive:'High five! A tiny paw and a happy wink. ♡',tickle:'Tiny tickles, happy wiggles! ♡',kiss:`A little kiss, just for ${recipient}. ♡`}[kind]);
+}
+$('togetherActions').onclick=e=>{const button=e.target.closest('[data-together]');if(button)playTogether(button.dataset.together);};
+
 
 function save(){
   // Merge collections before writing, including progress earned in another tab.
@@ -261,6 +272,7 @@ try{
     if(!hunt?.active&&!celebrating&&hero){
       const now=performance.now();if(now-lastTouch<650)return;lastTouch=now;
       if(part==='offer'){playGift();return;}
+      if(['highfive','tickle','kiss'].includes(part)){playTogether(part);return;}
       room.react(part);
       if(part==='pet'){room.heartBurst();say('A gentle head pat. A little love back. ♡');}
       else if(part==='tilt')say('A bow, a little tilt, and a hello. ♡');

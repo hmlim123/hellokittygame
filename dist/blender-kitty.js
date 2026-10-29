@@ -57,6 +57,9 @@ export function blenderTouchPart(object){
   let o=object;
   while(o){
     if(o.userData.interaction)return o.userData.interaction;
+    if(/^White_arm/.test(o.name))return 'highfive';
+    if(/(foot|Foot|paw|Paw)/.test(o.name))return 'tickle';
+    if(/nose/i.test(o.name))return 'kiss';
     if(o.name.startsWith('Bow_'))return 'tilt';
     if(/^(Pink_daisy|Yellow_daisy|Pink_flower|Yellow_flower|Bouquet_leaf|Leaf_vein)/.test(o.name))return 'offer';
     o=o.parent;
@@ -64,14 +67,14 @@ export function blenderTouchPart(object){
   return 'pet';
 }
 export function reactBlender(hero,emotion,reduced=false){
-  const b=hero.userData.blender,action=b.actions[emotion];b.reduced=reduced;
+  const b=hero.userData.blender,action=b.actions[emotion==='highfive'?'wave':emotion];b.reduced=reduced;
   // Repeated taps don't restart a gesture mid-pose.
   if(action&&b.current===action&&b.age<action.getClip().duration)return;
   if(b.current){b.current.fadeOut(.2);b.fading.push({action:b.current,left:.22});}
   b.current=null;b.reducedWink=false;b.gesture=null;b.age=0;
-  if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(emotion==='wave'||emotion==='pet'){b.resetEyes(true);b.reducedWink=true;}return;}
+  if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(['wave','pet','highfive','kiss','tickle','hug'].includes(emotion)){b.resetEyes(true);b.reducedWink=true;}return;}
   if(action){action.reset().fadeIn(.2).play();b.current=action;}
-  else if(['pet','tilt','catch','hug'].includes(emotion))b.gesture=emotion;
+  else if(['pet','tilt','catch','hug','kiss','tickle'].includes(emotion))b.gesture=emotion;
 }
 export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idle=true}={}){
   const b=hero.userData.blender;dt=Number.isFinite(dt)?Math.max(0,dt):0;b.age+=dt;b.time+=dt;b.mixer.update(dt);
@@ -89,6 +92,8 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   if(b.gesture&&!reduced){
     const p=Math.min(1,b.age/(b.gesture==='hug'?1.35:1.1)),curve=Math.sin(Math.PI*p);
     if(b.gesture==='hug'){b.armIdle[0].rotation.z=curve*.45;b.armIdle[1].rotation.z=-curve*.45;}
+    if(b.gesture==='tickle'){b.headIdle.rotation.z+=Math.sin(b.age*22)*curve*.07;b.armIdle[0].rotation.z=Math.sin(b.age*22)*curve*.16;b.armIdle[1].rotation.z=-Math.sin(b.age*22)*curve*.16;}
+    if(b.gesture==='kiss')b.headIdle.rotation.y+=curve*.14;
     if(b.gesture==='tilt')b.headIdle.rotation.z+=curve*.15;
     else b.headIdle.rotation.x+=curve*.10;
     if(p===1)b.gesture=null;

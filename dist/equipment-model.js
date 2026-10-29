@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {setHeldGift} from './gifts.js';
-import {OUTFITS,HELD_ITEMS} from './equipment-state.js?v=wardrobe-6';
+import {OUTFITS,HELD_ITEMS} from './equipment-state.js?v=adventure-7';
 const cloth=color=>new THREE.MeshStandardMaterial({color,roughness:.9,side:THREE.DoubleSide});
 function ellipsoid(parent,name,material,x,y,z,sx,sy,sz){const o=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);o.name=name;o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o;}
 function patch(parent,name,mat,points){const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(points.flat(),3));geometry.computeVertexNormals();const o=new THREE.Mesh(geometry,mat);o.name=name;parent.add(o);return o;}
@@ -11,6 +11,10 @@ function star(parent,x,y,z){
 function outfitDetails(id){
  const g=new THREE.Group();g.name='Outfit_'+id;
  const cream=cloth('#fff3dd');
+ if(id==='berry'){
+  for(const side of [-1,1])ellipsoid(g,'Berry_collar',cream,side*.18,.60,.60,.22,.14,.04);
+  const shape=new THREE.Shape();shape.moveTo(0,-.11);shape.bezierCurveTo(-.28,.08,-.12,.28,0,.13);shape.bezierCurveTo(.12,.28,.28,.08,0,-.11);const heart=new THREE.Mesh(new THREE.ShapeGeometry(shape),cream);heart.position.set(0,-.08,.80);g.add(heart);
+ }
  if(id==='sailor'){
   for(const side of [-1,1])patch(g,'Sailor_collar',cream,[[side*.56,.75,.43],[side*.31,.25,.68],[0,.59,.66]]);
   const blue=cloth('#628fae');ellipsoid(g,'Sailor_knot',blue,0,.48,.70,.08,.08,.035);

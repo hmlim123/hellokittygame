@@ -73,6 +73,20 @@ open three treasure chests, help the cloud guardian in a three-turn conversation
 open the moon gate, and restore Nancy’s moonflower at the shrine. The current
 chapter has one village, one dungeon, and a complete ending. There is no timer.
 
+There are also three optional quests, available in **Inventory → Quest** in
+the room and adventure:
+
+| Quest | How to play | Reward at home |
+| --- | --- | --- |
+| Momo’s lost ribbons | Find three village ribbons and approach Momo | Berry sweetheart outfit |
+| A picnic for Momo | Pick both southern garden berry bushes, equip Sweet strawberry, then approach Momo | Picnic basket keepsake |
+| Lanterns for the garden | After restoring the moonflower, visit both northern lanterns and return to the shrine | Moon lantern keepsake |
+
+Use **Follow quest** for its objective and direction hint. Pickups and hand-ins
+happen on approach. Completing a tracked quest follows the next unfinished one.
+Existing completed chapters gain the optional quests without resetting progress.
+Clothes and keepsakes appear in Kitty’s room through the shared save.
+
 Walk next to Momo to start the quest automatically, and approach a chest to collect
 its charm. Discoveries show an illustrated card without stopping movement or
 requiring a dismiss button. Charms rise above their chests with a small burst of
@@ -90,7 +104,7 @@ beside it, or tap the arch or its label. Entering starts the quest automatically
 talking to Momo first is optional. The same entrance works from either side of
 the arch. Direction hints guide you to Momo and, after accepting the quest, the
 entrance even when it is off-screen.
-If a browser still shows the older entrance, open `adventure.html?v=wardrobe-6`.
+If a browser still shows the older entrance, open `adventure.html?v=adventure-7`.
 The entry script, quest module and stylesheet also carry this release query so
 the browser requests the matching update without clearing Nancy’s saved progress.
 
@@ -132,6 +146,19 @@ own appearances and the selected friend stays saved.
 
 ![Kitty’s clothes and live preview](docs/nancy-inventory-clothes.png)
 ![The earned picnic outfit at home](docs/nancy-earned-outfit-room.png)
+
+## Playing with Kitty and looking around
+
+The room supports a full **360° camera orbit**: drag or swipe around Kitty, or
+focus the room canvas and press Left/Right. Walls and the cabinet cut away when
+they would block the back view. **Reset view** returns to the front. Inventory
+previews can also rotate; double-click a preview to face forward again.
+
+Open **Play a mission → Gifts & play → Play together** for cuddles, high fives,
+tickles and kisses. Tapping a paw gives a high five, feet trigger tickles, the
+nose sends a kiss, the bow tilts her head, and the head receives a gentle pat.
+These use the actual Blender rig and respect reduced motion. The main screen
+keeps its three play buttons.
 
 ## Run locally
 
@@ -238,7 +265,7 @@ npm ci
 npm test
 ```
 
-53 automated checks cover the Blender asset, real paw and wink playback, pose
+Automated checks cover the Blender asset, real paw and wink playback, pose
 reset, continuous gesture switching, bounded attention, blinking, touch targets,
 friend arrivals, opt-in audio, relaxed hunts, gift replacement, timed/memory
 mission rules, keepsake persistence, picnic placement, item play, the reserved
@@ -276,6 +303,7 @@ python tests/adventure-browser.py
 python tests/quest-effects-browser.py
 python tests/inventory-browser.py
 python tests/room-wardrobe-browser.py
+python tests/adventure-expansion-browser.py
 ```
 
 Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
@@ -298,6 +326,7 @@ colors and checks phone controls with WebGL disabled.
 | `dist/letter.js` | User-authored letter content (pending) |
 | `dist/adventure.html`, `dist/adventure.js` | Separate RPG map and controls |
 | `dist/adventure-state.js` | Maps, collision, quests, save repair and reward rules |
+| `dist/adventure-quests.js` | Shared quest journal, progress and follow controls |
 | `dist/adventure-effects.js`, `dist/assets/quest/` | Discovery effects and original vector illustrations |
 | `dist/equipment-state.js`, `dist/equipment-model.js` | Equipment unlocks, save repair and clothing on the Blender rig |
 | `dist/equipment-storage.js` | Shared wardrobe reads, validated changes and merging across pages |

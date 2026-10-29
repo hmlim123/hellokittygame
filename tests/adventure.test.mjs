@@ -78,3 +78,22 @@ test('village hints lead around obstacles to Momo and then to the off-screen dun
  interactAdventure(s);assert.equal(s.map,'garden');assert.equal(villageDirections(s),'');
  }
 });
+
+test('ribbon and picnic quests are reachable, require the equipped item, and cannot award twice',()=>{
+ const s=normalizeAdventure({accepted:true});
+ for(const [id,x,z] of [['rose',5,3],['sky',12,9],['honey',4,5]]){go(s,x,z);interactAdventure(s,undefined,MAPS.village.objects.find(o=>o.type==='R'&&o.id===id));}
+ go(s,5,6);assert.equal(interactAdventure(s).questComplete,'ribbons');assert.equal(s.ribbonReturned,true);assert.equal(interactAdventure(s).questComplete,undefined);
+ go(s,12,2);for(const [id,x,z] of [['west',3,10],['east',11,10]]){go(s,x,z);interactAdventure(s,undefined,MAPS.garden.objects.find(o=>o.type==='B'&&o.id===id));}
+ go(s,7,12);go(s,5,6);const momo=MAPS.village.objects.find(o=>o.type==='M');
+ assert.match(interactAdventure(s,undefined,momo,{item:'none'}).text,/Equip Sweet strawberry/);assert.equal(s.picnicDelivered,false);
+ assert.equal(interactAdventure(s,undefined,momo,{item:'strawberry'}).questComplete,'picnic');assert.equal(interactAdventure(s,undefined,momo,{item:'strawberry'}).questComplete,undefined);
+ assert.deepEqual(normalizeAdventure(s),s);
+});
+test('lantern quest follows the original ending and old completed saves gain optional quests safely',()=>{
+ const s=complete();
+ for(const [id,x,z] of [['west',3,4],['east',11,4]]){go(s,x,z);assert.equal(interactAdventure(s,undefined,MAPS.garden.objects.find(o=>o.type==='T'&&o.id===id)).chime,true);}
+ go(s,7,3);assert.equal(interactAdventure(s).questComplete,'lanterns');assert.equal(s.lanternsBlessed,true);assert.deepEqual(normalizeAdventure(s),s);
+ const e=new AdventureEncounters();assert.equal(e.take(s),undefined);
+ const corrupt=normalizeAdventure({ribbons:['rose','rose'],ribbonReturned:true,berries:['bad'],picnicDelivered:true,litLanterns:['west','east'],lanternsBlessed:true});
+ assert.equal(corrupt.ribbonReturned,false);assert.equal(corrupt.picnicDelivered,false);assert.equal(corrupt.lanternsBlessed,false);
+});

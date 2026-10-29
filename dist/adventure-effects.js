@@ -16,4 +16,4 @@ export class DiscoveryEffects{
  update(dt){for(const g of this.groups)g.time-=dt;this.groups=this.groups.filter(g=>{if(g.time>0)return true;g.el.remove();return false;});}
  clear(){for(const g of this.groups)g.el.remove();this.groups=[];}
 }
-export function questArt(id){const path=`./assets/quest/${id}.svg`;return ['rose','honey','sky','momo','cloud','gate','moonflower'].includes(id)?globalThis.KITTY_ART_URLS?.[path]||path+'?v=wardrobe-6':null;}
+export function questArt(id){const path=`./assets/quest/${id}.svg`;return ['rose','honey','sky','momo','cloud','gate','moonflower','berry','lantern'].includes(id)?globalThis.KITTY_ART_URLS?.[path]||path+'?v=adventure-7':null;}

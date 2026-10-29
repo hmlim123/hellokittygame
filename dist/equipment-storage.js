@@ -1,5 +1,5 @@
-import {normalizeAdventure} from './adventure-state.js?v=wardrobe-6';
-import {EQUIPMENT_KEY,normalizeEquipment,equip} from './equipment-state.js?v=wardrobe-6';
+import {normalizeAdventure} from './adventure-state.js?v=adventure-7';
+import {EQUIPMENT_KEY,normalizeEquipment,equip} from './equipment-state.js?v=adventure-7';
 export function readWardrobe(storage,fallback={}){
  const read=(key,otherwise={})=>{try{const value=storage.getItem(key);return value===null?otherwise:JSON.parse(value);}catch{return otherwise;}};
  const quest=normalizeAdventure(read('kitty-nancy-adventure-v1',fallback.quest||{}));

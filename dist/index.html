@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en" data-release="wardrobe-6">
+<html lang="en" data-release="adventure-7">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fff7f3"><meta name="description" content="A little Hello Kitty world made for Nancy, with gentle missions, gifts, and keepsakes.">
 <title>Nancy’s Hello Kitty · A little happy place</title>
-<link rel="stylesheet" href="./simple.css?v=wardrobe-6">
-<link rel="stylesheet" href="./inventory.css?v=wardrobe-6"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<link rel="stylesheet" href="./simple.css?v=adventure-7">
+<link rel="stylesheet" href="./inventory.css?v=adventure-7"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body><main>
 <header><a class="brand" href="./" aria-label="Hello Kitty home"><svg viewBox="0 0 80 48" aria-hidden="true"><path d="M36 17C13-4 1 4 5 25S23 48 38 31M44 17C67-4 79 4 75 25S57 48 42 31" fill="currentColor"/><ellipse cx="40" cy="24" rx="10" ry="11" fill="currentColor"/></svg><span>hello kitty<small>A LITTLE GIFT FOR <span data-recipient>Nancy</span></small></span></a><div class="header-actions"><span class="header-note">made with love, for <span data-recipient>Nancy</span> ♡</span><button id="openWardrobe" disabled>Inventory ♡</button></div></header>
@@ -19,7 +19,7 @@
 <div id="bowTargets" class="targets"></div>
 <div id="pausePanel" class="pause-panel" hidden><div><span class="eyebrow">TAKE YOUR TIME</span><h2>A little pause.</h2><button id="resume" class="primary">Keep playing</button></div></div>
 <p id="toast" class="toast" role="status"></p>
-<span id="sceneHint" class="scene-hint" role="status">Tap her bow, present, or head · Drag to look around</span>
+<span id="sceneHint" class="scene-hint" role="status">Tap Kitty to play · Drag for a 360° view</span>
 <div id="webglError" class="error-panel" hidden><h2>Kitty needs a moment.</h2><p>The room couldn’t load. Please try reloading this page.</p><button id="reload" class="primary">Try again</button></div>
 </div>
 <div class="action-bar" aria-label="Play with Kitty">
@@ -33,9 +33,9 @@
 <footer>A small, unofficial fan-made happy place. Hello Kitty © Sanrio.</footer>
 <dialog id="adventureModal" class="adventure-modal" aria-labelledby="adventureTitle">
 <button id="closeAdventures" class="close" aria-label="Close adventures">×</button><span class="eyebrow">A LITTLE WORLD MADE FOR YOU</span><h2 id="adventureTitle"><span data-recipient>Nancy</span>’s little adventures</h2>
-<div class="adventure-tabs" role="tablist" aria-label="Adventures and gifts"><button id="tab-missions" role="tab" aria-selected="true" aria-controls="panel-missions">Missions</button><button id="tab-gifts" role="tab" aria-selected="false" aria-controls="panel-gifts" tabindex="-1">Gifts</button><button id="tab-nancy" role="tab" aria-selected="false" aria-controls="panel-nancy" tabindex="-1">For <span data-recipient>Nancy</span></button></div>
-<section id="panel-missions" role="tabpanel" aria-labelledby="tab-missions"><p>Pick a little adventure. Every completed mission can bring a new friend home.</p><div id="missionCards" class="mission-cards"></div><a class="adventure-link" href="./adventure.html?v=wardrobe-6"><span aria-hidden="true">☾</span><span><strong>Moonflower Adventure</strong><small>A little village, a gentle dungeon, and a quest for Nancy ↗</small></span></a><label class="relaxed-setting"><input type="checkbox" id="relaxed"> Relaxed hunt <small>No timer</small></label><p class="small-note">Take your time. Memory Hearts always has no timer.</p></section>
-<section id="panel-gifts" role="tabpanel" aria-labelledby="tab-gifts" hidden><p>Choose a present, then play with it. You can also tap the present in Kitty’s paws.</p><div id="giftChoices" class="gift-choices"></div><p id="giftFeedback" role="status"></p><button id="playGift" class="primary">Set up a picnic</button><button id="backToKitty" class="primary">Back to Kitty</button></section>
+<div class="adventure-tabs" role="tablist" aria-label="Adventures and gifts"><button id="tab-missions" role="tab" aria-selected="true" aria-controls="panel-missions">Missions</button><button id="tab-gifts" role="tab" aria-selected="false" aria-controls="panel-gifts" tabindex="-1">Gifts &amp; play</button><button id="tab-nancy" role="tab" aria-selected="false" aria-controls="panel-nancy" tabindex="-1">For <span data-recipient>Nancy</span></button></div>
+<section id="panel-missions" role="tabpanel" aria-labelledby="tab-missions"><p>Pick a little adventure. Every completed mission can bring a new friend home.</p><div id="missionCards" class="mission-cards"></div><a class="adventure-link" href="./adventure.html?v=adventure-7"><span aria-hidden="true">☾</span><span><strong>Moonflower Adventure</strong><small>A little village, a gentle dungeon, and a quest for Nancy ↗</small></span></a><label class="relaxed-setting"><input type="checkbox" id="relaxed"> Relaxed hunt <small>No timer</small></label><p class="small-note">Take your time. Memory Hearts always has no timer.</p></section>
+<section id="panel-gifts" role="tabpanel" aria-labelledby="tab-gifts" hidden><p>Choose a present, then play with it. You can also tap the present in Kitty’s paws.</p><div id="giftChoices" class="gift-choices"></div><p id="giftFeedback" role="status"></p><button id="playGift" class="primary">Set up a picnic</button><section class="together-section"><h3>Play together</h3><p>Or tap her paws, nose, or head in the room.</p><div id="togetherActions"><button data-together="hug">Cuddle ♡</button><button data-together="highfive">High five ✧</button><button data-together="tickle">Tickle ♫</button><button data-together="kiss">Send a kiss ♡</button></div></section><button id="backToKitty" class="primary">Back to Kitty</button></section>
 <section id="panel-nancy" role="tabpanel" aria-labelledby="tab-nancy" hidden><article class="nancy-letter"><span aria-hidden="true">💌</span><h3>A letter for <span data-recipient>Nancy</span></h3><p>A little envelope with a place for words just for you.</p><button id="readLetter" class="primary">Open your letter</button></article><h3 class="keepsake-heading">Your little keepsakes</h3><div id="keepsakes" class="keepsakes"></div><small id="journalStatus">Your memories save in this browser.</small></section>
 </dialog>
 <dialog id="letterModal" class="letter-modal" aria-labelledby="letterTitle"><button id="closeLetter" class="close" aria-label="Close letter">×</button><span class="eyebrow">A LITTLE LETTER, JUST FOR YOU</span><h2 id="letterTitle">For <span data-recipient>Nancy</span></h2><div id="letterCover" class="sealed-envelope" aria-hidden="true"><span>♡</span></div><button id="unsealLetter" class="primary" aria-expanded="false" aria-controls="letterPaper">Break the heart seal</button><article id="letterPaper" class="letter-paper" hidden><h3 id="letterGreeting" tabindex="-1">Dear <span data-recipient>Nancy</span>,</h3><p id="letterPending">Your special letter is being written. This little place is waiting for your words.</p><div id="letterWords"></div><p id="letterSignoff" class="signature"></p><p id="letterSignature" class="signature"></p></article></dialog>
@@ -46,6 +46,6 @@
 <div id="equipmentLayout"><section id="previewPane" aria-label="Equipped outfit and item"><div id="equipmentPreview"></div><strong id="equippedOutfit"></strong><span id="equippedItem"></span></section>
 <section id="inventoryPanel-clothes" role="tabpanel" aria-labelledby="inventoryTab-clothes"><p>Pick a little outfit. Kitty changes right away.</p><div id="outfitGrid" class="equipment-grid"></div></section>
 <section id="inventoryPanel-items" role="tabpanel" aria-labelledby="inventoryTab-items" hidden><p>Choose what Kitty carries on her adventure.</p><div id="itemGrid" class="equipment-grid"></div></section>
-<section id="inventoryPanel-quest" role="tabpanel" aria-labelledby="inventoryTab-quest" hidden><p id="bagQuest"></p><div id="charms"></div><p id="questComplete"></p><a href="./adventure.html?v=wardrobe-6">Continue the adventure ↗</a></section></div>
+<section id="inventoryPanel-quest" role="tabpanel" aria-labelledby="inventoryTab-quest" hidden><p id="bagQuest"></p><div id="charms"></div><p id="questComplete"></p><div id="questJournal"></div><a href="./adventure.html?v=adventure-7">Continue the adventure ↗</a></section></div>
 <p id="inventoryStatus" role="status"></p><p id="equipmentSaveStatus">Your outfit and item save automatically.</p><button id="backToWorld">Back to Kitty</button></dialog>
-</main><script type="module" src="./app.js?v=wardrobe-6"></script></body></html>
+</main><script type="module" src="./app.js?v=adventure-7"></script></body></html>
