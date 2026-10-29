@@ -16,4 +16,4 @@ export class DiscoveryEffects{
  update(dt){for(const g of this.groups)g.time-=dt;this.groups=this.groups.filter(g=>{if(g.time>0)return true;g.el.remove();return false;});}
  clear(){for(const g of this.groups)g.el.remove();this.groups=[];}
 }
-export function questArt(id){return ['rose','honey','sky','momo','cloud','gate','moonflower'].includes(id)?`./assets/quest/${id}.svg?v=encounters-4`:null;}
+export function questArt(id){return ['rose','honey','sky','momo','cloud','gate','moonflower'].includes(id)?`./assets/quest/${id}.svg?v=inventory-5`:null;}

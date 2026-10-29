@@ -1,13 +1,19 @@
 import * as THREE from 'three';
 import {CanvasFallback} from './CanvasFallback.js';
 import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
-import {makeGift,setHeldGift} from './gifts.js';
+import {makeGift} from './gifts.js';
 import {RoomSound} from './sound.js';
-import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath,AdventureEncounters} from './adventure-state.js?v=encounters-4';
-import {DiscoveryEffects,questArt} from './adventure-effects.js?v=encounters-4';
+import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath,AdventureEncounters} from './adventure-state.js?v=inventory-5';
+import {DiscoveryEffects,questArt} from './adventure-effects.js?v=inventory-5';
+import {EQUIPMENT_KEY,normalizeEquipment,equip,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=inventory-5';
+import {applyEquipment} from './equipment-model.js?v=inventory-5';
+import {EquipmentPreview} from './equipment-preview.js?v=inventory-5';
+import {InventoryUI} from './inventory.js?v=inventory-5';
 const $=id=>document.getElementById(id),KEY='kitty-nancy-adventure-v1';
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{return {};}}
 const state=normalizeAdventure(read(KEY)),sound=new RoomSound();
+const equipment=normalizeEquipment(read(EQUIPMENT_KEY),state,read('kitty-room-preferences-v1'));
+let loadedAsset,preview;
 const storage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const encounters=new AdventureEncounters(),effects=new DiscoveryEffects($('effects'),{reduced});
@@ -15,6 +21,12 @@ let pendingEncounter=true,discoveryTime=0,storySource=null;
 let ready=false,player,renderer,camera,scene,world,clock,motion=null,pressed=null,queued=null,noticeTime=0,walkTime=0;
 const rendered=[],labels=[];
 const dirs={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
+function saveEquipment(){try{localStorage.setItem(EQUIPMENT_KEY,JSON.stringify(equipment));$('equipmentSaveStatus').textContent='Your outfit and item save automatically.';}catch{$('equipmentSaveStatus').textContent='Saving unavailable. Your choice lasts while this tab stays open.';}}
+function refreshEquipment(){
+ if(player)applyEquipment(player,equipment);inventoryUI.render(equipment,state);
+ if(preview)preview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===equipment.item).name}`);
+}
+const inventoryUI=new InventoryUI((kind,id)=>{if(equip(equipment,kind,id,state)){refreshEquipment();saveEquipment();}});
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='Your steps and discoveries save automatically.';}catch{$('saveStatus').textContent='Saving unavailable. Keep this tab open to continue your adventure.';}}
 function notice(text){$('notice').textContent=text;$('notice').classList.add('visible');noticeTime=4;}
 function modal(){return $('story').open||$('inventory').open;}
@@ -39,6 +51,8 @@ function showStory(result){
  if(result.chime){sound.chime('arrival');const o=result.source;if(o){const p=new THREE.Vector3(o.x,.7,o.z).project(camera);effects.burst((p.x*.5+.5)*$('world').clientWidth,(-p.y*.5+.5)*$('world').clientHeight,result.art);}}
  if(result.wave)reactBlender(player,'wave',reduced);
  save();
+ if(result.chime&&result.source?.id==='honey')result.text+=' The Honey picnic outfit is now in Inventory → Clothes!';
+ if(result.complete)result.text+=' Your Moonlight dress is unlocked in Inventory → Clothes.';
  if(result.complete){const reward=claimAdventureReward(storage);if(reward.claimed)result.text+=reward.name?` ${reward.name} is waiting on your shelf back in the room.`:' Your whole little family is cheering for you back in the room.';if(reward.saveFailed)result.text+=' This browser could not save the room reward. You can return to the shrine to try again.';}
  refreshUI();
  if(!result.choices?.length&&!result.complete){if($('story').open)$('story').close();showDiscovery(result);return;}
@@ -58,6 +72,8 @@ function openBag(){
  if(!ready)return;pressed=queued=null;$('bagQuest').textContent=questText(state);
  $('charms').replaceChildren();for(const [id,name] of [['rose','Rose'],['honey','Honey'],['sky','Sky']]){const el=document.createElement('span'),img=document.createElement('img');img.src=questArt(id);img.alt='';el.append(img,document.createTextNode(name));el.className=state.charms.includes(id)?'':'missing';el.setAttribute('aria-label',name+' charm'+(state.charms.includes(id)?', collected':', missing'));$('charms').append(el);}
  $('questComplete').textContent=state.complete?'Moonflower restored. Your little story is saved. ♡':'Every little step counts. There is no timer.';$('inventory').showModal();
+ if(!preview)preview=new EquipmentPreview(loadedAsset,$('equipmentPreview'),{software:renderer.software,reduced});
+ preview.resize();refreshEquipment();
 }
 $('bag').onclick=openBag;for(const id of ['closeBag','backToWorld'])$(id).onclick=()=>$('inventory').close();$('inventory').addEventListener('close',()=>renderer?.domElement.focus());
 $('sound').onclick=async()=>{const on=await sound.toggle();$('sound').textContent=on?'♫ On':'♫ Off';$('sound').setAttribute('aria-pressed',String(on));$('sound').setAttribute('aria-label',on?'Turn sound off':'Turn sound on');};
@@ -153,7 +169,7 @@ function followCamera(snap=false,dt=.016){
  for(const l of labels){const p=l.point.clone().project(camera);l.el.hidden=p.x<-1||p.x>1||p.y<-1||p.y>1;l.el.style.left=(p.x*.5+.5)*$('world').clientWidth+'px';l.el.style.top=(-p.y*.5+.5)*$('world').clientHeight+'px';}
 }
 try{
- const asset=await loadBlenderKitty();scene=new THREE.Scene();world=new THREE.Group();scene.add(world);
+ const asset=await loadBlenderKitty();loadedAsset=asset;scene=new THREE.Scene();world=new THREE.Group();scene.add(world);
  const probe=document.createElement('canvas'),gl=probe.getContext('webgl2',{antialias:true});
  renderer=gl?new THREE.WebGLRenderer({canvas:probe,context:gl,antialias:true}):new CanvasFallback();
  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.shadowMap.enabled=false;
@@ -170,7 +186,7 @@ try{
   }
  });
  player=makeBlenderKitty(asset);player.scale.setScalar(.48);player.position.set(state.x,0,state.z);player.rotation.y={up:Math.PI,down:0,left:-Math.PI/2,right:Math.PI/2}[state.facing];scene.add(player);
- const gift=read('kitty-room-preferences-v1').heldGift;setHeldGift(player,gift||'flowers');
+ refreshEquipment();saveEquipment();
  const resize=()=>{const w=$('world').clientWidth,h=$('world').clientHeight;renderer.setSize(w,h,false);const half=w/h<1?4.0:4.4;camera.left=-half*w/h;camera.right=half*w/h;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix();};
  new ResizeObserver(resize).observe($('world'));resize();ready=true;buildWorld();followCamera(true);$('loading').hidden=true;save();
  if(state.complete)claimAdventureReward(storage);
@@ -184,7 +200,7 @@ try{
   for(const {object,mesh} of rendered)if(object.type==='C'){const lid=mesh.children[0],target=state.charms.includes(object.id)?-.85:0;lid.rotation.x=reduced?target:THREE.MathUtils.lerp(lid.rotation.x,target,1-Math.exp(-dt*9));}
   effects.update(Math.min(elapsed,1));if(discoveryTime>0){discoveryTime-=Math.min(elapsed,1);if(discoveryTime<=0)$('discovery').hidden=true;}
   if(noticeTime>0){noticeTime-=dt;if(noticeTime<=0)$('notice').classList.remove('visible');}
-  renderer.render(scene,camera);
+  if(!$('inventory').open)renderer.render(scene,camera);else if(preview&&!$('previewPane').hidden)preview.render(elapsed);
  });
  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pressed=queued=null;$('error').hidden=false;});
 }catch(error){console.error('Adventure failed to load:',error);$('loading').hidden=true;$('error').hidden=false;}

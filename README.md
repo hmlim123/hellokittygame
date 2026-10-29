@@ -90,12 +90,12 @@ beside it, or tap the arch or its label. Entering starts the quest automatically
 talking to Momo first is optional. The same entrance works from either side of
 the arch. Direction hints guide you to Momo and, after accepting the quest, the
 entrance even when it is off-screen.
-If a browser still shows the older entrance, open `adventure.html?v=encounters-4`.
+If a browser still shows the older entrance, open `adventure.html?v=inventory-5`.
 The entry script, quest module and stylesheet also carry this release query so
 the browser requests the matching update without clearing Nancy’s saved progress.
 
 Use arrow keys/WASD to walk and Enter/Space to interact. A direction pad and an
-interaction button support touch. **Bag & quest** shows the objective and three
+interaction button support touch. **Inventory → Quest** shows the objective and three
 charms. The camera follows Kitty, with reduced-motion support. House/hedge tiles
 block movement and story interactions stop walking while their dialogue is open.
 
@@ -108,6 +108,25 @@ still completes without inventing a seventh collectible. The old room remains
 available through the header link.
 
 ![Nancy’s village adventure](docs/nancy-adventure-village.png)
+
+## Inventory and clothes
+
+Open **Inventory ♡** at the top-right of the adventure. **Clothes** equips an
+outfit immediately on the walking Kitty and the live, front-facing Blender-model
+preview. Rose dress and Sky sailor are available from the start. Find the honey
+charm to earn Honey picnic with its cream apron; restore the moonflower to earn
+the star-decorated Moonlight dress. The dress and bow change together, and clothing
+details follow the original character rig.
+
+**Items** equips flowers, a teddy, a strawberry, Nancy’s sealed envelope, or empty
+paws. Items are available from the start. **Quest** keeps the collected charms
+and current objective in their own tab. The tabs support keyboard arrows and
+touch. Choices persist through map changes and reloads in
+`kitty-nancy-equipment-v1`, separate from quest progress. A previous room gift is
+used as the initial item when no adventure equipment has been saved. Adventure
+equipment does not change the room’s shelf collection or selected friend.
+
+![Kitty’s clothes and live preview](docs/nancy-inventory-clothes.png)
 
 ## Run locally
 
@@ -250,10 +269,13 @@ python tests/missions-browser.py
 python tests/items-browser.py
 python tests/adventure-browser.py
 python tests/quest-effects-browser.py
+python tests/inventory-browser.py
 ```
 
 Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
 Chromium executable. This test writes the documented screenshots into `docs/`.
+The inventory browser test also uses Pillow to compare the rendered outfit
+colors and checks phone controls with WebGL disabled.
 
 ## Main files
 
@@ -271,6 +293,8 @@ Chromium executable. This test writes the documented screenshots into `docs/`.
 | `dist/adventure.html`, `dist/adventure.js` | Separate RPG map and controls |
 | `dist/adventure-state.js` | Maps, collision, quests, save repair and reward rules |
 | `dist/adventure-effects.js`, `dist/assets/quest/` | Discovery effects and original vector illustrations |
+| `dist/equipment-state.js`, `dist/equipment-model.js` | Equipment unlocks, save repair and clothing on the Blender rig |
+| `dist/inventory.js`, `dist/equipment-preview.js` | Inventory tabs, item cards and live character preview |
 | `dist/assets/hello-kitty.glb` | Actual exported Blender character |
 | `dist/scene.js` | Three.js room, camera, and interactions |
 | `scripts/export_blender.py` | Reproducible Blender-to-game export |

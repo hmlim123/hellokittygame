@@ -12,11 +12,11 @@ with sync_playwright() as p:
  def stale_module(route):
   stale.append(route.request.url);route.fulfill(status=200,content_type='text/javascript',body='throw new Error("Old adventure script used");')
  for name in ['adventure.js','adventure-state.js']:page.route('**/'+name,stale_module)
- page.goto(base+'/adventure.html?v=encounters-4');page.wait_for_function("document.querySelector('#loading').hidden",timeout=60000)
- assert page.locator('html').get_attribute('data-release')=='encounters-4' and not stale
+ page.goto(base+'/adventure.html?v=inventory-5');page.wait_for_function("document.querySelector('#loading').hidden",timeout=60000)
+ assert page.locator('html').get_attribute('data-release')=='inventory-5' and not stale
  assert page.locator('#error').is_hidden()
  page.evaluate("document.addEventListener('animationstart',e=>{if(e.animationName==='treasure-spark')document.documentElement.dataset.sparksSeen='true'})")
- maps=page.evaluate("async()=>{const {MAPS}=await import('./adventure-state.js?v=encounters-4');return MAPS;}")
+ maps=page.evaluate("async()=>{const {MAPS}=await import('./adventure-state.js?v=inventory-5');return MAPS;}")
  def state():return page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'))")
  keys={'up':'ArrowUp','down':'ArrowDown','left':'ArrowLeft','right':'ArrowRight'}
  def move_to(x,z,touch=False):
@@ -43,7 +43,7 @@ with sync_playwright() as p:
  def close():page.locator('#closeStory').click()
  page.screenshot(path=str(out/'nancy-adventure-village.png'),full_page=True)
  move_to(5,6);page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).accepted");assert page.locator('#story').is_hidden()
- assert page.locator('#discoveryImage').get_attribute('src').endswith('momo.svg?v=encounters-4')
+ assert page.locator('#discoveryImage').get_attribute('src').endswith('momo.svg?v=inventory-5')
  assert 'Dungeon entrance' in page.locator('#wayfinder').inner_text()
  move_to(12,3);assert 'walk through or tap' in page.locator('#wayfinder').inner_text()
  page.get_by_role('button',name='Enter dungeon',exact=True).click();assert state()['map']=='garden'
@@ -69,7 +69,9 @@ with sync_playwright() as p:
  close();page.wait_for_timeout(350);assert page.locator('#story').is_hidden(),'The same encounter must not reopen immediately'
  talk();assert page.evaluate("JSON.parse(localStorage.getItem('kitty-room-3d-v1')).owned")==room['owned'];close()
  page.reload();page.wait_for_function("document.querySelector('#loading').hidden");assert state()['complete']
- page.locator('#bag').click();assert page.locator('#charms .missing').count()==0;page.locator('#backToWorld').click()
+ page.locator('#bag').click();assert page.get_by_role('button',name='Moonlight dress',exact=True).is_enabled();page.get_by_role('button',name='Moonlight dress',exact=True).click()
+ assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).outfit")=='moonlight'
+ page.locator('#inventoryTab-quest').click();assert page.locator('#charms .missing').count()==0;page.locator('#backToWorld').click()
  page.goto(base);page.wait_for_function("!document.querySelector('#wave').disabled");assert page.locator('#collectionCount').inner_text()=='2 of 6 friends'
  assert not errors,errors;page.close()
  phone=b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce');m=phone.new_page();m.on('pageerror',lambda e:errors.append(str(e)))

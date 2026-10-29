@@ -94,3 +94,17 @@ test('strawberry has three non-overlapping bites and switching props clears tran
  assert.equal(b.bites,0);assert.equal(b.gifts.cache.get('strawberry').scale.x,1);
  playHeldItem(hero);setHeldGift(hero,'teddy');assert.equal(b.itemPlay,null);assert.equal(b.bites,0);
 });
+
+test('equipping clothes changes the actual Blender dress and bow, adds rigged details, and preserves the face and other models',async()=>{
+ const {applyEquipment}=await import('../dist/equipment-model.js');
+ const hero=makeBlenderKitty(asset),other=makeBlenderKitty(asset),b=hero.userData.blender;
+ const dress=b.model.getObjectByName('Strawberry_pink_rounded_dress'),head=b.model.getObjectByName('Head'),geometry=head.geometry,white=head.material.color.getHexString();
+ const original=other.userData.blender.model.getObjectByName('Strawberry_pink_rounded_dress').material.color.getHexString();
+ applyEquipment(hero,{outfit:'sailor',item:'none'});assert.equal(dress.material.color.getHexString(),'91bbd3');assert.equal(b.model.getObjectByName('Bow_center_knot').material.color.getHexString(),'91bbd3');
+ assert.equal(b.wardrobe.cache.get('sailor').parent,b.model.getObjectByName('CTRL_Body'));assert.ok(b.wardrobe.cache.get('sailor').getObjectByName('Sailor_collar'));
+ assert.equal(head.geometry,geometry);assert.equal(head.material.color.getHexString(),white);assert.equal(other.userData.blender.model.getObjectByName('Strawberry_pink_rounded_dress').material.color.getHexString(),original);
+ applyEquipment(hero,{outfit:'picnic',item:'teddy'});assert.equal(b.wardrobe.cache.get('sailor').visible,false);assert.ok(b.model.getObjectByName('Cream_picnic_apron'));assert.equal(b.gift,'teddy');
+ applyEquipment(hero,{outfit:'moonlight',item:'none'});assert.equal(b.wardrobe.cache.get('moonlight').children.length,3);assert.ok(b.gifts.original.every(o=>!o.visible));assert.ok([...b.gifts.cache.values()].every(o=>!o.visible));
+ for(let i=0;i<8;i++)applyEquipment(hero,{outfit:'sailor',item:'flowers'});assert.equal(b.wardrobe.cache.size,3);assert.ok(b.gifts.original.every(o=>o.visible));
+ applyEquipment(hero,{outfit:'classic',item:'flowers'});assert.ok([...b.wardrobe.cache.values()].every(o=>!o.visible));reactBlender(hero,'wave');updateBlender(hero,.8);assert.ok(b.current);
+});
