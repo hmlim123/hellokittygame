@@ -355,7 +355,7 @@ export function memoryPages(s: Adventure): MemoryPage[] {
       title: "A garden remembers kindness",
       art: "bloom",
       place: "The secret flower patch",
-      text: "A little water helped the thirsty flowers bloom. Their new vines reached toward the stream.",
+      text: "A little water helped the thirsty flowers bloom. Their new vines reached toward the stream. Your Blossom keepsake dress and the flower souvenir at home remember this kindness.",
       unlocked: c.flowersRevived,
     },
     {

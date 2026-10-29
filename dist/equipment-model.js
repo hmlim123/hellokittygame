@@ -26,6 +26,10 @@ function outfitDetails(id){
   const rose=cloth('#dd91ac');ellipsoid(g,'Apron_bow',rose,-.09,.43,.71,.12,.075,.04);ellipsoid(g,'Apron_bow',rose,.09,.43,.71,.12,.075,.04);
  }
  if(id==='moonlight')for(const [x,y,z] of [[-.52,-.08,.70],[.48,.05,.70],[0,-.27,.75]])star(g,x,y,z);
+ if(id==='blossom'){
+  for(let i=0;i<5;i++){const a=i*Math.PI*2/5;ellipsoid(g,'Blossom_petal',cream,Math.cos(a)*.13,.23+Math.sin(a)*.13,.78,.105,.10,.035);}
+  ellipsoid(g,'Blossom_center',cloth('#e8c36b'),0,.23,.82,.075,.075,.025);
+ }
  return g;
 }
 export function applyEquipment(hero,equipment){

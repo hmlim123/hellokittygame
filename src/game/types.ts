@@ -1,7 +1,7 @@
 export type Mode = "room" | "adventure";
 export type Direction = "up" | "down" | "left" | "right";
 export type Theme = "rose" | "lavender" | "peach" | "mint";
-export type OutfitId = "classic" | "sailor" | "picnic" | "moonlight" | "berry";
+export type OutfitId = "classic" | "sailor" | "picnic" | "moonlight" | "berry" | "blossom";
 export type ItemId =
   | "none"
   | "flowers"
@@ -156,6 +156,7 @@ export interface Notice {
   text: string;
   art?: string | null;
   at?: [number, number];
+  rewardOutfit?: OutfitId;
 }
 
 export interface DiscoveryEffect {

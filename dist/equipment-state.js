@@ -5,6 +5,7 @@ export const OUTFITS=[
  {id:'picnic',name:'Honey picnic',color:'#e8ca7b',accent:'#c99d54',detail:'A sunny dress and a little cream apron.',unlock:s=>s.charms?.includes('honey')||false,hint:'Find the honey charm in the garden.'},
  {id:'moonlight',name:'Moonlight dress',color:'#bba7dd',accent:'#987abf',detail:'A lavender dress with little gold stars.',unlock:s=>s.complete===true,hint:'Restore the moonflower to unlock.'},
  {id:'berry',name:'Berry sweetheart',color:'#df82a5',accent:'#bf6086',detail:'A berry pink dress with a cream collar and heart.',unlock:s=>s.ribbonReturned===true,hint:'Return Momo’s three lost ribbons.'},
+ {id:'blossom',name:'Blossom keepsake',color:'#a7cdb8',accent:'#e99fba',detail:'A soft mint dress with a little cream flower.',unlock:s=>s.chapter?.flowersRevived===true,hint:'Help the thirsty flowers in Butterfly Glade.'},
 ];
 export const HELD_ITEMS=[
  {id:'none',name:'Empty paws',detail:'Travel with nothing in your paws.'},

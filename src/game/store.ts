@@ -270,6 +270,9 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                               ],
                             }
                           : {}),
+                        ...(!before.chapter.flowersRevived && a.chapter.flowersRevived
+                          ? { rewardOutfit: "blossom" as const }
+                          : {}),
                       },
                 }
               : {}),

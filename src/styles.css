@@ -1703,3 +1703,11 @@ legend {
 .quest-guide summary { color: #8c4168; cursor: pointer; width: fit-content; min-height: 32px; display: list-item; }
 .quest-guide details p { margin: 0 0 10px; }
 .quest-guide .hint-ready summary { font-weight: 700; }
+.earned-reward { display: flex; gap: 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.earned-reward > img { width: 72px; height: 72px; object-fit: contain; }
+.earned-reward strong { font-size: 13px; }
+.reward-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.reward-actions button { font-size: 12px; }
+.reward-notification { pointer-events: auto; width: 420px; max-height: calc(100% - 80px); overflow: auto; align-items: flex-start; }
+.reward-notification h3 { padding-right: 24px; }
+.dismiss-notice { position: absolute; top: 4px; right: 4px; width: 40px; height: 40px; border: 0; background: transparent; font-size: 23px; }

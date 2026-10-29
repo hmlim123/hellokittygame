@@ -42,12 +42,20 @@ with sync_playwright() as p:
     walk(5,6);page.get_by_role('button',name='Use watering can',exact=True).click()
     assert save()['chapter']['flowersRevived']
     assert guide.get_by_role('heading',name='Mend the friendship bridge').is_visible()
-    page.get_by_role('button',name='← Her room',exact=True).click();ready()
+    reward=page.locator('[data-reward=blossom]')
+    assert reward.is_visible()
+    reward.get_by_role('button',name='Try it at home',exact=True).click();ready()
+    page.wait_for_function("document.querySelector('#stage canvas').dataset.outfit==='blossom'")
     assert page.locator('.action-bar>button').count()==3
     page.get_by_role('button',name='Remember The flower patch',exact=True).click()
     assert page.locator('[data-memory=flowers]').count()==1
     page.keyboard.press('Escape');page.reload();ready()
     assert save()['chapter']['flowersRevived']
+    assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).outfit")== 'blossom'
+    page.get_by_role('button',name='Inventory ♡',exact=True).click()
+    assert page.get_by_role('button',name='Blossom keepsake',exact=True).get_attribute('aria-pressed')=='true'
+    page.keyboard.press('Escape')
+    page.screenshot(path='/tmp/nancy-stage3-room.png',full_page=True)
     assert not errors,errors
-    print(f'PASS fresh glade journey: visible goal/hint, three one-tap lantern actions, watering, room souvenir, reload. Automated elapsed {time.monotonic()-started:.1f}s (not a first-player duration).',flush=True)
+    print(f'PASS fresh glade journey: visible goal/hint, three one-tap lantern actions, watering, earned dress at home, room souvenir, inventory and reload. Automated elapsed {time.monotonic()-started:.1f}s (not a first-player duration).',flush=True)
     browser.close()

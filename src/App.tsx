@@ -205,23 +205,44 @@ function Notification() {
   const notice = useGameStore((s) => s.notice),
     clear = useGameStore((s) => s.clearNotice);
   useEffect(() => {
-    if (!notice) return;
+    if (!notice || notice.rewardOutfit) return;
     const timer = setTimeout(() => clear(notice.id), 7000);
     return () => clearTimeout(timer);
   }, [notice, clear]);
   if (!notice) return null;
   return (
     <aside
-      className={`notification ${notice.art ? "illustrated" : ""}`}
+      className={`notification ${notice.art ? "illustrated" : ""} ${notice.rewardOutfit ? "reward-notification" : ""}`}
       role="status"
     >
-      {notice.art && (
+      {notice.art && !notice.rewardOutfit && (
         <img alt="" src={assetUrl(`assets/quest/${notice.art}.svg`)} />
       )}
       <div>
+        {notice.rewardOutfit && <button className="dismiss-notice" aria-label="Keep exploring" onClick={() => clear(notice.id)}>×</button>}
         <small>{notice.art ? "A LITTLE DISCOVERY" : "A LITTLE MOMENT"}</small>
         <h3>{notice.title}</h3>
         <p>{notice.text}</p>
+        {notice.rewardOutfit && (
+          <div className="earned-reward" data-reward={notice.rewardOutfit}>
+            <img alt="Blossom keepsake dress" src={assetUrl("assets/inventory/blossom.svg")} />
+            <div>
+              <strong>You earned Blossom keepsake ♡</strong>
+              <p>A flower dress to wear here or at home. Your room has a new flower memory, too.</p>
+              <div className="reward-actions">
+                <button onClick={() => {
+                  const s = useGameStore.getState();
+                  s.equip("outfit", notice.rewardOutfit!);
+                  s.setMode("room");
+                }}>Try it at home</button>
+                <button onClick={() => {
+                  useGameStore.getState().equip("outfit", notice.rewardOutfit!);
+                  clear(notice.id);
+                }}>Wear it here</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );
