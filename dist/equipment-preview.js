@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {CanvasFallback} from './CanvasFallback.js';
 import {makeBlenderKitty,updateBlender} from './blender-kitty.js';
-import {applyEquipment} from './equipment-model.js?v=inventory-5';
+import {applyEquipment} from './equipment-model.js?v=wardrobe-6';
 export class EquipmentPreview{
  constructor(asset,container,{software=false,reduced=false}={}){
   this.container=container;this.reduced=reduced;

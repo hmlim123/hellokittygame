@@ -1,17 +1,26 @@
 import {DOLLS,normalizeState,nextDoll,rewardDoll} from './state.js';
-import {KittyRoom} from './scene.js';
+import {KittyRoom} from './scene.js?v=wardrobe-6';
 import {loadBlenderKitty} from './blender-kitty.js';
 import {RoomSound} from './sound.js';
 import {MISSIONS,KEEPSAKES,createMission,tickMission,actMission,replayMemory,normalizeJournal,recordMission} from './missions.js';
 import {GIFTS} from './gifts.js';
 import {LOVE_LETTER} from './letter.js';
 import {bindPicnicBoard} from './item-play.js';
+import {EQUIPMENT_KEY,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=wardrobe-6';
+import {readWardrobe,saveEquipmentChoice} from './equipment-storage.js?v=wardrobe-6';
+import {InventoryUI} from './inventory.js?v=wardrobe-6';
+import {EquipmentPreview} from './equipment-preview.js?v=wardrobe-6';
+import {questText} from './adventure-state.js?v=wardrobe-6';
+import {questArt} from './adventure-effects.js?v=wardrobe-6';
 
 const $=id=>document.getElementById(id), KEY='kitty-room-3d-v1';
 function read(key){try{const value=JSON.parse(localStorage.getItem(key)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return {};}}
 const state=normalizeState(read(KEY),read('kitty-picnic-v1'));
 let room=null,hunt=null,ready=false,handled=false,toastLeft=0,celebrating=false,lastTouch=-Infinity;
 const sound=new RoomSound(),preferences=read('kitty-room-preferences-v1');
+const wardrobeStorage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
+let wardrobe=readWardrobe(wardrobeStorage),wardrobePreview,roomAsset;
+const equipment={...wardrobe.equipment};
 $('relaxed').checked=preferences.relaxed===true;
 $('relaxed').onchange=()=>{preferences.relaxed=$('relaxed').checked;try{localStorage.setItem('kitty-room-preferences-v1',JSON.stringify(preferences));}catch{say('This play pace will last for this visit.');}};
 $('sound').onclick=async()=>{const on=await sound.toggle();$('sound').setAttribute('aria-pressed',String(on));$('sound').textContent=on?'♫ On':'♫ Off';$('sound').setAttribute('aria-label',on?'Turn sound off':'Turn sound on');};
@@ -20,8 +29,35 @@ const recipient=new URLSearchParams(location.search).get('to')?.slice(0,32)||'Na
 document.querySelectorAll('[data-recipient]').forEach(el=>el.textContent=recipient);
 $('roomMessage').textContent=`No rush, ${recipient}. This little happy place is yours. ♡`;
 let journal=normalizeJournal(read('kitty-nancy-missions-v1'));
-let heldGift=GIFTS.some(g=>g.id===preferences.heldGift)?preferences.heldGift:'flowers';
-function updateGiftAction(){const gift=GIFTS.find(g=>g.id===heldGift);$('playGift').textContent=gift.action;$('giftFeedback').textContent=gift.description;}
+let heldGift=equipment.item;
+function updateGiftAction(){const gift=GIFTS.find(g=>g.id===heldGift);$('playGift').textContent=gift?.action||'Choose a little gift';$('giftFeedback').textContent=gift?.description||'Kitty’s paws are free. Choose a present in Inventory → Items.';}
+function renderRoomQuest(){
+  $('bagQuest').textContent=questText(wardrobe.quest);$('charms').replaceChildren();
+  for(const [id,name] of [['rose','Rose'],['honey','Honey'],['sky','Sky']]){const el=document.createElement('span'),img=document.createElement('img');img.src=questArt(id);img.alt='';el.append(img,document.createTextNode(name));el.className=wardrobe.quest.charms.includes(id)?'':'missing';el.setAttribute('aria-label',name+' charm'+(wardrobe.quest.charms.includes(id)?', collected':', missing'));$('charms').append(el);}
+  $('questComplete').textContent=wardrobe.quest.complete?'Moonflower restored. Your earned clothes are home with you. ♡':'Earn more outfits on your Moonflower Adventure.';
+}
+function syncEquipment(){
+  wardrobe=readWardrobe(wardrobeStorage,{equipment,quest:wardrobe.quest});Object.assign(equipment,wardrobe.equipment);heldGift=equipment.item;
+  if(room&&JSON.stringify(room.equipment)!==JSON.stringify(equipment))room.setEquipment(equipment);
+  wardrobeUI.render(equipment,wardrobe.quest);renderRoomQuest();
+  if(wardrobePreview)wardrobePreview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===heldGift).name}`);
+  renderAdventures();
+}
+function chooseEquipment(kind,id){
+  const result=saveEquipmentChoice(wardrobeStorage,kind,id,{equipment,quest:wardrobe.quest});if(!result.accepted)return;
+  wardrobe={equipment:result.equipment,quest:result.quest};Object.assign(equipment,result.equipment);heldGift=equipment.item;room?.setEquipment(equipment);wardrobeUI.render(equipment,wardrobe.quest);
+  if(wardrobePreview)wardrobePreview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===heldGift).name}`);
+  renderAdventures();$('equipmentSaveStatus').textContent=result.saved?'Your outfit follows Kitty between her room and adventure.':'This outfit will last while this tab stays open.';
+  if(kind==='item'){preferences.heldGift=heldGift;try{localStorage.setItem('kitty-room-preferences-v1',JSON.stringify({...read('kitty-room-preferences-v1'),heldGift}));}catch{}}
+}
+const wardrobeUI=new InventoryUI(chooseEquipment);
+function openWardrobe(tab='clothes'){
+  if(!ready||hunt?.active||celebrating)return;if($('adventureModal').open)$('adventureModal').close();syncEquipment();wardrobeUI.select(tab);$('inventory').showModal();room.inventoryOpen=true;
+  if(!wardrobePreview)wardrobePreview=new EquipmentPreview(roomAsset,$('equipmentPreview'),{software:room.renderer.software,reduced:room.reduced});
+  wardrobePreview.resize();wardrobePreview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===heldGift).name}`);
+}
+$('openWardrobe').onclick=()=>openWardrobe();for(const id of ['closeBag','backToWorld'])$(id).onclick=()=>$('inventory').close();
+$('inventory').addEventListener('close',()=>{if(room)room.inventoryOpen=false;$('openWardrobe').focus();});
 function renderAdventures(){
   updateGiftAction();$('readLetter').textContent=preferences.letterOpened?'Read your letter again':'Open your letter';
   $('missionCards').innerHTML=MISSIONS.map(m=>`<button data-mission="${m.id}" class="mission-card"><span aria-hidden="true">${m.icon}</span><strong>${m.title}</strong><small>${m.description}</small><em>${journal.completed[m.id]?`${journal.completed[m.id]} completed`:'A keepsake to discover'}</em></button>`).join('');
@@ -37,7 +73,7 @@ function openAdventures(){if(!ready||hunt?.active||celebrating)return;renderAdve
 for(const key of ['missions','gifts','nancy'])$('tab-'+key).onclick=()=>selectTab(key);
 document.querySelector('.adventure-tabs').onkeydown=e=>{const tabs=['missions','gifts','nancy'];let index=tabs.findIndex(t=>$('tab-'+t)===document.activeElement);if(index<0)return;if(e.key==='ArrowRight')index=(index+1)%3;else if(e.key==='ArrowLeft')index=(index+2)%3;else if(e.key==='Home')index=0;else if(e.key==='End')index=2;else return;e.preventDefault();selectTab(tabs[index],true);};
 $('missionCards').onclick=e=>{const b=e.target.closest('[data-mission]');if(b)start(b.dataset.mission);};
-$('giftChoices').onclick=e=>{const b=e.target.closest('[data-gift]');if(!b||!ready)return;heldGift=b.dataset.gift;preferences.heldGift=heldGift;room.setGift(heldGift);updateGiftAction();document.querySelectorAll('[data-gift]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.gift===heldGift)));try{localStorage.setItem('kitty-room-preferences-v1',JSON.stringify(preferences));$('giftFeedback').textContent=`${GIFTS.find(g=>g.id===heldGift).name}, ready for ${recipient}. ♡`;}catch{$('giftFeedback').textContent='Your choice will stay for this visit.';}};
+$('giftChoices').onclick=e=>{const b=e.target.closest('[data-gift]');if(!b||!ready)return;chooseEquipment('item',b.dataset.gift);$('giftFeedback').textContent=`${GIFTS.find(g=>g.id===heldGift).name}, ready for ${recipient}. ♡`;};
 for(const id of ['closeAdventures','backToKitty'])$(id).onclick=()=>$('adventureModal').close();
 $('adventureModal').addEventListener('close',()=>$('startHunt').focus());
 renderAdventures();
@@ -73,6 +109,7 @@ $('closePicnic').onclick=leavePicnic;$('picnicModal').addEventListener('cancel',
 function playGift(){
   if(!ready||hunt?.active||celebrating)return;
   if($('adventureModal').open)$('adventureModal').close();
+  if(heldGift==='none'){openWardrobe('items');return;}
   if(heldGift==='letter'){room.react('offer');openLetter();return;}
   if(heldGift==='flowers'){startPicnic();return;}
   const result=room.playItem();
@@ -114,6 +151,7 @@ function controls(){
   $('startHunt').disabled=!ready||celebrating;
   $('wave').disabled=$('dance').disabled=!ready||active||celebrating;
   $('relaxed').disabled=active||celebrating;
+  $('openWardrobe').disabled=!ready||active||celebrating;
   document.querySelectorAll('[data-theme]').forEach(b=>b.disabled=celebrating);
   $('huntButtonLabel').textContent=active?'Finish early':'Play a mission';
   $('huntButtonHint').textContent=active?'Your friends stay safe':'Missions & little gifts';
@@ -195,6 +233,8 @@ for(const id of ['rewardDone','closeResult'])$(id).onclick=()=>$('rewardModal').
 $('rewardModal').addEventListener('close',()=>$('startHunt').focus());
 $('reload').onclick=()=>location.reload();
 document.addEventListener('visibilitychange',()=>{if(document.hidden){pause(true);sound.suspend();}else sound.resume();});
+addEventListener('pageshow',()=>{if(ready)syncEquipment();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)syncEquipment();});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&$('picnicModal').open){e.preventDefault();leavePicnic();return;}
   if(e.key==='Escape'&&celebrating){e.preventDefault();room.finishArrival();return;}
@@ -202,10 +242,11 @@ document.addEventListener('keydown',e=>{
   if(e.key===' '&&e.target.tagName==='CANVAS'&&hunt?.active){e.preventDefault();pause();}
 });
 addEventListener('storage',event=>{
+  if(event.key===EQUIPMENT_KEY||event.key==='kitty-nancy-adventure-v1'){syncEquipment();return;}
   if(event.key==='kitty-nancy-missions-v1'){journal=normalizeJournal(read(event.key));renderAdventures();return;}
   if(event.key==='kitty-room-preferences-v1'){
     Object.assign(preferences,read(event.key));$('relaxed').checked=preferences.relaxed===true;
-    heldGift=GIFTS.some(g=>g.id===preferences.heldGift)?preferences.heldGift:'flowers';room?.setGift(heldGift);renderAdventures();return;
+    syncEquipment();return;
   }
   if(event.key&&!['kitty-room-3d-v1','kitty-picnic-v1'].includes(event.key))return;
   const merged=normalizeState(read(KEY),{owned:[...state.owned,...normalizeState({},read('kitty-picnic-v1')).owned]});
@@ -215,6 +256,7 @@ addEventListener('storage',event=>{
 collection();
 try{
   const asset=await loadBlenderKitty();
+  roomAsset=asset;
   room=new KittyRoom($('stage'),{asset,onKitty:(id,hero,part)=>{
     if(!hunt?.active&&!celebrating&&hero){
       const now=performance.now();if(now-lastTouch<650)return;lastTouch=now;
@@ -222,9 +264,10 @@ try{
       room.react(part);
       if(part==='pet'){room.heartBurst();say('A gentle head pat. A little love back. ♡');}
       else if(part==='tilt')say('A bow, a little tilt, and a hello. ♡');
-      else say(`${GIFTS.find(g=>g.id===heldGift).message} ${recipient}. ♡`);
+      else say(`${GIFTS.find(g=>g.id===heldGift)?.message||'A little hello for'} ${recipient}. ♡`);
     }
   },onFrame:(dt)=>{
+    if($('inventory').open&&wardrobePreview&&!$('previewPane').hidden)wardrobePreview.render(dt);
     if(toastLeft>0){toastLeft-=dt;if(toastLeft<=0)$('toast').classList.remove('visible');}
     if(!room||!hunt?.active||hunt.id==='picnic')return;
     tickMission(hunt,hunt.phase==='show'?Math.min(dt,.2):dt);updateMissionUI();
@@ -233,7 +276,7 @@ try{
       const p=room.project(b.position);targets[i].style.left=p.x+'px';targets[i].style.top=p.y+'px';targets[i].hidden=!p.visible;
     });
   }});
-  room.updateShelf(state.slots);room.setHero(state.selected);room.setGift(heldGift);room.setTheme(state.theme);room.setNight(false);room.inspectKitty();
+  room.updateShelf(state.slots);room.setHero(state.selected);syncEquipment();room.setTheme(state.theme);room.setNight(false);room.inspectKitty();
   $('loading').hidden=true;ready=true;controls();save();
   room.renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause(true);$('webglError').hidden=false;});
 }catch(error){console.error('Kitty room failed to start:',error);$('loading').hidden=true;$('webglError').hidden=false;}

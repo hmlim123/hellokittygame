@@ -13,7 +13,7 @@ with sync_playwright() as p:
  def gear():return page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1'))")
  def blue_pixels(data):
   rgb=Image.open(BytesIO(data)).convert('RGB').tobytes();return sum(blue>red+10 and blue>green for red,green,blue in zip(rgb[0::3],rgb[1::3],rgb[2::3]))
- page.goto(base+'/adventure.html?v=inventory-5');ready();world_before=page.locator('#world canvas').screenshot()
+ page.goto(base+'/adventure.html?v=wardrobe-6');ready();world_before=page.locator('#world canvas').screenshot()
  page.get_by_role('button',name='Inventory ♡',exact=True).click();page.wait_for_selector('#equipmentPreview canvas')
  assert page.get_by_role('button',name='Honey picnic',exact=True).is_disabled();assert page.get_by_role('button',name='Moonlight dress',exact=True).is_disabled()
  before=page.locator('#equipmentPreview canvas').screenshot()
@@ -37,7 +37,7 @@ with sync_playwright() as p:
  assert not errors,errors;page.close()
  c=b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce')
  c.add_init_script("const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(t,...a){return t.startsWith('webgl')?null:original.call(this,t,...a)}")
- page=c.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(base+'/adventure.html?v=inventory-5');ready();page.locator('#bag').tap();page.get_by_role('button',name='Sky sailor',exact=True).tap()
+ page=c.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(base+'/adventure.html?v=wardrobe-6');ready();page.locator('#bag').tap();page.get_by_role('button',name='Sky sailor',exact=True).tap()
  assert gear()['outfit']=='sailor';page.locator('#inventoryTab-items').tap();page.get_by_role('button',name='Empty paws',exact=True).tap();assert gear()['item']=='none'
  page.locator('#inventoryTab-clothes').tap();page.locator('#inventory').evaluate('(e)=>e.scrollTop=0');page.screenshot(path=str(out/'nancy-inventory-mobile.png'),full_page=True)
  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');assert page.locator('#inventory').evaluate('(e)=>e.scrollWidth<=e.clientWidth')

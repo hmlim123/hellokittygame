@@ -3,30 +3,36 @@ import {CanvasFallback} from './CanvasFallback.js';
 import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender} from './blender-kitty.js';
 import {makeGift} from './gifts.js';
 import {RoomSound} from './sound.js';
-import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath,AdventureEncounters} from './adventure-state.js?v=inventory-5';
-import {DiscoveryEffects,questArt} from './adventure-effects.js?v=inventory-5';
-import {EQUIPMENT_KEY,normalizeEquipment,equip,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=inventory-5';
-import {applyEquipment} from './equipment-model.js?v=inventory-5';
-import {EquipmentPreview} from './equipment-preview.js?v=inventory-5';
-import {InventoryUI} from './inventory.js?v=inventory-5';
+import {MAPS,normalizeAdventure,questText,moveAdventure,nearbyObject,interactAdventure,claimAdventureReward,villageDirections,enterAdventurePath,AdventureEncounters} from './adventure-state.js?v=wardrobe-6';
+import {DiscoveryEffects,questArt} from './adventure-effects.js?v=wardrobe-6';
+import {EQUIPMENT_KEY,OUTFITS,HELD_ITEMS} from './equipment-state.js?v=wardrobe-6';
+import {readWardrobe,saveEquipmentChoice} from './equipment-storage.js?v=wardrobe-6';
+import {applyEquipment} from './equipment-model.js?v=wardrobe-6';
+import {EquipmentPreview} from './equipment-preview.js?v=wardrobe-6';
+import {InventoryUI} from './inventory.js?v=wardrobe-6';
 const $=id=>document.getElementById(id),KEY='kitty-nancy-adventure-v1';
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{return {};}}
 const state=normalizeAdventure(read(KEY)),sound=new RoomSound();
-const equipment=normalizeEquipment(read(EQUIPMENT_KEY),state,read('kitty-room-preferences-v1'));
 let loadedAsset,preview;
 const storage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
+let wardrobe=readWardrobe(storage,{quest:state});
+const equipment={...wardrobe.equipment};
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const encounters=new AdventureEncounters(),effects=new DiscoveryEffects($('effects'),{reduced});
 let pendingEncounter=true,discoveryTime=0,storySource=null;
 let ready=false,player,renderer,camera,scene,world,clock,motion=null,pressed=null,queued=null,noticeTime=0,walkTime=0;
 const rendered=[],labels=[];
 const dirs={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
-function saveEquipment(){try{localStorage.setItem(EQUIPMENT_KEY,JSON.stringify(equipment));$('equipmentSaveStatus').textContent='Your outfit and item save automatically.';}catch{$('equipmentSaveStatus').textContent='Saving unavailable. Your choice lasts while this tab stays open.';}}
 function refreshEquipment(){
- if(player)applyEquipment(player,equipment);inventoryUI.render(equipment,state);
+ if(player&&(player.userData.equipment?.outfit!==equipment.outfit||player.userData.equipment?.item!==equipment.item))applyEquipment(player,equipment);inventoryUI.render(equipment,wardrobe.quest);
  if(preview)preview.equip(equipment,`${OUTFITS.find(o=>o.id===equipment.outfit).name}, ${HELD_ITEMS.find(i=>i.id===equipment.item).name}`);
 }
-const inventoryUI=new InventoryUI((kind,id)=>{if(equip(equipment,kind,id,state)){refreshEquipment();saveEquipment();}});
+function syncEquipment(){wardrobe=readWardrobe(storage,{quest:state,equipment});Object.assign(equipment,wardrobe.equipment);refreshEquipment();}
+const inventoryUI=new InventoryUI((kind,id)=>{
+ const result=saveEquipmentChoice(storage,kind,id,{equipment,quest:state});if(!result.accepted)return;
+ wardrobe={quest:result.quest,equipment:result.equipment};Object.assign(equipment,result.equipment);refreshEquipment();
+ $('equipmentSaveStatus').textContent=result.saved?'Your outfit follows Kitty between her room and adventure.':'Saving unavailable. Your choice lasts while this tab stays open.';
+});
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='Your steps and discoveries save automatically.';}catch{$('saveStatus').textContent='Saving unavailable. Keep this tab open to continue your adventure.';}}
 function notice(text){$('notice').textContent=text;$('notice').classList.add('visible');noticeTime=4;}
 function modal(){return $('story').open||$('inventory').open;}
@@ -69,7 +75,7 @@ function usePath(type){if(!ready||motion||modal())return;const result=enterAdven
 $('interact').onclick=interact;
 $('closeStory').onclick=()=>$('story').close();$('story').addEventListener('close',()=>{pendingEncounter=true;refreshUI();renderer?.domElement.focus();});
 function openBag(){
- if(!ready)return;pressed=queued=null;$('bagQuest').textContent=questText(state);
+ if(!ready)return;pressed=queued=null;syncEquipment();$('bagQuest').textContent=questText(state);
  $('charms').replaceChildren();for(const [id,name] of [['rose','Rose'],['honey','Honey'],['sky','Sky']]){const el=document.createElement('span'),img=document.createElement('img');img.src=questArt(id);img.alt='';el.append(img,document.createTextNode(name));el.className=state.charms.includes(id)?'':'missing';el.setAttribute('aria-label',name+' charm'+(state.charms.includes(id)?', collected':', missing'));$('charms').append(el);}
  $('questComplete').textContent=state.complete?'Moonflower restored. Your little story is saved. ♡':'Every little step counts. There is no timer.';$('inventory').showModal();
  if(!preview)preview=new EquipmentPreview(loadedAsset,$('equipmentPreview'),{software:renderer.software,reduced});
@@ -105,6 +111,9 @@ for(const b of document.querySelectorAll('[data-direction]')){
  b.onclick=e=>{if(e.detail===0)step(b.dataset.direction);};
 }
 document.addEventListener('visibilitychange',()=>{pressed=queued=null;if(document.hidden)sound.suspend();else sound.resume();});
+addEventListener('storage',e=>{if([EQUIPMENT_KEY,KEY,'kitty-room-preferences-v1'].includes(e.key))syncEquipment();});
+addEventListener('pageshow',syncEquipment);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncEquipment();});
 // Soft low-poly map pieces keep the imported Kitty readable on phones.
 const material=color=>new THREE.MeshStandardMaterial({color,roughness:.9});
 const cube=new THREE.BoxGeometry(1,1,1),sphere=new THREE.SphereGeometry(1,14,10);
@@ -186,7 +195,7 @@ try{
   }
  });
  player=makeBlenderKitty(asset);player.scale.setScalar(.48);player.position.set(state.x,0,state.z);player.rotation.y={up:Math.PI,down:0,left:-Math.PI/2,right:Math.PI/2}[state.facing];scene.add(player);
- refreshEquipment();saveEquipment();
+ syncEquipment();
  const resize=()=>{const w=$('world').clientWidth,h=$('world').clientHeight;renderer.setSize(w,h,false);const half=w/h<1?4.0:4.4;camera.left=-half*w/h;camera.right=half*w/h;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix();};
  new ResizeObserver(resize).observe($('world'));resize();ready=true;buildWorld();followCamera(true);$('loading').hidden=true;save();
  if(state.complete)claimAdventureReward(storage);

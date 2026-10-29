@@ -1,11 +1,12 @@
-import {OUTFITS,HELD_ITEMS} from './equipment-state.js?v=inventory-5';
+import {OUTFITS,HELD_ITEMS} from './equipment-state.js?v=wardrobe-6';
 const $=id=>document.getElementById(id);
 export class InventoryUI{
  constructor(onEquip){
   this.tab='clothes';this.cards={outfit:new Map(),item:new Map()};
   for(const [kind,options,grid] of [['outfit',OUTFITS,'outfitGrid'],['item',HELD_ITEMS,'itemGrid']])for(const option of options){
    const button=document.createElement('button'),img=document.createElement('img'),name=document.createElement('strong'),status=document.createElement('small');button.type='button';button.setAttribute('aria-label',option.name);button.dataset[kind]=option.id;
-   img.alt='';img.src=kind==='item'&&option.id==='teddy'?'./assets/quest/momo.svg?v=inventory-5':`./assets/inventory/${option.id}.svg?v=inventory-5`;
+   const path=kind==='item'&&option.id==='teddy'?'./assets/quest/momo.svg':`./assets/inventory/${option.id}.svg`;
+   img.alt='';img.src=globalThis.KITTY_ART_URLS?.[path]||path+'?v=wardrobe-6';
    name.textContent=option.name;button.append(img,name,status);button.onclick=()=>onEquip(kind,option.id);$(grid).append(button);this.cards[kind].set(option.id,{button,status});
   }
   const tabs=['clothes','items','quest'];

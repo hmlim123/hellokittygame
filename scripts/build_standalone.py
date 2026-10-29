@@ -5,15 +5,18 @@ Then: python scripts/build_standalone.py /tmp/kitty-standalone.js /path/to/Hello
 from pathlib import Path
 import base64
 import json
+import re
 import sys
 root=Path(__file__).resolve().parents[1]
 bundle=Path(sys.argv[1]).read_text().replace('</script','<\\/script')
 model='data:model/gltf-binary;base64,'+base64.b64encode((root/'dist/assets/hello-kitty.glb').read_bytes()).decode()
 html=(root/'dist/index.html').read_text()
-html=html.replace('<link rel="stylesheet" href="./simple.css">','<style>'+(root/'dist/simple.css').read_text()+'</style>')
+html=re.sub(r'<link rel="stylesheet" href="\./(simple|inventory)\.css(?:\?[^"]*)?">',lambda m:'<style>'+(root/f'dist/{m[1]}.css').read_text()+'</style>',html)
 a=html.index('<script type="importmap">');b=html.index('</script>',a)+len('</script>')
 html=html[:a]+html[b:]
-html=html.replace('<script type="module" src="./app.js"></script>', '<script>globalThis.KITTY_MODEL_URL='+json.dumps(model)+'</script><script type="module">'+bundle+'</script>')
+art={'./'+str(p.relative_to(root/'dist')):'data:image/svg+xml;base64,'+base64.b64encode(p.read_bytes()).decode() for p in sorted((root/'dist/assets').rglob('*.svg'))}
+inline='<script>globalThis.KITTY_MODEL_URL='+json.dumps(model)+';globalThis.KITTY_ART_URLS='+json.dumps(art)+'</script><script type="module">'+bundle+'</script>'
+html=re.sub(r'<script type="module" src="\./app\.js(?:\?[^"]*)?"></script>',lambda _:inline,html)
 html=html.replace('href="./" aria-label="Hello Kitty home"','href="#" aria-label="Hello Kitty home"')
 html=html.replace('href="./adventure.html','href="https://hmlim123.github.io/hellokittygame/adventure.html').replace('Moonflower Adventure</strong>','Moonflower Adventure · online</strong>')
 html=html.replace('Your friends save here automatically.','Your friends save in this browser when file storage is available.')

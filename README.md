@@ -90,7 +90,7 @@ beside it, or tap the arch or its label. Entering starts the quest automatically
 talking to Momo first is optional. The same entrance works from either side of
 the arch. Direction hints guide you to Momo and, after accepting the quest, the
 entrance even when it is off-screen.
-If a browser still shows the older entrance, open `adventure.html?v=inventory-5`.
+If a browser still shows the older entrance, open `adventure.html?v=wardrobe-6`.
 The entry script, quest module and stylesheet also carry this release query so
 the browser requests the matching update without clearing Nancy’s saved progress.
 
@@ -111,7 +111,7 @@ available through the header link.
 
 ## Inventory and clothes
 
-Open **Inventory ♡** at the top-right of the adventure. **Clothes** equips an
+Open **Inventory ♡** in the room header or at the top-right of the adventure. **Clothes** equips an
 outfit immediately on the walking Kitty and the live, front-facing Blender-model
 preview. Rose dress and Sky sailor are available from the start. Find the honey
 charm to earn Honey picnic with its cream apron; restore the moonflower to earn
@@ -123,10 +123,15 @@ paws. Items are available from the start. **Quest** keeps the collected charms
 and current objective in their own tab. The tabs support keyboard arrows and
 touch. Choices persist through map changes and reloads in
 `kitty-nancy-equipment-v1`, separate from quest progress. A previous room gift is
-used as the initial item when no adventure equipment has been saved. Adventure
-equipment does not change the room’s shelf collection or selected friend.
+used as the initial item when no equipment has been saved. The main Kitty wears
+the same outfit and carries the same item in her room and adventure. Earned
+outfits are selectable from either place. Changes sync across open tabs and when
+returning to a page; each choice merges with the latest saved equipment. The
+room’s Gifts tab also updates the shared held item. Shelf collectibles keep their
+own appearances and the selected friend stays saved.
 
 ![Kitty’s clothes and live preview](docs/nancy-inventory-clothes.png)
+![The earned picnic outfit at home](docs/nancy-earned-outfit-room.png)
 
 ## Run locally
 
@@ -270,6 +275,7 @@ python tests/items-browser.py
 python tests/adventure-browser.py
 python tests/quest-effects-browser.py
 python tests/inventory-browser.py
+python tests/room-wardrobe-browser.py
 ```
 
 Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
@@ -294,6 +300,7 @@ colors and checks phone controls with WebGL disabled.
 | `dist/adventure-state.js` | Maps, collision, quests, save repair and reward rules |
 | `dist/adventure-effects.js`, `dist/assets/quest/` | Discovery effects and original vector illustrations |
 | `dist/equipment-state.js`, `dist/equipment-model.js` | Equipment unlocks, save repair and clothing on the Blender rig |
+| `dist/equipment-storage.js` | Shared wardrobe reads, validated changes and merging across pages |
 | `dist/inventory.js`, `dist/equipment-preview.js` | Inventory tabs, item cards and live character preview |
 | `dist/assets/hello-kitty.glb` | Actual exported Blender character |
 | `dist/scene.js` | Three.js room, camera, and interactions |

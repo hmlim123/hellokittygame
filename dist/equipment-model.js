@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {setHeldGift} from './gifts.js';
-import {OUTFITS,HELD_ITEMS} from './equipment-state.js?v=inventory-5';
+import {OUTFITS,HELD_ITEMS} from './equipment-state.js?v=wardrobe-6';
 const cloth=color=>new THREE.MeshStandardMaterial({color,roughness:.9,side:THREE.DoubleSide});
 function ellipsoid(parent,name,material,x,y,z,sx,sy,sz){const o=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);o.name=name;o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o;}
 function patch(parent,name,mat,points){const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(points.flat(),3));geometry.computeVertexNormals();const o=new THREE.Mesh(geometry,mat);o.name=name;parent.add(o);return o;}

@@ -8,6 +8,7 @@ import {THEMES} from './state.js';
 import {FriendArrival} from './friend-arrival.js';
 import {makeStrawberry,setHeldGift,playHeldItem,updateHeldItem} from './gifts.js';
 import {makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from './blender-kitty.js';
+import {applyEquipment} from './equipment-model.js?v=wardrobe-6';
 export class KittyRoom{
   constructor(container,{asset=null,onSlot=()=>{},onKitty=()=>{},onGift=()=>{},onFrame=()=>{}}={}){
     this.asset=asset;this.container=container;this.onSlot=onSlot;this.onKitty=onKitty;this.onGift=onGift;this.onFrame=onFrame;
@@ -121,7 +122,7 @@ export class KittyRoom{
     this.react('catch');
     for(let i=0;i<4;i++){const h=heartMesh(i%2?'#e5a0b9':'#f2c5d3',.045);h.position.copy(position);h.userData={velocity:new THREE.Vector3((i-1.5)*.12,.35+i*.06,0),life:.75+i*.1,heart:true};this.scene.add(h);this.confetti.push(h);}
   }
-  setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;if(this.asset)setHeldGift(this.hero,this.heldGift);this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
+  setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;if(this.equipment)this.setEquipment(this.equipment);else if(this.asset)setHeldGift(this.hero,this.heldGift);this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
   setRewardGifts(equipped={},baseTheme='rose'){
     this.rewardEquipped={...equipped};this.baseRewardTheme=baseTheme;
     const colors={sky:['#dce7f2','#b4abd5','#9cbacb'],gold:['#f5e6b9','#d8b56e','#e2c582'],twilight:['#d9d0e9','#9b8dba','#b9a1cc']}[equipped.theme];
@@ -146,7 +147,8 @@ export class KittyRoom{
     this.hero.userData.head.add(this.rewardCrown);this.rewardCrown.visible=equipped.accessory==='crown';
   }
   playItem(){const result=playHeldItem(this.hero,this.reduced);if(result.accepted)this.react(this.heldGift==='teddy'?'hug':'pet');return result;}
-  setGift(id){this.heldGift=id;if(this.asset)setHeldGift(this.hero,id);}
+  setEquipment(equipment){this.equipment={...equipment};this.heldGift=equipment.item;if(this.asset)applyEquipment(this.hero,equipment);}
+  setGift(id){if(this.equipment){this.setEquipment({...this.equipment,item:id});return;}this.heldGift=id;if(this.asset)setHeldGift(this.hero,id);}
   react(emotion){if(this.asset){reactBlender(this.hero,emotion,this.reduced);return;}this.emotion=emotion;this.reaction={emotion,elapsed:0};this.waveTime=0;this.nextHello=14;}
   setChat(active){this.chatting=active;if(active){this.inspectKitty();this.react('wave');}else{this.reaction=null;this.resetView();}}
   setTheme(theme){const t=THEMES[theme]||THEMES.rose;this.wallMat.color.set(t.wall);this.rugMat.color.set(t.rug);this.accentMat.color.set(t.accent);}
@@ -203,7 +205,7 @@ export class KittyRoom{
     this.bows.forEach((b,i)=>{if(b.visible){const base=this.bowPositions[this.bowIndices[i]];b.position.y=base[1]+(this.reduced||this.missionKind==='hearts'?0:Math.sin(t*1.6+i)*.12);if(this.missionKind==='hearts')b.scale.copy(b.userData.baseScale).multiplyScalar(this.missionFlash===i&&!this.reduced?1.3:1);b.rotation.y=.45+Math.sin(t+i)*.25;b.rotation.z=Math.sin(t*1.1+i)*.12;}});
     for(let i=this.confetti.length-1;i>=0;i--){const c=this.confetti[i];c.userData.life-=dt;c.position.addScaledVector(c.userData.velocity,dt);if(!c.userData.heart)c.userData.velocity.y-=3*dt;if(c.userData.life<=0){this.scene.remove(c);c.geometry.dispose();c.material.dispose();this.confetti.splice(i,1);}}
     if(this.treat?.visible){this.treatTime+=elapsed;const age=this.treatTime,p=Math.min(1,age/1.1),ease=p*p*(3-2*p);this.treat.position.set(.65*(1-ease),.65+.55*ease,.58);this.treat.rotation.z=-.2+Math.sin(age*5)*.06;this.treat.scale.setScalar(Math.max(.01,1-Math.max(0,age-1.5)));if(!this.reduced)u.head.rotation.x+=Math.sin(age*11)*.025*ease;if(age>2.5)this.treat.visible=false;}
-    this.onFrame(elapsed,t);this.renderer.render(this.scene,this.camera);
+    this.onFrame(elapsed,t);if(!this.inventoryOpen)this.renderer.render(this.scene,this.camera);
   }
 }
 function meshRing(radius,tubeRadius,mat){return new THREE.Mesh(new THREE.TorusGeometry(radius,tubeRadius,8,64),mat)}
