@@ -221,3 +221,14 @@ export class KittyRoom{
 }
 function meshRing(radius,tubeRadius,mat){return new THREE.Mesh(new THREE.TorusGeometry(radius,tubeRadius,8,64),mat)}
 function meshCylinder(top,bottom,height,mat){return new THREE.Mesh(new THREE.CylinderGeometry(top,bottom,height,32),mat)}
+
+// Geometry-only adapter for the React Three Fiber renderer. No renderer or input
+// controller is constructed here; the React scene owns lights, camera and input.
+export function createRoomGeometry(theme='rose'){
+  const context=Object.create(KittyRoom.prototype);
+  context.room=new THREE.Group();context.white=material('#fff7e9');context.wood=material('#d4ae8b');context.darkWood=material('#b18c70');
+  context.wallMat=material('#f0d5d8');context.rugMat=material('#d49aab');context.accentMat=material('#df9cae');
+  context.renderer={domElement:{dataset:{}}};context.buildRoom();context.gifts.forEach(g=>g.visible=false);
+  const setTheme=key=>{const t=THEMES[key]||THEMES.rose;context.wallMat.color.set(t.wall);context.rugMat.color.set(t.rug);context.accentMat.color.set(t.accent);};setTheme(theme);
+  return {group:context.room,backWall:context.backWall,leftWall:context.leftWall,cabinet:context.backFurniture,petals:context.petals,setTheme,setRewards:quest=>context.setAdventureRewards(quest)};
+}

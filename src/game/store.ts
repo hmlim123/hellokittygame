@@ -1,0 +1,574 @@
+import { create } from "zustand";
+import {
+  persist,
+  createJSONStorage,
+  type StateStorage,
+} from "zustand/middleware";
+import type {
+  Adventure,
+  Direction,
+  Equipment,
+  Gesture,
+  ItemId,
+  Mission,
+  MissionId,
+  Mode,
+  Notice,
+  OutfitId,
+  Panel,
+  Preferences,
+  QuestId,
+  Room,
+  SaveState,
+  Story,
+  Theme,
+} from "./types";
+import {
+  actMission,
+  createMission,
+  EncounterTracker,
+  enterPath,
+  interactAdventure,
+  kittyReply,
+  MAPS,
+  moveAdventure,
+  nearbyObject,
+  normalizeEquipment,
+  OUTFITS,
+  ITEMS,
+  questJournal,
+  recordMission,
+  replayMemory,
+  rewardDoll,
+  tickMission,
+} from "./domain";
+import {
+  browserStorage,
+  emptyStorage,
+  migrateLegacy,
+  mirrorLegacy,
+  read,
+  sanitizeSave,
+  type StorageLike,
+} from "./storage";
+const copy = <T>(v: T): T => structuredClone(v);
+const initialMode = (): Mode =>
+  typeof location !== "undefined" &&
+  location.pathname.endsWith("adventure.html")
+    ? "adventure"
+    : "room";
+export interface GameState extends SaveState {
+  mode: Mode;
+  panel: Panel;
+  inventoryTab: "clothes" | "items" | "quest";
+  notice: Notice | null;
+  dialogue: Story | null;
+  arrival: { friend: number; result: { title: string; text: string } } | null;
+  finishArrival(): void;
+  gesture: { id: number; kind: Gesture };
+  mission: Mission | null;
+  result: { title: string; text: string } | null;
+  messages: { role: "nancy" | "kitty"; text: string }[];
+  moving: boolean;
+  moveCommand: { id: number; dir: Direction } | null;
+  queuedDirection: Direction | null;
+  sceneReady: boolean;
+  saveFailed: boolean;
+  physicsContacts: number;
+  cameraReset: number;
+  setMode(mode: Mode): void;
+  openPanel(panel: Panel, tab?: "clothes" | "items" | "quest"): void;
+  closePanel(): void;
+  equip(kind: "outfit" | "item", id: string): void;
+  followQuest(id: QuestId): void;
+  react(kind: Gesture, text?: string): void;
+  chat(message: string): void;
+  requestMove(dir: Direction): void;
+  finishMove(blocked: boolean): void;
+  interact(choice?: string): void;
+  enter(type: "D" | "E"): void;
+  closeDialogue(): void;
+  startMission(id: MissionId): void;
+  missionAction(index: number): void;
+  tick(dt: number): void;
+  pauseMission(): void;
+  replayMemory(): void;
+  endMission(): void;
+  closeResult(): void;
+  setTheme(theme: Theme): void;
+  setPreferences(patch: Partial<Preferences>): void;
+  setFriend(id: number): void;
+  markLetterOpened(): void;
+  setSceneReady(ready: boolean): void;
+  resetCamera(): void;
+  clearNotice(id: number): void;
+}
+export function createGameStore(storage: StorageLike = browserStorage()) {
+  const legacy = migrateLegacy(storage);
+  let tracker = new EncounterTracker(),
+    serial = 0,
+    lastMirror = "";
+  // Persist only durable state; animation frames and chat never generate disk writes.
+  const cache = new Map<string, string>();
+  const stableStorage: StateStorage = {
+    getItem: (k) => {
+      try {
+        return storage.getItem(k);
+      } catch {
+        return null;
+      }
+    },
+    setItem: (k, v) => {
+      if (cache.get(k) === v) return;
+      try {
+        storage.setItem(k, v);
+        cache.set(k, v);
+      } catch {
+        /* The UI also reports unavailable saves through legacy mirroring. */
+      }
+    },
+    removeItem: (k) => {
+      try {
+        storage.removeItem?.(k);
+      } catch {}
+    },
+  };
+  const selectSave = (s: SaveState): SaveState => ({
+    room: s.room,
+    adventure: s.adventure,
+    equipment: s.equipment,
+    preferences: s.preferences,
+    journal: s.journal,
+  });
+  const useStore = create<GameState>()(
+    persist<GameState, [], [], SaveState>(
+      (set, get) => {
+        const notify = (
+          title: string,
+          text: string,
+          art?: string | null,
+        ): Notice => ({ id: ++serial, title, text, art });
+        const applyStory = (
+          a: Adventure,
+          result?: Story,
+          extra: Partial<GameState> = {},
+        ) => {
+          const room = copy(get().room);
+          if (a.complete && !room.adventureRewarded) {
+            const friend = rewardDoll(room);
+            room.adventureRewarded = true;
+            if (result?.complete && friend)
+              result = {
+                ...result,
+                text:
+                  result.text +
+                  ` ${friend.name} is waiting on your shelf at home.`,
+              };
+          }
+          if (result?.questComplete && a.trackedQuest === result.questComplete)
+            a.trackedQuest =
+              questJournal(a).find((q) => !q.done)?.id || "moonflower";
+          const dialogue =
+            result && (result.choices?.length || result.complete)
+              ? result
+              : null;
+          set({
+            adventure: a,
+            room,
+            ...extra,
+            ...(result
+              ? {
+                  dialogue,
+                  notice: dialogue
+                    ? null
+                    : {
+                        ...notify(
+                          result.speaker || MAPS[a.map].title,
+                          result.text || "A little path to somewhere sweet.",
+                          result.art,
+                        ),
+                        ...(result.chime && result.source
+                          ? {
+                              at: [result.source.x, result.source.z] as [
+                                number,
+                                number,
+                              ],
+                            }
+                          : {}),
+                      },
+                }
+              : {}),
+          });
+        };
+        const autoEncounter = (a: Adventure) => {
+          const s = get(),
+            object = tracker.take(a, s.equipment);
+          return object
+            ? interactAdventure(
+                a,
+                object.type === "M" ? "accept" : undefined,
+                object,
+                s.equipment,
+              )
+            : undefined;
+        };
+        const finishMission = (mission: Mission) => {
+          const room = copy(get().room),
+            journal = copy(get().journal);
+          let title = "Lovely playing together.",
+            text = `You made ${mission.hits} of ${mission.goal} little steps. Try again whenever you like.`;
+          let friendId: number | null = null;
+          if (mission.complete) {
+            recordMission(journal, mission.id);
+            const friend = rewardDoll(room);
+            friendId = friend?.id ?? null;
+            room.best = Math.max(
+              room.best,
+              mission.id === "bows"
+                ? 80 + (mission.relaxed ? 0 : Math.ceil(mission.time || 0) * 2)
+                : 0,
+            );
+            title = friend
+              ? `Hello, ${friend.short.toLowerCase()}.`
+              : "A happy little memory.";
+            text = friend
+              ? `${friend.name} is joining your shelf. A keepsake is ready in the mission journal.`
+              : "All your friends are home. Your little keepsake is saved.";
+          }
+          set({
+            mission: null,
+            room,
+            journal,
+            result: friendId === null ? { title, text } : null,
+            arrival:
+              friendId === null
+                ? null
+                : { friend: friendId, result: { title, text } },
+            gesture: { id: ++serial, kind: "wave" },
+          });
+        };
+        return {
+          ...legacy,
+          arrival: null,
+          finishArrival() {
+            const arrival = get().arrival;
+            if (arrival) set({ arrival: null, result: arrival.result });
+          },
+          mode: initialMode(),
+          panel: null,
+          inventoryTab: "clothes",
+          notice: null,
+          dialogue: null,
+          gesture: { id: 0, kind: "wave" },
+          mission: null,
+          result: null,
+          messages: [],
+          moving: false,
+          moveCommand: null,
+          queuedDirection: null,
+          sceneReady: false,
+          saveFailed: false,
+          physicsContacts: 0,
+          cameraReset: 0,
+          setMode(mode) {
+            if (get().mode === mode) {
+              set({ panel: null, dialogue: null });
+              return;
+            }
+            set({
+              mode,
+              arrival: null,
+              panel: null,
+              dialogue: null,
+              mission: null,
+              result: null,
+              moving: false,
+              moveCommand: null,
+              queuedDirection: null,
+              sceneReady: false,
+              notice: null,
+            });
+            tracker = new EncounterTracker();
+          },
+          openPanel(panel, tab) {
+            if (get().moving || get().mission?.active || get().arrival) return;
+            set({ panel, inventoryTab: tab || get().inventoryTab });
+          },
+          closePanel() {
+            set({ panel: null });
+            if (get().mode === "adventure") {
+              const a = copy(get().adventure);
+              applyStory(a, autoEncounter(a));
+            }
+          },
+          equip(kind, id) {
+            const s = get();
+            if (kind === "item" && !ITEMS.some((i) => i.id === id)) return;
+            if (
+              kind === "outfit" &&
+              !OUTFITS.some((o) => o.id === id && o.unlock(s.adventure))
+            )
+              return;
+            const equipment = normalizeEquipment(
+              { ...s.equipment, [kind]: id },
+              s.adventure,
+            );
+            set({ equipment });
+          },
+          followQuest(id) {
+            const adventure = { ...get().adventure, trackedQuest: id };
+            set({ adventure });
+          },
+          react(kind, text) {
+            set({
+              gesture: { id: ++serial, kind },
+              notice: notify(
+                "A little moment",
+                text ||
+                  {
+                    excited: "Three happy little hops for Nancy. ♡",
+                    wave: "A paw and a wink, just for Nancy. ♡",
+                    dance: "A tiny dance makes a lovely little day. ♫",
+                    hug: "A soft little cuddle for Nancy. ♡",
+                    highfive: "High five! A tiny paw and a happy wink. ♡",
+                    tickle: "Tiny tickles, happy wiggles! ♡",
+                    kiss: "A little kiss, just for Nancy. ♡",
+                    pet: "A gentle head pat. A little love back. ♡",
+                    tilt: "A bow, a little tilt, and a hello. ♡",
+                    offer: "A little present, just for Nancy. ♡",
+                  }[kind],
+              ),
+            });
+          },
+          chat(message) {
+            const text = message.trim().slice(0, 240);
+            if (!text) return;
+            const s = get(),
+              answer = kittyReply(text, "Nancy", s.messages.length / 2);
+            const kind: Gesture =
+              answer.emotion === "excited"
+                ? "excited"
+                : answer.emotion === "dance"
+                  ? "dance"
+                  : answer.emotion === "hug"
+                    ? "hug"
+                    : answer.emotion === "wave"
+                      ? "wave"
+                      : "tilt";
+            set({
+              messages: [
+                ...s.messages,
+                { role: "nancy" as const, text },
+                { role: "kitty" as const, text: answer.text },
+              ].slice(-24),
+              gesture: { id: ++serial, kind },
+            });
+          },
+          requestMove(dir) {
+            const s = get();
+            if (
+              s.mode !== "adventure" ||
+              s.panel ||
+              s.dialogue ||
+              !s.sceneReady
+            )
+              return;
+            if (s.moving) {
+              set({ queuedDirection: dir });
+              return;
+            }
+            set({ moving: true, moveCommand: { id: ++serial, dir } });
+          },
+          finishMove(blocked) {
+            const s = get();
+            if (!s.moveCommand) return;
+            const a = copy(s.adventure),
+              dir = s.moveCommand.dir;
+            a.facing = dir;
+            if (!blocked) moveAdventure(a, dir);
+            const queued = s.queuedDirection;
+            applyStory(a, autoEncounter(a), {
+              moving: false,
+              moveCommand: null,
+              queuedDirection: null,
+              physicsContacts: s.physicsContacts + (blocked ? 1 : 0),
+            });
+            if (queued && !get().dialogue) get().requestMove(queued);
+          },
+          interact(choice) {
+            const s = get();
+            if (s.moving) return;
+            const a = copy(s.adventure);
+            const source = choice ? s.dialogue?.source : nearbyObject(a);
+            if (source?.type === "D" || source?.type === "E") {
+              get().enter(source.type);
+              return;
+            }
+            tracker.mark(a, source || undefined, s.equipment);
+            const result = interactAdventure(
+              a,
+              choice,
+              source || undefined,
+              s.equipment,
+            );
+            applyStory(a, result);
+            if (!get().dialogue) {
+              const next = autoEncounter(a);
+              if (next) applyStory(a, next);
+            }
+          },
+          enter(type) {
+            const a = copy(get().adventure);
+            if (enterPath(a, type).changedMap)
+              applyStory(a, undefined, {
+                dialogue: null,
+                notice: notify(
+                  MAPS[a.map].title,
+                  type === "D"
+                    ? "Your little adventure continues."
+                    : "Welcome back to the village.",
+                ),
+                moving: false,
+                moveCommand: null,
+                queuedDirection: null,
+              });
+          },
+          closeDialogue() {
+            set({ dialogue: null });
+            const a = copy(get().adventure);
+            applyStory(a, autoEncounter(a));
+          },
+          startMission(id) {
+            set({
+              panel: null,
+              result: null,
+              mission: createMission(id, {
+                relaxed: get().preferences.relaxed,
+              }),
+            });
+          },
+          missionAction(index) {
+            const mission = get().mission;
+            if (!mission) return;
+            const next = copy(mission),
+              result = actMission(next, index);
+            if (!result.accepted) return;
+            if (next.complete) finishMission(next);
+            else
+              set({
+                mission: next,
+                gesture: { id: ++serial, kind: "pet" },
+                ...(result.mistake
+                  ? {
+                      notice: notify(
+                        "No rush",
+                        "Watch the hearts and try that little pattern again.",
+                      ),
+                    }
+                  : {}),
+              });
+          },
+          tick(dt) {
+            const mission = get().mission;
+            if (
+              !mission ||
+              !mission.active ||
+              mission.paused ||
+              mission.id === "picnic"
+            )
+              return;
+            const next = copy(mission);
+            tickMission(next, Math.min(dt, 0.1));
+            if (!next.active) finishMission(next);
+            else set({ mission: next });
+          },
+          pauseMission() {
+            const mission = get().mission;
+            if (mission)
+              set({ mission: { ...mission, paused: !mission.paused } });
+          },
+          replayMemory() {
+            const mission = get().mission;
+            if (!mission) return;
+            const next = copy(mission);
+            replayMemory(next);
+            set({ mission: next });
+          },
+          endMission() {
+            const mission = get().mission;
+            if (mission) finishMission({ ...mission, active: false });
+          },
+          closeResult() {
+            set({ result: null });
+          },
+          setTheme(theme) {
+            set({ room: { ...get().room, theme } });
+          },
+          setPreferences(patch) {
+            set({ preferences: { ...get().preferences, ...patch } });
+          },
+          setFriend(id) {
+            if (get().room.owned.includes(id))
+              set({
+                room: { ...get().room, selected: id },
+                gesture: { id: ++serial, kind: "wave" },
+              });
+          },
+          markLetterOpened() {
+            set({ preferences: { ...get().preferences, letterOpened: true } });
+          },
+          setSceneReady(sceneReady) {
+            set({ sceneReady });
+          },
+          resetCamera() {
+            set({ cameraReset: get().cameraReset + 1 });
+          },
+          clearNotice(id) {
+            if (get().notice?.id === id) set({ notice: null });
+          },
+        };
+      },
+      {
+        name: "kitty-world-v2",
+        version: 2,
+        storage: createJSONStorage(() => stableStorage),
+        partialize: selectSave,
+        merge: (saved, current) => {
+          const previous = sanitizeSave(saved, legacy),
+            fresh = migrateLegacy(storage);
+          return {
+            ...current,
+            ...previous,
+            room: read(storage, "kitty-room-3d-v1")
+              ? fresh.room
+              : previous.room,
+            adventure: read(storage, "kitty-nancy-adventure-v1")
+              ? fresh.adventure
+              : previous.adventure,
+            equipment: read(storage, "kitty-nancy-equipment-v1")
+              ? fresh.equipment
+              : previous.equipment,
+            journal: read(storage, "kitty-nancy-missions-v1")
+              ? fresh.journal
+              : previous.journal,
+            preferences: read(storage, "kitty-room-preferences-v1")
+              ? fresh.preferences
+              : previous.preferences,
+          };
+        },
+        migrate: (saved) => sanitizeSave(saved, legacy),
+      },
+    ),
+  );
+  useStore.subscribe((s) => {
+    const save = selectSave(s),
+      json = JSON.stringify(save);
+    if (json === lastMirror) return;
+    lastMirror = json;
+    const saved = mirrorLegacy(storage, save);
+    if (!saved && !s.saveFailed) useStore.setState({ saveFailed: true });
+  });
+  return useStore;
+}
+export const useGameStore = createGameStore();
+export const resetForTests = () => createGameStore(emptyStorage);

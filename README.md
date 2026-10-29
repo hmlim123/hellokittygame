@@ -1,365 +1,194 @@
 # Nancy’s Hello Kitty · A little happy place
 
-A small browser game made as a gift for Nancy, built around **our actual Blender
-Hello Kitty model**. The home page keeps three actions: **Wave hello**, **Little
-dance**, and **Play a mission**. The mission button opens one tidy panel with
-**Missions**, **Gifts**, and **For Nancy** tabs. The tabs support arrow-key navigation.
+A cozy browser game for Nancy, using our actual animated Blender Hello Kitty.
+The room keeps three main buttons: **Wave hello**, **Little dance**, and
+**Play a mission**. Inventory, settings, and playful interactions open in focused
+panels. The same clothes, items, collection, and quests follow Kitty between her
+room and Moonflower Adventure.
 
-## Nancy’s little adventures
+## Application stack
 
-| Mission | How to play | Finish |
-| --- | --- | --- |
-| Bow Hunt | Find the floating bows | 8 bows; 45 seconds or relaxed mode |
-| Strawberry Picnic | Gather the 3D strawberries | 6 berries; 40 seconds or relaxed mode |
-| Memory Hearts | Watch four numbered hearts light up, then repeat their order | Correct 4-heart sequence; no timer |
-| A Picnic for Nancy | Drag or tap the four gifts into their cozy spots | All four placed; no timer |
+| Technology | What it does in this game |
+| --- | --- |
+| React + TypeScript | Application navigation, menus, inventory, local chat, settings, mission controls and dialogue |
+| React Three Fiber | Owns the room, adventure and wardrobe-preview render loops and 3D scene composition |
+| Zustand | Shared game state, durable progress, equipment, mission transitions and save migration |
+| Rapier | Kinematic adventure character controller, capsule collider, map-wall and floor colliders |
+| Drei | GLB loading, 360° OrbitControls, orthographic camera, loading progress and world labels |
+| Three.js | Blender animation mixer, meshes, materials and geometry beneath Fiber |
+| Vite | Development server, typed production build and hashed application assets |
 
-Memory Hearts accepts input only after the cue sequence. A wrong answer replays
-the same sequence, with no penalty. **Watch again** resets the current attempt;
-pause freezes both cues and input. Relaxed mode removes the timer from the two
-collecting missions. A completed mission brings another friend home until all
-six are collected; replaying remains available afterwards.
+`src/` contains the new React/TypeScript application. Existing tested game rules,
+Blender animation adapters, and geometry helpers in `dist/` are reused through a
+typed boundary in `src/game/domain.ts`. The active application does not run the
+old DOM application or its renderer. The previous game is preserved at `classic/`
+in each build, including its compatibility renderer and older optional features.
 
-Every mission’s first completion opens one keepsake note for Nancy in **For
-Nancy**. The panel also links to her sealed letter. There are no streaks,
-deadlines, currencies, or chores attached to the keepsakes.
+## Play
 
-## Little gifts and moments
+- **Her room:** wave, dance, tap the bow/head/paws/nose, or open **Play together**
+  for cuddles, high fives, tickles, kisses, held-item play and a little local chat.
+  Chat uses a small set of playful responses; it does not contact an AI service.
+- **Look around:** drag/swipe for a full 360° orbit. Focus the room canvas and
+  press Left/Right for keyboard rotation; **Reset view** returns to the front.
+  Walls and the cabinet cut away for the rear view.
+- **Inventory:** choose clothes and flowers, teddy, strawberry, envelope or empty
+  paws. The live Blender preview rotates and changes immediately. Outfits unlock
+  from quests and follow Kitty both at home and in the adventure.
+- **Settings:** choose a room palette, optional music-box sound, relaxed hunts
+  without a timer, and reduced motion. Device reduced-motion settings are honored.
+  Audio starts only after enabling it and suspends when the tab is hidden.
 
-In **Play a mission → Gifts**, choose **flowers**, a **cuddle teddy**, a **sweet
-strawberry**, or a **heart-sealed love letter**. Tap the present in Kitty’s paws
-to play with it. The choice saves and follows the selected friend:
+| Mission | Goal |
+| --- | --- |
+| Bow Hunt | Collect eight floating bows; 45 seconds or relaxed mode |
+| Strawberry Picnic | Collect six berries; 40 seconds or relaxed mode |
+| Memory Hearts | Watch and repeat four numbered hearts; no timer |
+| A Picnic for Nancy | Drag or tap four gifts into their matching spots; no timer |
 
-- Teddy: a gentle squeeze with the actual Blender arms moving into a cuddle.
-- Strawberry: three tap-to-feed bites, then a fresh serving. Repeated taps wait
-  for the current bite to finish; switching items clears transient play.
-- Letter: opens a sealed envelope. Break the heart seal to read it and fold it
-  again whenever you like. It also opens from the **For Nancy** tab.
-- Flowers: starts the picnic activity, with all four gifts to arrange.
+A completed mission saves a keepsake and unlocks another friend until all six
+are home. New friends enter, wave, and settle on the shelf. Ownership saves before
+the welcome finishes; Escape skips it and reduced motion settles immediately.
+Teddy play animates the actual arms into a cuddle. Feeding the strawberry takes
+three bites and then refreshes it. A picnic can be replayed with a fresh board.
 
-The picnic supports a real pointer drag or selecting an item and then a spot
-by tap/keyboard. Wrong spots give a hint, with no penalty. Only placing all four
-awards a friend and keepsake. Leaving early preserves earned collections but
-resets the current picnic. Reduced motion skips the friend entrance as before.
+Nancy’s letter is reserved for the user’s own words. `dist/letter.js` deliberately
+contains `pending: true` and no invented love-letter draft. Set its paragraph
+array, sign-off and signature only when the author supplies the message.
 
-The letter's text is reserved for the user's own message. `dist/letter.js` has
-`pending: true` and no invented draft. Until the message is supplied, the paper
-shows a clear “being written” placeholder. Set `pending: false`, the paragraph
-array, sign-off and signature when the author provides the actual words. Letter
-content is rendered as text. Opening the seal is remembered in preferences.
-The original flowers are part of the Blender model; the additional lightweight
-3D gift props attach to the same exported bouquet controller. The character
-itself remains the actual Blender mesh and rig.
-
-Kitty breathes and blinks gently, follows nearby pointer movement, and blends
-between poses. Tap her bow for a head tilt or her head for a pet. New friends
-enter, wave, and settle onto the shelf. Ownership saves **before** the welcome;
-Escape skips it, and reduced motion settles the friend immediately.
-
-Optional music-box sound starts only when enabled, with chimes for catches and
-arrivals. Audio suspends when the tab is hidden. A few slow petals float by the
-window. The shelf and room colors remain in one expandable panel below the room.
-
-![Nancy’s room with her cuddle teddy](docs/nancy-teddy-room.png)
-
-## Moonflower Adventure — a small browser RPG chapter
+## Moonflower Adventure
 
 Open **Play a mission → Moonflower Adventure** or `adventure.html`. This is a
-cozy, classic Japanese-RPG-style browser mode, using our actual Blender Kitty;
-it is not a project requiring the RPG Maker application or its runtime.
+small browser RPG chapter: Rosemilk Village and Moonflower Garden, with no timer
+or combat. Walk using arrows/WASD or the touch direction pad. Enter/Space or
+**Talk / inspect** repeats a nearby interaction. Story choices stop walking.
 
-Explore Rosemilk Village, talk to Momo by the fountain, enter Moonflower Garden,
-open three treasure chests, help the cloud guardian in a three-turn conversation,
-open the moon gate, and restore Nancy’s moonflower at the shrine. The current
-chapter has one village, one dungeon, and a complete ending. There is no timer.
+Walk beside friends, treasure and quest objects to discover them automatically.
+Cards show original illustrations, chests open, and charms rise with hearts and
+stars. Reduced motion keeps the discoveries still. Enter the upper-right pink
+arch by walking through it or pressing its **Enter dungeon** label. Entering
+starts the quest even if you have not spoken with Momo. Rapier physically blocks
+Kitty at houses, hedges and the locked moon gate.
 
-There are also three optional quests, available in **Inventory → Quest** in
-the room and adventure:
-
-| Quest | How to play | Reward at home |
+| Quest | Steps | Reward |
 | --- | --- | --- |
+| Restore the moonflower | Find three chest charms, listen/tell a story/wave to the cloud guardian, pass the moon gate and approach the shrine | Moonlight dress and one room friend |
 | Momo’s lost ribbons | Find three village ribbons and approach Momo | Berry sweetheart outfit |
-| A picnic for Momo | Pick both southern garden berry bushes, equip Sweet strawberry, then approach Momo | Picnic basket keepsake |
-| Lanterns for the garden | After restoring the moonflower, visit both northern lanterns and return to the shrine | Moon lantern keepsake |
+| A picnic for Momo | Pick both southern garden berry bushes, equip Sweet strawberry, approach Momo | Room picnic basket |
+| Lanterns for the garden | After restoring the flower, visit both northern lanterns and return to the shrine | Room moon lantern |
 
-Use **Follow quest** for its objective and direction hint. Pickups and hand-ins
-happen on approach. Completing a tracked quest follows the next unfinished one.
-Existing completed chapters gain the optional quests without resetting progress.
-Clothes and keepsakes appear in Kitty’s room through the shared save.
+**Inventory → Quest** shows all four quests, collected charms and **Follow quest**
+controls. Completing the tracked quest follows another unfinished quest. The
+honey chest also unlocks the Honey picnic outfit. Rewards are granted once and
+are shared with the room; reloading does not duplicate them.
 
-Walk next to Momo to start the quest automatically, and approach a chest to collect
-its charm. Discoveries show an illustrated card without stopping movement or
-requiring a dismiss button. Charms rise above their chests with a small burst of
-hearts and stars; lids ease open. The cloud guardian starts talking on approach,
-with three deliberate conversation choices. The ready gate opens and the shrine
-finishes the quest on approach. Encounters do not immediately repeat after closing
-a conversation, and collected treasure never awards twice. The bag shows matching
-charm illustrations; the guardian and ending have illustrated portraits. Reduced
-motion keeps the images and removes moving particles.
+## Develop and verify
 
-![A charm discovered automatically](docs/nancy-treasure-discovery.png)
-
-To reach the dungeon, walk through the upper-right pink arch, use **Enter dungeon**
-beside it, or tap the arch or its label. Entering starts the quest automatically;
-talking to Momo first is optional. The same entrance works from either side of
-the arch. Direction hints guide you to Momo and, after accepting the quest, the
-entrance even when it is off-screen.
-If a browser still shows the older entrance, open `adventure.html?v=adventure-7`.
-The entry script, quest module and stylesheet also carry this release query so
-the browser requests the matching update without clearing Nancy’s saved progress.
-
-Use arrow keys/WASD to walk and Enter/Space to interact. A direction pad and an
-interaction button support touch. **Inventory → Quest** shows the objective and three
-charms. The camera follows Kitty, with reduced-motion support. House/hedge tiles
-block movement and story interactions stop walking while their dialogue is open.
-
-Progress saves after steps and discoveries in `kitty-nancy-adventure-v1`. The
-quest can be resumed after reloading. At completion, one room friend is granted
-once, with an `adventureRewarded` marker in the same atomic room-state write.
-The marker is retained by the room’s save normalizer and merges. Existing picnic
-and room collections are preserved. If all friends are already owned, the chapter
-still completes without inventing a seventh collectible. The old room remains
-available through the header link.
-
-![Nancy’s village adventure](docs/nancy-adventure-village.png)
-
-## Inventory and clothes
-
-Open **Inventory ♡** in the room header or at the top-right of the adventure. **Clothes** equips an
-outfit immediately on the walking Kitty and the live, front-facing Blender-model
-preview. Rose dress and Sky sailor are available from the start. Find the honey
-charm to earn Honey picnic with its cream apron; restore the moonflower to earn
-the star-decorated Moonlight dress. The dress and bow change together, and clothing
-details follow the original character rig.
-
-**Items** equips flowers, a teddy, a strawberry, Nancy’s sealed envelope, or empty
-paws. Items are available from the start. **Quest** keeps the collected charms
-and current objective in their own tab. The tabs support keyboard arrows and
-touch. Choices persist through map changes and reloads in
-`kitty-nancy-equipment-v1`, separate from quest progress. A previous room gift is
-used as the initial item when no equipment has been saved. The main Kitty wears
-the same outfit and carries the same item in her room and adventure. Earned
-outfits are selectable from either place. Changes sync across open tabs and when
-returning to a page; each choice merges with the latest saved equipment. The
-room’s Gifts tab also updates the shared held item. Shelf collectibles keep their
-own appearances and the selected friend stays saved.
-
-![Kitty’s clothes and live preview](docs/nancy-inventory-clothes.png)
-![The earned picnic outfit at home](docs/nancy-earned-outfit-room.png)
-
-## Playing with Kitty and looking around
-
-The room supports a full **360° camera orbit**: drag or swipe around Kitty, or
-focus the room canvas and press Left/Right. Walls and the cabinet cut away when
-they would block the back view. **Reset view** returns to the front. Inventory
-previews can also rotate; double-click a preview to face forward again.
-
-Open **Play a mission → Gifts & play → Play together** for cuddles, high fives,
-tickles and kisses. Tapping a paw gives a high five, feet trigger tickles, the
-nose sends a kiss, the bow tilts her head, and the head receives a gentle pat.
-These use the actual Blender rig and respect reduced motion. The main screen
-keeps its three play buttons.
-
-## Run locally
-
-Python 3 is enough to serve the game. No build step is required, and all assets,
-including Three.js and the 1.7 MB character model, are bundled locally.
+Use Node.js 24 and npm:
 
 ```sh
-python3 -m http.server 8000 --directory dist
+npm ci
+npm run dev
 ```
 
-Open `http://localhost:8000`. Serve over HTTP: opening `index.html` as a file
-will not reliably load modules or the GLB asset. Drag to orbit and scroll/pinch
-to zoom. The main buttons and bow targets also work with the keyboard.
-Escape pauses a hunt; the Pause button and Space on the scene canvas do too.
-
-The WebGL renderer is preferred. A software compatibility renderer uses the
-same imported model and camera when WebGL2 is unavailable, at lower performance.
-Reduced motion replaces moving reactions with a brief, static wink.
-
-## Play without Terminal
-
-Download `play.html` from this repository and open it in a desktop browser.
-It contains the complete game, Three.js, and the Blender model in one file;
-no server, account, or Internet requests are needed for the room and mini-games.
-The separate Moonflower Adventure link opens the online game and needs Internet
-access; it is not embedded into the single-file download. File-based
-browser storage varies, so saves are best-effort and separate from the hosted
-site's saves. The self-contained HTML was verified in an isolated browser
-document, including the eight-bow hunt, with zero HTTP requests. Direct
-`file://` navigation could not be tested because this cloud browser blocks it.
-
-Regenerate the standalone file after changing the game:
+Open the local Vite address printed in the terminal. No remote game assets,
+login, Blender installation, database or API key is required to play.
 
 ```sh
-npm exec --yes --package=esbuild@0.28.2 -- esbuild dist/app.js --bundle --format=esm --target=es2022 --minify --outfile=/tmp/kitty-standalone.js
-python scripts/build_standalone.py /tmp/kitty-standalone.js play.html
+npm test           # Existing game/model rules + Zustand/save migration tests
+npm run build      # Prepare local assets, strict TypeScript, production bundle
+npm run preview -- --port 8053
 ```
 
-`play.html` is a downloadable artifact, not a published website or ChatGPT
-playable card. For hosting, upload the contents of `dist/` to a static host.
+The new browser integration check uses a real Chromium WebGL canvas and Rapier
+controller. With Python Playwright and Chromium installed and preview running:
 
-## The Blender model
+```sh
+python tests/react-browser.py
+```
 
-`dist/assets/hello-kitty.glb` is exported from
-[hmlim123/hellokitty3D](https://github.com/hmlim123/hellokitty3D), specifically
-`hello_kitty_animated.blend` at commit `1fee5d514ba101055d1bb1c6e6957830aa3be646`.
-It includes the actual head, bow, bouquet, rounded paws, controller hierarchy,
-and animation. It is not a recreation using browser primitives. The Blender
-studio is excluded, the meshes are reduced for browser use, and the wink’s
-render-visibility keys are converted into glTF morph targets.
+Set `KITTY_BASE_URL` or `CHROMIUM_PATH` to override the defaults. It checks room
+controls, chat, settings, wardrobe, mission rewards, picnic replay, a physical
+wall collision, all four adventure quests, reloads, shared room rewards, and phone
+touch controls. Older browser scripts in `tests/` target the preserved classic
+application; serve `dist/` separately to run those historical checks.
 
-The source and conversion details are recorded in `dist/assets/kitty-source.json`.
-The Blender source remains in its private repository; it is not needed to play.
+Vite splits the React interface from the 3D application and wardrobe preview.
+The physics WebAssembly and rendering libraries are the largest download. Assets
+and dependencies are pinned in `package-lock.json` and bundled locally. Bright
+pastel realtime lighting uses no grain or noisy path tracing.
 
-To reproduce the GLB after checking out that source commit alongside this repo:
+## Saves and compatibility
+
+Zustand persists durable state under `kitty-world-v2`. It migrates the existing
+room, picnic collection, adventure, equipment, mission journal and preferences.
+The old save keys are mirrored for the classic version. Returning from classic
+or another tab rehydrates progress. Unrelated older wallet/care/sticker saves are
+preserved. Animation frames, movement requests, modal visibility and chat history
+are transient and do not cause repeated storage writes.
+
+Progress belongs to this browser and origin; it is not a cloud account save.
+Changing hosting domains or using a private window gives a separate save. When
+storage is blocked the game remains playable and reports that saving is unavailable.
+
+`play.html` is the previous self-contained classic room, retained as an offline
+download. It is not the new React/Rapier build and does not embed the adventure.
+The modern app needs HTTP hosting; upload **the contents of `build/`** after
+`npm run build`. A graphics failure offers the classic compatibility version.
+
+## Blender model
+
+`dist/assets/hello-kitty.glb` comes from the private
+[hmlim123/hellokitty3D](https://github.com/hmlim123/hellokitty3D) repository:
+`hello_kitty_animated.blend`, commit `1fee5d514ba101055d1bb1c6e6957830aa3be646`.
+It contains the actual head, bow, bouquet, rounded paws, controllers, wave,
+dance and animated wink. It is not a primitive replacement for the character.
+Provenance is recorded in `dist/assets/kitty-source.json`.
+
+To re-export after checking out that source revision alongside this repository:
 
 ```sh
 blender -b ../hellokitty3D/hello_kitty_animated.blend --threads 5 --python-exit-code 1 --python scripts/export_blender.py
 ```
 
-This updates the game asset and provenance JSON without saving or changing the
-input Blender file. If exporting a different model revision, update the source
-commit in the exporter’s provenance metadata too. The runtime combines Blender’s
-object animation tracks and plays the wave/wink and dance portions with an
-`AnimationMixer`. Lighting is smooth and pastel, without grain textures or cast
-shadow noise. The browser lighting differs from the original Blender studio.
-
-## Saved progress and older features
-
-The main page continues to read `kitty-room-3d-v1` and merges owned friends from
-`kitty-picnic-v1`. Existing owned friends, shelf placements, selected friend,
-room color, best score, and completed hunts are retained. Old evening settings
-remain saved, while the simplified room opens in daylight.
-
-Care hearts, stickers, wallet balances, milestones, purchased gifts, and equipped
-shop items are **not deleted or overwritten**. Their interfaces and effects are
-not active on the simplified main page. New hunts unlock friends, rather than
-awarding wallet tokens. A partial or expired hunt keeps your friends safe but
-does not unlock a new one.
-
-The older picnic remains at `picnic.html` for existing direct links. Its modules
-and tests remain in the repository, but it is no longer linked from the home
-page. Chat, care, and reward modules are retained for compatibility. Their interfaces
-are not part of the simplified page; the scene still shares some legacy helpers.
-
-Nancy’s mission counts and keepsake unlocks use `kitty-nancy-missions-v1`.
-The held gift and relaxed setting use `kitty-room-preferences-v1`. These keys
-are separate from the pre-existing collection, care, and wallet saves. Mission
-completion updates the journal and friend collection once; wrong memory answers,
-replays of the cues, and unfinished missions award neither a friend nor a keepsake.
-
-Progress is local to the same browser and site address. Moving to another host,
-using another device, or clearing site data means a different save. Blocked
-storage shows a saving warning. There are no accounts, remote chat requests,
-or external asset requests. An old `?to=` link still displays its recipient as
-plain text, without adding another settings screen.
-
-## Checks
-
-Node.js 20+ and npm are needed for the tests:
-
-```sh
-npm ci
-npm test
-```
-
-Automated checks cover the Blender asset, real paw and wink playback, pose
-reset, continuous gesture switching, bounded attention, blinking, touch targets,
-friend arrivals, opt-in audio, relaxed hunts, gift replacement, timed/memory
-mission rules, keepsake persistence, picnic placement, item play, the reserved
-letter, full adventure reachability, quest order, save repair, exactly-once
-adventure rewards, reduced motion, independent model instances,
-collection migration, bow
-hunt rules, saved progress, and the retained legacy modules.
-
-Browser checks exercised actual WebGL loading, wave/dance, a complete eight-bow
-hunt, pause/resume, partial completion, unlock persistence across reloads, old
-collection migration, saved theme and selection, untouched care/wallet saves,
-phone layout, touch raycasts, optional sound, relaxed-mode persistence, and
-ownership saved before the visible arrival finishes. The compatibility renderer
-was also checked with WebGL disabled. The mission browser checks exercise all
-four gift choices, gift persistence, a full Strawberry Picnic, memory cues,
-wrong-answer replay and completion, Nancy’s notes, keyboard tabs and mobile gifts. Item-play checks cover the actual 3D feeding taps, the teddy
-cuddle, letter seal/fold controls, pointer dragging, keyboard placement, reward
-persistence, cancellation, and touch placement on a phone. The adventure browser test plays the complete
-village/dungeon quest using real keyboard controls, reloads mid-quest, finishes
-the guardian/gate/shrine sequence, checks the room reward only arrives once, and
-checks phone movement and the bag.
-The quest-effects browser test checks automatic pickup, loaded illustrations,
-particle cleanup, no repeated pickup, and the phone software renderer with
-reduced motion.
-Preview screenshots are in `docs/simple-room-*.png`.
-
-The browser smoke test is also saved in `tests/browser-smoke.py`. With the local
-server on port 8012, Python Playwright and its Chromium installed, run:
-
-```sh
-python tests/browser-smoke.py
-python tests/missions-browser.py
-python tests/items-browser.py
-python tests/adventure-browser.py
-python tests/quest-effects-browser.py
-python tests/inventory-browser.py
-python tests/room-wardrobe-browser.py
-python tests/adventure-expansion-browser.py
-```
-
-Set `KITTY_BASE_URL` for another local port or `CHROMIUM_PATH` to use an installed
-Chromium executable. This test writes the documented screenshots into `docs/`.
-The inventory browser test also uses Pillow to compare the rendered outfit
-colors and checks phone controls with WebGL disabled.
+The exporter excludes the Blender studio and converts eye visibility into glTF
+morph targets. It does not modify the source `.blend`. React components load the
+GLB with Drei and animate its real controllers; clothes and held props attach to
+the original rig. Shelf variants keep their own palettes.
 
 ## Main files
 
 | File | Purpose |
 | --- | --- |
-| `dist/index.html`, `dist/simple.css` | Simplified responsive page |
-| `dist/app.js` | Three actions, bow hunt, collection, and saves |
-| `dist/blender-kitty.js` | Imported model, pose blending, idle motion and touches |
-| `dist/friend-arrival.js` | Arrival timing and shelf placement |
-| `dist/sound.js` | Opt-in synthesized music and chimes |
-| `dist/missions.js` | Mission state, memory cues, and Nancy’s keepsakes |
-| `dist/gifts.js` | Held props, cuddle and feeding play on the Blender rig |
-| `dist/item-play.js` | Picnic placement rules and pointer/tap controls |
-| `dist/letter.js` | User-authored letter content (pending) |
-| `dist/adventure.html`, `dist/adventure.js` | Separate RPG map and controls |
-| `dist/adventure-state.js` | Maps, collision, quests, save repair and reward rules |
-| `dist/adventure-quests.js` | Shared quest journal, progress and follow controls |
-| `dist/adventure-effects.js`, `dist/assets/quest/` | Discovery effects and original vector illustrations |
-| `dist/equipment-state.js`, `dist/equipment-model.js` | Equipment unlocks, save repair and clothing on the Blender rig |
-| `dist/equipment-storage.js` | Shared wardrobe reads, validated changes and merging across pages |
-| `dist/inventory.js`, `dist/equipment-preview.js` | Inventory tabs, item cards and live character preview |
-| `dist/assets/hello-kitty.glb` | Actual exported Blender character |
-| `dist/scene.js` | Three.js room, camera, and interactions |
-| `scripts/export_blender.py` | Reproducible Blender-to-game export |
-| `tests/` | Automated model, game, and compatibility checks |
+| `src/App.tsx` | React navigation, menus, controls and dialogue |
+| `src/ui/` | Inventory, chat, settings, missions and letter |
+| `src/game/store.ts` | Zustand actions, atomic rewards and persistence |
+| `src/game/storage.ts` | Save migration and legacy compatibility |
+| `src/game/types.ts`, `domain.ts` | Shared types and boundary to existing rules |
+| `src/scenes/Stage.tsx` | Fiber Canvas, physics context, loading and failure UI |
+| `src/scenes/RoomScene.tsx` | Room, interactions, shelf, arrivals and 360° orbit |
+| `src/scenes/AdventureScene.tsx` | Map, Rapier character controller and discoveries |
+| `src/scenes/Kitty.tsx` | Actual Blender character and rig animation |
+| `src/scenes/WardrobePreview.tsx` | Live 3D equipment preview |
+| `scripts/prepare-assets.mjs` | Copy game assets and classic fallback for Vite |
+| `dist/` | Reused domain/geometry adapters, art, model and classic application |
 
-## Hosting
+## Publish
 
-GitHub Pages deployment is configured in `.github/workflows/pages.yml`.
-In repository **Settings → Pages**, keep **Source: GitHub Actions** selected.
-The workflow uploads only `dist/`, including the actual Blender GLB, and deploys
-it to the `github-pages` environment. It runs on pushes changing the game or
-workflow on `master`, and can also be started manually from the Actions tab.
-No deploy key or extra secret is required; GitHub's built-in workflow token
-uses Pages and OIDC permissions.
+GitHub Pages uses `.github/workflows/pages.yml`. Keep repository **Settings →
+Pages → Source: GitHub Actions**. On changes to the app, rules, tests or build
+configuration on `master`, the workflow installs locked dependencies, runs tests,
+builds the typed application and deploys **`build/`**. No deploy key is needed.
+A successful workflow run confirms deployment; a successful push alone does not.
 
-Expected public game address: `https://hmlim123.github.io/hellokittygame/`.
-Check the **Publish Hello Kitty game** run in GitHub Actions and use the URL
-reported by the deployment. A successful push alone does not confirm deployment.
-The environment may require an approval if repository protection rules say so.
-Keep the repository private; Pages availability depends on the account plan.
+Game: <https://hmlim123.github.io/hellokittygame/>
 
-The old ChatGPT Sites deployment is separate and is not updated by this workflow.
-Moving to the new GitHub Pages address starts a separate browser save; older
-progress remains stored at the old website. The self-contained download also
-has separate saves.
+Adventure: <https://hmlim123.github.io/hellokittygame/adventure.html>
+
+Classic compatibility version: <https://hmlim123.github.io/hellokittygame/classic/>
 
 ## Attribution
 
-Unofficial fan-made project, not affiliated with or endorsed by Sanrio.
-Hello Kitty belongs to Sanrio. No ownership of Sanrio characters or trademarks
-is claimed. Three.js and the bundled GLTFLoader/BufferGeometryUtils carry the
-MIT license; see `dist/vendor/THREE-LICENSE.txt`. No license for Sanrio IP is granted.
+Unofficial fan-made gift, not affiliated with or endorsed by Sanrio. Hello Kitty
+belongs to Sanrio. Three.js and its bundled helpers carry the MIT license; see
+`dist/vendor/THREE-LICENSE.txt`. No license for Sanrio IP is granted.
