@@ -354,15 +354,20 @@ footer {
 }
 .dpad {
   display: grid;
-  grid-template-columns: repeat(3, 37px);
-  grid-template-rows: repeat(2, 33px);
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(2, 48px);
   gap: 4px;
+  touch-action: none;
 }
 .dpad button {
   padding: 0;
   font-size: 19px;
   touch-action: none;
   user-select: none;
+}
+.dpad button[aria-pressed="true"] {
+  background: #f6d7e5;
+  border-color: #cb7da1;
 }
 .dpad [data-direction="up"] {
   grid-column: 2;

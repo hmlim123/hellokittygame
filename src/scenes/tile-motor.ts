@@ -4,6 +4,8 @@ import type {
   KinematicCharacterController,
 } from "@dimforge/rapier3d-compat";
 export const PHYSICS_STEP = 1 / 60;
+const WALK_SPEED = 4.5;
+const START_SECONDS = 0.04;
 interface Point {
   x: number;
   z: number;
@@ -42,7 +44,7 @@ export class TileMotor {
     };
     this.pending = null;
   }
-  beforeStep(dt = PHYSICS_STEP, continuous = false) {
+  beforeStep(dt = PHYSICS_STEP) {
     const t = this.target;
     if (!t) {
       this.speed = 0;
@@ -72,18 +74,16 @@ export class TileMotor {
       this.speed = 0;
       return;
     }
-    const step =
-      distance < 0.025
-        ? distance
-        : Math.min(
-            distance,
-            dt *
-              Math.min(
-                t.initialSpeed + (3.2 * t.elapsed) / 0.09,
-                3.2,
-                continuous && !t.returning ? Infinity : distance * 12,
-              ),
-          );
+    // Do not ease toward each tile center: that made taps take almost half a
+    // second and postponed the next turn. The visual rig eases into its idle pose.
+    const step = Math.min(
+      distance,
+      dt *
+        Math.min(
+          t.initialSpeed + (WALK_SPEED * t.elapsed) / START_SECONDS,
+          WALK_SPEED,
+        ),
+    );
     this.controller.computeColliderMovement(this.body.collider(0), {
       x: ((end.x - p.x) / distance) * step,
       y: 0,

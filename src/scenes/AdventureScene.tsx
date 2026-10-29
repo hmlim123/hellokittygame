@@ -452,7 +452,7 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
         s.heldDirection === cmd.dir,
       );
     }
-    m.beforeStep(PHYSICS_STEP, !!cmd && s.heldDirection === cmd.dir);
+    m.beforeStep(PHYSICS_STEP);
     locomotion.current.speed = m.speed;
   });
   useAfterPhysicsStep(() => {

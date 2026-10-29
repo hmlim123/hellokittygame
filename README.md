@@ -150,6 +150,14 @@ Holding a direction queues continuous steps; releasing, losing focus, opening a
 story choice, or reaching an entrance clears the held input. A whole-tile collision
 sweep stops Kitty before a wall, without a lunge or snap-back.
 
+A tap finishes its tile in at most 250 ms of simulation time, with movement
+starting on the first physics tick. There is no slow ease-out at every tile.
+One additional press is buffered, so a quick turn or second tap is not discarded
+when its key is released. Holding two keys uses the most recent direction;
+releasing it returns to the key still held. Uppercase WASD works too. The touch
+pad has 48-pixel buttons and lets Nancy slide between arrows without lifting her
+finger, including turning away from a wall. Losing focus cancels pending input.
+
 The adventure camera follows Kitty’s interpolated rendered position on every
 frame, including reduced-motion mode. Physics updates run before the camera,
 which updates before world labels. Logical tile commits no longer move the camera
@@ -227,6 +235,7 @@ python tests/chapter-browser.py
 python tests/play-polish-browser.py
 python tests/navigation-browser.py
 python tests/movement-browser.py
+python tests/controls-browser.py
 ```
 
 Set `KITTY_BASE_URL` or `CHROMIUM_PATH` to override the defaults. It checks room

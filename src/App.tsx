@@ -10,6 +10,7 @@ import { assetUrl } from "./game/assets";
 import { useGameStore } from "./game/store";
 import { directions, MAPS, questText } from "./game/domain";
 import type { Direction } from "./game/types";
+import { DirectionKeys, directionForKey } from "./game/direction-keys";
 import { Inventory } from "./ui/Inventory";
 import { Dialog } from "./ui/Dialog";
 import {
@@ -92,19 +93,10 @@ function useGameLoop() {
   }, []);
 }
 function useAdventureInput() {
-  const held = useRef<Direction | null>(null);
   useEffect(() => {
-    const dirs: Record<string, Direction> = {
-      ArrowUp: "up",
-      ArrowDown: "down",
-      ArrowLeft: "left",
-      ArrowRight: "right",
-      w: "up",
-      s: "down",
-      a: "left",
-      d: "right",
-    };
+    const keys = new DirectionKeys();
     const down = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       const s = useGameStore.getState();
       if (s.mode !== "adventure" || s.panel || s.dialogue || !s.sceneReady)
         return;
@@ -113,12 +105,12 @@ function useAdventureInput() {
         ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)
       )
         return;
-      const dir = dirs[e.key];
+      const dir = directionForKey(e);
       if (dir) {
         e.preventDefault();
         if (!e.repeat) {
-          held.current = dir;
-          s.holdMove(dir);
+          const next = keys.press(e);
+          if (next) s.holdMove(next);
         }
       } else if (e.key.toLowerCase() === "e") {
         e.preventDefault();
@@ -133,13 +125,20 @@ function useAdventureInput() {
       }
     };
     const up = (e: KeyboardEvent) => {
-      if (held.current === dirs[e.key]) held.current = null;
-      if (dirs[e.key]) useGameStore.getState().releaseMove(dirs[e.key]);
+      const next = keys.release(e),
+        s = useGameStore.getState();
+      if (next) s.holdMove(next);
+      else if (next === null) s.releaseMove(directionForKey(e));
     };
     const blur = () => {
-      held.current = null;
+      keys.clear();
       useGameStore.getState().releaseMove();
     };
+    const canWalk = (s: ReturnType<typeof useGameStore.getState>) =>
+      s.mode === "adventure" && !s.panel && !s.dialogue && s.sceneReady;
+    const unsubscribe = useGameStore.subscribe((s, prev) => {
+      if (canWalk(prev) && !canWalk(s)) blur();
+    });
     const visibility = () => {
       if (document.hidden) blur();
     };
@@ -148,6 +147,7 @@ function useAdventureInput() {
     addEventListener("keyup", up);
     addEventListener("blur", blur);
     return () => {
+      unsubscribe();
       document.removeEventListener("visibilitychange", visibility);
       blur();
       removeEventListener("keydown", down);
@@ -155,7 +155,6 @@ function useAdventureInput() {
       removeEventListener("blur", blur);
     };
   }, []);
-  return held;
 }
 function MissionHUD() {
   const mission = useGameStore((s) => s.mission),
@@ -230,27 +229,69 @@ function AdventureControls() {
     request = useGameStore((s) => s.requestMove),
     interact = useGameStore((s) => s.interact),
     ready = useGameStore((s) => s.sceneReady),
-    moving = useGameStore((s) => s.moving);
+    moving = useGameStore((s) => s.moving),
+    held = useGameStore((s) => s.heldDirection);
+  const pointer = useRef<{ id: number; dir: Direction | null } | null>(null);
   const action = nearbyItemAction(state);
   const stop = () => useGameStore.getState().releaseMove();
   useEffect(() => stop, []);
   return (
     <div className="adventure-controls">
-      <div className="dpad" aria-label="Move Kitty">
+      <div
+        className="dpad"
+        aria-label="Move Kitty"
+        onPointerMove={(e) => {
+          const active = pointer.current;
+          if (!active || active.id !== e.pointerId) return;
+          const button = document.elementFromPoint(e.clientX, e.clientY)
+            ?.closest<HTMLButtonElement>("button[data-direction]");
+          if (button && e.currentTarget.contains(button)) {
+            const dir = button.dataset.direction as Direction;
+            if (dir !== active.dir) {
+              active.dir = dir;
+              useGameStore.getState().holdMove(dir);
+            }
+          } else {
+            const r = e.currentTarget.getBoundingClientRect();
+            if (
+              e.clientX < r.left || e.clientX > r.right ||
+              e.clientY < r.top || e.clientY > r.bottom
+            ) {
+              active.dir = null;
+              stop();
+            }
+          }
+        }}
+        onPointerUp={(e) => {
+          if (pointer.current?.id !== e.pointerId) return;
+          useGameStore.getState().releaseMove(pointer.current.dir || undefined);
+          pointer.current = null;
+        }}
+        onPointerCancel={(e) => {
+          if (pointer.current?.id !== e.pointerId) return;
+          pointer.current = null;
+          stop();
+        }}
+        onLostPointerCapture={(e) => {
+          if (pointer.current?.id !== e.pointerId) return;
+          pointer.current = null;
+          stop();
+        }}
+      >
         {(["up", "left", "down", "right"] as Direction[]).map((dir, i) => (
           <button
             key={dir}
             data-direction={dir}
             aria-label={`Walk ${dir}`}
+            aria-pressed={held === dir}
             disabled={!ready}
             onPointerDown={(e) => {
+              if (e.button !== 0 || pointer.current) return;
               e.preventDefault();
-              e.currentTarget.setPointerCapture(e.pointerId);
+              pointer.current = { id: e.pointerId, dir };
+              e.currentTarget.parentElement!.setPointerCapture(e.pointerId);
               useGameStore.getState().holdMove(dir);
             }}
-            onPointerUp={stop}
-            onPointerCancel={stop}
-            onLostPointerCapture={stop}
             onClick={(e) => {
               if (e.detail === 0) request(dir);
             }}

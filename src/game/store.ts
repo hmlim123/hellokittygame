@@ -599,12 +599,21 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               !s.sceneReady
             )
               return;
-            set({ heldDirection: dir });
-            get().requestMove(dir);
+            if (s.moving) {
+              // Keep the latest press even if it is released before this tile
+              // ends. Holding itself adds no requests; finishMove continues it.
+              set({
+                heldDirection: dir,
+                queuedDirection: dir,
+              });
+            } else {
+              set({ heldDirection: dir });
+              get().requestMove(dir);
+            }
           },
           releaseMove(dir) {
-            if (!dir || get().heldDirection === dir)
-              set({ heldDirection: null, queuedDirection: null });
+            if (!dir) set({ heldDirection: null, queuedDirection: null });
+            else if (get().heldDirection === dir) set({ heldDirection: null });
           },
           moving: false,
           moveCommand: null,

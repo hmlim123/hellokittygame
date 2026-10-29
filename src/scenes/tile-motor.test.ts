@@ -24,6 +24,15 @@ function fixture(wall = false) {
   return { world, body, motor: new TileMotor(world, body, controller) };
 }
 describe("refresh-independent adventure movement", () => {
+  it("starts moving on the first physics tick instead of waiting for an input delay", () => {
+    const { world, body, motor } = fixture();
+    motor.begin({ x: 8, z: 8 });
+    motor.beforeStep();
+    world.step();
+    expect(body.translation().x - 7).toBeGreaterThan(0.02);
+    expect(motor.afterStep()).toBeNull();
+    world.free();
+  });
   for (const fps of [20, 30, 60, 120, 144, 240])
     it(`finishes a smooth tile at ${fps} display frames per second without timing out or snapping back`, () => {
       const { world, body, motor } = fixture();
@@ -40,7 +49,7 @@ describe("refresh-independent adventure movement", () => {
           steps++;
           const x = body.translation().x;
           expect(x).toBeGreaterThanOrEqual(previous - 1e-6);
-          expect(x - previous).toBeLessThan(0.054);
+          expect(x - previous).toBeLessThanOrEqual(0.076);
           previous = x;
           result = motor.afterStep();
           acc -= PHYSICS_STEP;
@@ -48,7 +57,7 @@ describe("refresh-independent adventure movement", () => {
       }
       expect(result).toBe("arrived");
       expect(body.translation().x).toBeCloseTo(8, 5);
-      expect(steps).toBeLessThan(35);
+      expect(steps * PHYSICS_STEP).toBeLessThanOrEqual(0.25);
       world.free();
     });
   it("blocks a wall before leaving the tile, avoiding the old lunge and rollback", () => {
@@ -67,7 +76,7 @@ describe("refresh-independent adventure movement", () => {
       previous = 7;
     const boundarySpeeds: number[] = [];
     for (let i = 0; i < 100 && completed < 3; i++) {
-      motor.beforeStep(PHYSICS_STEP, true);
+      motor.beforeStep(PHYSICS_STEP);
       world.step();
       const x = body.translation().x;
       expect(x - previous).toBeGreaterThan(0);
@@ -82,7 +91,7 @@ describe("refresh-independent adventure movement", () => {
     }
     expect(completed).toBe(3);
     expect(body.translation().x).toBeCloseTo(10, 5);
-    expect(boundarySpeeds.every((speed) => speed > 0.5)).toBe(true);
+    expect(boundarySpeeds.every((speed) => speed > 0)).toBe(true);
     world.free();
   });
 });

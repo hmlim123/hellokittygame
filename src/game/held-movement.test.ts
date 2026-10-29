@@ -48,6 +48,44 @@ describe("continuous movement input", () => {
     expect(s.getState().adventure.x).toBe(9);
     expect(s.getState().moving).toBe(false);
   });
+  it("keeps a quick turn tap even when its key is released before the current tile ends", () => {
+    const s = store();
+    s.getState().holdMove("right");
+    s.getState().releaseMove("right");
+    s.getState().holdMove("up");
+    s.getState().releaseMove("up");
+    s.getState().finishMove(false);
+    expect(s.getState().moveCommand?.dir).toBe("up");
+    s.getState().finishMove(false);
+    expect(s.getState().adventure).toMatchObject({ x: 8, z: 7 });
+    expect(s.getState().moving).toBe(false);
+  });
+  it("a later direction replaces the buffered turn, while blur cancels it", () => {
+    const s = store();
+    s.getState().holdMove("right");
+    s.getState().holdMove("up");
+    s.getState().holdMove("down");
+    s.getState().releaseMove("down");
+    s.getState().finishMove(false);
+    expect(s.getState().moveCommand?.dir).toBe("down");
+    s.getState().holdMove("left");
+    s.getState().releaseMove();
+    s.getState().finishMove(false);
+    expect(s.getState().moving).toBe(false);
+  });
+  it("keeps a second same-direction tap, with at most one buffered step", () => {
+    const s = store();
+    s.getState().holdMove("right");
+    s.getState().releaseMove("right");
+    s.getState().holdMove("right");
+    s.getState().releaseMove("right");
+    s.getState().finishMove(false);
+    expect(s.getState().adventure.x).toBe(8);
+    expect(s.getState().moveCommand?.dir).toBe("right");
+    s.getState().finishMove(false);
+    expect(s.getState().adventure.x).toBe(9);
+    expect(s.getState().moving).toBe(false);
+  });
   it("stops against a wall without repeatedly retrying while a direction remains held", () => {
     const s = store();
     s.getState().holdMove("left");
