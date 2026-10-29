@@ -1,4 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Storybook, StarsPanel } from "./ui/StoryPanels";
+const PhotoCorner = lazy(() => import("./scenes/PhotoCorner"));
+const MoonPicnic = lazy(() => import("./scenes/MoonPicnic"));
 const Stage = lazy(() =>
   import("./scenes/Stage").then((m) => ({ default: m.Stage })),
 );
@@ -207,7 +210,7 @@ function Notification() {
         <img alt="" src={assetUrl(`assets/quest/${notice.art}.svg`)} />
       )}
       <div>
-        <small>A LITTLE DISCOVERY</small>
+        <small>{notice.art ? "A LITTLE DISCOVERY" : "A LITTLE MOMENT"}</small>
         <h3>{notice.title}</h3>
         <p>{notice.text}</p>
       </div>
@@ -276,6 +279,13 @@ export default function App() {
   useNavigation();
   useGameLoop();
   useAdventureInput();
+  const greeted = useRef(false);
+  useEffect(() => {
+    if (!greeted.current) {
+      greeted.current = true;
+      useGameStore.getState().greet();
+    }
+  }, []);
   const mode = useGameStore((s) => s.mode),
     panel = useGameStore((s) => s.panel),
     ready = useGameStore((s) => s.sceneReady),
@@ -348,7 +358,8 @@ export default function App() {
             </>
           ) : (
             <>
-              Moonflower <em>Adventure.</em>
+              {quest.map === "glade" ? "Butterfly" : "Moonflower"}{" "}
+              <em>{quest.map === "glade" ? "Glade." : "Adventure."}</em>
             </>
           )}
         </h1>
@@ -465,6 +476,12 @@ export default function App() {
         </p>
       )}
       <footer>Unofficial fan-made gift · Hello Kitty © Sanrio</footer>
+      {panel === "storybook" && <Storybook />}
+      {panel === "stars" && <StarsPanel />}
+      <Suspense fallback={null}>
+        {panel === "photo" && <PhotoCorner />}
+        {panel === "ending" && <MoonPicnic />}
+      </Suspense>
       {panel === "inventory" && <Inventory />}
       {panel === "missions" && <MissionsPanel />}
       {panel === "together" && <TogetherPanel />}

@@ -1,3 +1,9 @@
+import {
+  STAR_ORDER,
+  endingUnlocked,
+  memoryPages,
+  normalizeChapter,
+} from "./chapter";
 import { create } from "zustand";
 import {
   persist,
@@ -61,6 +67,13 @@ export interface GameState extends SaveState {
   mode: Mode;
   panel: Panel;
   inventoryTab: "clothes" | "items" | "quest";
+  memoryPage: string | null;
+  greet(): void;
+  startGlade(): void;
+  openMemory(id?: string): void;
+  arrangeStar(id: string): void;
+  finishEnding(): void;
+  savePostcard(): void;
   notice: Notice | null;
   dialogue: Story | null;
   arrival: { friend: number; result: { title: string; text: string } } | null;
@@ -86,7 +99,7 @@ export interface GameState extends SaveState {
   requestMove(dir: Direction): void;
   finishMove(blocked: boolean): void;
   interact(choice?: string): void;
-  enter(type: "D" | "E"): void;
+  enter(type: "D" | "E" | "A" | "V"): void;
   closeDialogue(): void;
   startMission(id: MissionId): void;
   missionAction(index: number): void;
@@ -168,6 +181,14 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           if (result?.questComplete && a.trackedQuest === result.questComplete)
             a.trackedQuest =
               questJournal(a).find((q) => !q.done)?.id || "moonflower";
+          if (result?.chime || result?.wave)
+            extra.gesture = { id: ++serial, kind: "excited" };
+          if (result?.source?.type === "K" && a.chapter.letterFound)
+            extra.equipment = { ...get().equipment, item: "letter" };
+          if (result?.source?.type === "Z" && a.chapter.stars.length < 3) {
+            extra.panel = "stars";
+            result = { ...result, choices: [] };
+          }
           const dialogue =
             result && (result.choices?.length || result.complete)
               ? result
@@ -249,6 +270,110 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
         };
         return {
           ...legacy,
+          memoryPage: null,
+          greet() {
+            set({
+              gesture: { id: ++serial, kind: "wave" },
+              notice: notify(
+                "Hello, Nancy ♡",
+                get().adventure.chapter.endingSeen
+                  ? "Your friends are keeping your little picnic memory safe. Shall we make another lovely moment?"
+                  : "Kitty saved you a little happy place. A small adventure, or a moment together?",
+              ),
+            });
+          },
+          startGlade() {
+            get().setMode("adventure");
+            const adventure = copy(get().adventure);
+            adventure.map = "glade";
+            adventure.accepted = true;
+            adventure.trackedQuest = "glade";
+            [adventure.x, adventure.z] = MAPS.glade.spawn;
+            tracker = new EncounterTracker();
+            set({
+              adventure,
+              panel: null,
+              dialogue: null,
+              moving: false,
+              moveCommand: null,
+              queuedDirection: null,
+            });
+          },
+          openMemory(id) {
+            const page = memoryPages(get().adventure).find(
+              (p) => p.id === id && p.unlocked,
+            );
+            set({ panel: "storybook", memoryPage: page?.id || null });
+          },
+          arrangeStar(id) {
+            const s = get();
+            if (
+              s.panel !== "stars" ||
+              s.adventure.map !== "glade" ||
+              !s.adventure.chapter.bridgeFixed
+            )
+              return;
+            const target = MAPS.glade.objects.find((o) => o.type === "Z")!;
+            if (
+              Math.abs(s.adventure.x - target.x) +
+                Math.abs(s.adventure.z - target.z) >
+              1
+            )
+              return;
+            const a = copy(s.adventure),
+              c = a.chapter;
+            if (c.stars.length === 3) return;
+            if (id !== STAR_ORDER[c.stars.length]) {
+              set({
+                notice: notify(
+                  "No hurry",
+                  "Try the next picture carved on the stones: moon → flower → heart.",
+                  "stars",
+                ),
+              });
+              return;
+            }
+            c.stars.push(id);
+            applyStory(
+              a,
+              {
+                speaker:
+                  c.stars.length === 3
+                    ? "The stars glow together"
+                    : "A wishing star",
+                text:
+                  c.stars.length === 3
+                    ? "Moon, flower, heart. Pip is stirring nearby. Bring a Cuddle teddy for a gentle hello."
+                    : `${c.stars.length} of 3 stars are shining.`,
+                art: "stars",
+                chime: true,
+                source: target,
+              },
+              c.stars.length === 3 ? { panel: null } : {},
+            );
+          },
+          finishEnding() {
+            const s = get();
+            if (!endingUnlocked(s.adventure)) return;
+            const adventure = copy(s.adventure);
+            adventure.chapter.endingSeen = true;
+            set({
+              adventure,
+              panel: null,
+              memoryPage: "ending",
+              gesture: { id: ++serial, kind: "hug" },
+              notice: notify(
+                "A memory to keep",
+                "Your moonlit picnic is now a page in your storybook. Revisit it whenever you like.",
+                "picnic",
+              ),
+            });
+          },
+          savePostcard() {
+            const adventure = copy(get().adventure);
+            adventure.chapter.postcardSaved = true;
+            set({ adventure });
+          },
           arrival: null,
           finishArrival() {
             const arrival = get().arrival;
@@ -295,6 +420,14 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             set({ panel, inventoryTab: tab || get().inventoryTab });
           },
           closePanel() {
+            if (get().panel === "stars") {
+              const s = get();
+              tracker.mark(
+                s.adventure,
+                MAPS.glade.objects.find((o) => o.type === "Z"),
+                s.equipment,
+              );
+            }
             set({ panel: null });
             if (get().mode === "adventure") {
               const a = copy(get().adventure);
@@ -313,7 +446,18 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               { ...s.equipment, [kind]: id },
               s.adventure,
             );
-            set({ equipment });
+            set({
+              equipment,
+              ...(kind === "outfit" && equipment.outfit !== s.equipment.outfit
+                ? {
+                    gesture: { id: ++serial, kind: "tilt" as const },
+                    notice: notify(
+                      "A lovely little change",
+                      `Kitty gives her ${OUTFITS.find((o) => o.id === equipment.outfit)?.name.toLowerCase()} a happy little bow, just for Nancy.`,
+                    ),
+                  }
+                : {}),
+            });
           },
           followQuest(id) {
             const adventure = { ...get().adventure, trackedQuest: id };
@@ -400,8 +544,16 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             if (s.moving) return;
             const a = copy(s.adventure);
             const source = choice ? s.dialogue?.source : nearbyObject(a);
-            if (source?.type === "D" || source?.type === "E") {
-              get().enter(source.type);
+            if (source && ["D", "E", "A", "V"].includes(source.type)) {
+              get().enter(source!.type as "D" | "E" | "A" | "V");
+              return;
+            }
+            if (choice === "stars") {
+              set({ dialogue: null, panel: "stars" });
+              return;
+            }
+            if (choice === "ending" && endingUnlocked(a)) {
+              set({ dialogue: null, panel: "ending" });
               return;
             }
             tracker.mark(a, source || undefined, s.equipment);
@@ -424,9 +576,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 dialogue: null,
                 notice: notify(
                   MAPS[a.map].title,
-                  type === "D"
-                    ? "Your little adventure continues."
-                    : "Welcome back to the village.",
+                  a.map === "glade"
+                    ? "Follow the butterflies. Your little tools are in Inventory → Items."
+                    : a.map === "garden"
+                      ? "Your little garden adventure continues."
+                      : "Welcome back to the village.",
                 ),
                 moving: false,
                 moveCommand: null,
@@ -536,6 +690,13 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
         merge: (saved, current) => {
           const previous = sanitizeSave(saved, legacy),
             fresh = migrateLegacy(storage);
+          const rawAdventure = read(storage, "kitty-nancy-adventure-v1") as {
+            chapter?: unknown;
+          } | null;
+          fresh.adventure.chapter = normalizeChapter(
+            rawAdventure?.chapter ?? previous.adventure.chapter,
+            fresh.adventure.complete,
+          );
           return {
             ...current,
             ...previous,

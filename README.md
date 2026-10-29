@@ -4,7 +4,7 @@ A cozy browser game for Nancy, using our actual animated Blender Hello Kitty.
 The room keeps three main buttons: **Wave hello**, **Little dance**, and
 **Play a mission**. Inventory, settings, and playful interactions open in focused
 panels. The same clothes, items, collection, and quests follow Kitty between her
-room and Moonflower Adventure.
+room, Moonflower Adventure, and Butterfly Glade.
 
 ## Application stack
 
@@ -82,6 +82,53 @@ controls. Completing the tracked quest follows another unfinished quest. The
 honey chest also unlocks the Honey picnic outfit. Rewards are granted once and
 are shared with the room; reloading does not duplicate them.
 
+## Butterfly Glade · a story to keep
+
+Open **Play a mission → Butterfly Glade**, or use the lilac arch in the garden’s
+southeast. The glade is a third map connected to the existing adventure. Direction
+hints lead to each objective; walk up to objects to use the item in Kitty’s paws.
+Open **Inventory → Items** to change tools. Only one item is equipped at a time.
+
+1. Equip **Butterfly lantern** and follow three butterfly markers. The first
+   reveals a hidden path through the hedge. The path stays open after changing items.
+2. Equip **Little watering can** beside the thirsty flowers. Their revived vines
+   become an anchor for the bridge.
+3. Equip **Friendship ribbon** at the broken bridge. Rapier blocks the crossing
+   until it is repaired, then Kitty can walk across.
+4. Arrange **moon → flower → heart** at the wishing stars by tapping or dragging.
+   Wrong choices give gentle hints without removing correct stars. Leaving or
+   reloading preserves the puzzle.
+5. Bring **Cuddle teddy** to Pip the sleepy bunny. Find the envelope beside Pip;
+   Kitty equips it to bring home. The actual letter still awaits the author’s words.
+6. After restoring the original moonflower and finding the envelope, visit the
+   glade picnic at the north end. Kitty, Momo, Pip and the cloud guardian gather
+   in a short 3D moonlit scene. Pause or look around, then **Keep this memory**.
+   Reduced motion shows a still scene. The picnic can be revisited from the storybook.
+
+**Your storybook ♡** is available from Inventory, the mission panel and Play
+together. Its twelve illustrated pages unlock from the four original quests,
+the new discoveries, the picnic ending and a saved postcard. Pages can be revisited
+in any order. Locked pages never expose an invented letter. Room keepsakes have
+small heart buttons: tap one, or the object itself, to reopen its memory. Names
+appear on hover or keyboard focus. Kitty greets Nancy, reacts to changed outfits,
+and celebrates discoveries using the actual Blender rig.
+
+**Photo corner** is also available from Inventory, Play together and the storybook.
+Choose a still pose, wave, cuddle or wink; select rose, garden or lavender scenery;
+and drag for a 360° view. **Save postcard PNG ♡** downloads a 1000×1200 image with a
+cream frame and “For Nancy ♡”. The image preserves the character’s proportions and
+current outfit, held item, pose and view. No image upload or sharing service is used.
+
+The new chapter lives in `adventure.chapter` with its own normalized schema.
+Dependencies are validated on load so a corrupt save cannot unlock the bridge,
+letter or ending early. Old completed quests unlock their storybook pages without
+pretending the new puzzles are complete. Classic-version saves preserve modern
+chapter memories through the modern save fallback.
+
+![Friends at Nancy’s moonlit picnic](docs/nancy-moon-picnic.png)
+
+[Example postcard exported from the real Blender model](docs/nancy-postcard.png)
+
 ## Develop and verify
 
 Use Node.js 24 and npm:
@@ -105,12 +152,16 @@ controller. With Python Playwright and Chromium installed and preview running:
 
 ```sh
 python tests/react-browser.py
+python tests/chapter-browser.py
 ```
 
 Set `KITTY_BASE_URL` or `CHROMIUM_PATH` to override the defaults. It checks room
 controls, chat, settings, wardrobe, mission rewards, picnic replay, a physical
 wall collision, all four adventure quests, reloads, shared room rewards, and phone
-touch controls. Older browser scripts in `tests/` target the preserved classic
+touch controls. The chapter check plays the new map, tests a wrong tool and a
+physically blocked bridge, reloads during the star puzzle, reaches the letter and
+ending, opens room souvenirs, and downloads and inspects a real postcard PNG. It
+also checks the puzzle and storybook on a phone. Older browser scripts in `tests/` target the preserved classic
 application; serve `dist/` separately to run those historical checks.
 
 Vite splits the React interface from the 3D application and wardrobe preview.
@@ -163,6 +214,11 @@ the original rig. Shelf variants keep their own palettes.
 | `src/App.tsx` | React navigation, menus, controls and dialogue |
 | `src/ui/` | Inventory, chat, settings, missions and letter |
 | `src/game/store.ts` | Zustand actions, atomic rewards and persistence |
+| `src/game/chapter.ts` | New map, tool puzzles, storybook pages, progress repair and ending rules |
+| `src/ui/StoryPanels.tsx` | Storybook and accessible tap/drag star puzzle |
+| `src/scenes/GladeScene.tsx`, `AdventureTools.ts` | Glade scenery, NPCs, and tools attached to the Blender rig |
+| `src/scenes/PhotoCorner.tsx`, `MoonPicnic.tsx` | Postcard export and the replayable picnic scene |
+| `src/scenes/Souvenirs.tsx` | Clickable memories in Kitty’s room |
 | `src/game/storage.ts` | Save migration and legacy compatibility |
 | `src/game/types.ts`, `domain.ts` | Shared types and boundary to existing rules |
 | `src/scenes/Stage.tsx` | Fiber Canvas, physics context, loading and failure UI |

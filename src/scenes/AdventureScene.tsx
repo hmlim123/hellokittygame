@@ -9,6 +9,7 @@ import {
   type RapierRigidBody,
 } from "@react-three/rapier";
 import * as THREE from "three";
+import { GladeObject, GladePortal, GladeScenery } from "./GladeScene";
 import { makeGift } from "../../dist/gifts.js";
 import { makeBow } from "../../dist/models.js";
 import { MAPS, walkable } from "../game/domain";
@@ -114,6 +115,12 @@ function Prop({ object: o }: { object: MapObject }) {
       T: "Garden lantern",
     } as Record<string, string>
   )[o.type];
+  if (o.type === "A")
+    return (
+      <group position={[o.x, 0, o.z]}>
+        <GladePortal type="A" />
+      </group>
+    );
   return (
     <group position={[o.x, 0, o.z]}>
       {label && (
@@ -315,7 +322,7 @@ function Prop({ object: o }: { object: MapObject }) {
 function Terrain() {
   const a = useGameStore((s) => s.adventure),
     map = MAPS[a.map],
-    garden = a.map === "garden";
+    garden = a.map !== "village";
   const floors = useMemo(() => {
     const mesh = new THREE.InstancedMesh(
         new THREE.BoxGeometry(0.995, 0.2, 0.995),
@@ -326,27 +333,32 @@ function Terrain() {
     let i = 0;
     for (let z = 0; z < map.h; z++)
       for (let x = 0; x < map.w; x++) {
-        const path = garden
-          ? x === 7 || z === 7 || z === 10
-          : x === 7 ||
-            z === 5 ||
-            (z === 8 && x < 8) ||
-            (x === 12 && z <= 5) ||
-            (z === 2 && x >= 7);
+        const path =
+          a.map === "glade"
+            ? x === 3 || z === 8
+            : garden
+              ? x === 7 || z === 7 || z === 10
+              : x === 7 ||
+                z === 5 ||
+                (z === 8 && x < 8) ||
+                (x === 12 && z <= 5) ||
+                (z === 2 && x >= 7);
         matrix.makeTranslation(x, -0.11, z);
         mesh.setMatrixAt(i, matrix);
         mesh.setColorAt(
           i++,
           new THREE.Color(
-            path
-              ? "#fff0da"
-              : garden
-                ? (x + z) % 2
-                  ? "#d3cbe2"
-                  : "#d9d1e7"
-                : (x + z) % 2
-                  ? "#d2dfba"
-                  : "#d7e4c1",
+            a.map === "glade" && x === 7
+              ? "#b8d6df"
+              : path
+                ? "#fff0da"
+                : garden
+                  ? (x + z) % 2
+                    ? "#d3cbe2"
+                    : "#d9d1e7"
+                  : (x + z) % 2
+                    ? "#d2dfba"
+                    : "#d7e4c1",
           ),
         );
       }
@@ -383,12 +395,17 @@ function Terrain() {
             color={garden ? "#b8a9ce" : "#b6c99f"}
           />
         ))}
-      {map.objects.map((o) => (
-        <Prop
-          key={`${a.map}-${o.type}-${o.id || `${o.x}-${o.z}`}`}
-          object={o}
-        />
-      ))}
+      {a.map === "glade" && <GladeScenery />}
+      {map.objects.map((o) =>
+        a.map === "glade" ? (
+          <GladeObject key={`${o.type}-${o.id || o.x}`} object={o} />
+        ) : (
+          <Prop
+            key={`${a.map}-${o.type}-${o.id || `${o.x}-${o.z}`}`}
+            object={o}
+          />
+        ),
+      )}
     </>
   );
 }
@@ -576,7 +593,13 @@ export function AdventureScene() {
     <>
       <color
         attach="background"
-        args={[map === "garden" ? "#e5d9ef" : "#e6e4d3"]}
+        args={[
+          map === "glade"
+            ? "#e2deed"
+            : map === "garden"
+              ? "#e5d9ef"
+              : "#e6e4d3",
+        ]}
       />
       <hemisphereLight args={["#fff4ef", "#baa6cf", 2.8]} />
       <directionalLight position={[-3, 9, 6]} color="#fff1d2" intensity={2} />

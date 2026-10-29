@@ -193,6 +193,14 @@ export function Inventory() {
           </section>
         )}
       </div>
+      <div className="memory-actions">
+        <button onClick={() => useGameStore.getState().openMemory()}>
+          Your storybook ♡
+        </button>
+        <button onClick={() => useGameStore.getState().openPanel("photo")}>
+          Photo corner ↗
+        </button>
+      </div>
       <p className="inventory-status" role="status">
         Wearing {outfit.name} · {item.name}
       </p>

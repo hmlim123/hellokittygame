@@ -52,6 +52,26 @@ export function MissionsPanel() {
           </small>
         </span>
       </button>
+      <button
+        className="adventure-link glade-link"
+        onClick={() => useGameStore.getState().startGlade()}
+      >
+        ✧{" "}
+        <span>
+          <strong>Butterfly Glade</strong>
+          <small>
+            Lantern trails, little puzzles, and a picnic under the moon ↗
+          </small>
+        </span>
+      </button>
+      <div className="memory-actions">
+        <button onClick={() => useGameStore.getState().openMemory()}>
+          Your storybook ♡
+        </button>
+        <button onClick={() => useGameStore.getState().openPanel("photo")}>
+          Photo corner ↗
+        </button>
+      </div>
       <label className="check-setting">
         <input
           type="checkbox"
@@ -121,6 +141,8 @@ export function TogetherPanel() {
           onClick={() => {
             if (equipment.item === "letter") open("letter");
             else if (equipment.item === "flowers") start("picnic");
+            else if (["lantern", "watering", "ribbon"].includes(equipment.item))
+              useGameStore.getState().startGlade();
             else if (equipment.item === "none") open("inventory", "items");
             else play("offer");
           }}
@@ -133,9 +155,17 @@ export function TogetherPanel() {
                 ? "Open your letter"
                 : equipment.item === "flowers"
                   ? "Set up a picnic"
-                  : "Choose a little gift"}
+                  : ["lantern", "watering", "ribbon"].includes(equipment.item)
+                    ? "Use it in Butterfly Glade"
+                    : "Choose a little gift"}
         </button>
         <button onClick={() => open("inventory", "items")}>Change item</button>
+      </div>
+      <div className="memory-actions">
+        <button onClick={() => useGameStore.getState().openMemory()}>
+          Your storybook ♡
+        </button>
+        <button onClick={() => open("photo")}>Photo corner ↗</button>
       </div>
       <h3>A little chat</h3>
       <p className="small-note">

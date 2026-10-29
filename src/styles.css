@@ -1201,3 +1201,251 @@ legend {
 .world-discovery.still span {
   display: none;
 }
+
+/* Storybook and chapter panels share the existing quiet room interface. */
+.memory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+.memory-actions > * {
+  flex: 1;
+  min-width: 130px;
+}
+.glade-link {
+  background: #f1e9f5;
+}
+.storybook-dialog {
+  max-width: 780px;
+}
+.memory-spread {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.9fr) 1.1fr;
+  gap: 28px;
+  align-items: center;
+  padding: 24px;
+  background: #fff7e9;
+  border: 1px solid #ead4d8;
+  border-radius: 18px;
+  box-shadow: inset 4px 0 #eedcce;
+  margin: 20px 0;
+}
+.memory-spread > img {
+  width: 100%;
+  max-height: 240px;
+}
+.memory-spread h3 {
+  font:
+    26px Georgia,
+    serif;
+  line-height: 1.25;
+  color: #845e76;
+}
+.memory-spread p {
+  line-height: 1.8;
+}
+.empty-story {
+  text-align: center;
+  padding: 24px;
+  background: #f6ebf0;
+  border-radius: 16px;
+}
+.empty-story > span {
+  font-size: 48px;
+  color: #b18ab8;
+}
+.page-turner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin: 15px 0;
+}
+.memory-index {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.memory-index button {
+  padding: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.memory-index img {
+  width: 60px;
+  height: 60px;
+}
+.memory-index button:disabled img {
+  filter: grayscale(1);
+  opacity: 0.35;
+}
+.souvenir-label {
+  font-size: 9px;
+  border: 1px solid #e7cad8;
+  padding: 5px 8px;
+  border-radius: 20px;
+  background: #fff8efee;
+  white-space: nowrap;
+  color: #9a6f89;
+}
+.star-stones,
+.star-choices {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 24px 0;
+}
+.star-stones > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 110px;
+  border-radius: 22px;
+  background: #ede4ec;
+  border: 2px dashed #cbb4cf;
+  color: #b5a3bc;
+}
+.star-stones > div.filled {
+  background: #fff0ca;
+  border-style: solid;
+  color: #bc8c57;
+}
+.star-stones span,
+.star-choices span {
+  font:
+    44px Georgia,
+    serif;
+}
+.star-choices button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 86px;
+  padding: 15px;
+  background: #fff2d9;
+  color: #a17c5c;
+}
+.puzzle-hint {
+  text-align: center;
+  min-height: 40px;
+  color: #9b6a8a;
+}
+.photo-dialog,
+.ending-dialog {
+  max-width: 720px;
+}
+.photo-preview,
+.ending-preview {
+  height: 400px;
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f2d9e6;
+  margin: 20px 0;
+}
+.photo-preview canvas,
+.ending-preview canvas {
+  touch-action: none;
+}
+.photo-preview > span {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font:
+    italic 26px Georgia,
+    serif;
+  color: #945f7c;
+  pointer-events: none;
+}
+.photo-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.photo-options button {
+  flex: 1;
+  min-width: 110px;
+}
+.photo-dialog fieldset {
+  border: 0;
+  padding: 0;
+  margin: 18px 0;
+}
+.photo-dialog legend {
+  margin-bottom: 10px;
+  color: #8d6e82;
+}
+.ending-line {
+  text-align: center;
+  font:
+    italic 20px/1.6 Georgia,
+    serif;
+  min-height: 64px;
+  color: #926e89;
+  padding: 0 10px;
+}
+.world-label {
+  max-width: 190px;
+  white-space: normal;
+  text-align: center;
+}
+.wayfinder {
+  max-width: 85%;
+  text-align: center;
+  line-height: 1.5;
+}
+@media (max-width: 600px) {
+  .memory-spread {
+    grid-template-columns: 1fr;
+    padding: 18px;
+    gap: 10px;
+  }
+  .memory-spread > img {
+    height: 140px;
+  }
+  .memory-index {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .photo-preview,
+  .ending-preview {
+    height: 330px;
+  }
+  .star-stones,
+  .star-choices {
+    gap: 9px;
+  }
+  .star-stones > div {
+    width: 76px;
+  }
+  .star-choices button {
+    min-width: 72px;
+  }
+  .souvenir-label {
+    font-size: 8px;
+    padding: 4px 6px;
+  }
+}
+
+.world-label {
+  display: block;
+  width: max-content;
+  max-width: 180px;
+  white-space: normal;
+}
+.souvenir-label > span {
+  display: none;
+}
+.souvenir-label:hover > span,
+.souvenir-label:focus-visible > span {
+  display: inline;
+}

@@ -2,8 +2,17 @@ export type Mode = "room" | "adventure";
 export type Direction = "up" | "down" | "left" | "right";
 export type Theme = "rose" | "lavender" | "peach" | "mint";
 export type OutfitId = "classic" | "sailor" | "picnic" | "moonlight" | "berry";
-export type ItemId = "none" | "flowers" | "teddy" | "strawberry" | "letter";
-export type QuestId = "moonflower" | "ribbons" | "picnic" | "lanterns";
+export type ItemId =
+  | "none"
+  | "flowers"
+  | "teddy"
+  | "strawberry"
+  | "letter"
+  | "lantern"
+  | "watering"
+  | "ribbon";
+export type QuestId =
+  "moonflower" | "ribbons" | "picnic" | "lanterns" | "glade";
 export type MissionId = "bows" | "strawberries" | "hearts" | "picnic";
 export type Gesture =
   | "excited"
@@ -21,9 +30,21 @@ export interface Equipment {
   outfit: OutfitId;
   item: ItemId;
 }
+export interface ChapterProgress {
+  version: 1;
+  butterflyStep: number;
+  flowersRevived: boolean;
+  bridgeFixed: boolean;
+  stars: string[];
+  friendAwake: boolean;
+  letterFound: boolean;
+  endingSeen: boolean;
+  postcardSaved: boolean;
+}
 export interface Adventure {
   version: number;
-  map: "village" | "garden";
+  map: "village" | "garden" | "glade";
+  chapter: ChapterProgress;
   x: number;
   z: number;
   facing: Direction;
@@ -107,7 +128,16 @@ export interface SaveState {
   journal: Journal;
 }
 export type Panel =
-  "missions" | "inventory" | "together" | "letter" | "settings" | null;
+  | "missions"
+  | "inventory"
+  | "together"
+  | "letter"
+  | "settings"
+  | "storybook"
+  | "photo"
+  | "stars"
+  | "ending"
+  | null;
 export interface Notice {
   id: number;
   title: string;

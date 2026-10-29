@@ -4,6 +4,7 @@ import { Html, OrbitControls } from "@react-three/drei";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
+import { Souvenirs } from "./Souvenirs";
 import { createRoomGeometry } from "../../dist/scene.js";
 import { FriendArrival } from "../../dist/friend-arrival.js";
 import { makeBow, heartMesh } from "../../dist/models.js";
@@ -202,6 +203,7 @@ export function RoomScene() {
       <directionalLight position={[5, 3, 0]} color="#f9d4e0" intensity={0.8} />
       <RoomEnvironment />
       <Shelf />
+      <Souvenirs />
       <Arrival />
       <Kitty
         id={id}

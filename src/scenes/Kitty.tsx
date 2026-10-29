@@ -9,7 +9,7 @@ import {
   blenderTouchPart,
   setBlenderAttention,
 } from "../../dist/blender-kitty.js";
-import { applyEquipment } from "../../dist/equipment-model.js";
+import { applyHeroEquipment } from "./AdventureTools";
 import { playHeldItem, updateHeldItem } from "../../dist/gifts.js";
 import type { Equipment, Gesture } from "../game/types";
 import { useGameStore } from "../game/store";
@@ -56,6 +56,7 @@ interface KittyProps {
   rotation?: [number, number, number];
   onTouch?: (part: string) => void;
   performance?: { id: number; kind: Gesture };
+  photoPose?: "still" | "wave" | "cuddle" | "wink";
 }
 export function Kitty({
   id = 0,
@@ -67,6 +68,7 @@ export function Kitty({
   rotation,
   onTouch,
   performance,
+  photoPose,
 }: KittyProps) {
   const asset = useKittyAsset(),
     hero = useMemo(() => makeBlenderKitty(asset, id), [asset, id]),
@@ -95,7 +97,7 @@ export function Kitty({
     [hero],
   );
   useEffect(() => {
-    if (equipment) applyEquipment(hero, equipment);
+    if (equipment) applyHeroEquipment(hero, equipment);
   }, [hero, equipment]);
   useEffect(() => {
     if (!animate) return;
@@ -115,7 +117,27 @@ export function Kitty({
         reduced,
       );
   }, [hero, gesture, animate, reduced]);
+  useEffect(() => {
+    if (!photoPose) return;
+    const b = hero.userData.blender;
+    b.mixer.stopAllAction();
+    b.resetEyes(false);
+    b.current = null;
+    b.gesture = null;
+    b.headIdle.rotation.set(0, 0, 0);
+    b.armIdle.forEach((arm: THREE.Group) => arm.rotation.set(0, 0, 0));
+    if (photoPose === "wave") {
+      reactBlender(hero, "wave", false);
+      updateBlender(hero, 0.72, { idle: false, reduced: false });
+    }
+    if (photoPose === "cuddle") {
+      reactBlender(hero, "hug", false);
+      updateBlender(hero, 0.65, { idle: true, reduced: false });
+    }
+    if (photoPose === "wink") b.resetEyes(true);
+  }, [hero, photoPose]);
   useFrame((state, dt) => {
+    if (photoPose) return;
     if (animate) {
       reaction.current.time += dt;
       setBlenderAttention(hero, state.pointer.x, state.pointer.y);
