@@ -1,6 +1,9 @@
+import { MAPS, walkable } from "./world-map";
+export { MAPS, walkable } from "./world-map";
+import { normalizeJourney, rememberStop } from "./travel-state";
+import { journeyObjective, navigationDirection } from "./navigation";
 import {
   normalizeChapter,
-  gladeMap,
   TOOLS,
   chapterEligible,
   interactChapter,
@@ -18,7 +21,6 @@ import type {
   Equipment,
   Room,
   Journal,
-  GameMap,
   MapObject,
   Story,
   Mission,
@@ -34,7 +36,10 @@ export function normalizeAdventure(raw: unknown = {}): Adventure {
   const result = {
     ...base,
     chapter: normalizeChapter(r.chapter, base.complete),
-    trackedQuest: r.trackedQuest === "glade" ? "glade" : base.trackedQuest,
+    trackedQuest:
+      r.trackedQuest === "glade" || (r.map === "glade" && !r.trackedQuest)
+        ? "glade"
+        : base.trackedQuest,
   } as Adventure;
   if (r.map === "glade") {
     result.map = "glade";
@@ -49,6 +54,7 @@ export function normalizeAdventure(raw: unknown = {}): Adventure {
     )
       [result.x, result.z] = MAPS.glade.spawn;
   }
+  result.journey = normalizeJourney(r.journey, result);
   return result;
 }
 export function normalizeEquipment(
@@ -74,59 +80,32 @@ export const normalizeRoom = room.normalizeState as (
 export const normalizeJournal = missions.normalizeJournal as (
   raw?: unknown,
 ) => Journal;
-const garden = adventure.MAPS.garden;
-const gardenRows = garden.rows.map((r: string, z: number) =>
-  z === 11 ? r.slice(0, 13) + "A" + r.slice(14) : r,
-);
-export const MAPS: Record<Adventure["map"], GameMap> = {
-  ...adventure.MAPS,
-  garden: {
-    ...garden,
-    rows: gardenRows,
-    objects: [...garden.objects, { type: "A", x: 13, z: 11 }],
-  },
-  glade: gladeMap(),
-};
-export const questText = (s: Adventure) =>
-  s.map === "glade" || s.trackedQuest === "glade"
-    ? chapterObjective(s)
-    : s.complete && s.ribbonReturned && s.picnicDelivered && s.lanternsBlessed
-      ? s.chapter.endingSeen
-        ? "All five quests complete. Nancy’s little world is glowing. ♡"
-        : "The garden stories are complete. A new little chapter awaits in Butterfly Glade."
-      : adventure.questText(s);
-export function walkable(s: Adventure, x: number, z: number): boolean {
-  if (s.map === "glade" && x === 3 && z === 7)
-    return s.chapter.butterflyStep > 0;
-  const t = MAPS[s.map]?.rows[z]?.[x];
-  return (
-    !!t &&
-    ((" .DERBLAVKP".includes(t) && t !== " ") ||
-      (t === "G" && s.gate) ||
-      (t === "J" && s.chapter.bridgeFixed) ||
-      (t === "h" && s.chapter.butterflyStep > 0))
-  );
-}
+export const questText = journeyObjective;
 export function enterPath(
   s: Adventure,
   tile: string,
 ): { moved: boolean; changedMap?: boolean } {
   if (!MAPS[s.map].objects.some((o) => o.type === tile))
     return { moved: false };
+  if (!["A", "V", "D", "E"].includes(tile)) return { moved: false };
+  rememberStop(s);
   if (tile === "A") {
     s.accepted = true;
     s.map = "glade";
     s.trackedQuest = "glade";
     [s.x, s.z] = MAPS.glade.spawn;
+    rememberStop(s);
     return { moved: true, changedMap: true };
   }
   if (tile === "V") {
-    if (s.chapter.letterFound && !s.complete) s.trackedQuest = "moonflower";
     s.map = "garden";
     [s.x, s.z] = [13, 10];
+    rememberStop(s);
     return { moved: true, changedMap: true };
   }
-  return adventure.enterAdventurePath(s, tile);
+  const result = adventure.enterAdventurePath(s, tile);
+  if (result.changedMap) rememberStop(s);
+  return result;
 }
 export function moveAdventure(
   s: Adventure,
@@ -147,6 +126,7 @@ export function moveAdventure(
   if (["D", "E", "A", "V"].includes(t)) return enterPath(s, t);
   s.x = x;
   s.z = z;
+  rememberStop(s);
   return { moved: true };
 }
 export function nearbyObject(s: Adventure): MapObject | undefined {
@@ -191,73 +171,7 @@ export function interactAdventure(
     return { speaker: "Kitty", text: chapterObjective(s), art: "butterfly" };
   return adventure.interactAdventure(s, choice, target, equipment) as Story;
 }
-export function directions(s: Adventure): string {
-  if (s.map !== "glade")
-    return s.trackedQuest === "glade"
-      ? "Butterfly Glade · the lilac arch in the garden’s southeast"
-      : adventure.villageDirections(s);
-  const c = s.chapter,
-    type =
-      c.butterflyStep < 3
-        ? "L"
-        : !c.flowersRevived
-          ? "W"
-          : !c.bridgeFixed
-            ? "J"
-            : c.stars.length < 3
-              ? "Z"
-              : !c.friendAwake
-                ? "N"
-                : !c.letterFound
-                  ? "K"
-                  : !s.complete
-                    ? "V"
-                    : "P";
-  const target = MAPS.glade.objects.find(
-    (o) =>
-      o.type === type && (type !== "L" || Number(o.id) === c.butterflyStep),
-  )!;
-  const label = (
-    {
-      L: "Butterflies",
-      W: "Thirsty flowers",
-      J: "Friendship bridge",
-      Z: "Wishing stars",
-      N: "Pip the bunny",
-      K: "Nancy’s envelope",
-      V: "Garden path",
-      P: "Moonlit picnic",
-    } as Record<string, string>
-  )[type];
-  const queue = [{ x: s.x, z: s.z, first: "", steps: 0 }],
-    seen = new Set([`${s.x},${s.z}`]);
-  for (let i = 0; i < queue.length; i++) {
-    const p = queue[i];
-    if (Math.abs(p.x - target.x) + Math.abs(p.z - target.z) <= 1)
-      return p.steps
-        ? `${({ up: "↑", down: "↓", left: "←", right: "→" } as Record<string, string>)[p.first]} ${label} · ${p.steps} ${p.steps === 1 ? "step" : "steps"} away`
-        : `${label} · right beside you`;
-    for (const [d, dx, dz] of [
-      ["up", 0, -1],
-      ["down", 0, 1],
-      ["left", -1, 0],
-      ["right", 1, 0],
-    ] as [string, number, number][]) {
-      const x = p.x + dx,
-        z = p.z + dz,
-        key = `${x},${z}`;
-      if (
-        !seen.has(key) &&
-        walkable(s, x, z) &&
-        MAPS.glade.rows[z][x] !== "V"
-      ) {
-        seen.add(key);
-        queue.push({ x, z, first: p.first || d, steps: p.steps + 1 });
-      }
-    }
-  }
-  return `${label} · follow the cream path`;
-}
+export const directions = navigationDirection;
 export interface Encounters {
   take(s: Adventure, e?: Equipment): MapObject | undefined;
   mark(s: Adventure, o: MapObject | undefined, e?: Equipment): void;

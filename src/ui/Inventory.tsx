@@ -1,3 +1,4 @@
+import { TravelMap } from "./TravelMap";
 import { lazy, Suspense } from "react";
 const WardrobePreview = lazy(() => import("../scenes/WardrobePreview"));
 import { useGameStore } from "../game/store";
@@ -148,6 +149,7 @@ export function Inventory() {
             aria-labelledby="inventory-quest"
           >
             <p>{questText(quest)}</p>
+            <TravelMap />
             <div className="charms">
               {[
                 ["rose", "Rose"],

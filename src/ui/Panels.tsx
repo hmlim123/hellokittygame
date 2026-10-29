@@ -1,3 +1,5 @@
+import { MAPS as WORLD } from "../game/world-map";
+import { journeyObjective, QUEST_NAMES } from "../game/navigation";
 import { SaveBackup } from "./SaveBackup";
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../game/store";
@@ -19,12 +21,30 @@ export function MissionsPanel() {
     journal = useGameStore((s) => s.journal),
     preferences = useGameStore((s) => s.preferences),
     setPreferences = useGameStore((s) => s.setPreferences),
-    setMode = useGameStore((s) => s.setMode);
+    adventure = useGameStore((s) => s.adventure);
   return (
     <Dialog title="Nancy’s little adventures" onClose={close}>
       <span className="eyebrow">A LITTLE WORLD MADE FOR YOU</span>
       <h2>Nancy’s little adventures</h2>
       <p>Pick a cozy little game, or continue your Moonflower story.</p>
+      {adventure.accepted && (
+        <button
+          className="continue-adventure"
+          onClick={() => useGameStore.getState().continueAdventure()}
+          aria-label="Continue adventure"
+        >
+          <span>☾</span>
+          <div>
+            <strong>Continue adventure</strong>
+            <small>
+              {WORLD[adventure.map].title} ·{" "}
+              {QUEST_NAMES[adventure.trackedQuest]}
+            </small>
+            <p>{journeyObjective(adventure)}</p>
+          </div>
+          <span aria-hidden="true">↗</span>
+        </button>
+      )}
       <div className="mission-grid">
         {MISSIONS.map((m) => (
           <button
@@ -44,7 +64,10 @@ export function MissionsPanel() {
           </button>
         ))}
       </div>
-      <button className="adventure-link" onClick={() => setMode("adventure")}>
+      <button
+        className="adventure-link"
+        onClick={() => useGameStore.getState().startMoonflower()}
+      >
         ☾{" "}
         <span>
           <strong>Moonflower Adventure</strong>

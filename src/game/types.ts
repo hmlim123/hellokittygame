@@ -41,10 +41,22 @@ export interface ChapterProgress {
   endingSeen: boolean;
   postcardSaved: boolean;
 }
+export type AreaId = "village" | "garden" | "glade";
+export interface TravelStop {
+  x: number;
+  z: number;
+  facing: Direction;
+}
+export interface Journey {
+  version: 1;
+  visited: AreaId[];
+  stops: Partial<Record<AreaId, TravelStop>>;
+}
 export interface Adventure {
   version: number;
   map: "village" | "garden" | "glade";
   chapter: ChapterProgress;
+  journey: Journey;
   x: number;
   z: number;
   facing: Direction;

@@ -166,6 +166,31 @@ cloud-save service.
 
 [Phone view with a nearby item action](docs/nancy-mobile-quick-tool.png)
 
+## Continue your story and find your way
+
+The mission panel offers **Continue adventure** once the story has started. It
+returns to Kitty’s exact saved place and selected quest. **Moonflower Adventure**
+chooses the original chapter; **Butterfly Glade** chooses the glade chapter and
+resumes its last place rather than resetting to the entrance.
+
+Tap the direction hint below the adventure scene to open **Inventory → Quest →
+Your little map**. The same map is available as a folded section in the quest
+panel. It shows Kitty, the next objective, and a dotted walking route derived
+from the actual collision grid. Closed gates and the unrepaired bridge block
+routes. Guidance follows the selected quest across all three areas, including
+the moonflower prerequisite for the glade picnic and garden lanterns.
+
+Choose an area in the map to preview it. Visited places have a **Return to…**
+button; Kitty returns to her saved spot with her equipment and discoveries intact.
+Unvisited places show an entrance hint. Travel does not finish quests or grant
+rewards. Older saves infer known areas from existing discoveries, and start at an
+entrance when no old position is available. New return points are saved per area,
+included in progress backups, and preserved when returning from the classic game.
+The map and quest cards remain in one panel, with tabs and a close button that
+stay accessible while scrolling.
+
+[Nancy’s walking map on a phone](docs/nancy-phone-map.png)
+
 ## Develop and verify
 
 Use Node.js 24 and npm:
@@ -191,6 +216,7 @@ controller. With Python Playwright and Chromium installed and preview running:
 python tests/react-browser.py
 python tests/chapter-browser.py
 python tests/play-polish-browser.py
+python tests/navigation-browser.py
 ```
 
 Set `KITTY_BASE_URL` or `CHROMIUM_PATH` to override the defaults. It checks room
@@ -202,7 +228,9 @@ ending, opens room souvenirs, and downloads and inspects a real postcard PNG. It
 also checks the puzzle and storybook on a phone. The polish check verifies one-tap
 item use, movement of the actual feet, smooth turns, rendered flower/bridge/bunny
 animation, invalid-file handling, previous-save recovery, and transfer to a fresh
-phone browser. Older browser scripts in `tests/` target the preserved classic
+phone browser. Navigation checks exercise exact resume, return points, connected
+quest routes, folded and expanded maps, unvisited-area hints, reloads and browser
+history, including a scrolling phone panel. Older browser scripts in `tests/` target the preserved classic
 application; serve `dist/` separately to run those historical checks.
 
 Vite splits the React interface from the 3D application and wardrobe preview.
@@ -260,6 +288,9 @@ the original rig. Shelf variants keep their own palettes.
 | `src/scenes/GladeScene.tsx`, `AdventureTools.ts` | Glade scenery, NPCs, and tools attached to the Blender rig |
 | `src/scenes/PhotoCorner.tsx`, `MoonPicnic.tsx` | Postcard export and the replayable picnic scene |
 | `src/scenes/Souvenirs.tsx` | Clickable memories in Kitty’s room |
+| `src/game/world-map.ts` | Shared map geometry, collision and valid return points |
+| `src/game/navigation.ts`, `travel-state.ts` | Quest routes, visited areas and saved positions |
+| `src/ui/TravelMap.tsx` | Foldable walking map and returning to visited places |
 | `src/game/context-action.ts` | Nearby action prerequisites and label distance |
 | `src/game/backup.ts`, `src/ui/SaveBackup.tsx` | Validated backups, restore preview and rollback |
 | `src/scenes/walk-animation.ts` | Additive walking cycle and smooth turning |

@@ -443,7 +443,13 @@ export default function App() {
             </span>
           ) : (
             directions(quest) && (
-              <span className="wayfinder">{directions(quest)}</span>
+              <button
+                className="wayfinder"
+                aria-label="Open quest map"
+                onClick={() => useGameStore.getState().openQuestMap()}
+              >
+                {directions(quest)} <span aria-hidden="true">⌖</span>
+              </button>
             )
           )}
         </div>

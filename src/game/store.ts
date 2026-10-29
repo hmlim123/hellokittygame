@@ -1,3 +1,9 @@
+import {
+  normalizeJourney,
+  rememberStop,
+  travelAdventure,
+} from "./travel-state";
+import type { AreaId } from "./types";
 import { nearbyItemAction } from "./context-action";
 import { parseBackup, commitRestoredSave, PREVIOUS_BACKUP } from "./backup";
 import type { DiscoveryEffect } from "./types";
@@ -73,6 +79,11 @@ export interface GameState extends SaveState {
   memoryPage: string | null;
   greet(): void;
   startGlade(): void;
+  startMoonflower(): void;
+  continueAdventure(): void;
+  travelTo(area: AreaId): void;
+  mapOnOpen: boolean;
+  openQuestMap(): void;
   openMemory(id?: string): void;
   arrangeStar(id: string): void;
   finishEnding(): void;
@@ -177,6 +188,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           result?: Story,
           extra: Partial<GameState> = {},
         ) => {
+          rememberStop(a);
           const before = get().adventure;
           if (result?.source) {
             const kind =
@@ -305,6 +317,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
         };
         return {
           ...legacy,
+          mapOnOpen: false,
+          openQuestMap() {
+            if (get().moving || get().mission?.active || get().arrival) return;
+            set({ panel: "inventory", inventoryTab: "quest", mapOnOpen: true });
+          },
           worldRevision: 0,
           stepPulse: 0,
           effect: null,
@@ -398,18 +415,75 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               ),
             });
           },
-          startGlade() {
+          startMoonflower() {
+            const s = get();
+            if (s.moving || s.mission?.active) return;
+            const adventure = copy(s.adventure);
+            adventure.trackedQuest = !adventure.complete
+              ? "moonflower"
+              : !adventure.ribbonReturned
+                ? "ribbons"
+                : !adventure.picnicDelivered
+                  ? "picnic"
+                  : !adventure.lanternsBlessed
+                    ? "lanterns"
+                    : "moonflower";
+            if (adventure.map === "glade")
+              travelAdventure(
+                adventure,
+                adventure.journey.visited.includes("garden")
+                  ? "garden"
+                  : "village",
+              );
             get().setMode("adventure");
-            const adventure = copy(get().adventure);
-            adventure.map = "glade";
-            adventure.accepted = true;
-            adventure.trackedQuest = "glade";
-            [adventure.x, adventure.z] = MAPS.glade.spawn;
             tracker = new EncounterTracker();
             set({
               adventure,
               panel: null,
               dialogue: null,
+              effect: null,
+              moving: false,
+              moveCommand: null,
+              queuedDirection: null,
+            });
+          },
+          continueAdventure() {
+            if (get().moving) return;
+            get().setMode("adventure");
+          },
+          travelTo(area) {
+            const s = get();
+            if (s.moving || s.mission?.active) return;
+            const adventure = copy(s.adventure);
+            if (!travelAdventure(adventure, area)) return;
+            get().setMode("adventure");
+            tracker = new EncounterTracker();
+            set({
+              adventure,
+              panel: null,
+              dialogue: null,
+              effect: null,
+              moving: false,
+              moveCommand: null,
+              queuedDirection: null,
+              notice: notify(
+                MAPS[area].title,
+                "Your little story continues. Your discoveries and outfit are safe.",
+              ),
+            });
+          },
+          startGlade() {
+            if (get().moving || get().mission?.active) return;
+            const adventure = copy(get().adventure);
+            travelAdventure(adventure, "glade", true);
+            adventure.trackedQuest = "glade";
+            get().setMode("adventure");
+            tracker = new EncounterTracker();
+            set({
+              adventure,
+              panel: null,
+              dialogue: null,
+              effect: null,
               moving: false,
               moveCommand: null,
               queuedDirection: null,
@@ -534,7 +608,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           },
           openPanel(panel, tab) {
             if (get().moving || get().mission?.active || get().arrival) return;
-            set({ panel, inventoryTab: tab || get().inventoryTab });
+            set({
+              panel,
+              inventoryTab: tab || get().inventoryTab,
+              ...(panel === "inventory" ? { mapOnOpen: false } : {}),
+            });
           },
           closePanel() {
             if (get().panel === "stars") {
@@ -809,10 +887,15 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             fresh = migrateLegacy(storage);
           const rawAdventure = read(storage, "kitty-nancy-adventure-v1") as {
             chapter?: unknown;
+            journey?: unknown;
           } | null;
           fresh.adventure.chapter = normalizeChapter(
             rawAdventure?.chapter ?? previous.adventure.chapter,
             fresh.adventure.complete,
+          );
+          fresh.adventure.journey = normalizeJourney(
+            rawAdventure?.journey ?? previous.adventure.journey,
+            fresh.adventure,
           );
           return {
             ...current,

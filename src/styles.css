@@ -1511,3 +1511,180 @@ legend {
     display: none;
   }
 }
+
+.continue-adventure {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 18px;
+  background: #efe5f4;
+  border: 1px solid #dbc4e3;
+  color: #876480;
+}
+.continue-adventure > span {
+  font:
+    30px Georgia,
+    serif;
+}
+.continue-adventure > div {
+  flex: 1;
+}
+.continue-adventure strong {
+  display: block;
+  font:
+    22px Georgia,
+    serif;
+}
+.continue-adventure small {
+  display: block;
+  font-size: 11px;
+  margin-top: 7px;
+  color: #a07c97;
+}
+.continue-adventure p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+.travel-map {
+  margin: 18px 0;
+  border: 1px solid #e4cad9;
+  border-radius: 16px;
+  padding: 16px;
+  background: #fff8ef;
+}
+.travel-map > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  color: #8c6783;
+  font:
+    19px Georgia,
+    serif;
+  list-style: none;
+}
+.travel-map > summary:after {
+  content: "⌄";
+}
+.travel-map > summary small {
+  font: 10px sans-serif;
+  align-self: center;
+  color: #a28296;
+}
+.travel-map[open] > summary {
+  margin-bottom: 14px;
+}
+.map-areas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+.map-areas button {
+  padding: 10px 6px;
+  line-height: 1.4;
+  font-size: 11px;
+}
+.map-areas small {
+  display: block;
+  font-size: 9px;
+  margin-top: 5px;
+  opacity: 0.7;
+}
+.quest-map-svg {
+  display: block;
+  width: 100%;
+  max-height: 330px;
+  margin: auto;
+}
+.map-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 10px;
+  color: #a17792;
+  margin: 12px 0;
+}
+.map-next {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f6e7ee;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.unvisited-map {
+  text-align: center;
+  padding: 18px;
+}
+.unvisited-map img {
+  width: 100px;
+}
+.unvisited-map p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.unvisited-map small {
+  color: #a37e96;
+}
+.wayfinder {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.wayfinder:focus-visible {
+  outline: 2px solid #bf80a1;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .continue-adventure {
+    padding: 15px;
+    gap: 10px;
+  }
+  .continue-adventure strong {
+    font-size: 19px;
+  }
+  .travel-map {
+    padding: 12px;
+  }
+  .map-areas {
+    gap: 5px;
+  }
+  .map-areas button {
+    font-size: 10px;
+  }
+  .travel-map > summary small {
+    max-width: 110px;
+    text-align: right;
+  }
+  .quest-map-svg {
+    max-height: 290px;
+  }
+}
+
+.close-dialog {
+  position: sticky;
+  top: 8px;
+  right: auto;
+  float: right;
+  z-index: 5;
+  margin: -14px -14px 0 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff8eef5;
+}
+.inventory-dialog .tabs {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #fff8ee;
+  padding: 8px 36px 0 0;
+}
+.travel-map {
+  scroll-margin-top: 65px;
+}
