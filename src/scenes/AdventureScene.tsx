@@ -1,3 +1,4 @@
+import { CozyLights, WORLD_COLORS } from "./CozyLights";
 import { TileMotor, PHYSICS_STEP } from "./tile-motor";
 import { DiscoveryEffects } from "./DiscoveryEffects";
 import { turnToward } from "./walk-animation";
@@ -327,7 +328,33 @@ function Prop({ object: o }: { object: MapObject }) {
     </group>
   );
 }
-function Terrain() {
+function ForegroundWalls({ walls, anchor, color }: {
+  walls: { x: number; z: number }[];
+  anchor: RefObject<THREE.Group | null>;
+  color: string;
+}) {
+  const group = useRef<THREE.Group>(null), point = useRef(new THREE.Vector3()), reduced = useReducedMotion();
+  useFrame(({ gl }, dt) => {
+    if (!group.current || !anchor.current) return;
+    anchor.current.getWorldPosition(point.current);
+    let faded = 0;
+    for (const child of group.current.children) {
+      const mesh = child as THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
+      const dz = mesh.position.z - point.current.z;
+      const foreground = dz > 0.2 && dz < 3 && Math.abs(mesh.position.x - point.current.x) < 1.5;
+      if (foreground) faded++;
+      mesh.material.opacity = reduced ? (foreground ? 0.15 : 1) : THREE.MathUtils.lerp(mesh.material.opacity, foreground ? 0.15 : 1, 1-Math.exp(-Math.min(dt,0.1)*12));
+    }
+    gl.domElement.dataset.cutawayWalls = String(faded);
+  });
+  return <group ref={group}>{walls.map(({ x,z }) =>
+    <mesh key={`${x}-${z}`} position={[x,0.25,z]}>
+      <boxGeometry args={[0.96,0.65,0.96]} />
+      <meshStandardMaterial color={color} roughness={0.9} transparent depthWrite={false} />
+    </mesh>
+  )}</group>;
+}
+function Terrain({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
   const a = useGameStore((s) => s.adventure),
     map = MAPS[a.map],
     garden = a.map !== "village";
@@ -393,16 +420,7 @@ function Terrain() {
           />
         ))}
       </RigidBody>
-      {blocked
-        .filter((b) => b.wall)
-        .map(({ x, z }) => (
-          <SoftBox
-            key={`${x}-${z}`}
-            position={[x, 0.25, z]}
-            size={[0.96, 0.65, 0.96]}
-            color={garden ? "#b8a9ce" : "#b6c99f"}
-          />
-        ))}
+      <ForegroundWalls walls={blocked.filter((b) => b.wall)} anchor={anchor} color={garden ? "#b8a9ce" : "#b6c99f"} />
       {a.map === "glade" && <GladeScenery />}
       {map.objects.map((o) =>
         a.map === "glade" ? (
@@ -587,19 +605,9 @@ export function AdventureScene() {
     anchor = useRef<THREE.Group>(null);
   return (
     <>
-      <color
-        attach="background"
-        args={[
-          map === "glade"
-            ? "#e2deed"
-            : map === "garden"
-              ? "#e5d9ef"
-              : "#e6e4d3",
-        ]}
-      />
-      <hemisphereLight args={["#fff4ef", "#baa6cf", 2.8]} />
-      <directionalLight position={[-3, 9, 6]} color="#fff1d2" intensity={2} />
-      <Terrain />
+      <color attach="background" args={[WORLD_COLORS[map]]} />
+      <CozyLights />
+      <Terrain anchor={anchor} />
       <Player key={map} anchor={anchor} />
       <FollowCamera anchor={anchor} />
       <Discovery />

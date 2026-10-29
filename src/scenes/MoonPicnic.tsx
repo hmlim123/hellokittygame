@@ -1,3 +1,4 @@
+import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import * as THREE from "three";
 import { wakeAmount, effectTime } from "./effect-motion";
 import type { DiscoveryEffect } from "../game/types";
@@ -134,8 +135,7 @@ function PicnicScene({
   return (
     <>
       <color attach="background" args={["#e5daee"]} />
-      <hemisphereLight args={["#fff1e6", "#bca6ca", 2.7]} />
-      <directionalLight position={[-3, 6, 4]} intensity={2} color="#ffe9c5" />
+      <CozyLights evening />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.025, 0]}>
         <circleGeometry args={[8, 64]} />
         <meshStandardMaterial color="#b9cbb4" />
@@ -243,7 +243,7 @@ export default function MoonPicnic() {
               dpr={[1, 1.5]}
               onCreated={({ gl }) => {
                 gl.toneMapping = ACESFilmicToneMapping;
-                gl.toneMappingExposure = 1.1;
+                gl.toneMappingExposure = COZY_EXPOSURE;
                 gl.domElement.setAttribute(
                   "aria-label",
                   "Kitty, Momo, Pip and the cloud guardian at a moonlit picnic.",

@@ -3,8 +3,8 @@
   --cream: #fff7f3;
   --paper: #fffcf7;
   --ink: #614b50;
-  --muted: #977b86;
-  --rose: #bd6c91;
+  --muted: #755b68;
+  --rose: #a34d76;
   --line: #ecd6df;
   font-family:
     "Avenir Next",
@@ -1711,3 +1711,17 @@ legend {
 .reward-notification { pointer-events: auto; width: 420px; max-height: calc(100% - 80px); overflow: auto; align-items: flex-start; }
 .reward-notification h3 { padding-right: 24px; }
 .dismiss-notice { position: absolute; top: 4px; right: 4px; width: 40px; height: 40px; border: 0; background: transparent; font-size: 23px; }
+
+/* Shared storybook typography and readable pastel surfaces. */
+:root { --accent: #94446c; --accent-soft: #f5dfe9; --radius-card: 22px; --radius-control: 12px; }
+.eyebrow, .notification small, .brand small, .scene-label { color: #805368; }
+.small-note, .save-note, .inventory-status, .equipment-grid small, .outfit-preview span, .outfit-preview small, .room-message, .keepsakes p, .collection-grid small, .chat-list span, .present-play > span, .adventure-controls p { color: var(--muted); }
+dialog > p, .notification p, .quest-card p, .memory-spread p { color: var(--muted); }
+.primary, #startHunt { background: var(--accent); border-color: var(--accent); color: #fffaf5; }
+.text-button, .inline-button, .souvenir-label { color: var(--accent); }
+.notification { background: #fffbf5; }
+.notification h3 { color: #794763; }
+.scene-hint { color: #714d61; background: #fff8efdb; border-radius: 12px; width: fit-content; margin: auto; padding: 5px 10px; }
+.quest-guide, .quest-card, .backup-preview, .memory-spread { border-radius: var(--radius-card); }
+button, input, select { border-radius: var(--radius-control); }
+button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visible { outline: 3px solid #804f83; outline-offset: 3px; }

@@ -1,3 +1,4 @@
+import { COZY_EXPOSURE } from "./CozyLights";
 import { PHYSICS_STEP } from "./tile-motor";
 import {
   Component,
@@ -93,7 +94,7 @@ export function Stage() {
           }}
           onCreated={({ gl }) => {
             gl.toneMapping = ACESFilmicToneMapping;
-            gl.toneMappingExposure = mode === "room" ? 1.18 : 1.1;
+            gl.toneMappingExposure = COZY_EXPOSURE;
             gl.domElement.setAttribute(
               "aria-label",
               mode === "room"

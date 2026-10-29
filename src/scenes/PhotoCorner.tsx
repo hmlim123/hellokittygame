@@ -1,3 +1,4 @@
+import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -139,7 +140,7 @@ export default function PhotoCorner() {
           gl={{ antialias: true, preserveDrawingBuffer: true }}
           onCreated={({ gl }) => {
             gl.toneMapping = ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.15;
+            gl.toneMappingExposure = COZY_EXPOSURE;
             gl.domElement.setAttribute(
               "aria-label",
               "Kitty postcard preview. Drag to rotate.",
@@ -147,12 +148,7 @@ export default function PhotoCorner() {
           }}
         >
           <color attach="background" args={[bg.color]} />
-          <hemisphereLight args={["#fff8ed", "#c4adc8", 2.7]} />
-          <directionalLight
-            position={[-3, 7, 5]}
-            color="#fff0d7"
-            intensity={2}
-          />
+          <CozyLights />
           <Suspense fallback={null}>
             <Kitty id={friend} equipment={equipment} photoPose={pose} />
             <PhotoReady ready={ready} />

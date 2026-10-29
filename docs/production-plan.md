@@ -29,7 +29,7 @@ Reuse existing quests, equipment, souvenirs, and storybook pages where possible.
 | 1. Polished controls | Delivered (browser verified) | Keyboard/touch reliability, turning, camera, obstacles, focus loss and area transitions. | Quick taps are retained, holds are smooth, newer turns survive walls, and release/cancel/focus loss stop safely in desktop and phone browser checks. |
 | 2. One clear next goal | Implemented; browser verified | One objective, nearby actions, missing-tool explanations, gentle optional hints. | A new player can find and revive the flowers using the game interface; record actual journey duration. |
 | 3. Satisfying discoveries | Implemented; browser verified | Watering/bloom/reward feedback, optional sound, Kitty celebrations, reward-to-inventory-to-room connection. | Each reward is understandable, granted once, wearable at home and in the adventure, and connected to a revisitable memory. |
-| 4. Consistent visual style | Queued | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity. | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene. |
+| 4. Consistent visual style | Implemented; browser verified | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity. | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene. |
 | 5. Comfortable phone play | Queued | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering. | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues. |
 | 6. Dependable progress/releases | Queued | Save feedback, visible version, backup/restore, interrupted sessions, migration, and automated browser release checks. | Reopen, restore, and upgrade saves without losing rewards; failed core-journey checks prevent publication. |
 
@@ -101,3 +101,15 @@ reaction, and optional chime remain connected to the discovery.
 The unlock is derived from the existing flower completion flag, so it is earned
 once and returning players receive it too. Two reward-state tests and the fresh
 journey through reward → room → outfit → memory → inventory → reload pass.
+
+## Stage 4 delivery record
+
+The room, adventure, wardrobe, postcard and ending now share a warm lighting rig
+and exposure. UI text, buttons, focus rings, cards and scene hints use a coherent
+pastel/rose palette with stronger text contrast. Foreground adventure walls fade
+near Kitty so they do not hide her; their collision boundaries stay unchanged.
+
+Desktop and phone presentation checks pass, including measured 4.5:1 contrast
+for the tested goal/body/primary/settings text. Screenshots were visually reviewed.
+The complete reward journey and normal/reduced-motion camera, collision, touch
+and portal regressions pass. This is not a claim of a full accessibility audit.

@@ -1,3 +1,4 @@
+import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import { Suspense, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -25,7 +26,7 @@ export default function WardrobePreview({
       gl={{ antialias: true }}
       onCreated={({ gl }) => {
         gl.toneMapping = ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.1;
+        gl.toneMappingExposure = COZY_EXPOSURE;
         gl.domElement.setAttribute(
           "aria-label",
           `${label}. Drag to rotate Kitty.`,
@@ -34,8 +35,7 @@ export default function WardrobePreview({
     >
       <PreviewLabel label={label} />
       <color attach="background" args={["#f8e9ef"]} />
-      <hemisphereLight args={["#fff4ef", "#baa6cf", 2.8]} />
-      <directionalLight position={[-3, 9, 6]} color="#fff1d2" intensity={2} />
+      <CozyLights />
       <Suspense fallback={null}>
         <Kitty equipment={equipment} />
       </Suspense>

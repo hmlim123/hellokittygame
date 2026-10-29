@@ -1,3 +1,4 @@
+import { CozyLights } from "./CozyLights";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls } from "@react-three/drei";
@@ -198,9 +199,7 @@ export function RoomScene() {
   return (
     <>
       <color attach="background" args={["#f5ece5"]} />
-      <hemisphereLight args={["#fff8ef", "#b8a5a6", 2.6]} />
-      <directionalLight position={[-3, 9, 6]} color="#fff1d5" intensity={2.3} />
-      <directionalLight position={[5, 3, 0]} color="#f9d4e0" intensity={0.8} />
+      <CozyLights />
       <RoomEnvironment />
       <Shelf />
       <Souvenirs />
