@@ -1,3 +1,6 @@
+import { nearbyItemAction } from "./context-action";
+import { parseBackup, commitRestoredSave, PREVIOUS_BACKUP } from "./backup";
+import type { DiscoveryEffect } from "./types";
 import {
   STAR_ORDER,
   endingUnlocked,
@@ -74,6 +77,14 @@ export interface GameState extends SaveState {
   arrangeStar(id: string): void;
   finishEnding(): void;
   savePostcard(): void;
+  worldRevision: number;
+  stepPulse: number;
+  footstep(): void;
+  effect: DiscoveryEffect | null;
+  clearEffect(id: number): void;
+  useNearbyItem(): void;
+  restoreBackup(text: string): { ok: boolean; error?: string };
+  previousBackup(): string | null;
   notice: Notice | null;
   dialogue: Story | null;
   arrival: { friend: number; result: { title: string; text: string } } | null;
@@ -166,6 +177,30 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           result?: Story,
           extra: Partial<GameState> = {},
         ) => {
+          const before = get().adventure;
+          if (result?.source) {
+            const kind =
+              !before.chapter.flowersRevived && a.chapter.flowersRevived
+                ? "water"
+                : !before.chapter.bridgeFixed && a.chapter.bridgeFixed
+                  ? "tie"
+                  : !before.chapter.friendAwake && a.chapter.friendAwake
+                    ? "wake"
+                    : a.chapter.butterflyStep > before.chapter.butterflyStep
+                      ? "light"
+                      : a.chapter.stars.length > before.chapter.stars.length
+                        ? "stars"
+                        : null;
+            if (kind)
+              extra.effect = {
+                id: ++serial,
+                kind,
+                map: a.map,
+                at: [result.source.x, result.source.z],
+                startedAt: performance.now(),
+                duration: kind === "water" ? 2.6 : 2,
+              };
+          }
           const room = copy(get().room);
           if (a.complete && !room.adventureRewarded) {
             const friend = rewardDoll(room);
@@ -270,6 +305,87 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
         };
         return {
           ...legacy,
+          worldRevision: 0,
+          stepPulse: 0,
+          effect: null,
+          footstep() {
+            set({ stepPulse: get().stepPulse + 1 });
+          },
+          clearEffect(id) {
+            if (get().effect?.id === id) set({ effect: null });
+          },
+          useNearbyItem() {
+            const s = get();
+            if (
+              s.mode !== "adventure" ||
+              s.moving ||
+              s.panel ||
+              s.dialogue ||
+              !s.sceneReady
+            )
+              return;
+            const action = nearbyItemAction(s.adventure);
+            if (!action) return;
+            const a = copy(s.adventure),
+              equipment = normalizeEquipment(
+                { ...s.equipment, item: action.item },
+                a,
+              );
+            tracker.mark(a, action.source, equipment);
+            const result = interactAdventure(
+              a,
+              undefined,
+              action.source,
+              equipment,
+            );
+            applyStory(a, result, { equipment });
+          },
+          previousBackup() {
+            try {
+              return storage.getItem(PREVIOUS_BACKUP);
+            } catch {
+              return null;
+            }
+          },
+          restoreBackup(text) {
+            try {
+              const restored = parseBackup(text),
+                save = selectSave(restored),
+                json = commitRestoredSave(storage, selectSave(get()), save);
+              cache.set("kitty-world-v2", json);
+              lastMirror = JSON.stringify(save);
+              tracker = new EncounterTracker();
+              set({
+                ...save,
+                worldRevision: get().worldRevision + 1,
+                sceneReady: false,
+                saveFailed: false,
+                moving: false,
+                moveCommand: null,
+                queuedDirection: null,
+                mission: null,
+                dialogue: null,
+                arrival: null,
+                result: null,
+                effect: null,
+                memoryPage: null,
+                gesture: { id: ++serial, kind: "wave" },
+                notice: notify(
+                  "Your little world is back",
+                  "Your collection, outfits, quests, and memories are ready. Your previous save is also available in Settings.",
+                ),
+              });
+              return { ok: true };
+            } catch (e) {
+              return {
+                ok: false,
+                error:
+                  e instanceof Error
+                    ? e.message
+                    : "This backup could not be restored.",
+              };
+            }
+          },
           memoryPage: null,
           greet() {
             set({
@@ -402,6 +518,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             }
             set({
               mode,
+              effect: null,
               arrival: null,
               panel: null,
               dialogue: null,

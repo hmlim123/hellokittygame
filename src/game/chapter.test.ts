@@ -57,7 +57,7 @@ describe("Butterfly Glade chapter", () => {
     expect(directions(s)).toContain("right beside you");
   });
   it("inspecting an empty clearing gives a useful hint and never calls a legacy map handler", () => {
-    const s = normalizeAdventure({ map: "glade", x: 2, z: 4 });
+    const s = normalizeAdventure({ map: "glade", x: 2, z: 8 });
     expect(interactAdventure(s).text).toContain("Butterfly lantern");
     expect(s.map).toBe("glade");
   });

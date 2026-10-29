@@ -87,7 +87,9 @@ are shared with the room; reloading does not duplicate them.
 Open **Play a mission → Butterfly Glade**, or use the lilac arch in the garden’s
 southeast. The glade is a third map connected to the existing adventure. Direction
 hints lead to each objective; walk up to objects to use the item in Kitty’s paws.
-Open **Inventory → Items** to change tools. Only one item is equipped at a time.
+Open **Inventory → Items** to change tools, or use the nearby item button to equip
+and use the right tool in one tap. On a keyboard, **E** uses that action. Only one
+item is equipped at a time. Automatic encounters still work with an equipped item.
 
 1. Equip **Butterfly lantern** and follow three butterfly markers. The first
    reveals a hidden path through the hedge. The path stays open after changing items.
@@ -129,6 +131,41 @@ chapter memories through the modern save fallback.
 
 [Example postcard exported from the real Blender model](docs/nancy-postcard.png)
 
+## Smoother adventures and keeping progress
+
+Nearby tool actions appear below the map when their prerequisites are ready:
+**Use butterfly lantern**, **Use watering can**, **Tie friendship ribbon**,
+**Offer cuddle teddy**, and **Share strawberry picnic**. Each action checks the
+current location again, equips one item and applies the encounter once. The
+inventory remains available for dressing up and choosing what Kitty carries.
+
+Kitty walks with alternating feet, arm swing and a gentle body motion on additive
+pivots around the actual Blender controllers. Turns follow the shortest arc and
+settle smoothly. The original Blender wave, dance and wink tracks stay usable.
+Soft footsteps play only when sound is enabled. Reduced motion keeps the walking
+pose still and turns immediately. Walking uses actual Rapier movement, so a blocked
+wall does not keep the feet cycling in place.
+
+Watering tilts the held can and sends a few visible drops toward the flowers;
+the petals then open gradually. Bridge planks align and the friendship ribbon
+ties across them. Pip stretches awake and opens her eyes. These short effects
+play for new discoveries, with progress saved immediately; loading a completed
+save shows the finished scene. Reduced motion shows finished states without the
+moving drops or bursts. The phone camera is closer and lower, with labels mostly
+limited to nearby objects and entrances.
+
+Open **Settings → Keep your progress ♡** to download a JSON backup. On another
+device, choose that file, review the current and selected progress, then press
+**Restore this backup**. Collection, equipment, quests, storybook memories,
+keepsakes and preferences transfer together. Chat and transient animation state
+are excluded. The current save is kept as a downloadable previous save. Invalid,
+oversized and unsupported files leave the current game unchanged; partial storage
+writes are rolled back. Repaired glade progress also returns Kitty to a reachable
+spawn when needed. This is a manual transfer; it does not introduce an account or
+cloud-save service.
+
+[Phone view with a nearby item action](docs/nancy-mobile-quick-tool.png)
+
 ## Develop and verify
 
 Use Node.js 24 and npm:
@@ -153,6 +190,7 @@ controller. With Python Playwright and Chromium installed and preview running:
 ```sh
 python tests/react-browser.py
 python tests/chapter-browser.py
+python tests/play-polish-browser.py
 ```
 
 Set `KITTY_BASE_URL` or `CHROMIUM_PATH` to override the defaults. It checks room
@@ -161,7 +199,10 @@ wall collision, all four adventure quests, reloads, shared room rewards, and pho
 touch controls. The chapter check plays the new map, tests a wrong tool and a
 physically blocked bridge, reloads during the star puzzle, reaches the letter and
 ending, opens room souvenirs, and downloads and inspects a real postcard PNG. It
-also checks the puzzle and storybook on a phone. Older browser scripts in `tests/` target the preserved classic
+also checks the puzzle and storybook on a phone. The polish check verifies one-tap
+item use, movement of the actual feet, smooth turns, rendered flower/bridge/bunny
+animation, invalid-file handling, previous-save recovery, and transfer to a fresh
+phone browser. Older browser scripts in `tests/` target the preserved classic
 application; serve `dist/` separately to run those historical checks.
 
 Vite splits the React interface from the 3D application and wardrobe preview.
@@ -219,6 +260,10 @@ the original rig. Shelf variants keep their own palettes.
 | `src/scenes/GladeScene.tsx`, `AdventureTools.ts` | Glade scenery, NPCs, and tools attached to the Blender rig |
 | `src/scenes/PhotoCorner.tsx`, `MoonPicnic.tsx` | Postcard export and the replayable picnic scene |
 | `src/scenes/Souvenirs.tsx` | Clickable memories in Kitty’s room |
+| `src/game/context-action.ts` | Nearby action prerequisites and label distance |
+| `src/game/backup.ts`, `src/ui/SaveBackup.tsx` | Validated backups, restore preview and rollback |
+| `src/scenes/walk-animation.ts` | Additive walking cycle and smooth turning |
+| `src/scenes/DiscoveryEffects.tsx`, `effect-motion.ts` | Short discovery effects and reduced-motion easing |
 | `src/game/storage.ts` | Save migration and legacy compatibility |
 | `src/game/types.ts`, `domain.ts` | Shared types and boundary to existing rules |
 | `src/scenes/Stage.tsx` | Fiber Canvas, physics context, loading and failure UI |

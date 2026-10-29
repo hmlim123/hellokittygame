@@ -1,3 +1,6 @@
+import { DiscoveryEffects } from "./DiscoveryEffects";
+import { turnToward } from "./walk-animation";
+import { nearbyLabel } from "../game/context-action";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, OrthographicCamera } from "@react-three/drei";
@@ -123,7 +126,7 @@ function Prop({ object: o }: { object: MapObject }) {
     );
   return (
     <group position={[o.x, 0, o.z]}>
-      {label && (
+      {label && nearbyLabel(a, o) && (
         <Html
           position={[0, o.type === "M" ? 1.45 : 1.3, 0]}
           center
@@ -252,14 +255,16 @@ function Prop({ object: o }: { object: MapObject }) {
             size={[0.8, 0.04, 0.8]}
             color="#fff0da"
           />
-          <Html position={[0, 1.5, 0]} center zIndexRange={[2, 0]}>
-            <button
-              className="world-label portal"
-              onClick={() => enter(o.type as "D" | "E")}
-            >
-              {o.type === "D" ? "Enter dungeon ↗" : "Return to village ↗"}
-            </button>
-          </Html>
+          {nearbyLabel(a, o, true) && (
+            <Html position={[0, 1.5, 0]} center zIndexRange={[2, 0]}>
+              <button
+                className="world-label portal"
+                onClick={() => enter(o.type as "D" | "E")}
+              >
+                {o.type === "D" ? "Enter dungeon ↗" : "Return to village ↗"}
+              </button>
+            </Html>
+          )}
         </>
       )}
       {o.type === "F" && (
@@ -417,6 +422,7 @@ function Player() {
     visual = useRef<THREE.Group>(null),
     { world } = useRapier(),
     reduced = useReducedMotion();
+  const locomotion = useRef({ speed: 0 });
   const controller = useRef<ReturnType<
     typeof world.createCharacterController
   > | null>(null);
@@ -437,6 +443,7 @@ function Player() {
   useEffect(() => {
     body.current?.setTranslation({ x: a.x, y: 0, z: a.z }, true);
     target.current = null;
+    locomotion.current.speed = 0;
   }, [a.map]);
   useEffect(() => {
     if (command) {
@@ -445,24 +452,47 @@ function Player() {
       target.current = { x: s.x + dx, z: s.z + dz, elapsed: 0, blocked: 0 };
     }
   }, [command]);
-  useFrame((_, dt) => {
+  const facing = command?.dir || a.facing;
+  useFrame(({ gl }, dt) => {
+    if (visual.current) {
+      const yaw = {
+        up: Math.PI,
+        down: 0,
+        left: -Math.PI / 2,
+        right: Math.PI / 2,
+      }[facing];
+      visual.current.rotation.y = turnToward(
+        visual.current.rotation.y,
+        yaw,
+        Math.min(dt, 0.1),
+        reduced,
+      );
+      gl.domElement.dataset.playerYaw = String(visual.current.rotation.y);
+    }
     const rb = body.current,
       t = target.current,
       c = controller.current;
-    if (!rb || !t || !c) return;
+    if (!rb || !t || !c) {
+      locomotion.current.speed = 0;
+      return;
+    }
     dt = Math.min(dt, 0.1);
     const p = rb.translation(),
       distance = Math.hypot(t.x - p.x, t.z - p.z);
     t.elapsed += dt;
     if (distance < 0.025) {
       target.current = null;
+      locomotion.current.speed = 0;
       useGameStore.getState().finishMove(false);
       const next = useGameStore.getState().adventure;
       rb.setTranslation({ x: next.x, y: 0, z: next.z }, true);
       if (visual.current) visual.current.position.y = 0;
       return;
     }
-    const speed = Math.min(distance, dt * 4),
+    const speed = Math.min(
+        distance,
+        dt * Math.min((3.2 * t.elapsed) / 0.09, 3.2, distance * 12),
+      ),
       desired = {
         x: ((t.x - p.x) / distance) * speed,
         y: 0,
@@ -475,21 +505,19 @@ function Player() {
       y: 0,
       z: p.z + movement.z,
     });
+    locomotion.current.speed =
+      dt > 0 ? Math.hypot(movement.x, movement.z) / dt : 0;
     t.blocked =
       Math.hypot(movement.x, movement.z) < speed * 0.12 ? t.blocked + dt : 0;
-    if (visual.current)
-      visual.current.position.y = reduced
-        ? 0
-        : Math.abs(Math.sin(t.elapsed * 20)) * 0.035;
     if (t.blocked > 0.12 || t.elapsed > 1) {
       target.current = null;
+      locomotion.current.speed = 0;
       useGameStore.getState().finishMove(true);
       const next = useGameStore.getState().adventure;
       rb.setTranslation({ x: next.x, y: 0, z: next.z }, true);
       if (visual.current) visual.current.position.y = 0;
     }
   });
-  const facing = command?.dir || a.facing;
   return (
     <RigidBody
       ref={body}
@@ -499,17 +527,13 @@ function Player() {
       enabledRotations={[false, false, false]}
     >
       <CapsuleCollider args={[0.18, 0.18]} position={[0, 0.39, 0]} />
-      <group
-        ref={visual}
-        rotation={[
-          0,
-          { up: Math.PI, down: 0, left: -Math.PI / 2, right: Math.PI / 2 }[
-            facing
-          ],
-          0,
-        ]}
-      >
-        <Kitty equipment={equipment} animate scale={0.48} />
+      <group ref={visual}>
+        <Kitty
+          equipment={equipment}
+          animate
+          scale={0.48}
+          locomotion={locomotion}
+        />
       </group>
     </RigidBody>
   );
@@ -518,7 +542,7 @@ function FollowCamera() {
   const reduced = useReducedMotion(),
     a = useGameStore((s) => s.adventure),
     { size } = useThree();
-  const half = size.width < 640 ? 3.6 : 4.4,
+  const half = size.width < 640 ? 2.65 : 3.8,
     aspect = size.width / size.height;
   useFrame(({ camera, gl }, dt) => {
     if (camera instanceof THREE.OrthographicCamera) {
@@ -533,12 +557,13 @@ function FollowCamera() {
       x = THREE.MathUtils.clamp(a.x, 3, m.w - 4),
       z = THREE.MathUtils.clamp(a.z, 3, m.h - 4);
     camera.position.lerp(
-      new THREE.Vector3(x, 8, z + 6),
+      new THREE.Vector3(x, 7, z + 8),
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 10),
     );
-    camera.lookAt(camera.position.x, 0, camera.position.z - 6);
+    camera.lookAt(camera.position.x, 0, camera.position.z - 8);
     camera.updateMatrixWorld(true);
     gl.domElement.dataset.cameraType = camera.type;
+    gl.domElement.dataset.cameraHalf = String(half);
     gl.domElement.dataset.physicsContacts = String(
       useGameStore.getState().physicsContacts,
     );
@@ -548,7 +573,7 @@ function FollowCamera() {
     <OrthographicCamera
       makeDefault
       manual
-      position={[a.x, 8, a.z + 6]}
+      position={[a.x, 7, a.z + 8]}
       left={-half * aspect}
       right={half * aspect}
       top={half}
@@ -607,6 +632,7 @@ export function AdventureScene() {
       <Player />
       <FollowCamera />
       <Discovery />
+      <DiscoveryEffects />
     </>
   );
 }

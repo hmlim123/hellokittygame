@@ -1449,3 +1449,65 @@ legend {
 .souvenir-label:focus-visible > span {
   display: inline;
 }
+
+.adventure-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+.adventure-action-stack .context-action {
+  padding: 14px 18px;
+}
+.save-backup {
+  border-top: 1px solid #e8d1db;
+  margin: 24px 0 16px;
+  padding-top: 18px;
+}
+.save-backup > summary {
+  cursor: pointer;
+  color: #975f80;
+}
+.backup-preview {
+  padding: 16px;
+  border: 1px solid #e1c4d4;
+  border-radius: 14px;
+  background: #fcf0f5;
+}
+.backup-preview p {
+  line-height: 1.7;
+}
+.adventure-controls > p {
+  max-width: 300px;
+}
+@media (max-width: 600px) {
+  .adventure-action-stack {
+    min-width: 0;
+    flex: 1;
+    max-width: 190px;
+  }
+  .adventure-action-stack .context-action {
+    font-size: 12px;
+    padding: 12px;
+  }
+  .adventure-action-stack .text-button {
+    font-size: 11px;
+  }
+  .adventure-controls {
+    gap: 10px;
+  }
+}
+
+.context-action kbd {
+  font: 10px sans-serif;
+  border: 1px solid #fff7;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin-left: 6px;
+  opacity: 0.8;
+}
+@media (hover: none) {
+  .context-action kbd {
+    display: none;
+  }
+}

@@ -1,3 +1,5 @@
+import { nearbyLabel } from "../game/context-action";
+import { bloomAmount, bridgeAmount } from "./effect-motion";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
@@ -9,8 +11,29 @@ import { useGameStore } from "../game/store";
 import { useReducedMotion } from "./Kitty";
 import type { MapObject } from "../game/types";
 function Bud({ open = false }: { open?: boolean }) {
+  const effect = useGameStore((s) => s.effect),
+    reduced = useReducedMotion(),
+    group = useRef<THREE.Group>(null);
+  useFrame(({ gl }) => {
+    const root = group.current;
+    if (!root) return;
+    const p = bloomAmount(open, effect, reduced);
+    for (let i = 0; i < 5; i++) {
+      const petal = root.children[i + 1] as THREE.Mesh;
+      petal.position.set(
+        Math.sin((i * Math.PI * 2) / 5) * (0.07 + 0.08 * p),
+        0.52 + Math.cos((i * Math.PI * 2) / 5) * 0.15 * p,
+        0,
+      );
+      petal.scale.set(0.06 + 0.06 * p, 0.12 + 0.03 * p, 0.05 + 0.005 * p);
+      (petal.material as THREE.MeshStandardMaterial).color
+        .set("#c2afbf")
+        .lerp(new THREE.Color("#e7a3be"), p);
+    }
+    gl.domElement.dataset.petalSpread = String(root.children[1].scale.x);
+  });
   return (
-    <group>
+    <group ref={group}>
       <mesh position={[0, 0.22, 0]}>
         <cylinderGeometry args={[0.022, 0.022, 0.42, 8]} />
         <meshStandardMaterial color="#9ab998" />
@@ -71,7 +94,13 @@ function Butterfly({ index, lit }: { index: number; lit: boolean }) {
   );
 }
 export function GladePortal({ type }: { type: "A" | "V" }) {
-  const enter = useGameStore((s) => s.enter);
+  const enter = useGameStore((s) => s.enter),
+    a = useGameStore((s) => s.adventure);
+  const show = nearbyLabel(
+    a,
+    type === "A" ? { x: 13, z: 11 } : { x: 1, z: 10 },
+    true,
+  );
   return (
     <group>
       {[-0.4, 0.4].map((x) => (
@@ -84,16 +113,20 @@ export function GladePortal({ type }: { type: "A" | "V" }) {
         <torusGeometry args={[0.4, 0.07, 8, 24, Math.PI]} />
         <meshStandardMaterial color="#bca7d3" />
       </mesh>
-      <Html center position={[0, 1.45, 0]} zIndexRange={[2, 0]}>
-        <button className="world-label portal" onClick={() => enter(type)}>
-          {type === "A" ? "Butterfly Glade ↗" : "Return to garden ↗"}
-        </button>
-      </Html>
+      {show && (
+        <Html center position={[0, 1.45, 0]} zIndexRange={[2, 0]}>
+          <button className="world-label portal" onClick={() => enter(type)}>
+            {type === "A" ? "Butterfly Glade ↗" : "Return to garden ↗"}
+          </button>
+        </Html>
+      )}
     </group>
   );
 }
 export function GladeObject({ object: o }: { object: MapObject }) {
-  const c = useGameStore((s) => s.adventure.chapter),
+  const adventure = useGameStore((s) => s.adventure),
+    effect = useGameStore((s) => s.effect),
+    c = adventure.chapter,
     letter = useMemo(() => (o.type === "K" ? makeGift("letter") : null), [o]),
     lantern = useMemo(
       () => (o.type === "P" ? makeAdventureTool("lantern") : null),
@@ -114,7 +147,7 @@ export function GladeObject({ object: o }: { object: MapObject }) {
   if (o.type === "L" && Number(o.id) < c.butterflyStep) return null;
   return (
     <group position={[o.x, 0, o.z]}>
-      {label && (
+      {label && nearbyLabel(adventure, o) && (
         <Html
           center
           position={[0, o.type === "N" ? 1.7 : 1.2, 0]}
@@ -139,27 +172,7 @@ export function GladeObject({ object: o }: { object: MapObject }) {
           ))}
         </group>
       )}
-      {o.type === "J" && (
-        <>
-          {[-0.3, -0.1, 0.1, 0.3].map((z, i) => (
-            <mesh
-              key={z}
-              position={[0, 0.04, z]}
-              rotation={[0, c.bridgeFixed ? 0 : i % 2 ? 0.3 : -0.3, 0]}
-            >
-              <boxGeometry args={[c.bridgeFixed ? 1.2 : 0.45, 0.075, 0.14]} />
-              <meshStandardMaterial color="#d8b294" />
-            </mesh>
-          ))}
-          {c.bridgeFixed &&
-            [-0.42, 0.42].map((z) => (
-              <mesh key={z} position={[0, 0.19, z]}>
-                <boxGeometry args={[1.3, 0.045, 0.045]} />
-                <meshStandardMaterial color="#d984ab" />
-              </mesh>
-            ))}
-        </>
-      )}
+      {o.type === "J" && <AnimatedBridge fixed={c.bridgeFixed} />}
       {o.type === "Z" && (
         <>
           {[-0.34, 0, 0.34].map((x, i) => (
@@ -180,7 +193,12 @@ export function GladeObject({ object: o }: { object: MapObject }) {
           ))}
         </>
       )}
-      {o.type === "N" && <Pip awake={c.friendAwake} />}
+      {o.type === "N" && (
+        <Pip
+          awake={c.friendAwake}
+          waking={effect?.kind === "wake" ? effect : null}
+        />
+      )}
       {letter && (
         <primitive object={letter} position={[0, 0.35, 0]} scale={0.85} />
       )}
@@ -249,6 +267,46 @@ export function GladeScenery() {
           </mesh>
         </group>
       ))}
+    </>
+  );
+}
+
+function AnimatedBridge({ fixed }: { fixed: boolean }) {
+  const effect = useGameStore((s) => s.effect),
+    reduced = useReducedMotion(),
+    boards = useRef<THREE.Group>(null),
+    ties = useRef<THREE.Group>(null);
+  useFrame(({ gl }) => {
+    const p = bridgeAmount(fixed, effect, reduced);
+    boards.current?.children.forEach((board, i) => {
+      board.scale.x = (0.45 + 0.75 * p) / 1.2;
+      board.rotation.y = (i % 2 ? 0.3 : -0.3) * (1 - p);
+    });
+    if (ties.current) ties.current.scale.x = Math.max(0.001, p);
+    gl.domElement.dataset.bridgeWidth = String(
+      1.2 * (boards.current?.children[0].scale.x || 0.375),
+    );
+  });
+  return (
+    <>
+      <group ref={boards}>
+        {[-0.3, -0.1, 0.1, 0.3].map((z) => (
+          <mesh key={z} position={[0, 0.04, z]}>
+            <boxGeometry args={[1.2, 0.075, 0.14]} />
+            <meshStandardMaterial color="#d8b294" />
+          </mesh>
+        ))}
+      </group>
+      {fixed && (
+        <group ref={ties}>
+          {[-0.42, 0.42].map((z) => (
+            <mesh key={z} position={[0, 0.19, z]}>
+              <boxGeometry args={[1.3, 0.045, 0.045]} />
+              <meshStandardMaterial color="#d984ab" />
+            </mesh>
+          ))}
+        </group>
+      )}
     </>
   );
 }

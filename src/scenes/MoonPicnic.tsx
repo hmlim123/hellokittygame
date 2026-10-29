@@ -1,3 +1,6 @@
+import * as THREE from "three";
+import { wakeAmount, effectTime } from "./effect-motion";
+import type { DiscoveryEffect } from "../game/types";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -7,9 +10,44 @@ import { makeGift } from "../../dist/gifts.js";
 import { Dialog } from "../ui/Dialog";
 import { useGameStore } from "../game/store";
 import { endingUnlocked } from "../game/chapter";
-export function Pip({ awake = true }: { awake?: boolean }) {
+export function Pip({
+  awake = true,
+  waking = null,
+}: {
+  awake?: boolean;
+  waking?: DiscoveryEffect | null;
+}) {
+  const root = useRef<THREE.Group>(null),
+    reduced = useReducedMotion();
+  useFrame(({ gl }) => {
+    const g = root.current;
+    if (!g) return;
+    const p = wakeAmount(awake, waking, reduced),
+      t = effectTime(waking);
+    g.scale.y = 0.9 + 0.1 * p;
+    g.position.y =
+      !reduced && waking && t < 2
+        ? Math.sin(Math.min(1, t / 2) * Math.PI) * 0.06
+        : 0;
+    g.rotation.z = !awake
+      ? -0.04
+      : !reduced && t < 2
+        ? Math.sin(t * 7) * 0.035 * (1 - p)
+        : 0;
+    for (let i = 0; i < 2; i++) {
+      const side = g.children[i + 2] as THREE.Group;
+      if (!side) continue;
+      const sign = i === 0 ? -1 : 1;
+      side.children[0].rotation.z = -sign * (0.45 - 0.29 * p);
+      side.children[1].rotation.z = side.children[0].rotation.z;
+      side.children[2].scale.y = 0.009 + 0.029 * p;
+    }
+    gl.domElement.dataset.pipEyeOpen = String(
+      (g.children[2] as THREE.Group).children[2].scale.y,
+    );
+  });
   return (
-    <group>
+    <group ref={root}>
       <mesh position={[0, 0.32, 0]} scale={[0.3, 0.35, 0.23]}>
         <sphereGeometry args={[1, 18, 14]} />
         <meshStandardMaterial color="#eee0d0" />

@@ -43,7 +43,9 @@ export function normalizeAdventure(raw: unknown = {}): Adventure {
     if (
       !Number.isInteger(result.x) ||
       !Number.isInteger(result.z) ||
-      !walkable(result, result.x, result.z)
+      !walkable(result, result.x, result.z) ||
+      (!result.chapter.bridgeFixed && result.x >= 7) ||
+      (result.chapter.butterflyStep === 0 && result.x < 7 && result.z < 7)
     )
       [result.x, result.z] = MAPS.glade.spawn;
   }

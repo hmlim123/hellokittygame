@@ -21,6 +21,7 @@ export class RoomSound{
   }
   musicNote(){if(globalThis.document?.hidden)return;const melody=[523.25,659.25,783.99,659.25,587.33,698.46,659.25,523.25];this.note(melody[this.step++%melody.length],.009,1.1);}
   chime(kind){if(kind==='arrival'){[523.25,659.25,783.99].forEach((n,i)=>this.note(n,.025,.8,i*.13));}else this.note(880,.018,.3);}
+  footstep(){if(globalThis.document?.hidden)return;this.note(145+(this.step%2)*18,.0045,.075);}
   stop(){this.enabled=false;clearInterval(this.timer);this.timer=null;for(const o of this.voices){try{o.stop();}catch{}}this.voices.clear();}
   suspend(){if(this.context&&this.enabled)this.context.suspend().catch(()=>{});}
   resume(){if(this.context&&this.enabled)this.context.resume().catch(()=>{});}

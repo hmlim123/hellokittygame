@@ -1,3 +1,4 @@
+import { nearbyItemAction } from "./game/context-action";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Storybook, StarsPanel } from "./ui/StoryPanels";
 const PhotoCorner = lazy(() => import("./scenes/PhotoCorner"));
@@ -119,6 +120,10 @@ function useAdventureInput() {
           held.current = dir;
           s.requestMove(dir);
         }
+      } else if (e.key.toLowerCase() === "e") {
+        e.preventDefault();
+        if (nearbyItemAction(s.adventure)) s.useNearbyItem();
+        else s.interact();
       } else if (
         (e.key === "Enter" || e.key === " ") &&
         !(e.target instanceof HTMLButtonElement)
@@ -223,6 +228,7 @@ function AdventureControls() {
     interact = useGameStore((s) => s.interact),
     ready = useGameStore((s) => s.sceneReady),
     moving = useGameStore((s) => s.moving);
+  const action = nearbyItemAction(state);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const stop = () => {
     if (timer.current) clearInterval(timer.current);
@@ -262,13 +268,26 @@ function AdventureControls() {
         <br />
         Walk up to friends and treasure to discover them.
       </p>
-      <button
-        className="primary"
-        disabled={!ready || moving}
-        onClick={() => interact()}
-      >
-        Talk / inspect ♡
-      </button>
+      <div className="adventure-action-stack">
+        {action && (
+          <button
+            className="primary context-action"
+            disabled={!ready || moving}
+            aria-keyshortcuts="E"
+            aria-label={action.label}
+            onClick={() => useGameStore.getState().useNearbyItem()}
+          >
+            {action.label} <kbd aria-hidden="true">E</kbd>
+          </button>
+        )}
+        <button
+          className={action ? "text-button" : "primary"}
+          disabled={!ready || moving}
+          onClick={() => interact()}
+        >
+          Talk / inspect ♡
+        </button>
+      </div>
       <span className="sr-only">
         Kitty is at {state.x}, {state.z}
       </span>
@@ -300,6 +319,19 @@ export default function App() {
   const [soundOn, setSoundOn] = useState(false),
     sound = useMemo(() => new RoomSound(), []),
     notice = useGameStore((s) => s.notice);
+  const stepPulse = useGameStore((s) => s.stepPulse),
+    effect = useGameStore((s) => s.effect);
+  useEffect(() => {
+    if (stepPulse) sound.footstep();
+  }, [stepPulse, sound]);
+  useEffect(() => {
+    if (!effect) return;
+    const timer = setTimeout(
+      () => useGameStore.getState().clearEffect(effect.id),
+      effect.duration * 1000,
+    );
+    return () => clearTimeout(timer);
+  }, [effect]);
   useEffect(() => () => sound.stop(), [sound]);
   useEffect(() => {
     if (notice) sound.chime(notice.art ? "arrival" : "catch");

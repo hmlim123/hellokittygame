@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef } from "react";
+import { updateWalking, walkingRig } from "./walk-animation";
+import { effectTime } from "./effect-motion";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -56,6 +58,7 @@ interface KittyProps {
   rotation?: [number, number, number];
   onTouch?: (part: string) => void;
   performance?: { id: number; kind: Gesture };
+  locomotion?: RefObject<{ speed: number }>;
   photoPose?: "still" | "wave" | "cuddle" | "wink";
 }
 export function Kitty({
@@ -69,10 +72,12 @@ export function Kitty({
   onTouch,
   performance,
   photoPose,
+  locomotion,
 }: KittyProps) {
   const asset = useKittyAsset(),
     hero = useMemo(() => makeBlenderKitty(asset, id), [asset, id]),
     reduced = useReducedMotion();
+  const effect = useGameStore((s) => s.effect);
   const sharedGesture = useGameStore((s) => s.gesture),
     gesture = performance || sharedGesture;
   const baseY = useMemo(
@@ -140,14 +145,53 @@ export function Kitty({
     if (photoPose) return;
     if (animate) {
       reaction.current.time += dt;
-      setBlenderAttention(hero, state.pointer.x, state.pointer.y);
+      setBlenderAttention(
+        hero,
+        locomotion?.current.speed ? 0 : state.pointer.x,
+        locomotion?.current.speed ? 0 : state.pointer.y,
+      );
     }
     updateBlender(hero, Math.min(dt, 0.1), { reduced, idle: true });
     updateHeldItem(hero, Math.min(dt, 0.1));
+    if (locomotion) {
+      if (updateWalking(hero, dt, locomotion.current.speed, reduced))
+        useGameStore.getState().footstep();
+      const rig = walkingRig(hero);
+      state.gl.domElement.dataset.walkWeight = String(rig.amount);
+      state.gl.domElement.dataset.footLift = String(
+        Math.max(...rig.feet.map((f) => f.pivot.position.y - f.base.y)),
+      );
+      const tool = hero.userData.blender.chapterTools?.get(equipment?.item);
+      if (tool) {
+        tool.rotation.z = 0;
+        tool.position.y = 0;
+        const t = effectTime(effect);
+        if (
+          !reduced &&
+          t < 2.6 &&
+          effect?.kind === "water" &&
+          equipment?.item === "watering"
+        ) {
+          const pour = Math.sin(Math.min(1, t / 2.2) * Math.PI);
+          tool.rotation.z = pour * 0.8;
+          tool.position.y = pour * 0.12;
+          hero.userData.blender.armIdle[1].rotation.x -= pour * 0.15;
+        }
+        if (
+          !reduced &&
+          t < 2 &&
+          effect?.kind === "tie" &&
+          equipment?.item === "ribbon"
+        )
+          tool.rotation.z =
+            Math.sin(t * 8) * 0.12 * Math.sin(Math.min(1, t / 2) * Math.PI);
+      }
+    }
     hero.userData.blender.normalize.position.y =
       baseY +
       (animate &&
       !reduced &&
+      (!locomotion || locomotion.current.speed < 0.05) &&
       reaction.current.kind === "excited" &&
       reaction.current.time < 3
         ? Math.abs(Math.sin(reaction.current.time * Math.PI)) * 0.18

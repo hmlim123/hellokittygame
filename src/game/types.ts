@@ -145,3 +145,12 @@ export interface Notice {
   art?: string | null;
   at?: [number, number];
 }
+
+export interface DiscoveryEffect {
+  id: number;
+  kind: "water" | "tie" | "wake" | "light" | "stars";
+  map: Adventure["map"];
+  at: [number, number];
+  startedAt: number;
+  duration: number;
+}

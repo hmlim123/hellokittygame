@@ -31,14 +31,24 @@ class SceneBoundary extends Component<
     return this.state.failed ? null : this.props.children;
   }
 }
-function Ready({ mode }: { mode: "room" | "adventure" }) {
+function Ready({
+  mode,
+  revision,
+}: {
+  mode: "room" | "adventure";
+  revision: number;
+}) {
   const set = useGameStore((s) => s.setSceneReady);
   useEffect(() => {
     set(true);
     return () => {
-      if (useGameStore.getState().mode === mode) set(false);
+      if (
+        useGameStore.getState().mode === mode &&
+        useGameStore.getState().worldRevision === revision
+      )
+        set(false);
     };
-  }, [set, mode]);
+  }, [set, mode, revision]);
   return null;
 }
 function Loader() {
@@ -52,10 +62,11 @@ function Loader() {
   );
 }
 export function Stage() {
+  const revision = useGameStore((s) => s.worldRevision);
   const mode = useGameStore((s) => s.mode),
     ready = useGameStore((s) => s.sceneReady),
     [error, setError] = useState(false);
-  useEffect(() => setError(false), [mode]);
+  useEffect(() => setError(false), [mode, revision]);
   const camera = useMemo(
     () => ({
       fov: 37,
@@ -67,9 +78,9 @@ export function Stage() {
   );
   return (
     <div className={`stage ${mode}`} id={mode === "room" ? "stage" : "world"}>
-      <SceneBoundary key={mode} onError={() => setError(true)}>
+      <SceneBoundary key={`${mode}-${revision}`} onError={() => setError(true)}>
         <Canvas
-          key={mode}
+          key={`${mode}-${revision}`}
           shadows={false}
           dpr={[1, 1.5]}
           orthographic={mode === "adventure"}
@@ -100,7 +111,7 @@ export function Stage() {
           <Suspense fallback={null}>
             <Physics gravity={[0, 0, 0]} timeStep={1 / 60} interpolate>
               {mode === "room" ? <RoomScene /> : <AdventureScene />}
-              <Ready mode={mode} />
+              <Ready mode={mode} revision={revision} />
             </Physics>
           </Suspense>
         </Canvas>

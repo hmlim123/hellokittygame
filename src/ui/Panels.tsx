@@ -1,3 +1,4 @@
+import { SaveBackup } from "./SaveBackup";
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../game/store";
 import {
@@ -318,6 +319,7 @@ export function SettingsPanel({
         />
         Reduce motion
       </label>
+      <SaveBackup />
       <p className="small-note">
         Your device’s reduced-motion setting is also respected. Progress saves
         in this browser.

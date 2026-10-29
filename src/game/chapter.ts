@@ -94,17 +94,17 @@ export function gladeMap(): GameMap {
 export function chapterObjective(s: Adventure): string {
   const c = s.chapter;
   if (!c.butterflyStep)
-    return "Equip Butterfly lantern in Inventory → Items. Follow the first butterflies in the glade.";
+    return "Follow the first butterflies. Use Butterfly lantern below when you are nearby.";
   if (c.butterflyStep < 3)
     return `Follow the glowing butterflies with your lantern: ${c.butterflyStep} / 3 trail markers.`;
   if (!c.flowersRevived)
-    return "Equip Little watering can and approach the thirsty flowers north of the hidden path.";
+    return "Find the thirsty flowers north of the hidden path. Choose Use watering can when nearby.";
   if (!c.bridgeFixed)
-    return "Equip Friendship ribbon and approach the broken bridge to the east.";
+    return "Approach the broken bridge to the east. Choose Tie friendship ribbon to help.";
   if (c.stars.length < 3)
     return "Across the bridge, arrange the stars: moon → flower → heart.";
   if (!c.friendAwake)
-    return "Equip Cuddle teddy and approach the sleepy bunny beside the stars.";
+    return "Find the sleepy bunny beside the stars. Offer Cuddle teddy for a gentle hello.";
   if (!c.letterFound)
     return "A sealed envelope is waiting beside the bunny. Walk up to discover it.";
   if (!s.complete)
@@ -155,7 +155,7 @@ export function interactChapter(
     if (e.item !== "lantern")
       return say(
         "A path in the leaves",
-        "Equip Butterfly lantern in Inventory → Items to reveal the way.",
+        "Choose Use butterfly lantern below, or equip Butterfly lantern in Inventory → Items.",
         "lantern",
       );
     c.butterflyStep++;
@@ -186,7 +186,7 @@ export function interactChapter(
     if (e.item !== "watering")
       return say(
         "A sip of water?",
-        "Equip Little watering can in Inventory → Items, then approach the flowers.",
+        "Choose Use watering can below, or equip Little watering can in Inventory → Items.",
         "watering",
       );
     c.flowersRevived = true;
@@ -213,7 +213,7 @@ export function interactChapter(
     if (e.item !== "ribbon")
       return say(
         "One little knot",
-        "Equip Friendship ribbon, then approach this side of the bridge.",
+        "Choose Tie friendship ribbon below, or equip Friendship ribbon in Inventory → Items.",
         "ribbon",
       );
     c.bridgeFixed = true;
@@ -254,7 +254,7 @@ export function interactChapter(
     if (e.item !== "teddy")
       return say(
         "A soft little hello",
-        "Equip Cuddle teddy and approach Pip. A familiar little friend might help.",
+        "Choose Offer cuddle teddy below, or equip Cuddle teddy to give Pip a gentle hello.",
         "bunny",
       );
     c.friendAwake = true;
