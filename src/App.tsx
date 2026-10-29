@@ -118,7 +118,7 @@ function useAdventureInput() {
         e.preventDefault();
         if (!e.repeat) {
           held.current = dir;
-          s.requestMove(dir);
+          s.holdMove(dir);
         }
       } else if (e.key.toLowerCase() === "e") {
         e.preventDefault();
@@ -134,19 +134,22 @@ function useAdventureInput() {
     };
     const up = (e: KeyboardEvent) => {
       if (held.current === dirs[e.key]) held.current = null;
+      if (dirs[e.key]) useGameStore.getState().releaseMove(dirs[e.key]);
     };
-    const blur = () => (held.current = null);
-    const timer = setInterval(() => {
-      if (held.current) {
-        const s = useGameStore.getState();
-        if (!s.moving) s.requestMove(held.current);
-      }
-    }, 110);
+    const blur = () => {
+      held.current = null;
+      useGameStore.getState().releaseMove();
+    };
+    const visibility = () => {
+      if (document.hidden) blur();
+    };
+    document.addEventListener("visibilitychange", visibility);
     addEventListener("keydown", down);
     addEventListener("keyup", up);
     addEventListener("blur", blur);
     return () => {
-      clearInterval(timer);
+      document.removeEventListener("visibilitychange", visibility);
+      blur();
       removeEventListener("keydown", down);
       removeEventListener("keyup", up);
       removeEventListener("blur", blur);
@@ -229,11 +232,7 @@ function AdventureControls() {
     ready = useGameStore((s) => s.sceneReady),
     moving = useGameStore((s) => s.moving);
   const action = nearbyItemAction(state);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const stop = () => {
-    if (timer.current) clearInterval(timer.current);
-    timer.current = null;
-  };
+  const stop = () => useGameStore.getState().releaseMove();
   useEffect(() => stop, []);
   return (
     <div className="adventure-controls">
@@ -247,14 +246,11 @@ function AdventureControls() {
             onPointerDown={(e) => {
               e.preventDefault();
               e.currentTarget.setPointerCapture(e.pointerId);
-              request(dir);
-              stop();
-              timer.current = setInterval(() => {
-                if (!useGameStore.getState().moving) request(dir);
-              }, 110);
+              useGameStore.getState().holdMove(dir);
             }}
             onPointerUp={stop}
             onPointerCancel={stop}
+            onLostPointerCapture={stop}
             onClick={(e) => {
               if (e.detail === 0) request(dir);
             }}

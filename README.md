@@ -144,7 +144,16 @@ pivots around the actual Blender controllers. Turns follow the shortest arc and
 settle smoothly. The original Blender wave, dance and wink tracks stay usable.
 Soft footsteps play only when sound is enabled. Reduced motion keeps the walking
 pose still and turns immediately. Walking uses actual Rapier movement, so a blocked
-wall does not keep the feet cycling in place.
+wall does not keep the feet cycling in place. The kinematic controller runs on
+fixed physics ticks, with movement tested at display rates from 20 through 240 FPS.
+Holding a direction queues continuous steps; releasing, losing focus, opening a
+story choice, or reaching an entrance clears the held input. A whole-tile collision
+sweep stops Kitty before a wall, without a lunge or snap-back.
+
+The adventure camera follows Kitty’s interpolated rendered position on every
+frame, including reduced-motion mode. Physics updates run before the camera,
+which updates before world labels. Logical tile commits no longer move the camera
+in jumps, and held walking does not wait for an input polling timer between tiles.
 
 Watering tilts the held can and sends a few visible drops toward the flowers;
 the petals then open gradually. Bridge planks align and the friendship ribbon
@@ -217,6 +226,7 @@ python tests/react-browser.py
 python tests/chapter-browser.py
 python tests/play-polish-browser.py
 python tests/navigation-browser.py
+python tests/movement-browser.py
 ```
 
 Set `KITTY_BASE_URL` or `CHROMIUM_PATH` to override the defaults. It checks room
@@ -293,6 +303,7 @@ the original rig. Shelf variants keep their own palettes.
 | `src/ui/TravelMap.tsx` | Foldable walking map and returning to visited places |
 | `src/game/context-action.ts` | Nearby action prerequisites and label distance |
 | `src/game/backup.ts`, `src/ui/SaveBackup.tsx` | Validated backups, restore preview and rollback |
+| `src/scenes/tile-motor.ts` | Fixed-step kinematic movement, swept wall checks and continuous steps |
 | `src/scenes/walk-animation.ts` | Additive walking cycle and smooth turning |
 | `src/scenes/DiscoveryEffects.tsx`, `effect-motion.ts` | Short discovery effects and reduced-motion easing |
 | `src/game/storage.ts` | Save migration and legacy compatibility |

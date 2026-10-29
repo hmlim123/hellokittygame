@@ -104,6 +104,9 @@ export interface GameState extends SaveState {
   mission: Mission | null;
   result: { title: string; text: string } | null;
   messages: { role: "nancy" | "kitty"; text: string }[];
+  heldDirection: Direction | null;
+  holdMove(dir: Direction): void;
+  releaseMove(dir?: Direction): void;
   moving: boolean;
   moveCommand: { id: number; dir: Direction } | null;
   queuedDirection: Direction | null;
@@ -240,6 +243,10 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             result && (result.choices?.length || result.complete)
               ? result
               : null;
+          if (dialogue || extra.panel) {
+            extra.heldDirection = null;
+            extra.queuedDirection = null;
+          }
           set({
             adventure: a,
             room,
@@ -377,6 +384,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 worldRevision: get().worldRevision + 1,
                 sceneReady: false,
                 saveFailed: false,
+                heldDirection: null,
                 moving: false,
                 moveCommand: null,
                 queuedDirection: null,
@@ -442,6 +450,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               panel: null,
               dialogue: null,
               effect: null,
+              heldDirection: null,
               moving: false,
               moveCommand: null,
               queuedDirection: null,
@@ -463,6 +472,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               panel: null,
               dialogue: null,
               effect: null,
+              heldDirection: null,
               moving: false,
               moveCommand: null,
               queuedDirection: null,
@@ -484,6 +494,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               panel: null,
               dialogue: null,
               effect: null,
+              heldDirection: null,
               moving: false,
               moveCommand: null,
               queuedDirection: null,
@@ -578,6 +589,23 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           mission: null,
           result: null,
           messages: [],
+          heldDirection: null,
+          holdMove(dir) {
+            const s = get();
+            if (
+              s.mode !== "adventure" ||
+              s.panel ||
+              s.dialogue ||
+              !s.sceneReady
+            )
+              return;
+            set({ heldDirection: dir });
+            get().requestMove(dir);
+          },
+          releaseMove(dir) {
+            if (!dir || get().heldDirection === dir)
+              set({ heldDirection: null, queuedDirection: null });
+          },
           moving: false,
           moveCommand: null,
           queuedDirection: null,
@@ -598,6 +626,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               dialogue: null,
               mission: null,
               result: null,
+              heldDirection: null,
               moving: false,
               moveCommand: null,
               queuedDirection: null,
@@ -725,12 +754,17 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               dir = s.moveCommand.dir;
             a.facing = dir;
             if (!blocked) moveAdventure(a, dir);
-            const queued = s.queuedDirection;
+            const changedMap = a.map !== s.adventure.map;
+            const queued =
+              blocked || changedMap
+                ? null
+                : s.heldDirection || s.queuedDirection;
             applyStory(a, autoEncounter(a), {
               moving: false,
               moveCommand: null,
               queuedDirection: null,
               physicsContacts: s.physicsContacts + (blocked ? 1 : 0),
+              ...(blocked || changedMap ? { heldDirection: null } : {}),
             });
             if (queued && !get().dialogue) get().requestMove(queued);
           },
@@ -777,6 +811,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                       ? "Your little garden adventure continues."
                       : "Welcome back to the village.",
                 ),
+                heldDirection: null,
                 moving: false,
                 moveCommand: null,
                 queuedDirection: null,

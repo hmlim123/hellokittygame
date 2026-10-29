@@ -1,3 +1,4 @@
+import { PHYSICS_STEP } from "./tile-motor";
 import {
   Component,
   Suspense,
@@ -109,7 +110,12 @@ export function Stage() {
           }
         >
           <Suspense fallback={null}>
-            <Physics gravity={[0, 0, 0]} timeStep={1 / 60} interpolate>
+            <Physics
+              gravity={[0, 0, 0]}
+              timeStep={PHYSICS_STEP}
+              interpolate
+              updatePriority={-1}
+            >
               {mode === "room" ? <RoomScene /> : <AdventureScene />}
               <Ready mode={mode} revision={revision} />
             </Physics>
