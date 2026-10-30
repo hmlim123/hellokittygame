@@ -43,7 +43,8 @@ function Frame({ memory, index }: { memory: PostcardMemory; index: number }) {
       ]}
       onClick={(e) => {
         e.stopPropagation();
-        if (e.delta < 7 && !useGameStore.getState().viewOnly)
+        const s = useGameStore.getState();
+        if (e.delta < 7 && !s.viewOnly && !s.mission?.active && !s.arrival)
           useGameStore.setState({ panel: "keepsakes", memoryPage: memory.id });
       }}
     >

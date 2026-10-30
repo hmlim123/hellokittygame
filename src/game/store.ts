@@ -785,7 +785,13 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             });
           },
           openMemory(id) {
-            if (get().viewOnly) return;
+            if (
+              get().viewOnly ||
+              get().moving ||
+              get().mission?.active ||
+              get().arrival
+            )
+              return;
             const page = memoryPages(get().adventure).find(
               (p) => p.id === id && p.unlocked,
             );
