@@ -80,9 +80,10 @@ the welcome finishes; Escape skips it and reduced motion settles immediately.
 Teddy play animates the actual arms into a cuddle. Feeding the strawberry takes
 three bites and then refreshes it. A picnic can be replayed with a fresh board.
 
-Nancy’s letter is reserved for the user’s own words. `dist/letter.js` deliberately
-contains `pending: true` and no invented love-letter draft. Set its paragraph
-array, sign-off and signature only when the author supplies the message.
+Nancy’s letter is ready in `dist/letter.js` (`pending: false`). The user explicitly
+authorized this assistant-written message in v1.6.1. It uses a warm gift-giving
+voice and the signature “Me ♡”; the paragraphs, sign-off and signature can be
+edited later. The existing sealed-envelope opening and folding interaction stays.
 
 ## Moonflower Adventure
 
@@ -129,7 +130,7 @@ item is equipped at a time. Automatic encounters still work with an equipped ite
    Wrong choices give gentle hints without removing correct stars. Leaving or
    reloading preserves the puzzle.
 5. Bring **Cuddle teddy** to Pip the sleepy bunny. Find the envelope beside Pip;
-   Kitty equips it to bring home. The actual letter still awaits the author’s words.
+   Kitty equips it to bring home. The envelope contains the authorized letter to Nancy.
 6. After restoring the original moonflower and finding the envelope, visit the
    glade picnic at the north end. Kitty, Momo, Pip and the cloud guardian gather
    in a short 3D moonlit scene. Pause or look around, then **Keep this memory**.
@@ -138,7 +139,7 @@ item is equipped at a time. Automatic encounters still work with an equipped ite
 **Your storybook ♡** is available from Inventory, the mission panel and Play
 together. Its twelve illustrated pages unlock from the four original quests,
 the new discoveries, the picnic ending and a saved postcard. Pages can be revisited
-in any order. Locked pages never expose an invented letter. Room keepsakes have
+in any order. Locked storybook pages keep their discoveries hidden. Room keepsakes have
 small heart buttons: tap one, or the object itself, to reopen its memory. Names
 appear on hover or keyboard focus. Kitty greets Nancy, reacts to changed outfits,
 and celebrates discoveries using the actual Blender rig.

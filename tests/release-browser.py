@@ -1,6 +1,8 @@
 """Save failures/retry/export/restore, release visibility, and real cross-tab physics refresh."""
 import json,os
+from pathlib import Path
 from playwright.sync_api import sync_playwright
+VERSION=json.loads(Path('package.json').read_text())['version']
 BASE=os.environ.get('KITTY_BASE_URL','http://127.0.0.1:8053').rstrip('/')
 with sync_playwright() as p:
     b=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']);errors=[]
@@ -20,7 +22,7 @@ with sync_playwright() as p:
     backup=json.load(open(path));assert backup['data']['equipment']['outfit']=='blossom' and backup['data']['adventure']['chapter']['flowersRevived']
     page.evaluate('blockSaves=false');page.get_by_role('button',name='Retry saving',exact=True).click();page.locator('[data-save-state=saved]').wait_for()
     page.goto(BASE+'/');ready(page);page.wait_for_function("document.querySelector('#stage canvas').dataset.outfit==='blossom'")
-    page.get_by_role('button',name='Game settings',exact=True).click();assert 'Version 1.6.0' in page.locator('.release-details').inner_text();page.keyboard.press('Escape')
+    page.get_by_role('button',name='Game settings',exact=True).click();assert f'Version {VERSION}' in page.locator('.release-details').inner_text();page.keyboard.press('Escape')
     print('PASS blocked writes remain playable; current progress exports, retry recovers, reload preserves reward and version is visible',flush=True)
     page.close()
     phone=b.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce');phone.on('pageerror',lambda e:errors.append(str(e)))

@@ -19,7 +19,7 @@ Reuse existing quests, equipment, souvenirs, and storybook pages where possible.
 - Preserve the three main room buttons, existing saves, and the actual Blender model.
 - Keep interactions gentle, with no penalties, grain, or mandatory sound.
 - Keep the current React + TypeScript, React Three Fiber, Zustand, Rapier and Drei stack.
-- Keep Nancy's personal letter empty until the author supplies the message.
+- The user authorized an assistant-written letter in v1.6.1. Keep it editable and do not fabricate shared memories or the author's name.
 - Never equate phone emulation with a physical device test.
 
 ## Milestones
@@ -159,7 +159,7 @@ deployment and is the publication authority.
 - Review touch, Safari rendering, loading and performance on Nancy's physical
   phone and Mac. Automated Chromium/device emulation has passed; real hardware
   and Safari are still unverified.
-- The author's personal letter remains pending; no message was invented.
+- Nancy's letter is ready as an explicitly authorized assistant-written draft; the author can personalize it later.
 
 ## Release 1.6.0
 
@@ -177,3 +177,17 @@ finished **Success** for source commit `d2eeb6508a0eab33199c7d9dde9c2f7e6a8810a6
 The CI browser gate passed before publication. The deployed app reports version
 1.6.0 / build d2eeb65. This documentation-only delivery record does not change the
 deployed game build.
+
+## Letter update · v1.6.1
+
+The user explicitly requested an assistant-written letter and asked to know what
+would be added. `dist/letter.js` now contains four warm paragraphs about making
+this little world for Nancy, signed “With all my love, Me ♡”. No personal name or
+specific shared memory was invented. The envelope still opens behind its heart
+seal and can be folded and reopened. The chapter check now verifies the actual
+ready letter instead of the old placeholder.
+
+Validation for the letter update: all 150 automated checks and the complete
+chapter browser journey pass, including the actual message behind the heart
+seal, storybook access, ending and postcard. The letter remains editable.
+Letter release: <https://hmlim123.github.io/hellokittygame/?v=letter-17>.

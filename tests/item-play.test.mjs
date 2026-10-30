@@ -12,7 +12,7 @@ test('picnic accepts matched gifts, gives helpful wrong-slot feedback, and compl
 test('picnic rejects unknown items and spots without changing the activity',()=>{
  const s=createPicnic();assert.equal(placePicnic(s,'bad','plate').accepted,false);assert.equal(placePicnic(s,'letter','bad').accepted,false);assert.deepEqual(s.placed,{});
 });
-test('the letter is reserved for the user message, with no invented draft',()=>{
+test('the letter supports both a sealed placeholder and a ready, editable message',()=>{
  assert.equal(typeof LOVE_LETTER.pending,'boolean');
  if(LOVE_LETTER.pending){assert.deepEqual(LOVE_LETTER.paragraphs,[]);assert.equal(LOVE_LETTER.signature,'');}
  else{assert.ok(LOVE_LETTER.paragraphs.length>0);assert.ok(LOVE_LETTER.paragraphs.every(p=>typeof p==='string'));}
