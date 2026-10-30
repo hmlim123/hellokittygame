@@ -191,3 +191,15 @@ Validation for the letter update: all 150 automated checks and the complete
 chapter browser journey pass, including the actual message behind the heart
 seal, storybook access, ending and postcard. The letter remains editable.
 Letter release: <https://hmlim123.github.io/hellokittygame/?v=letter-17>.
+
+Follow-up verification on 2026-10-30: all ten local release browser suites pass,
+with zero page errors. The initial Pages release gate failed, so publication was
+blocked. The runner now retains individual suite logs and includes the failed
+suite's traceback in GitHub error annotations; every existing journey remains
+required. [Pages run 41082839102](https://github.com/hmlim123/hellokittygame/actions/runs/41082839102)
+passed the full CI browser gate and deployed source `9276a03` successfully. The
+original failure did not reproduce locally or in that release run; its cause is
+unconfirmed. The published game reports v1.6.1 / build 9276a03.
+
+Open the letter from Her room → Play together → Nancy’s letter, then break the
+heart seal. It is also available through the discovered envelope's storybook page.
