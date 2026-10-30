@@ -29,6 +29,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -54,6 +55,21 @@ jobs:
           test -s build/adventure.html
           test -s build/assets/hello-kitty.glb
           test -s build/classic/index.html
+      - name: Install pinned browser checks
+        run: |
+          python3 -m venv .venv-browser
+          .venv-browser/bin/python -m pip install -r tests/browser-requirements.txt
+          .venv-browser/bin/python -m playwright install --with-deps chromium
+      - name: Play the complete release journeys
+        run: .venv-browser/bin/python tests/run-browser-checks.py
+      - name: Keep browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-check-diagnostics
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload the playable website
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:

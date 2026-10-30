@@ -1,7 +1,13 @@
 export type Mode = "room" | "adventure";
 export type Direction = "up" | "down" | "left" | "right";
 export type Theme = "rose" | "lavender" | "peach" | "mint";
-export type OutfitId = "classic" | "sailor" | "picnic" | "moonlight" | "berry" | "blossom";
+export type OutfitId =
+  | "classic"
+  | "sailor"
+  | "picnic"
+  | "moonlight"
+  | "berry"
+  | "blossom";
 export type ItemId =
   | "none"
   | "flowers"
@@ -12,7 +18,11 @@ export type ItemId =
   | "watering"
   | "ribbon";
 export type QuestId =
-  "moonflower" | "ribbons" | "picnic" | "lanterns" | "glade";
+  | "moonflower"
+  | "ribbons"
+  | "picnic"
+  | "lanterns"
+  | "glade";
 export type MissionId = "bows" | "strawberries" | "hearts" | "picnic";
 export type Gesture =
   | "excited"

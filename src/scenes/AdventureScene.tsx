@@ -1,5 +1,6 @@
 import { CozyLights, WORLD_COLORS } from "./CozyLights";
 import { adventureFraming } from "./adventure-camera";
+import { InputClock } from "./input-clock";
 import { TileMotor, PHYSICS_STEP } from "./tile-motor";
 import { DiscoveryEffects } from "./DiscoveryEffects";
 import { turnToward } from "./walk-animation";
@@ -329,31 +330,58 @@ function Prop({ object: o }: { object: MapObject }) {
     </group>
   );
 }
-function ForegroundWalls({ walls, anchor, color }: {
+function ForegroundWalls({
+  walls,
+  anchor,
+  color,
+}: {
   walls: { x: number; z: number }[];
   anchor: RefObject<THREE.Group | null>;
   color: string;
 }) {
-  const group = useRef<THREE.Group>(null), point = useRef(new THREE.Vector3()), reduced = useReducedMotion();
+  const group = useRef<THREE.Group>(null),
+    point = useRef(new THREE.Vector3()),
+    reduced = useReducedMotion();
   useFrame(({ gl }, dt) => {
     if (!group.current || !anchor.current) return;
     anchor.current.getWorldPosition(point.current);
     let faded = 0;
     for (const child of group.current.children) {
-      const mesh = child as THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
+      const mesh = child as THREE.Mesh<
+        THREE.BoxGeometry,
+        THREE.MeshStandardMaterial
+      >;
       const dz = mesh.position.z - point.current.z;
-      const foreground = dz > 0.2 && dz < 3 && Math.abs(mesh.position.x - point.current.x) < 1.5;
+      const foreground =
+        dz > 0.2 && dz < 3 && Math.abs(mesh.position.x - point.current.x) < 1.5;
       if (foreground) faded++;
-      mesh.material.opacity = reduced ? (foreground ? 0.15 : 1) : THREE.MathUtils.lerp(mesh.material.opacity, foreground ? 0.15 : 1, 1-Math.exp(-Math.min(dt,0.1)*12));
+      mesh.material.opacity = reduced
+        ? foreground
+          ? 0.15
+          : 1
+        : THREE.MathUtils.lerp(
+            mesh.material.opacity,
+            foreground ? 0.15 : 1,
+            1 - Math.exp(-Math.min(dt, 0.1) * 12),
+          );
     }
     gl.domElement.dataset.cutawayWalls = String(faded);
   });
-  return <group ref={group}>{walls.map(({ x,z }) =>
-    <mesh key={`${x}-${z}`} position={[x,0.25,z]}>
-      <boxGeometry args={[0.96,0.65,0.96]} />
-      <meshStandardMaterial color={color} roughness={0.9} transparent depthWrite={false} />
-    </mesh>
-  )}</group>;
+  return (
+    <group ref={group}>
+      {walls.map(({ x, z }) => (
+        <mesh key={`${x}-${z}`} position={[x, 0.25, z]}>
+          <boxGeometry args={[0.96, 0.65, 0.96]} />
+          <meshStandardMaterial
+            color={color}
+            roughness={0.9}
+            transparent
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 function Terrain({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
   const a = useGameStore((s) => s.adventure),
@@ -421,7 +449,11 @@ function Terrain({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
           />
         ))}
       </RigidBody>
-      <ForegroundWalls walls={blocked.filter((b) => b.wall)} anchor={anchor} color={garden ? "#b8a9ce" : "#b6c99f"} />
+      <ForegroundWalls
+        walls={blocked.filter((b) => b.wall)}
+        anchor={anchor}
+        color={garden ? "#b8a9ce" : "#b6c99f"}
+      />
       {a.map === "glade" && <GladeScenery />}
       {map.objects.map((o) =>
         a.map === "glade" ? (
@@ -444,6 +476,7 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
     { world } = useRapier(),
     reduced = useReducedMotion();
   const locomotion = useRef({ speed: 0 }),
+    inputClock = useRef(new InputClock()),
     motor = useRef<TileMotor | null>(null),
     activeCommand = useRef<number | null>(null);
   const spawn = useMemo(() => [a.x, 0, a.z] as [number, number, number], []);
@@ -465,12 +498,14 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
         x = s.adventure.x + dx,
         z = s.adventure.z + dz;
       activeCommand.current = cmd.id;
+      inputClock.current.reset(cmd.issuedAt);
       m.begin(
         { x, z },
         walkable(s.adventure, x, z),
         s.heldDirection === cmd.dir,
       );
     }
+    if (cmd && !inputClock.current.consume(performance.now())) return;
     m.beforeStep(PHYSICS_STEP);
     locomotion.current.speed = m.speed;
   });
@@ -529,7 +564,10 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
 function FollowCamera({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
   const a = useGameStore((s) => s.adventure),
     { size } = useThree();
-  const { half, aspect, marginX, marginZ } = adventureFraming(size.width, size.height);
+  const { half, aspect, marginX, marginZ } = adventureFraming(
+    size.width,
+    size.height,
+  );
   useFrame(({ camera, gl }) => {
     if (camera instanceof THREE.OrthographicCamera) {
       camera.left = -half * aspect;
@@ -550,7 +588,10 @@ function FollowCamera({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
     gl.domElement.dataset.cameraZ = String(z);
     camera.lookAt(camera.position.x, 0, camera.position.z - 8);
     camera.updateMatrixWorld(true);
-    const screen = p.clone().add(new THREE.Vector3(0, 0.6, 0)).project(camera);
+    const screen = p
+      .clone()
+      .add(new THREE.Vector3(0, 0.6, 0))
+      .project(camera);
     gl.domElement.dataset.playerScreenX = String((screen.x + 1) / 2);
     gl.domElement.dataset.playerScreenY = String((1 - screen.y) / 2);
     gl.domElement.dataset.cameraType = camera.type;

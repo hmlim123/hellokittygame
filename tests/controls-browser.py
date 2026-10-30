@@ -41,6 +41,18 @@ with sync_playwright() as p:
     page.close()
 
     page = setup()
+    page.evaluate("""()=>new Promise(resolve=>requestAnimationFrame(()=>{
+      const until=performance.now()+350;while(performance.now()<until){}
+      dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+      requestAnimationFrame(()=>{dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowRight',bubbles:true}));resolve()});
+    }))""")
+    stopped(page, 8, 8)
+    page.wait_for_timeout(300)
+    stopped(page, 8, 8)
+    print('PASS a pre-input long frame does not turn a quick tap into an extra step', flush=True)
+    page.close()
+
+    page = setup()
     taps(page, ['ArrowRight', 'ArrowRight'])
     stopped(page, 9, 8)
     print('PASS a rapid second same-direction tap is preserved', flush=True)

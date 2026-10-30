@@ -9,17 +9,42 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Production polish · v1.6.0
+
+The six-stage implementation is recorded in [the production plan](docs/production-plan.md).
+The adventure shows one current goal with a folded optional hint. Reviving the
+flower patch earns the Blossom keepsake dress; try it on in the adventure or
+at home, then tap the flower pot to revisit the memory. Existing flower progress
+also unlocks the dress after updating.
+
+The room, adventure, inventory, postcard and ending share warm lighting. Text has
+stronger contrast, nearby foreground walls fade without changing collision, and
+phone framing keeps Kitty visible. Settings → Game visual detail offers
+Automatic, Battery friendly and Sharper. Automatic adjusts pixel density after
+sustained slow rendering; it does not add grain or change quest rules.
+
+Save feedback now distinguishes saved progress from failed writes. A failed save
+can be retried or downloaded immediately. Settings shows the version/build and
+last successful save time. Backup/restore, classic progress repair and returning
+from another tab preserve the shared wardrobe and align Kitty's physics position
+with the loaded save. Saves remain local to this browser; backups transfer them.
+
+Physical-device/Safari review and a first-time human playtime measurement remain
+on the checklist. Browser emulation and automated journeys do not certify those.
+
+[Room preview](docs/production-room.png) · [Phone adventure preview](docs/production-phone.png)
+
 ## Application stack
 
-| Technology | What it does in this game |
-| --- | --- |
+| Technology         | What it does in this game                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------- |
 | React + TypeScript | Application navigation, menus, inventory, local chat, settings, mission controls and dialogue |
-| React Three Fiber | Owns the room, adventure and wardrobe-preview render loops and 3D scene composition |
-| Zustand | Shared game state, durable progress, equipment, mission transitions and save migration |
-| Rapier | Kinematic adventure character controller, capsule collider, map-wall and floor colliders |
-| Drei | GLB loading, 360° OrbitControls, orthographic camera, loading progress and world labels |
-| Three.js | Blender animation mixer, meshes, materials and geometry beneath Fiber |
-| Vite | Development server, typed production build and hashed application assets |
+| React Three Fiber  | Owns the room, adventure and wardrobe-preview render loops and 3D scene composition           |
+| Zustand            | Shared game state, durable progress, equipment, mission transitions and save migration        |
+| Rapier             | Kinematic adventure character controller, capsule collider, map-wall and floor colliders      |
+| Drei               | GLB loading, 360° OrbitControls, orthographic camera, loading progress and world labels       |
+| Three.js           | Blender animation mixer, meshes, materials and geometry beneath Fiber                         |
+| Vite               | Development server, typed production build and hashed application assets                      |
 
 `src/` contains the new React/TypeScript application. Existing tested game rules,
 Blender animation adapters, and geometry helpers in `dist/` are reused through a
@@ -42,11 +67,11 @@ in each build, including its compatibility renderer and older optional features.
   without a timer, and reduced motion. Device reduced-motion settings are honored.
   Audio starts only after enabling it and suspends when the tab is hidden.
 
-| Mission | Goal |
-| --- | --- |
-| Bow Hunt | Collect eight floating bows; 45 seconds or relaxed mode |
-| Strawberry Picnic | Collect six berries; 40 seconds or relaxed mode |
-| Memory Hearts | Watch and repeat four numbered hearts; no timer |
+| Mission            | Goal                                                       |
+| ------------------ | ---------------------------------------------------------- |
+| Bow Hunt           | Collect eight floating bows; 45 seconds or relaxed mode    |
+| Strawberry Picnic  | Collect six berries; 40 seconds or relaxed mode            |
+| Memory Hearts      | Watch and repeat four numbered hearts; no timer            |
 | A Picnic for Nancy | Drag or tap four gifts into their matching spots; no timer |
 
 A completed mission saves a keepsake and unlocks another friend until all six
@@ -73,12 +98,12 @@ arch by walking through it or pressing its **Enter dungeon** label. Entering
 starts the quest even if you have not spoken with Momo. Rapier physically blocks
 Kitty at houses, hedges and the locked moon gate.
 
-| Quest | Steps | Reward |
-| --- | --- | --- |
-| Restore the moonflower | Find three chest charms, listen/tell a story/wave to the cloud guardian, pass the moon gate and approach the shrine | Moonlight dress and one room friend |
-| Momo’s lost ribbons | Find three village ribbons and approach Momo | Berry sweetheart outfit |
-| A picnic for Momo | Pick both southern garden berry bushes, equip Sweet strawberry, approach Momo | Room picnic basket |
-| Lanterns for the garden | After restoring the flower, visit both northern lanterns and return to the shrine | Room moon lantern |
+| Quest                   | Steps                                                                                                               | Reward                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Restore the moonflower  | Find three chest charms, listen/tell a story/wave to the cloud guardian, pass the moon gate and approach the shrine | Moonlight dress and one room friend |
+| Momo’s lost ribbons     | Find three village ribbons and approach Momo                                                                        | Berry sweetheart outfit             |
+| A picnic for Momo       | Pick both southern garden berry bushes, equip Sweet strawberry, approach Momo                                       | Room picnic basket                  |
+| Lanterns for the garden | After restoring the flower, visit both northern lanterns and return to the shrine                                   | Room moon lantern                   |
 
 **Inventory → Quest** shows all four quests, collected charms and **Follow quest**
 controls. Completing the tracked quest follows another unfinished quest. The
@@ -263,6 +288,23 @@ The physics WebAssembly and rendering libraries are the largest download. Assets
 and dependencies are pinned in `package-lock.json` and bundled locally. Bright
 pastel realtime lighting uses no grain or noisy path tracing.
 
+Run the complete release gate against a fresh production preview:
+
+```sh
+python3 -m venv .venv-browser
+.venv-browser/bin/python -m pip install -r tests/browser-requirements.txt
+.venv-browser/bin/python -m playwright install --with-deps chromium
+npm run build
+.venv-browser/bin/python tests/run-browser-checks.py
+```
+
+The runner owns an isolated preview on port 8066 and stops it on exit. It runs
+keyboard/touch/camera, fresh reward journey, presentation, phone/orientation,
+save-failure/transfer/tab-refresh, full chapter, polish, navigation and original
+quest checks. Results and screenshots go to ignored `test-results/`. GitHub Pages
+runs this same gate before uploading the website; failures retain diagnostics
+and prevent deployment. Dependencies are pinned in `tests/browser-requirements.txt`.
+
 ## Saves and compatibility
 
 Zustand persists durable state under `kitty-world-v2`. It migrates the existing
@@ -303,41 +345,41 @@ the original rig. Shelf variants keep their own palettes.
 
 ## Main files
 
-| File | Purpose |
-| --- | --- |
-| `src/App.tsx` | React navigation, menus, controls and dialogue |
-| `src/ui/DirectionPad.tsx` | Touch steering, pointer capture and safe input cancellation |
-| `src/ui/` | Inventory, chat, settings, missions and letter |
-| `src/game/store.ts` | Zustand actions, atomic rewards and persistence |
-| `src/game/chapter.ts` | New map, tool puzzles, storybook pages, progress repair and ending rules |
-| `src/ui/StoryPanels.tsx` | Storybook and accessible tap/drag star puzzle |
-| `src/scenes/GladeScene.tsx`, `AdventureTools.ts` | Glade scenery, NPCs, and tools attached to the Blender rig |
-| `src/scenes/PhotoCorner.tsx`, `MoonPicnic.tsx` | Postcard export and the replayable picnic scene |
-| `src/scenes/Souvenirs.tsx` | Clickable memories in Kitty’s room |
-| `src/game/world-map.ts` | Shared map geometry, collision and valid return points |
-| `src/game/navigation.ts`, `travel-state.ts` | Quest routes, visited areas and saved positions |
-| `src/ui/TravelMap.tsx` | Foldable walking map and returning to visited places |
-| `src/game/context-action.ts` | Nearby action prerequisites and label distance |
-| `src/game/backup.ts`, `src/ui/SaveBackup.tsx` | Validated backups, restore preview and rollback |
-| `src/scenes/tile-motor.ts` | Fixed-step kinematic movement, swept wall checks and continuous steps |
-| `src/scenes/walk-animation.ts` | Additive walking cycle and smooth turning |
-| `src/scenes/DiscoveryEffects.tsx`, `effect-motion.ts` | Short discovery effects and reduced-motion easing |
-| `src/game/storage.ts` | Save migration and legacy compatibility |
-| `src/game/types.ts`, `domain.ts` | Shared types and boundary to existing rules |
-| `src/scenes/Stage.tsx` | Fiber Canvas, physics context, loading and failure UI |
-| `src/scenes/RoomScene.tsx` | Room, interactions, shelf, arrivals and 360° orbit |
-| `src/scenes/AdventureScene.tsx` | Map, Rapier character controller and discoveries |
-| `src/scenes/Kitty.tsx` | Actual Blender character and rig animation |
-| `src/scenes/WardrobePreview.tsx` | Live 3D equipment preview |
-| `scripts/prepare-assets.mjs` | Copy game assets and classic fallback for Vite |
-| `dist/` | Reused domain/geometry adapters, art, model and classic application |
+| File                                                  | Purpose                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| `src/App.tsx`                                         | React navigation, menus, controls and dialogue                           |
+| `src/ui/DirectionPad.tsx`                             | Touch steering, pointer capture and safe input cancellation              |
+| `src/ui/`                                             | Inventory, chat, settings, missions and letter                           |
+| `src/game/store.ts`                                   | Zustand actions, atomic rewards and persistence                          |
+| `src/game/chapter.ts`                                 | New map, tool puzzles, storybook pages, progress repair and ending rules |
+| `src/ui/StoryPanels.tsx`                              | Storybook and accessible tap/drag star puzzle                            |
+| `src/scenes/GladeScene.tsx`, `AdventureTools.ts`      | Glade scenery, NPCs, and tools attached to the Blender rig               |
+| `src/scenes/PhotoCorner.tsx`, `MoonPicnic.tsx`        | Postcard export and the replayable picnic scene                          |
+| `src/scenes/Souvenirs.tsx`                            | Clickable memories in Kitty’s room                                       |
+| `src/game/world-map.ts`                               | Shared map geometry, collision and valid return points                   |
+| `src/game/navigation.ts`, `travel-state.ts`           | Quest routes, visited areas and saved positions                          |
+| `src/ui/TravelMap.tsx`                                | Foldable walking map and returning to visited places                     |
+| `src/game/context-action.ts`                          | Nearby action prerequisites and label distance                           |
+| `src/game/backup.ts`, `src/ui/SaveBackup.tsx`         | Validated backups, restore preview and rollback                          |
+| `src/scenes/tile-motor.ts`                            | Fixed-step kinematic movement, swept wall checks and continuous steps    |
+| `src/scenes/walk-animation.ts`                        | Additive walking cycle and smooth turning                                |
+| `src/scenes/DiscoveryEffects.tsx`, `effect-motion.ts` | Short discovery effects and reduced-motion easing                        |
+| `src/game/storage.ts`                                 | Save migration and legacy compatibility                                  |
+| `src/game/types.ts`, `domain.ts`                      | Shared types and boundary to existing rules                              |
+| `src/scenes/Stage.tsx`                                | Fiber Canvas, physics context, loading and failure UI                    |
+| `src/scenes/RoomScene.tsx`                            | Room, interactions, shelf, arrivals and 360° orbit                       |
+| `src/scenes/AdventureScene.tsx`                       | Map, Rapier character controller and discoveries                         |
+| `src/scenes/Kitty.tsx`                                | Actual Blender character and rig animation                               |
+| `src/scenes/WardrobePreview.tsx`                      | Live 3D equipment preview                                                |
+| `scripts/prepare-assets.mjs`                          | Copy game assets and classic fallback for Vite                           |
+| `dist/`                                               | Reused domain/geometry adapters, art, model and classic application      |
 
 ## Publish
 
 GitHub Pages uses `.github/workflows/pages.yml`. Keep repository **Settings →
 Pages → Source: GitHub Actions**. On changes to the app, rules, tests or build
 configuration on `master`, the workflow installs locked dependencies, runs tests,
-builds the typed application and deploys **`build/`**. No deploy key is needed.
+builds the typed application, passes the browser release gate, and deploys **`build/`**. No deploy key is needed.
 A successful workflow run confirms deployment; a successful push alone does not.
 
 Game: <https://hmlim123.github.io/hellokittygame/>

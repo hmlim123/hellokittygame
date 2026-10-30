@@ -64,6 +64,7 @@ import {
   mirrorLegacy,
   read,
   sanitizeSave,
+  normalizePreferences,
   type StorageLike,
 } from "./storage";
 const copy = <T>(v: T): T => structuredClone(v);
@@ -108,10 +109,12 @@ export interface GameState extends SaveState {
   holdMove(dir: Direction, options?: { restore?: boolean }): void;
   releaseMove(dir?: Direction): void;
   moving: boolean;
-  moveCommand: { id: number; dir: Direction } | null;
+  moveCommand: { id: number; dir: Direction; issuedAt: number } | null;
   queuedDirection: Direction | null;
   sceneReady: boolean;
   saveFailed: boolean;
+  lastSavedAt: number | null;
+  retrySave(): boolean;
   physicsContacts: number;
   cameraReset: number;
   setMode(mode: Mode): void;
@@ -146,6 +149,9 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
   let tracker = new EncounterTracker(),
     serial = 0,
     lastMirror = "";
+  let primarySaved = true,
+    legacySaved = true,
+    reportSave = () => {};
   // Persist only durable state; animation frames and chat never generate disk writes.
   const cache = new Map<string, string>();
   const stableStorage: StateStorage = {
@@ -161,9 +167,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
       try {
         storage.setItem(k, v);
         cache.set(k, v);
+        primarySaved = true;
       } catch {
-        /* The UI also reports unavailable saves through legacy mirroring. */
+        primarySaved = false;
       }
+      reportSave();
     },
     removeItem: (k) => {
       try {
@@ -270,7 +278,8 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                               ],
                             }
                           : {}),
-                        ...(!before.chapter.flowersRevived && a.chapter.flowersRevived
+                        ...(!before.chapter.flowersRevived &&
+                        a.chapter.flowersRevived
                           ? { rewardOutfit: "blossom" as const }
                           : {}),
                       },
@@ -374,12 +383,24 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               return null;
             }
           },
+          retrySave() {
+            const save = selectSave(get());
+            lastMirror = JSON.stringify(save);
+            legacySaved = mirrorLegacy(storage, save);
+            cache.delete("kitty-world-v2");
+            stableStorage.setItem(
+              "kitty-world-v2",
+              JSON.stringify({ state: save, version: 2 }),
+            );
+            return !get().saveFailed;
+          },
           restoreBackup(text) {
             try {
               const restored = parseBackup(text),
                 save = selectSave(restored),
                 json = commitRestoredSave(storage, selectSave(get()), save);
               cache.set("kitty-world-v2", json);
+              primarySaved = legacySaved = true;
               lastMirror = JSON.stringify(save);
               tracker = new EncounterTracker();
               set({
@@ -387,6 +408,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 worldRevision: get().worldRevision + 1,
                 sceneReady: false,
                 saveFailed: false,
+                lastSavedAt: Date.now(),
                 heldDirection: null,
                 moving: false,
                 moveCommand: null,
@@ -623,6 +645,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           queuedDirection: null,
           sceneReady: false,
           saveFailed: false,
+          lastSavedAt: null,
           physicsContacts: 0,
           cameraReset: 0,
           setMode(mode) {
@@ -757,7 +780,10 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               set({ queuedDirection: dir });
               return;
             }
-            set({ moving: true, moveCommand: { id: ++serial, dir } });
+            set({
+              moving: true,
+              moveCommand: { id: ++serial, dir, issuedAt: performance.now() },
+            });
           },
           finishMove(blocked) {
             const s = get();
@@ -949,24 +975,54 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             rawAdventure?.journey ?? previous.adventure.journey,
             fresh.adventure,
           );
+          const adventure = read(storage, "kitty-nancy-adventure-v1")
+            ? fresh.adventure
+            : previous.adventure;
+          const rawPreferences = read(storage, "kitty-room-preferences-v1");
+          const positionChanged =
+            adventure.map !== current.adventure.map ||
+            adventure.x !== current.adventure.x ||
+            adventure.z !== current.adventure.z;
+          const progressChanged =
+            JSON.stringify(adventure) !== JSON.stringify(current.adventure);
+          if (progressChanged) tracker = new EncounterTracker();
           return {
             ...current,
             ...previous,
             room: read(storage, "kitty-room-3d-v1")
               ? fresh.room
               : previous.room,
-            adventure: read(storage, "kitty-nancy-adventure-v1")
-              ? fresh.adventure
-              : previous.adventure,
-            equipment: read(storage, "kitty-nancy-equipment-v1")
-              ? fresh.equipment
-              : previous.equipment,
+            adventure,
+            // Normalize after repairing chapter progress from older classic saves.
+            equipment: normalizeEquipment(
+              read(storage, "kitty-nancy-equipment-v1") || previous.equipment,
+              adventure,
+            ),
             journal: read(storage, "kitty-nancy-missions-v1")
               ? fresh.journal
               : previous.journal,
-            preferences: read(storage, "kitty-room-preferences-v1")
-              ? fresh.preferences
-              : previous.preferences,
+            preferences: normalizePreferences({
+              ...previous.preferences,
+              ...(rawPreferences && typeof rawPreferences === "object"
+                ? rawPreferences
+                : {}),
+            }),
+            ...(progressChanged
+              ? {
+                  dialogue: null,
+                  effect: null,
+                  heldDirection: null,
+                  queuedDirection: null,
+                }
+              : {}),
+            ...(positionChanged
+              ? {
+                  worldRevision: current.worldRevision + 1,
+                  sceneReady: false,
+                  moving: false,
+                  moveCommand: null,
+                }
+              : {}),
           };
         },
         migrate: (saved) => sanitizeSave(saved, legacy),
@@ -978,9 +1034,15 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
       json = JSON.stringify(save);
     if (json === lastMirror) return;
     lastMirror = json;
-    const saved = mirrorLegacy(storage, save);
-    if (!saved && !s.saveFailed) useStore.setState({ saveFailed: true });
+    legacySaved = mirrorLegacy(storage, save);
+    if (!legacySaved) reportSave();
   });
+  reportSave = () => {
+    const s = useStore.getState();
+    if (primarySaved && legacySaved)
+      useStore.setState({ saveFailed: false, lastSavedAt: Date.now() });
+    else if (!s.saveFailed) useStore.setState({ saveFailed: true });
+  };
   return useStore;
 }
 export const useGameStore = createGameStore();

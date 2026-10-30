@@ -24,14 +24,14 @@ Reuse existing quests, equipment, souvenirs, and storybook pages where possible.
 
 ## Milestones
 
-| Stage | Status | Scope | Acceptance |
-| --- | --- | --- | --- |
-| 1. Polished controls | Delivered (browser verified) | Keyboard/touch reliability, turning, camera, obstacles, focus loss and area transitions. | Quick taps are retained, holds are smooth, newer turns survive walls, and release/cancel/focus loss stop safely in desktop and phone browser checks. |
-| 2. One clear next goal | Implemented; browser verified | One objective, nearby actions, missing-tool explanations, gentle optional hints. | A new player can find and revive the flowers using the game interface; record actual journey duration. |
-| 3. Satisfying discoveries | Implemented; browser verified | Watering/bloom/reward feedback, optional sound, Kitty celebrations, reward-to-inventory-to-room connection. | Each reward is understandable, granted once, wearable at home and in the adventure, and connected to a revisitable memory. |
-| 4. Consistent visual style | Implemented; browser verified | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity. | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene. |
-| 5. Comfortable phone play | Implemented; device review pending | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering. | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues. |
-| 6. Dependable progress/releases | Queued | Save feedback, visible version, backup/restore, interrupted sessions, migration, and automated browser release checks. | Reopen, restore, and upgrade saves without losing rewards; failed core-journey checks prevent publication. |
+| Stage                           | Status                                     | Scope                                                                                                                  | Acceptance                                                                                                                                           |
+| ------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Polished controls            | Delivered (browser verified)               | Keyboard/touch reliability, turning, camera, obstacles, focus loss and area transitions.                               | Quick taps are retained, holds are smooth, newer turns survive walls, and release/cancel/focus loss stop safely in desktop and phone browser checks. |
+| 2. One clear next goal          | Implemented; browser verified              | One objective, nearby actions, missing-tool explanations, gentle optional hints.                                       | A new player can find and revive the flowers using the game interface; record actual journey duration.                                               |
+| 3. Satisfying discoveries       | Implemented; browser verified              | Watering/bloom/reward feedback, optional sound, Kitty celebrations, reward-to-inventory-to-room connection.            | Each reward is understandable, granted once, wearable at home and in the adventure, and connected to a revisitable memory.                           |
+| 4. Consistent visual style      | Implemented; browser verified              | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity.                           | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene.               |
+| 5. Comfortable phone play       | Implemented; device review pending         | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering.                               | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues.   |
+| 6. Dependable progress/releases | Implemented; automated release checks pass | Save feedback, visible version, backup/restore, interrupted sessions, migration, and automated browser release checks. | Reopen, restore, and upgrade saves without losing rewards; failed core-journey checks prevent publication.                                           |
 
 ## Stage 1 delivery record
 
@@ -129,3 +129,45 @@ Validation: 3 adaptation/migration tests pass; browser checks pass at 320×568,
 persistence and reload. Presentation, keyboard, touch, camera, collisions and
 portal regressions pass. Physical iPhone/Android/Mac performance and Safari
 review remain pending; browser emulation does not certify those devices.
+
+## Stage 6 delivery record
+
+Primary and classic save writes now report failures, support retry, and retain a
+working download even when storage is blocked. Settings shows version 1.6.0, the
+source build revision and last successful save time. Rehydrating another tab's
+position remounts the old physics body safely; legacy saves that omit newer
+chapter or preference fields preserve those fields from the modern save.
+
+New unit checks cover primary-only and mirror-only failures, recovery without
+animation-write storms, coordinate refresh, and older-save repair. Browser checks
+cover blocked storage, export/retry/reload, fresh-phone restore and real cross-tab
+position refresh. A production journey also caught a pre-input physics backlog
+causing extra steps; each movement command now has its own elapsed-time budget.
+The full Butterfly Glade chapter passes after that correction, including the
+letter placeholder, ending, real postcard download and touch puzzle.
+
+Release automation installs pinned Chromium/Python checks, starts an isolated
+preview, and runs ten browser suites before artifact upload. A failed journey
+blocks publication and retains diagnostics. Final local verification: all 150 automated tests and all ten browser suites
+pass, with zero page errors. The GitHub Pages run repeats these checks before
+deployment and is the publication authority.
+
+## Remaining human review
+
+- Play the first journey without prior instructions; record the actual duration
+  and any confusing goal/tool wording. The 5–10 minute target is not yet validated.
+- Review touch, Safari rendering, loading and performance on Nancy's physical
+  phone and Mac. Automated Chromium/device emulation has passed; real hardware
+  and Safari are still unverified.
+- The author's personal letter remains pending; no message was invented.
+
+## Release 1.6.0
+
+Implementation is complete through Stage 6; human review items above remain
+explicitly open. The final local gate passed: 150 automated tests and all ten
+browser suites (controls, movement, fresh journey, presentation, devices, save
+release checks, full chapter, polish, navigation, original room/quests).
+
+Latest game: <https://hmlim123.github.io/hellokittygame/?v=production-16>.
+Deployments: <https://github.com/hmlim123/hellokittygame/actions/workflows/pages.yml>.
+The release is published only after that workflow succeeds.

@@ -6,3 +6,5 @@ public/assets/
 playwright-report/
 test-results/
 public/classic/
+
+.venv-browser/

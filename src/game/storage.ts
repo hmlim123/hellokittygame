@@ -33,7 +33,7 @@ export function read(storage: StorageLike, key: string): unknown {
     return null;
   }
 }
-function preferences(value: unknown): Preferences {
+export function normalizePreferences(value: unknown): Preferences {
   const p = (value && typeof value === "object" ? value : {}) as Record<
     string,
     unknown
@@ -42,7 +42,8 @@ function preferences(value: unknown): Preferences {
     relaxed: p.relaxed === true,
     letterOpened: p.letterOpened === true,
     motion: p.motion === "reduce" ? "reduce" : "system",
-    quality: p.quality === "gentle" || p.quality === "crisp" ? p.quality : "auto",
+    quality:
+      p.quality === "gentle" || p.quality === "crisp" ? p.quality : "auto",
   };
 }
 export function migrateLegacy(storage: StorageLike): SaveState {
@@ -61,7 +62,9 @@ export function migrateLegacy(storage: StorageLike): SaveState {
       read(storage, "kitty-room-preferences-v1"),
     ),
     journal: normalizeJournal(read(storage, "kitty-nancy-missions-v1")),
-    preferences: preferences(read(storage, "kitty-room-preferences-v1")),
+    preferences: normalizePreferences(
+      read(storage, "kitty-room-preferences-v1"),
+    ),
   };
 }
 export function sanitizeSave(value: unknown, fallback: SaveState): SaveState {
@@ -74,7 +77,7 @@ export function sanitizeSave(value: unknown, fallback: SaveState): SaveState {
     room: normalizeRoom(s.room ?? fallback.room),
     equipment: normalizeEquipment(s.equipment ?? fallback.equipment, adventure),
     journal: normalizeJournal(s.journal ?? fallback.journal),
-    preferences: preferences(s.preferences ?? fallback.preferences),
+    preferences: normalizePreferences(s.preferences ?? fallback.preferences),
   };
 }
 export function mirrorLegacy(storage: StorageLike, s: SaveState) {

@@ -1,6 +1,7 @@
 import { MAPS as WORLD } from "../game/world-map";
 import { journeyObjective, QUEST_NAMES } from "../game/navigation";
 import { SaveBackup } from "./SaveBackup";
+import { SaveDetails } from "./SaveStatus";
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../game/store";
 import {
@@ -344,14 +345,22 @@ export function SettingsPanel({
       </label>
       <label className="detail-setting">
         Game visual detail
-        <select value={preferences.quality} onChange={(e) => set({ quality: e.target.value as Preferences["quality"] })}>
+        <select
+          value={preferences.quality}
+          onChange={(e) =>
+            set({ quality: e.target.value as Preferences["quality"] })
+          }
+        >
           <option value="auto">Automatic</option>
           <option value="gentle">Battery friendly</option>
           <option value="crisp">Sharper</option>
         </select>
-        <small>Automatic adjusts the room and adventure to keep movement comfortable.</small>
+        <small>
+          Automatic adjusts the room and adventure to keep movement comfortable.
+        </small>
       </label>
       <SaveBackup />
+      <SaveDetails />
       <p className="small-note">
         Your device’s reduced-motion setting is also respected. Progress saves
         in this browser.

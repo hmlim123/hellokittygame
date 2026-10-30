@@ -11,6 +11,8 @@ import { useGameStore } from "./game/store";
 import { directions, MAPS } from "./game/domain";
 import { DirectionPad } from "./ui/DirectionPad";
 import { QuestGuide } from "./ui/QuestGuide";
+import { SaveStatus } from "./ui/SaveStatus";
+import { RELEASE_VERSION } from "./game/release";
 import { DirectionKeys, directionForKey } from "./game/direction-keys";
 import { Inventory } from "./ui/Inventory";
 import { Dialog } from "./ui/Dialog";
@@ -219,26 +221,50 @@ function Notification() {
         <img alt="" src={assetUrl(`assets/quest/${notice.art}.svg`)} />
       )}
       <div>
-        {notice.rewardOutfit && <button className="dismiss-notice" aria-label="Keep exploring" onClick={() => clear(notice.id)}>×</button>}
+        {notice.rewardOutfit && (
+          <button
+            className="dismiss-notice"
+            aria-label="Keep exploring"
+            onClick={() => clear(notice.id)}
+          >
+            ×
+          </button>
+        )}
         <small>{notice.art ? "A LITTLE DISCOVERY" : "A LITTLE MOMENT"}</small>
         <h3>{notice.title}</h3>
         <p>{notice.text}</p>
         {notice.rewardOutfit && (
           <div className="earned-reward" data-reward={notice.rewardOutfit}>
-            <img alt="Blossom keepsake dress" src={assetUrl("assets/inventory/blossom.svg")} />
+            <img
+              alt="Blossom keepsake dress"
+              src={assetUrl("assets/inventory/blossom.svg")}
+            />
             <div>
               <strong>You earned Blossom keepsake ♡</strong>
-              <p>A flower dress to wear here or at home. Your room has a new flower memory, too.</p>
+              <p>
+                A flower dress to wear here or at home. Your room has a new
+                flower memory, too.
+              </p>
               <div className="reward-actions">
-                <button onClick={() => {
-                  const s = useGameStore.getState();
-                  s.equip("outfit", notice.rewardOutfit!);
-                  s.setMode("room");
-                }}>Try it at home</button>
-                <button onClick={() => {
-                  useGameStore.getState().equip("outfit", notice.rewardOutfit!);
-                  clear(notice.id);
-                }}>Wear it here</button>
+                <button
+                  onClick={() => {
+                    const s = useGameStore.getState();
+                    s.equip("outfit", notice.rewardOutfit!);
+                    s.setMode("room");
+                  }}
+                >
+                  Try it at home
+                </button>
+                <button
+                  onClick={() => {
+                    useGameStore
+                      .getState()
+                      .equip("outfit", notice.rewardOutfit!);
+                    clear(notice.id);
+                  }}
+                >
+                  Wear it here
+                </button>
               </div>
             </div>
           </div>
@@ -307,8 +333,7 @@ export default function App() {
     quest = useGameStore((s) => s.adventure),
     mission = useGameStore((s) => s.mission),
     dialogue = useGameStore((s) => s.dialogue),
-    result = useGameStore((s) => s.result),
-    saveFailed = useGameStore((s) => s.saveFailed);
+    result = useGameStore((s) => s.result);
   const [soundOn, setSoundOn] = useState(false),
     sound = useMemo(() => new RoomSound(), []),
     notice = useGameStore((s) => s.notice);
@@ -389,8 +414,12 @@ export default function App() {
           )}
         </h1>
         {mode === "room" ? (
-          <p>Little adventures, sweet surprises, and a room made just for you.</p>
-        ) : <QuestGuide />}
+          <p>
+            Little adventures, sweet surprises, and a room made just for you.
+          </p>
+        ) : (
+          <QuestGuide />
+        )}
       </section>
       <section className="room-card">
         <div className="scene-container">
@@ -478,6 +507,7 @@ export default function App() {
           <AdventureControls />
         )}
       </section>
+      <SaveStatus />
       {mode === "room" ? (
         <>
           <p className="room-message">
@@ -490,21 +520,12 @@ export default function App() {
               Play together ↗
             </button>
           </p>
-          {saveFailed && (
-            <p className="save-note" role="status">
-              Saving unavailable. Keep this tab open to continue.
-            </p>
-          )}
           <Shelf />
         </>
-      ) : (
-        <p className="save-note">
-          {saveFailed
-            ? "Saving unavailable. Keep this tab open to continue."
-            : "A gentle adventure. Your steps and discoveries save automatically."}
-        </p>
-      )}
-      <footer>Unofficial fan-made gift · Hello Kitty © Sanrio</footer>
+      ) : null}
+      <footer>
+        Unofficial fan-made gift · Hello Kitty © Sanrio · v{RELEASE_VERSION}
+      </footer>
       {panel === "storybook" && <Storybook />}
       {panel === "stars" && <StarsPanel />}
       <Suspense fallback={null}>

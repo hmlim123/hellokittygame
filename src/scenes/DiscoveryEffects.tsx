@@ -5,7 +5,8 @@ import { useGameStore } from "../game/store";
 import { useReducedMotion } from "./Kitty";
 import { effectTime } from "./effect-motion";
 export function DiscoveryEffects() {
-  const dpr = useThree((s) => s.viewport.dpr), count = dpr <= 1 ? 6 : 12;
+  const dpr = useThree((s) => s.viewport.dpr),
+    count = dpr <= 1 ? 6 : 12;
   const effect = useGameStore((s) => s.effect),
     map = useGameStore((s) => s.adventure.map),
     group = useRef<THREE.Group>(null),

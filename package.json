@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test:domain": "node --test tests/*.test.mjs tests/game.test.cjs",
     "test:app": "vitest run",
-    "test": "npm run test:domain && npm run test:app"
+    "test": "npm run test:domain && npm run test:app",
+    "test:browser": "python3 tests/run-browser-checks.py"
   },
   "dependencies": {
     "@react-three/drei": "10.7.9",
@@ -29,5 +30,6 @@
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vitest": "5.0.5"
-  }
+  },
+  "version": "1.6.0"
 }
