@@ -1,5 +1,6 @@
 """Start an isolated production preview and gate releases on real browser journeys."""
 import json, os, shutil, signal, subprocess, sys, time
+from collections import deque
 from pathlib import Path
 from urllib.request import urlopen
 from playwright.sync_api import sync_playwright
@@ -39,10 +40,18 @@ with (results/'preview.log').open('w') as log:
             time.sleep(.2)
         for suite in SUITES:
             print('\nChecking '+suite,flush=True);started=time.monotonic()
-            result=subprocess.run([sys.executable,str(ROOT/'tests'/suite)],env=env)
-            report.append({'suite':suite,'passed':result.returncode==0,'seconds':round(time.monotonic()-started,2)})
+            tail=deque(maxlen=20)
+            with (results/(suite+'.log')).open('w') as suite_log:
+                process=subprocess.Popen([sys.executable,'-u',str(ROOT/'tests'/suite)],env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                for line in process.stdout:
+                    print(line,end='',flush=True);suite_log.write(line);tail.append(line)
+                returncode=process.wait()
+            report.append({'suite':suite,'passed':returncode==0,'seconds':round(time.monotonic()-started,2)})
             (results/'browser-summary.json').write_text(json.dumps(report,indent=2))
-            if result.returncode:raise SystemExit(result.returncode)
+            if returncode:
+                diagnostic=(suite+' failed:\n'+''.join(tail)[-3000:]).replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+                print('::error title=Browser journey failed::'+diagnostic,flush=True)
+                raise SystemExit(returncode)
         print('\nPASS all release browser journeys',flush=True)
     finally:
         try:os.killpg(server.pid,signal.SIGTERM)
