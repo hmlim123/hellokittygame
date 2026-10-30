@@ -5,6 +5,7 @@ import {
 } from "./travel-state";
 import type { AreaId } from "./types";
 import { nearbyItemAction } from "./context-action";
+import { canTalkToNpc, isNpc, NPC_NAMES } from "./npc";
 import {
   newCookie,
   normalizeCozy,
@@ -17,7 +18,12 @@ import {
   type CookieFriend,
   type PostcardMemory,
 } from "./cozy";
-import { parseBackup, commitRestoredSave, PREVIOUS_BACKUP } from "./backup";
+import {
+  parseBackup,
+  serializeBackup,
+  commitRestoredSave,
+  PREVIOUS_BACKUP,
+} from "./backup";
 import type { DiscoveryEffect } from "./types";
 import {
   STAR_ORDER,
@@ -40,6 +46,7 @@ import type {
   Mission,
   MissionId,
   Mode,
+  MapObject,
   Notice,
   OutfitId,
   Panel,
@@ -123,7 +130,12 @@ export interface GameState extends SaveState {
   effect: DiscoveryEffect | null;
   clearEffect(id: number): void;
   useNearbyItem(): void;
-  restoreBackup(text: string): { ok: boolean; error?: string };
+  restoreBackup(
+    text: string,
+    resetLegacy?: boolean,
+  ): { ok: boolean; error?: string };
+  resetProgress(): { ok: boolean; error?: string };
+  talkToNpc(source: MapObject): void;
   previousBackup(): string | null;
   notice: Notice | null;
   dialogue: Story | null;
@@ -232,6 +244,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           a: Adventure,
           result?: Story,
           extra: Partial<GameState> = {},
+          keepOpen = false,
         ) => {
           rememberStop(a);
           const before = get().adventure;
@@ -282,7 +295,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             result = { ...result, choices: [] };
           }
           const dialogue =
-            result && (result.choices?.length || result.complete)
+            result && (result.choices?.length || result.complete || keepOpen)
               ? result
               : null;
           if (dialogue || extra.panel) {
@@ -651,17 +664,31 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             );
             return !get().saveFailed;
           },
-          restoreBackup(text) {
+          resetProgress() {
+            return get().restoreBackup(
+              serializeBackup(migrateLegacy(emptyStorage)),
+              true,
+            );
+          },
+          restoreBackup(text, resetLegacy = false) {
             try {
               const restored = parseBackup(text),
                 save = selectSave(restored),
-                json = commitRestoredSave(storage, selectSave(get()), save);
+                json = commitRestoredSave(
+                  storage,
+                  selectSave(get()),
+                  save,
+                  resetLegacy,
+                );
               cache.set("kitty-world-v2", json);
               primarySaved = legacySaved = true;
               lastMirror = JSON.stringify(save);
               tracker = new EncounterTracker();
               set({
                 ...save,
+                ...(resetLegacy
+                  ? { mode: "room" as const, panel: null, messages: [] }
+                  : {}),
                 petMode: false,
                 viewOnly: false,
                 worldRevision: get().worldRevision + 1,
@@ -680,8 +707,12 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 memoryPage: null,
                 gesture: { id: ++serial, kind: "wave" },
                 notice: notify(
-                  "Your little world is back",
-                  "Your collection, outfits, quests, and memories are ready. Your previous save is also available in Settings.",
+                  resetLegacy
+                    ? "A fresh little beginning"
+                    : "Your little world is back",
+                  resetLegacy
+                    ? "Kitty’s room is ready for a first visit. Your old progress is kept as the previous save in Settings. Nancy’s letter is still here."
+                    : "Your collection, outfits, quests, and memories are ready. Your previous save is also available in Settings.",
                 ),
               });
               return { ok: true };
@@ -1104,6 +1135,38 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 !blocked && !buffered && heldDirection === dir,
               );
           },
+          talkToNpc(source) {
+            const s = get();
+            if (
+              s.mode !== "adventure" ||
+              !s.sceneReady ||
+              s.moving ||
+              s.panel ||
+              s.dialogue ||
+              s.viewOnly ||
+              !canTalkToNpc(s.adventure, source)
+            )
+              return;
+            const a = copy(s.adventure),
+              dx = source.x - a.x,
+              dz = source.z - a.z;
+            a.facing =
+              Math.abs(dx) > Math.abs(dz)
+                ? dx < 0
+                  ? "left"
+                  : "right"
+                : dz < 0
+                  ? "up"
+                  : "down";
+            tracker.mark(a, source, s.equipment);
+            const result = interactAdventure(a, undefined, source, s.equipment);
+            applyStory(
+              a,
+              { ...result, speaker: result.speaker || NPC_NAMES[source.type] },
+              {},
+              true,
+            );
+          },
           interact(choice) {
             const s = get();
             if (s.moving || s.viewOnly) return;
@@ -1128,7 +1191,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               source || undefined,
               s.equipment,
             );
-            applyStory(a, result);
+            applyStory(a, result, {}, !!choice && isNpc(source));
             if (!get().dialogue) {
               const next = autoEncounter(a);
               if (next) applyStory(a, next);

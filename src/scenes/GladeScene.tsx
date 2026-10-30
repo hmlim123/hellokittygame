@@ -1,4 +1,6 @@
 import { nearbyLabel } from "../game/context-action";
+import { canTalkToNpc } from "../game/npc";
+import { npcLabelPosition } from "./npc-label";
 import { TEA_LEAVES, TEA_TABLE, nearTea } from "../game/cozy";
 import { TeaTable } from "./TeaParty";
 import { bloomAmount, bridgeAmount } from "./effect-motion";
@@ -148,14 +150,33 @@ export function GladeObject({ object: o }: { object: MapObject }) {
   if (o.type === "K" && (!c.friendAwake || c.letterFound)) return null;
   if (o.type === "L" && Number(o.id) < c.butterflyStep) return null;
   return (
-    <group position={[o.x, 0, o.z]}>
+    <group
+      position={[o.x, 0, o.z]}
+      onClick={(e) => {
+        if (o.type === "N" && e.delta < 7) {
+          e.stopPropagation();
+          useGameStore.getState().talkToNpc(o);
+        }
+      }}
+    >
       {label && nearbyLabel(adventure, o) && (
         <Html
           center
           position={[0, o.type === "N" ? 1.7 : 1.2, 0]}
           zIndexRange={[2, 0]}
+          calculatePosition={o.type === "N" ? npcLabelPosition : undefined}
         >
-          <span className="world-label">{label}</span>
+          {o.type === "N" && canTalkToNpc(adventure, o) ? (
+            <button
+              className="world-label npc-talk"
+              aria-label="Talk to Pip"
+              onClick={() => useGameStore.getState().talkToNpc(o)}
+            >
+              Talk to Pip ♡
+            </button>
+          ) : (
+            <span className="world-label">{label}</span>
+          )}
         </Html>
       )}
       {o.type === "V" && <GladePortal type="V" />}

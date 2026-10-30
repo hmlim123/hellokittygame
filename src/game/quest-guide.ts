@@ -92,7 +92,7 @@ const OBJECTIVES: Record<
   },
   M: {
     title: "Visit Momo",
-    instruction: "Walk beside Momo by the village fountain.",
+    instruction: "Walk near Momo by the village fountain, then tap Talk to Momo.",
   },
 };
 export function questGuide(s: Adventure, equipment: Equipment) {

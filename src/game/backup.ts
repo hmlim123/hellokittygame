@@ -3,6 +3,7 @@ import {
   emptyStorage,
   sanitizeSave,
   mirrorLegacy,
+  read,
   type StorageLike,
 } from "./storage";
 import type { SaveState } from "./types";
@@ -75,6 +76,7 @@ const SAVE_KEYS = [
   "kitty-nancy-missions-v1",
   "kitty-nancy-cozy-v1",
   "kitty-room-preferences-v1",
+  "kitty-picnic-v1",
   PREVIOUS_BACKUP,
 ];
 /** Keep the current save and roll back partial storage writes before changing the live game. */
@@ -82,6 +84,7 @@ export function commitRestoredSave(
   storage: StorageLike,
   current: SaveState,
   next: SaveState,
+  resetLegacy = false,
 ): string {
   let before: Map<string, string | null>;
   try {
@@ -92,6 +95,15 @@ export function commitRestoredSave(
   const json = JSON.stringify({ state: next, version: 2 });
   try {
     storage.setItem(PREVIOUS_BACKUP, serializeBackup(current));
+    if (resetLegacy) {
+      const picnic = read(storage, "kitty-picnic-v1");
+      // Only clear the collection merged into this game, preserving unrelated
+      // classic picnic fields and the separately owned classic wallet.
+      storage.setItem(
+        "kitty-picnic-v1",
+        JSON.stringify({ ...(record(picnic) ? picnic : {}), owned: [0] }),
+      );
+    }
     if (!mirrorLegacy(storage, next)) throw Error("Saving is unavailable.");
     storage.setItem("kitty-world-v2", json);
   } catch {

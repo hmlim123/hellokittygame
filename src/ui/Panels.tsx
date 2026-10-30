@@ -399,7 +399,7 @@ export function SettingsPanel({
           Automatic adjusts the room and adventure to keep movement comfortable.
         </small>
       </label>
-      <SaveBackup />
+      <SaveBackup onFreshStart={() => setSound(false)} />
       <SaveDetails />
       <p className="small-note">
         Your device’s reduced-motion setting is also respected. Progress saves

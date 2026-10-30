@@ -246,3 +246,26 @@ Preview evidence: [cookie decorating](nancy-cookie-gift.png),
 [keepsake wall](nancy-keepsake-wall.png). The local website archive was refreshed
 with the same version/build. Physical-device/Safari review is still pending in
 [the review script](phone-playtest.md); automated emulation is not that review.
+
+## Gift handoff · v1.7.1 (in verification)
+
+The user requested easier NPC interactions, a reset for Nancy’s first visit,
+and a share link. Momo, the cloud guardian and Pip now have direct model/name
+interaction and a generous three-tile speaking range with a clear-line check.
+Facing is automatic. Named footer actions and E support keyboard/touch play;
+adjacent quest objects retain priority. Explicit conversations stay open until
+closed, and phone name buttons are clamped below the scene’s tool row.
+
+Progress is browser-local. A new visitor starts fresh without an automatic-reset
+URL. The share link is <https://hmlim123.github.io/hellokittygame/?v=gift-19>.
+A device with existing progress can use Settings → Keep your progress → Start
+fresh → Download backup & start fresh. Reset preserves Nancy’s letter, retains
+and downloads a restorable previous save, clears the merged legacy collection,
+and rolls back partial failures. Unrelated storage and classic wallet/picnic
+fields stay unchanged. Reopening the share link preserves Nancy’s progress.
+
+Local checks: 164 automated tests and the real-browser NPC/reset journey pass,
+including first conversations from three tiles away, persistent replies and
+choices, native backup download, reset/reload, unchanged letter, a fresh phone
+context, and real touch name/choice controls with zero page errors. The release
+gate now includes twelve suites. Physical-device/Safari review remains pending.

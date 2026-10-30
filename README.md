@@ -9,6 +9,26 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Easier conversations and a fresh gift visit · v1.7.1
+
+Tap a nearby NPC or their **Talk to…** name, use the named action below the map,
+or press **E**. Momo, the cloud guardian and Pip can hear Kitty from up to three
+clear tiles away; there is no need to face them exactly. Walls still block
+conversation. Name buttons stay inside the scene on phones, and an explicitly
+opened conversation stays readable until closed. Adjacent puzzles and treasure
+keep their own primary actions.
+
+Nancy’s first visit on a browser that has not played starts fresh. Your test
+progress is stored in your browser and is not included in a link. Send the room:
+<https://hmlim123.github.io/hellokittygame/?v=gift-19>.
+
+To reset a device that has already played, open **Settings → Keep your progress ♡
+→ Start fresh → Download backup & start fresh**. It starts a new room and clears
+this game’s quests, outfits, collection, cookie play and postcards. Nancy’s letter
+stays. The old progress downloads and remains available as **Download previous
+save**. A failed reset rolls back without changing the live game. Opening the
+gift link again never resets earned progress.
+
 ## Cozy days · v1.7.0
 
 - **Play a mission → Bake cookies with Kitty:** choose a heart, star or round
@@ -330,7 +350,7 @@ npm run build
 The runner owns an isolated preview on port 8066 and stops it on exit. It runs
 keyboard/touch/camera, fresh reward journey, presentation, phone/orientation,
 save-failure/transfer/tab-refresh, full chapter, polish, navigation, original
-quests and the new cozy journey (eleven suites). Results and screenshots go to ignored `test-results/`. GitHub Pages
+quests, the cozy journey and NPC/fresh-visit checks (twelve suites). Results and screenshots go to ignored `test-results/`. GitHub Pages
 runs this same gate before uploading the website; failures retain diagnostics
 and prevent deployment. Dependencies are pinned in `tests/browser-requirements.txt`.
 

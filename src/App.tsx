@@ -9,7 +9,8 @@ const Stage = lazy(() =>
 );
 import { assetUrl } from "./game/assets";
 import { useGameStore } from "./game/store";
-import { directions, MAPS } from "./game/domain";
+import { directions, MAPS, nearbyObject } from "./game/domain";
+import { preferredNpc, NPC_NAMES } from "./game/npc";
 import { DirectionPad } from "./ui/DirectionPad";
 import { QuestGuide } from "./ui/QuestGuide";
 import { SaveStatus } from "./ui/SaveStatus";
@@ -129,13 +130,19 @@ function useAdventureInput() {
             s.cozy.tea.leaves && !s.cozy.tea.baked ? "baking" : "tea",
           );
         else if (nearbyItemAction(s.adventure)) s.useNearbyItem();
-        else s.interact();
+        else {
+          const npc = preferredNpc(s.adventure, nearbyObject(s.adventure));
+          if (npc) s.talkToNpc(npc);
+          else s.interact();
+        }
       } else if (
         (e.key === "Enter" || e.key === " ") &&
         !(e.target instanceof HTMLButtonElement)
       ) {
         e.preventDefault();
-        s.interact();
+        const npc = preferredNpc(s.adventure, nearbyObject(s.adventure));
+        if (npc) s.talkToNpc(npc);
+        else s.interact();
       }
     };
     const up = (e: KeyboardEvent) => {
@@ -296,13 +303,14 @@ function AdventureControls() {
   const teaActive =
     useGameStore((s) => s.cozy.tea.active) && state.map === "glade";
   const action = teaActive ? null : nearbyItemAction(state);
+  const npc = teaActive ? undefined : preferredNpc(state, nearbyObject(state));
   return (
     <div className="adventure-controls">
       <DirectionPad />
       <p>
         Arrow keys or WASD to walk.
         <br />
-        Walk up to friends and treasure to discover them.
+        Walk near a friend, then tap their name or press E to talk.
       </p>
       <div className="adventure-action-stack">
         {action && (
@@ -320,10 +328,18 @@ function AdventureControls() {
           className={action ? "text-button" : "primary"}
           disabled={!ready || moving}
           onClick={() =>
-            teaActive ? useGameStore.getState().openPanel("tea") : interact()
+            teaActive
+              ? useGameStore.getState().openPanel("tea")
+              : npc
+                ? useGameStore.getState().talkToNpc(npc)
+                : interact()
           }
         >
-          {teaActive ? "Tea-party progress" : "Talk / inspect ♡"}
+          {teaActive
+            ? "Tea-party progress"
+            : npc
+              ? `Talk to ${NPC_NAMES[npc.type]} ♡`
+              : "Talk / inspect ♡"}
         </button>
       </div>
       <span className="sr-only">

@@ -6,7 +6,7 @@ from urllib.request import urlopen
 from playwright.sync_api import sync_playwright
 
 SUITES = [
-    'controls-browser.py', 'movement-browser.py', 'journey-browser.py',
+    'controls-browser.py', 'movement-browser.py', 'npc-gift-browser.py', 'journey-browser.py',
     'presentation-browser.py', 'device-browser.py', 'release-browser.py',
     'chapter-browser.py', 'play-polish-browser.py', 'navigation-browser.py',
     'react-browser.py', 'cozy-browser.py',

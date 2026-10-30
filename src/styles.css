@@ -2272,3 +2272,28 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
     justify-content: flex-end;
   }
 }
+
+.world-label.npc-talk {
+  min-height: 44px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 13px;
+  border: 2px solid #bb799a;
+  box-shadow: 0 4px 12px #80536c18;
+  pointer-events: auto;
+}
+.fresh-start {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.fresh-start > summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 12px 0;
+}
+.fresh-start button {
+  margin: 6px 0;
+  min-height: 44px;
+}

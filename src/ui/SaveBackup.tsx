@@ -11,7 +11,7 @@ import { OUTFITS } from "../game/domain";
 import type { SaveState } from "../game/types";
 const summary = (s: SaveState) =>
   `${s.room.owned.length} friends · ${memoryPages(s.adventure).filter((p) => p.unlocked).length + (s.cozy.tea.complete ? 1 : 0)} memories · ${s.cozy.postcards.length} postcards · ${s.cozy.cookiesGiven} cookie gifts · ${OUTFITS.find((o) => o.id === s.equipment.outfit)?.name}`;
-export function SaveBackup() {
+export function SaveBackup({ onFreshStart }: { onFreshStart?: () => void }) {
   const input = useRef<HTMLInputElement>(null),
     [candidate, setCandidate] = useState<{
       text: string;
@@ -136,6 +136,28 @@ export function SaveBackup() {
           Download previous save
         </button>
       )}
+      <details className="fresh-start">
+        <summary>Start fresh</summary>
+        <p className="small-note">
+          Reset this browser’s quests, outfits, collection, cookies and
+          postcards for a first visit. Nancy’s letter stays. Your current
+          progress downloads as a backup and is kept as the previous save. Other
+          browsers and devices are unaffected.
+        </p>
+        <button
+          onClick={() => {
+            downloadText(
+              serializeBackup(useGameStore.getState()),
+              "Nancy-Kitty-Before-Reset.json",
+            );
+            const result = useGameStore.getState().resetProgress();
+            if (result.ok) onFreshStart?.();
+            else setStatus(result.error || "Your current game is unchanged.");
+          }}
+        >
+          Download backup & start fresh
+        </button>
+      </details>
     </details>
   );
 }

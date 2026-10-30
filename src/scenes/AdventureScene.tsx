@@ -19,6 +19,8 @@ import {
 } from "@react-three/rapier";
 import * as THREE from "three";
 import { GladeObject, GladePortal, GladeScenery } from "./GladeScene";
+import { canTalkToNpc, isNpc, NPC_NAMES } from "../game/npc";
+import { npcLabelPosition } from "./npc-label";
 import { makeGift } from "../../dist/gifts.js";
 import { makeBow } from "../../dist/models.js";
 import { MAPS, walkable } from "../game/domain";
@@ -131,14 +133,33 @@ function Prop({ object: o }: { object: MapObject }) {
       </group>
     );
   return (
-    <group position={[o.x, 0, o.z]}>
+    <group
+      position={[o.x, 0, o.z]}
+      onClick={(e) => {
+        if (isNpc(o) && e.delta < 7) {
+          e.stopPropagation();
+          useGameStore.getState().talkToNpc(o);
+        }
+      }}
+    >
       {label && nearbyLabel(a, o) && (
         <Html
           position={[0, o.type === "M" ? 1.45 : 1.3, 0]}
           center
           zIndexRange={[2, 0]}
+          calculatePosition={isNpc(o) ? npcLabelPosition : undefined}
         >
-          <span className="world-label">{label}</span>
+          {isNpc(o) && canTalkToNpc(a, o) ? (
+            <button
+              className="world-label npc-talk"
+              aria-label={`Talk to ${NPC_NAMES[o.type]}`}
+              onClick={() => useGameStore.getState().talkToNpc(o)}
+            >
+              Talk to {label} ♡
+            </button>
+          ) : (
+            <span className="world-label">{label}</span>
+          )}
         </Html>
       )}
       {o.type === "H" && (
