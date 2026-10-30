@@ -10,7 +10,7 @@ import { memoryPages } from "../game/chapter";
 import { OUTFITS } from "../game/domain";
 import type { SaveState } from "../game/types";
 const summary = (s: SaveState) =>
-  `${s.room.owned.length} friends · ${memoryPages(s.adventure).filter((p) => p.unlocked).length} memories · ${OUTFITS.find((o) => o.id === s.equipment.outfit)?.name}`;
+  `${s.room.owned.length} friends · ${memoryPages(s.adventure).filter((p) => p.unlocked).length + (s.cozy.tea.complete ? 1 : 0)} memories · ${s.cozy.postcards.length} postcards · ${s.cozy.cookiesGiven} cookie gifts · ${OUTFITS.find((o) => o.id === s.equipment.outfit)?.name}`;
 export function SaveBackup() {
   const input = useRef<HTMLInputElement>(null),
     [candidate, setCandidate] = useState<{

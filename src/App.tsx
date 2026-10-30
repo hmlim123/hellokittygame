@@ -1,6 +1,7 @@
 import { nearbyItemAction } from "./game/context-action";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Storybook, StarsPanel } from "./ui/StoryPanels";
+import { BakingPanel, KeepsakePanel, TeaPanel } from "./ui/CozyPanels";
 const PhotoCorner = lazy(() => import("./scenes/PhotoCorner"));
 const MoonPicnic = lazy(() => import("./scenes/MoonPicnic"));
 const Stage = lazy(() =>
@@ -101,7 +102,13 @@ function useAdventureInput() {
     const down = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const s = useGameStore.getState();
-      if (s.mode !== "adventure" || s.panel || s.dialogue || !s.sceneReady)
+      if (
+        s.mode !== "adventure" ||
+        s.viewOnly ||
+        s.panel ||
+        s.dialogue ||
+        !s.sceneReady
+      )
         return;
       if (
         e.target instanceof HTMLElement &&
@@ -117,7 +124,11 @@ function useAdventureInput() {
         }
       } else if (e.key.toLowerCase() === "e") {
         e.preventDefault();
-        if (nearbyItemAction(s.adventure)) s.useNearbyItem();
+        if (s.cozy.tea.active && s.adventure.map === "glade")
+          s.openPanel(
+            s.cozy.tea.leaves && !s.cozy.tea.baked ? "baking" : "tea",
+          );
+        else if (nearbyItemAction(s.adventure)) s.useNearbyItem();
         else s.interact();
       } else if (
         (e.key === "Enter" || e.key === " ") &&
@@ -139,7 +150,11 @@ function useAdventureInput() {
       useGameStore.getState().releaseMove();
     };
     const canWalk = (s: ReturnType<typeof useGameStore.getState>) =>
-      s.mode === "adventure" && !s.panel && !s.dialogue && s.sceneReady;
+      s.mode === "adventure" &&
+      !s.viewOnly &&
+      !s.panel &&
+      !s.dialogue &&
+      s.sceneReady;
     const unsubscribe = useGameStore.subscribe((s, prev) => {
       if (canWalk(prev) && !canWalk(s)) blur();
     });
@@ -278,7 +293,9 @@ function AdventureControls() {
     interact = useGameStore((s) => s.interact),
     ready = useGameStore((s) => s.sceneReady),
     moving = useGameStore((s) => s.moving);
-  const action = nearbyItemAction(state);
+  const teaActive =
+    useGameStore((s) => s.cozy.tea.active) && state.map === "glade";
+  const action = teaActive ? null : nearbyItemAction(state);
   return (
     <div className="adventure-controls">
       <DirectionPad />
@@ -302,9 +319,11 @@ function AdventureControls() {
         <button
           className={action ? "text-button" : "primary"}
           disabled={!ready || moving}
-          onClick={() => interact()}
+          onClick={() =>
+            teaActive ? useGameStore.getState().openPanel("tea") : interact()
+          }
         >
-          Talk / inspect ♡
+          {teaActive ? "Tea-party progress" : "Talk / inspect ♡"}
         </button>
       </div>
       <span className="sr-only">
@@ -325,6 +344,10 @@ export default function App() {
     }
   }, []);
   const mode = useGameStore((s) => s.mode),
+    textSize = useGameStore((s) => s.preferences.textSize),
+    viewOnly = useGameStore((s) => s.viewOnly),
+    petMode = useGameStore((s) => s.petMode),
+    teaActive = useGameStore((s) => s.cozy.tea.active),
     panel = useGameStore((s) => s.panel),
     ready = useGameStore((s) => s.sceneReady),
     open = useGameStore((s) => s.openPanel),
@@ -334,6 +357,39 @@ export default function App() {
     mission = useGameStore((s) => s.mission),
     dialogue = useGameStore((s) => s.dialogue),
     result = useGameStore((s) => s.result);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (
+        e.metaKey ||
+        e.ctrlKey ||
+        e.altKey ||
+        e.repeat ||
+        (e.target instanceof HTMLElement &&
+          ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName))
+      )
+        return;
+      const s = useGameStore.getState();
+      if (e.key === "Escape" && s.viewOnly) {
+        e.preventDefault();
+        s.setViewOnly(false);
+      } else if (e.key.toLowerCase() === "h" && !s.panel && !s.dialogue) {
+        e.preventDefault();
+        s.setViewOnly(!s.viewOnly);
+      }
+    };
+    addEventListener("keydown", key);
+    return () => removeEventListener("keydown", key);
+  }, []);
+  useEffect(() => {
+    if (!viewOnly) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.getElementById("restoreInterface")?.focus();
+    return () => {
+      document.body.style.overflow = previous;
+      document.getElementById("hideInterface")?.focus();
+    };
+  }, [viewOnly]);
   const [soundOn, setSoundOn] = useState(false),
     sound = useMemo(() => new RoomSound(), []),
     notice = useGameStore((s) => s.notice);
@@ -365,7 +421,16 @@ export default function App() {
     void sound.toggle().then(setSoundOn);
   };
   return (
-    <main>
+    <main data-text-size={textSize} data-view-only={viewOnly}>
+      {viewOnly && (
+        <button
+          id="restoreInterface"
+          className="restore-interface"
+          onClick={() => useGameStore.getState().setViewOnly(false)}
+        >
+          Show interface · Esc
+        </button>
+      )}
       <header>
         <button
           className="brand"
@@ -408,8 +473,18 @@ export default function App() {
             </>
           ) : (
             <>
-              {quest.map === "glade" ? "Butterfly" : "Moonflower"}{" "}
-              <em>{quest.map === "glade" ? "Glade." : "Adventure."}</em>
+              {quest.map === "glade"
+                ? teaActive
+                  ? "Moonlight"
+                  : "Butterfly"
+                : "Moonflower"}{" "}
+              <em>
+                {quest.map === "glade"
+                  ? teaActive
+                    ? "Tea Party."
+                    : "Glade."
+                  : "Adventure."}
+              </em>
             </>
           )}
         </h1>
@@ -439,6 +514,14 @@ export default function App() {
           </span>
           <div className="scene-tools">
             <button
+              id="hideInterface"
+              disabled={!ready || !!mission}
+              onClick={() => useGameStore.getState().setViewOnly(true)}
+              aria-keyshortcuts="H"
+            >
+              Hide interface
+            </button>
+            <button
               aria-label={soundOn ? "Turn sound off" : "Turn sound on"}
               aria-pressed={soundOn}
               onClick={() => toggleSound(!soundOn)}
@@ -457,11 +540,20 @@ export default function App() {
           </div>
           <MissionHUD />
           <Notification />
+          {petMode && (
+            <button
+              className="pet-done"
+              onClick={() => useGameStore.getState().stopPetting()}
+            >
+              Done petting ♡
+            </button>
+          )}
           {mode === "room" ? (
             <span className="scene-hint">
               Tap Kitty to play · Drag for a 360° view
             </span>
           ) : (
+            !(teaActive && quest.map === "glade") &&
             directions(quest) && (
               <button
                 className="wayfinder"
@@ -527,6 +619,9 @@ export default function App() {
         Unofficial fan-made gift · Hello Kitty © Sanrio · v{RELEASE_VERSION}
       </footer>
       {panel === "storybook" && <Storybook />}
+      {panel === "baking" && <BakingPanel />}
+      {panel === "keepsakes" && <KeepsakePanel />}
+      {panel === "tea" && <TeaPanel />}
       {panel === "stars" && <StarsPanel />}
       <Suspense fallback={null}>
         {panel === "photo" && <PhotoCorner />}

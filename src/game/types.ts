@@ -99,6 +99,7 @@ export interface Preferences {
   letterOpened: boolean;
   motion: "system" | "reduce";
   quality: "auto" | "gentle" | "crisp";
+  textSize: "standard" | "large" | "larger";
 }
 export interface Journal {
   completed: Record<MissionId, number>;
@@ -149,6 +150,7 @@ export interface SaveState {
   equipment: Equipment;
   preferences: Preferences;
   journal: Journal;
+  cozy: import("./cozy").CozyProgress;
 }
 export type Panel =
   | "missions"
@@ -160,6 +162,9 @@ export type Panel =
   | "photo"
   | "stars"
   | "ending"
+  | "baking"
+  | "keepsakes"
+  | "tea"
   | null;
 export interface Notice {
   id: number;

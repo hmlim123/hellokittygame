@@ -4,6 +4,7 @@ import { useGameStore } from "../game/store";
 import { makeAdventureTool } from "./AdventureTools";
 import { makeGift } from "../../dist/gifts.js";
 import { makeBow } from "../../dist/models.js";
+import { TeaCup } from "./TeaParty";
 function FlowerKeepsake() {
   return (
     <group name="Flower patch keepsake" scale={0.55}>
@@ -40,6 +41,7 @@ function FlowerKeepsake() {
   );
 }
 export function Souvenirs() {
+  const tea = useGameStore((s) => s.cozy.tea);
   const a = useGameStore((s) => s.adventure),
     open = useGameStore((s) => s.openMemory),
     c = a.chapter;
@@ -90,6 +92,27 @@ export function Souvenirs() {
   ];
   return (
     <group>
+      {tea.complete && (
+        <group
+          position={[-1.8, 0.1, 1.65]}
+          scale={1.35}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (e.delta < 7) useGameStore.getState().openMemory("tea");
+          }}
+        >
+          <TeaCup />
+          <Html center position={[0, 0.55, 0]} zIndexRange={[2, 0]}>
+            <button
+              className="souvenir-label"
+              aria-label="Remember Moonlight tea party"
+              onClick={() => useGameStore.getState().openMemory("tea")}
+            >
+              ☾ <span>Our little tea party</span>
+            </button>
+          </Html>
+        </group>
+      )}
       {memories
         .filter((m) => m.show)
         .map((m) => (

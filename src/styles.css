@@ -2032,3 +2032,243 @@ footer {
   padding-top: 14px;
   border-top: 1px solid var(--line);
 }
+
+/* Small, replayable activities share the room's quiet palette. */
+.cozy-steps {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+.cozy-steps li {
+  flex: 1;
+  border-bottom: 3px solid var(--line);
+  padding: 10px 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cozy-steps li[aria-current] {
+  border-color: var(--rose);
+  color: var(--ink);
+  font-weight: 700;
+}
+.cookie-worktop {
+  padding: 12px 20px 18px;
+  background: radial-gradient(ellipse at 50% 40%, #fffaf0, #f6e5de);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  text-align: center;
+}
+.cookie-art {
+  display: block;
+  width: min(100%, 260px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  touch-action: manipulation;
+}
+button.cookie-art {
+  border: 2px dashed #d7a8ba;
+  border-radius: 40%;
+}
+.cookie-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.cookie-worktop p {
+  min-height: 2.8em;
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.baking-dialog .photo-options button {
+  text-transform: none;
+  min-height: 46px;
+}
+.baking-dialog fieldset {
+  margin-top: 18px;
+}
+.tea-quests {
+  padding-left: 24px;
+  line-height: 1.8;
+}
+.tea-quests li {
+  padding: 5px;
+}
+.tea-quests li[data-done="true"] {
+  color: #486c59;
+}
+.tea-preview {
+  height: 280px;
+  overflow: hidden;
+  border-radius: 22px;
+  margin: 18px 0;
+  background: #e4dced;
+}
+.tea-preview canvas {
+  touch-action: none;
+}
+.postcard-memory {
+  display: grid;
+  grid-template-columns: minmax(0, 180px) 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 20px;
+  background: #f8e9e5;
+  border-radius: 22px;
+}
+.postcard-memory > img {
+  width: 100%;
+  height: auto;
+  border: 6px solid #fff5e4;
+  box-shadow: 0 6px 18px #87526e18;
+  transform: rotate(-3deg);
+}
+.postcard-memory dl {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.postcard-memory dt {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 10px;
+}
+.postcard-memory dd {
+  margin: 3px 0;
+}
+.keepsake-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0;
+}
+.keepsake-thumbnails button {
+  width: 70px;
+  padding: 4px;
+  background: var(--paper);
+}
+.keepsake-thumbnails img {
+  width: 100%;
+  display: block;
+}
+.keepsake-thumbnails button[aria-pressed="true"] {
+  outline: 2px solid var(--rose);
+}
+.pet-done {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: var(--paper);
+}
+main[data-text-size="large"] {
+  --reading-size: 18px;
+  --reading-label: 16px;
+}
+main[data-text-size="larger"] {
+  --reading-size: 21px;
+  --reading-label: 18px;
+}
+main:is([data-text-size="large"], [data-text-size="larger"])
+  :is(
+    .intro p,
+    .quest-guide p,
+    .letter-paper p,
+    dialog p,
+    dialog li,
+    dialog dd,
+    .room-message,
+    .chat-list p
+  ) {
+  font-size: var(--reading-size);
+  line-height: 1.75;
+}
+main:is([data-text-size="large"], [data-text-size="larger"])
+  :is(
+    dialog button:not(.close-dialog),
+    dialog select,
+    dialog input,
+    .memory-actions button,
+    .action-bar strong,
+    .header-actions button,
+    .adventure-action-stack button
+  ) {
+  font-size: var(--reading-label);
+}
+main:is([data-text-size="large"], [data-text-size="larger"]) .quest-guide h2 {
+  font-size: 24px;
+}
+main[data-view-only="true"] {
+  padding: 0;
+  max-width: none;
+}
+main[data-view-only="true"] > :not(.room-card):not(.restore-interface) {
+  display: none !important;
+}
+main[data-view-only="true"] .room-card {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+main[data-view-only="true"] .room-card > :not(.scene-container),
+main[data-view-only="true"] .scene-container > :not(.stage) {
+  display: none !important;
+}
+main[data-view-only="true"] :is(.scene-container, .stage) {
+  height: 100dvh !important;
+  min-height: 0;
+  border-radius: 0;
+}
+.restore-interface {
+  position: fixed;
+  z-index: 101;
+  right: max(14px, env(safe-area-inset-right));
+  top: max(14px, env(safe-area-inset-top));
+  min-height: 44px;
+  background: #fff9f1e8;
+}
+@media (max-width: 520px) {
+  .postcard-memory {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 18px;
+  }
+  .postcard-memory > img {
+    width: 150px;
+    margin: auto;
+  }
+  .postcard-memory dl {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .postcard-memory dt,
+  .postcard-memory dd {
+    margin: 0;
+  }
+  .cozy-steps {
+    gap: 5px;
+  }
+  .cozy-steps li {
+    font-size: 12px;
+  }
+  .tea-preview {
+    height: 240px;
+  }
+  .scene-tools {
+    max-width: calc(100% - 20px);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

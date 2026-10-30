@@ -203,3 +203,23 @@ unconfirmed. The published game reports v1.6.1 / build 9276a03.
 
 Open the letter from Her room → Play together → Nancy’s letter, then break the
 heart seal. It is also available through the discovered envelope's storybook page.
+
+## Cozy expansion · v1.7.0 (in verification)
+
+The user authorized the next six improvements on 2026-10-30. This is a separate
+expansion from the completed production roadmap above.
+
+| Improvement | Implementation / review status |
+| --- | --- |
+| Physical phone and Safari playtesting | Pending actual devices; [review script](phone-playtest.md) records the journey, device fields and open result. Chromium emulation is separate evidence. |
+| Bake cookies with Kitty | Three cutters, three icings, up to 12 placed sprinkles, three gift recipients; no timer/penalty. Draft and one-time gift accounting persist. |
+| Personal keepsake wall | Six bounded JPEG thumbnails of the real downloaded postcards, with outfit, scene, place, pose and local date/time. Framed images appear at home. PNG originals remain separate downloads. |
+| More touch reactions | Dedicated captured-pointer petting without camera rotation; existing Blender high-five and a one-action equip/cuddle teddy flow; existing optional sound and reduced motion are respected. |
+| Second short story | Gather mint automatically near the glade entrance → bake a cookie for Momo → set two cups and the cookie at a moonlit table. Pausing preserves progress. Ending, storybook page and home teacup reward persist. The table remembers the gifted cookie. |
+| Comfortable reading | Standard/Large/Extra large persisted text; temporary clean scene view with visible touch restore, H/Escape support and movement guarded while hidden. |
+
+The room retains three main buttons. New durable fields normalize old saves and
+participate in legacy mirroring, failure handling and atomic backup/restore. No
+personal memories were invented and Nancy’s letter remains unchanged. Unit and
+new browser journey checks are being run before publication; device/Safari and
+first-time human duration remain explicitly pending.

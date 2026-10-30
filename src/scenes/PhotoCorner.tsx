@@ -6,7 +6,7 @@ import { ACESFilmicToneMapping } from "three";
 import { Kitty } from "./Kitty";
 import { Dialog } from "../ui/Dialog";
 import { useGameStore } from "../game/store";
-import { OUTFITS } from "../game/domain";
+import { OUTFITS, MAPS } from "../game/domain";
 export type PhotoPose = "still" | "wave" | "cuddle" | "wink";
 const BACKGROUNDS = [
   { id: "rose", name: "Rose milk", color: "#f3d6e2" },
@@ -70,6 +70,23 @@ async function postcard(imageUrl: string, caption: string): Promise<Blob> {
     ),
   );
 }
+async function thumbnail(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = 150;
+    canvas.height = 180;
+    const c = canvas.getContext("2d");
+    if (!c) throw Error("Could not keep this postcard.");
+    c.drawImage(image, 0, 0, 150, 180);
+    return canvas.toDataURL("image/jpeg", 0.65);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 export default function PhotoCorner() {
   const equipment = useGameStore((s) => s.equipment),
     friend = useGameStore((s) => s.room.selected),
@@ -103,6 +120,8 @@ export default function PhotoCorner() {
         capture.current(),
         `${OUTFITS.find((o) => o.id === equipment.outfit)?.name} · ${bg.name}`,
       );
+      const image = await thumbnail(blob),
+        s = useGameStore.getState();
       const url = URL.createObjectURL(blob),
         a = document.createElement("a");
       a.href = url;
@@ -112,8 +131,18 @@ export default function PhotoCorner() {
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 3000);
       useGameStore.getState().savePostcard();
+      s.keepPostcard({
+        id: crypto.randomUUID(),
+        image,
+        outfit: equipment.outfit,
+        background: bg.name,
+        pose,
+        place:
+          s.mode === "adventure" ? MAPS[s.adventure.map].title : "Kitty’s room",
+        createdAt: new Date().toISOString(),
+      });
       setMessage(
-        "Your postcard is ready. If your browser asks, choose Save. A memory is waiting in your storybook. ♡",
+        "Your postcard is ready. If your browser asks, choose Save. Its little frame is waiting on your keepsake wall at home. ♡",
       );
     } catch (e) {
       setMessage(
@@ -202,6 +231,10 @@ export default function PhotoCorner() {
       </fieldset>
       <p role="status" className="small-note">
         {message}
+      </p>
+      <p className="small-note">
+        Your six most recent postcards stay on the keepsake wall. Downloaded
+        PNGs are yours to keep.
       </p>
       <div className="memory-actions">
         <button onClick={() => useGameStore.getState().openPanel("inventory")}>

@@ -1,0 +1,55 @@
+"""New cozy loop: actual traversal, cookie play, keepsakes, touch, reading and clean view."""
+import json,os
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+BASE=os.environ.get('KITTY_BASE_URL','http://127.0.0.1:8053').rstrip('/')
+with sync_playwright() as p:
+ b=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']);errors=[]
+ page=b.new_page(viewport={'width':1100,'height':1060},reduced_motion='reduce',accept_downloads=True);page.on('pageerror',lambda e:errors.append(str(e)))
+ def ready(pg=page):pg.wait_for_function("document.querySelector('canvas[data-renderer]')&&!document.querySelector('#openWardrobe').disabled",timeout=60000)
+ def cozy(pg=page):return pg.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1'))")
+ def step(direction,x,z):
+  page.keyboard.press('Arrow'+direction);page.wait_for_function("p=>{const a=JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'));return a.x===p[0]&&a.z===p[1]}",arg=[x,z],timeout=15000)
+ page.goto(BASE+'/');ready();print('COZY room ready',flush=True);assert page.locator('.action-bar>button').count()==3
+ page.get_by_role('button',name='Play a mission').click();page.get_by_role('button',name='Moonlight tea party ☾',exact=True).click();ready()
+ assert page.locator('.quest-guide').get_attribute('data-objective')=='tea-leaves'
+ step('Up',2,9);page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).tea.leaves")
+ page.get_by_role('button',name='Bake a cookie ↗',exact=True).click();page.get_by_role('button',name='Star',exact=True).click();page.get_by_role('button',name='Bake & decorate →',exact=True).click();page.get_by_role('button',name='Honey icing',exact=True).click();page.get_by_role('button',name='Add a berry 🍓',exact=True).click();page.get_by_role('button',name='Add a heart ♥',exact=True).click();page.get_by_role('button',name='Ready to give →',exact=True).click()
+ page.screenshot(path='/tmp/nancy-cookie-gift.png',full_page=True)
+ page.reload();ready();assert cozy()['cookie']['stage']=='give'
+ page.get_by_role('button',name='Bake a cookie ↗',exact=True).click();page.get_by_role('button',name='Give cookie to Momo ♡',exact=True).click();assert cozy()['cookiesGiven']==1 and cozy()['tea']['baked']
+ page.get_by_role('button',name='Visit the tea table ↗',exact=True).click();ready();step('Down',2,10);step('Right',3,10);step('Right',4,10)
+ page.get_by_role('dialog',name='Moonlight tea party',exact=True).wait_for();page.get_by_role('button',name='Place Kitty’s cup',exact=True).click();assert cozy()['tea']['table']==1
+ page.reload();ready();page.get_by_role('button',name='Tea-party progress',exact=True).click();page.get_by_role('button',name='Place Momo’s cup',exact=True).click();page.get_by_role('button',name='Set down your cookie',exact=True).click();page.locator('.tea-preview canvas').wait_for();assert cozy()['tea']['complete'];page.screenshot(path='/tmp/nancy-tea-ending.png',full_page=True)
+ page.get_by_role('button',name='Keep this little evening ♡',exact=True).click();page.get_by_role('button',name='← Her room',exact=True).click();ready();page.get_by_role('button',name='Remember Moonlight tea party',exact=True).click();assert page.locator('[data-memory=tea]').count()==1
+ page.get_by_role('button',name='Photo corner ♡',exact=True).click();page.locator('.photo-preview canvas').wait_for();page.get_by_role('button',name='Wink ♡',exact=True).click();page.get_by_role('button',name='Garden morning',exact=True).click();page.wait_for_timeout(500)
+ with page.expect_download(timeout=15000) as download:page.get_by_role('button',name='Save postcard PNG ♡',exact=True).click()
+ download.value.save_as('/tmp/For-Nancy-Cozy-Postcard.png');page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).postcards.length===1")
+ card=cozy()['postcards'][0];assert card['background']=='Garden morning' and card['pose']=='wink' and card['place']=='Kitty’s room' and len(card['image'])<18000
+ page.keyboard.press('Escape');page.wait_for_function("document.querySelector('#stage canvas').dataset.keepsakeFrames==='1'")
+ page.get_by_role('button',name='Play together ↗',exact=True).click();page.get_by_role('button',name='Your keepsake wall ♡',exact=True).click();assert page.locator('.postcard-memory img').get_attribute('src')==card['image'];assert page.locator('time').get_attribute('datetime')==card['createdAt'];page.screenshot(path='/tmp/nancy-keepsake-wall.png',full_page=True);page.keyboard.press('Escape')
+ print('PASS fresh real-physics mint discovery → decorate/give → saved table steps → tea ending → room souvenir → storybook → real postcard download and rendered keepsake frame',flush=True)
+ page.emulate_media(reduced_motion='no-preference');page.get_by_role('button',name='Play together ↗',exact=True).click();page.get_by_role('button',name='Gently pet Kitty ♡',exact=True).click()
+ canvas=page.locator('#stage canvas');box=canvas.bounding_box();point=canvas.evaluate("c=>({x:Number(c.dataset.headX),y:Number(c.dataset.headY),angle:Number(c.dataset.viewAngle)})")
+ x=box['x']+point['x']*box['width'];y=box['y']+point['y']*box['height'];page.mouse.move(x,y);page.mouse.down();page.wait_for_function("document.querySelector('#stage canvas').dataset.petting==='true'")
+ before=float(canvas.get_attribute('data-head-look'));page.mouse.move(x+90,y-25,steps=8);page.wait_for_timeout(350);assert abs(float(canvas.get_attribute('data-head-look'))-before)>.002; assert abs(float(canvas.get_attribute('data-view-angle'))-point['angle'])<.02
+ page.mouse.up();page.wait_for_function("document.querySelector('#stage canvas').dataset.petting==='false'");page.mouse.move(x,y);page.mouse.down();page.wait_for_function("document.querySelector('#stage canvas').dataset.petting==='true'");canvas.dispatch_event('pointercancel',{'pointerId':1,'pointerType':'mouse','bubbles':True});page.wait_for_function("document.querySelector('#stage canvas').dataset.petting==='false'");page.mouse.up();page.get_by_role('button',name='Done petting ♡',exact=True).click()
+ page.get_by_role('button',name='Play together ↗',exact=True).click();page.get_by_role('button',name='A teddy cuddle 🧸',exact=True).click();page.wait_for_function("document.querySelector('#stage canvas').dataset.heldItem==='teddy'&&document.querySelector('#stage canvas').dataset.gesture==='offer'")
+ page.get_by_role('button',name='Play together ↗',exact=True).click();page.get_by_role('button',name='High five ✧',exact=True).click();page.wait_for_function("document.querySelector('#stage canvas').dataset.gesture==='highfive'")
+ page.get_by_role('button',name='Hide interface',exact=True).click();assert page.get_by_role('button',name='Show interface · Esc',exact=True).is_visible();assert not page.get_by_role('button',name='Play a mission').is_visible();page.keyboard.press('Escape');assert page.get_by_role('button',name='Play a mission').is_visible()
+ page.get_by_role('button',name='Game settings',exact=True).click();page.get_by_label('Reading size',exact=False).select_option('larger');page.keyboard.press('Escape');page.reload();ready();assert page.locator('main').get_attribute('data-text-size')=='larger'
+ page.get_by_role('button',name='Play together ↗',exact=True).click();page.get_by_role('button',name='Nancy’s letter 💌',exact=True).click();page.get_by_role('button',name='Break the heart seal',exact=True).click();assert float(page.locator('.letter-paper p').first.evaluate('e=>parseFloat(getComputedStyle(e).fontSize)'))>=21;page.keyboard.press('Escape')
+ page.get_by_role('button',name='Game settings',exact=True).click();page.get_by_text('Keep your progress ♡',exact=True).click()
+ with page.expect_download() as backup_download:page.get_by_role('button',name='Download save',exact=True).click()
+ backup_path='/tmp/Nancy-Cozy-Backup.json';backup_download.value.save_as(backup_path);page.keyboard.press('Escape')
+ print('PASS real pointer petting does not orbit the room, release is safe, teddy equips/cuddles, high five, clean-view restore and persistent large reading',flush=True)
+ # Use a fresh narrow phone, with touch and native select/scroll behavior.
+ phone=b.new_page(viewport={'width':320,'height':568},is_mobile=True,has_touch=True,reduced_motion='reduce');phone.on('pageerror',lambda e:errors.append(str(e)));phone.goto(BASE+'/');ready(phone)
+ phone.get_by_role('button',name='Game settings',exact=True).tap();phone.get_by_label('Reading size',exact=False).select_option('larger');phone.get_by_role('button',name='Close Game settings',exact=True).tap()
+ phone.get_by_role('button',name='Play a mission').tap();phone.get_by_role('button',name='Bake cookies with Kitty').tap();phone.get_by_role('button',name='Round',exact=True).tap();phone.get_by_role('button',name='Bake & decorate →',exact=True).tap();phone.get_by_role('button',name='Add a star ★',exact=True).tap();phone.get_by_role('button',name='Ready to give →',exact=True).tap();phone.get_by_role('button',name='Pip 🐰',exact=True).tap();phone.get_by_role('button',name='Give cookie to Pip ♡',exact=True).tap();assert cozy(phone)['cookiesGiven']==1
+ assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth');phone.screenshot(path='/tmp/nancy-cozy-phone.png',full_page=True);phone.get_by_role('button',name='Close Bake cookies with Kitty',exact=True).tap();phone.get_by_role('button',name='Hide interface',exact=True).tap();phone.get_by_role('button',name='Show interface · Esc',exact=True).tap();assert phone.get_by_role('button',name='Play a mission').is_visible()
+ phone.get_by_role('button',name='Game settings',exact=True).tap();phone.get_by_text('Keep your progress ♡',exact=True).tap();phone.get_by_label('Choose Kitty save backup',exact=True).set_input_files(backup_path);phone.get_by_role('button',name='Restore this backup',exact=True).tap();ready(phone);phone.get_by_role('button',name='Close Game settings',exact=True).tap();assert cozy(phone)['tea']['complete'] and cozy(phone)['postcards'][0]['id']==card['id'];phone.reload();ready(phone);phone.wait_for_function("document.querySelector('#stage canvas').dataset.keepsakeFrames==='1'");assert phone.locator('main').get_attribute('data-text-size')=='larger';assert phone.get_by_role('button',name='Remember Moonlight tea party',exact=True).is_visible()
+ phone.close();page.close()
+ broken=b.new_page(viewport={'width':390,'height':844});broken.on('pageerror',lambda e:errors.append(str(e)));broken.add_init_script("localStorage.setItem('kitty-nancy-cozy-v1',"+json.dumps(json.dumps({'postcards':[{**card,'image':'data:image/jpeg;base64,AAAA'}]}))+");");broken.goto(BASE+'/');ready(broken);assert broken.locator('.scene-failure').count()==0;assert broken.get_by_role('button',name='Play a mission').is_enabled();broken.close()
+ assert not errors,errors
+ print('PASS 320px phone touch cookie play, extra-large menus, reachable close, clean-view restore, actual cross-device keepsake/tea backup and corrupt-thumbnail isolation; zero page errors. Physical phone/Safari remain unverified.',flush=True);b.close()

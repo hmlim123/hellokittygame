@@ -22,6 +22,7 @@ export function serializeBackup(save: SaveState) {
         equipment: save.equipment,
         preferences: save.preferences,
         journal: save.journal,
+        cozy: save.cozy,
       },
     },
     null,
@@ -72,6 +73,7 @@ const SAVE_KEYS = [
   "kitty-nancy-adventure-v1",
   "kitty-nancy-equipment-v1",
   "kitty-nancy-missions-v1",
+  "kitty-nancy-cozy-v1",
   "kitty-room-preferences-v1",
   PREVIOUS_BACKUP,
 ];

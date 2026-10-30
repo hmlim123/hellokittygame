@@ -9,7 +9,7 @@ SUITES = [
     'controls-browser.py', 'movement-browser.py', 'journey-browser.py',
     'presentation-browser.py', 'device-browser.py', 'release-browser.py',
     'chapter-browser.py', 'play-polish-browser.py', 'navigation-browser.py',
-    'react-browser.py',
+    'react-browser.py', 'cozy-browser.py',
 ]
 ROOT=Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
@@ -58,6 +58,6 @@ with (results/'preview.log').open('w') as log:
         except ProcessLookupError:pass
         server.wait(timeout=10)
         screenshots=results/'screenshots';screenshots.mkdir(exist_ok=True)
-        for pattern in ['nancy-*.png','kitty-*.png','react-*.png','For-Nancy-Hello-Kitty.png']:
+        for pattern in ['nancy-*.png','kitty-*.png','react-*.png','For-Nancy-*.png']:
             for path in Path('/tmp').glob(pattern):
                 if path.stat().st_mtime>=run_started:shutil.copy2(path,screenshots/path.name)

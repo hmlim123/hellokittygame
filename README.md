@@ -9,6 +9,31 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Cozy days · v1.7.0
+
+- **Play a mission → Bake cookies with Kitty:** choose a heart, star or round
+  cutter, add icing and sprinkles, then give the cookie to Kitty, Momo or Pip.
+  No timer or penalties; unfinished cookies save between visits.
+- **Play a mission → Moonlight tea party:** gather mint automatically beside the
+  glade entrance, bake a cookie for Momo, then approach the pink tea table to the
+  east. Place two cups and the cookie to unlock an ending, a storybook page and a
+  tiny teacup at home. Pause the story without losing progress. The table keeps
+  the shape, icing and sprinkles of Momo’s gift, even after baking another cookie.
+- **Play together → Your keepsake wall:** the six most recent real postcards
+  appear as frames in Kitty’s room. Open one for its outfit, place, pose,
+  atmosphere and local date/time. Small thumbnails also transfer in save backups;
+  keep the downloaded full-resolution PNGs as a separate album.
+- **Play together → Gently pet Kitty:** hold and stroke her to guide her attention
+  without orbiting the camera. Choose Done petting to rotate again. High five
+  remains available, and A teddy cuddle equips and cuddles the teddy in one step.
+- **Settings → Reading size:** Standard, Large or Extra large. **Hide interface**
+  shows a clean scene, with a visible Show interface button; H and Escape work
+  on a keyboard. This view is temporary and guards adventure movement.
+
+Physical phone and Safari playtesting remains pending. The
+[device review script](docs/phone-playtest.md) separates the real-device checks
+from automated Chromium phone emulation. The main room still has three buttons.
+
 ## Production polish · v1.6.0
 
 The six-stage implementation is recorded in [the production plan](docs/production-plan.md).
@@ -268,6 +293,7 @@ python tests/play-polish-browser.py
 python tests/navigation-browser.py
 python tests/movement-browser.py
 python tests/controls-browser.py
+python tests/cozy-browser.py
 ```
 
 Set `KITTY_BASE_URL` or `CHROMIUM_PATH` to override the defaults. It checks room
@@ -301,8 +327,8 @@ npm run build
 
 The runner owns an isolated preview on port 8066 and stops it on exit. It runs
 keyboard/touch/camera, fresh reward journey, presentation, phone/orientation,
-save-failure/transfer/tab-refresh, full chapter, polish, navigation and original
-quest checks. Results and screenshots go to ignored `test-results/`. GitHub Pages
+save-failure/transfer/tab-refresh, full chapter, polish, navigation, original
+quests and the new cozy journey (eleven suites). Results and screenshots go to ignored `test-results/`. GitHub Pages
 runs this same gate before uploading the website; failures retain diagnostics
 and prevent deployment. Dependencies are pinned in `tests/browser-requirements.txt`.
 

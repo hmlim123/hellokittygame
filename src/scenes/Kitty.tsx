@@ -1,7 +1,7 @@
 import { updateWalking, walkingRig } from "./walk-animation";
 import { effectTime } from "./effect-motion";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
-import { useFrame, type ThreeEvent } from "@react-three/fiber";
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -78,6 +78,41 @@ export function Kitty({
     hero = useMemo(() => makeBlenderKitty(asset, id), [asset, id]),
     reduced = useReducedMotion();
   const effect = useGameStore((s) => s.effect);
+  const petMode = useGameStore((s) => s.petMode);
+  const canvas = useThree((s) => s.gl.domElement);
+  const stroke = useRef({ down: false, x: 0, y: 0 });
+  const headPoint = useMemo(() => new THREE.Vector3(), []);
+  const petCapture = useRef<{
+    id: number;
+    target: { releasePointerCapture(id: number): void };
+  } | null>(null);
+  useEffect(() => {
+    const clear = () => {
+      stroke.current.down = false;
+      const captured = petCapture.current;
+      petCapture.current = null;
+      if (captured) {
+        try {
+          captured.target.releasePointerCapture(captured.id);
+        } catch {}
+      }
+    };
+    if (!petMode) clear();
+    addEventListener("blur", clear);
+    canvas.addEventListener("pointercancel", clear);
+    canvas.addEventListener("lostpointercapture", clear);
+    const hidden = () => {
+      if (document.hidden) clear();
+    };
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      clear();
+      removeEventListener("blur", clear);
+      canvas.removeEventListener("pointercancel", clear);
+      canvas.removeEventListener("lostpointercapture", clear);
+      document.removeEventListener("visibilitychange", hidden);
+    };
+  }, [petMode, canvas]);
   const sharedGesture = useGameStore((s) => s.gesture),
     gesture = performance || sharedGesture;
   const baseY = useMemo(
@@ -147,12 +182,34 @@ export function Kitty({
       reaction.current.time += dt;
       setBlenderAttention(
         hero,
-        locomotion?.current.speed ? 0 : state.pointer.x,
-        locomotion?.current.speed ? 0 : state.pointer.y,
+        locomotion?.current.speed
+          ? 0
+          : stroke.current.down
+            ? stroke.current.x
+            : state.pointer.x,
+        locomotion?.current.speed
+          ? 0
+          : stroke.current.down
+            ? stroke.current.y
+            : state.pointer.y,
       );
     }
     updateBlender(hero, Math.min(dt, 0.1), { reduced, idle: true });
     updateHeldItem(hero, Math.min(dt, 0.1));
+    if (interactive) {
+      state.gl.domElement.dataset.petting = String(
+        petMode && stroke.current.down,
+      );
+      state.gl.domElement.dataset.headLook = String(
+        hero.userData.blender.headIdle.rotation.y,
+      );
+      state.gl.domElement.dataset.gesture = gesture.kind;
+      state.gl.domElement.dataset.heldItem = equipment?.item || "none";
+      hero.userData.blender.headIdle.getWorldPosition(headPoint);
+      headPoint.project(state.camera);
+      state.gl.domElement.dataset.headX = String((headPoint.x + 1) / 2);
+      state.gl.domElement.dataset.headY = String((1 - headPoint.y) / 2);
+    }
     if (locomotion) {
       if (updateWalking(hero, dt, locomotion.current.speed, reduced))
         useGameStore.getState().footstep();
@@ -198,7 +255,7 @@ export function Kitty({
         : 0);
   });
   const touch = (e: ThreeEvent<MouseEvent>) => {
-    if (!interactive) return;
+    if (!interactive || petMode) return;
     e.stopPropagation();
     if (e.delta > 7) return;
     onTouch?.(blenderTouchPart(e.object));
@@ -210,6 +267,46 @@ export function Kitty({
       position={position}
       rotation={rotation}
       onClick={touch}
+      onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+        if (!interactive || !petMode) return;
+        e.stopPropagation();
+        stroke.current.down = true;
+        const target = e.target as unknown as {
+          setPointerCapture(id: number): void;
+          releasePointerCapture(id: number): void;
+        };
+        target.setPointerCapture(e.pointerId);
+        petCapture.current = { id: e.pointerId, target };
+        useGameStore
+          .getState()
+          .react(
+            "pet",
+            "A gentle little stroke. Kitty leans toward your hand. ♡",
+          );
+      }}
+      onPointerMove={(e: ThreeEvent<PointerEvent>) => {
+        if (!interactive || !petMode || !stroke.current.down) return;
+        e.stopPropagation();
+        const canvas = e.nativeEvent.target as HTMLCanvasElement;
+        const rect = canvas.getBoundingClientRect();
+        stroke.current.x = Math.max(
+          -1,
+          Math.min(1, ((e.clientX - rect.left) / rect.width) * 2 - 1),
+        );
+        stroke.current.y = Math.max(
+          -1,
+          Math.min(1, 1 - ((e.clientY - rect.top) / rect.height) * 2),
+        );
+      }}
+      onPointerUp={(e: ThreeEvent<PointerEvent>) => {
+        if (!stroke.current.down) return;
+        e.stopPropagation();
+        stroke.current.down = false;
+        if (petCapture.current) {
+          petCapture.current.target.releasePointerCapture(e.pointerId);
+          petCapture.current = null;
+        }
+      }}
       dispose={null}
     />
   );

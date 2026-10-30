@@ -47,6 +47,14 @@ export function MissionsPanel() {
         </button>
       )}
       <div className="mission-grid">
+        <button
+          className="mission-card"
+          onClick={() => useGameStore.getState().openPanel("baking")}
+        >
+          <span>🍪</span>
+          <strong>Bake cookies with Kitty</strong>
+          <small>Choose, decorate, and give a little gift. No timer.</small>
+        </button>
         {MISSIONS.map((m) => (
           <button
             key={m.id}
@@ -90,6 +98,12 @@ export function MissionsPanel() {
         </span>
       </button>
       <div className="memory-actions">
+        <button onClick={() => useGameStore.getState().startTea()}>
+          Moonlight tea party ☾
+        </button>
+        <button onClick={() => useGameStore.getState().openPanel("keepsakes")}>
+          Your keepsake wall ♡
+        </button>
         <button onClick={() => useGameStore.getState().openMemory()}>
           Your storybook ♡
         </button>
@@ -143,6 +157,16 @@ export function TogetherPanel() {
       <span className="eyebrow">A LITTLE TIME WITH KITTY</span>
       <h2>Play together</h2>
       <p>Tap Kitty’s bow, paws, nose, or head in the room, too.</p>
+      <div className="memory-actions">
+        <button onClick={() => useGameStore.getState().startPetting()}>
+          Gently pet Kitty ♡
+        </button>
+        <button onClick={() => useGameStore.getState().cuddleTeddy()}>
+          A teddy cuddle 🧸
+        </button>
+        <button onClick={() => open("baking")}>Bake together 🍪</button>
+        <button onClick={() => open("keepsakes")}>Your keepsake wall ♡</button>
+      </div>
       <div className="together-grid">
         {(
           [
@@ -342,6 +366,22 @@ export function SettingsPanel({
           }
         />
         Reduce motion
+      </label>
+      <label className="detail-setting">
+        Reading size
+        <select
+          value={preferences.textSize}
+          onChange={(e) =>
+            set({ textSize: e.target.value as Preferences["textSize"] })
+          }
+        >
+          <option value="standard">Standard</option>
+          <option value="large">Large</option>
+          <option value="larger">Extra large</option>
+        </select>
+        <small>
+          Changes story, letter, menu, and goal text. Your choice saves here.
+        </small>
       </label>
       <label className="detail-setting">
         Game visual detail

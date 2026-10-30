@@ -281,7 +281,7 @@ export function interactChapter(
     c.letterFound = true;
     return say(
       "A letter for Nancy",
-      "You found a heart-sealed envelope. Kitty tucks it into her paws to bring home. Your own special message is still being written.",
+      "You found a heart-sealed envelope. Kitty tucks it into her paws to bring home. A loving message is waiting behind its little seal.",
       "envelope",
       { chime: true, wave: true },
     );

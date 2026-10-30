@@ -14,7 +14,7 @@ with sync_playwright() as p:
   assert all(abs(s['cam']-s['x'])<.0001 for s in usable),'camera is following tiles rather than interpolated Kitty'
   for prev,now in zip(usable,usable[1:]):
    assert now['x']>=prev['x']-1e-5,'snap backwards'
-   if now['t']-prev['t']>20:assert now['x']-prev['x']>.001,'pause at a tile boundary'
+   if now['t']-prev['t']>20:assert now['x']-prev['x']>.001,('pause at a tile boundary',motion,prev,now)
   end=page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x");page.wait_for_timeout(600);assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x")==end
   for x in range(end-1,3,-1):page.keyboard.press('ArrowLeft');page.wait_for_function("x=>JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x===x",arg=x,timeout=15000)
   page.wait_for_function("Math.abs(Number(document.querySelector('#world canvas').dataset.renderX)-4)<.001");page.keyboard.press('ArrowLeft');page.wait_for_function("Number(document.querySelector('#world canvas').dataset.physicsContacts)>0",timeout=5000);page.wait_for_timeout(200);assert abs(float(page.locator('#world canvas').get_attribute('data-body-x'))-4)<.001;assert abs(float(page.locator('#world canvas').get_attribute('data-render-x'))-4)<.001

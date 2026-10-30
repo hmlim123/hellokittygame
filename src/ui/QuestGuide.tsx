@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { useGameStore } from "../game/store";
 import { questGuide } from "../game/quest-guide";
+import { teaGoal } from "../game/cozy";
 export function QuestGuide() {
   const a = useGameStore((s) => s.adventure),
+    cozy = useGameStore((s) => s.cozy),
     equipment = useGameStore((s) => s.equipment),
     contacts = useGameStore((s) => s.physicsContacts),
     openMap = useGameStore((s) => s.openQuestMap);
-  const guide = questGuide(a, equipment),
+  const teaActive = cozy.tea.active && !cozy.tea.complete && a.map === "glade";
+  const guide = teaActive
+      ? { ...teaGoal(cozy), tool: undefined }
+      : questGuide(a, equipment),
     [idle, setIdle] = useState(false);
   useEffect(() => {
     setIdle(false);
@@ -28,8 +33,20 @@ export function QuestGuide() {
       <details key={guide.key} className={idle ? "hint-ready" : ""}>
         <summary>{idle ? "Need a little hint?" : "A little hint"}</summary>
         <p>{guide.hint}. You can take your time.</p>
-        <button onClick={openMap}>Show the walking path</button>
+        {!teaActive && <button onClick={openMap}>Show the walking path</button>}
       </details>
+      {teaActive && (
+        <div className="memory-actions">
+          {cozy.tea.leaves && !cozy.tea.baked && (
+            <button onClick={() => useGameStore.getState().openPanel("baking")}>
+              Bake a cookie ↗
+            </button>
+          )}
+          <button onClick={() => useGameStore.getState().pauseTea()}>
+            Pause this story
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

@@ -5,11 +5,26 @@ import { assetUrl } from "../game/assets";
 import { Dialog } from "./Dialog";
 export function Storybook() {
   const adventure = useGameStore((s) => s.adventure),
+    tea = useGameStore((s) => s.cozy.tea),
     requested = useGameStore((s) => s.memoryPage),
     close = useGameStore((s) => s.closePanel),
     open = useGameStore((s) => s.openPanel),
     start = useGameStore((s) => s.startGlade);
-  const pages = memoryPages(adventure),
+  const pages = [
+      ...memoryPages(adventure),
+      ...(tea.started
+        ? [
+            {
+              id: "tea",
+              title: "A cup of kindness",
+              art: "picnic",
+              place: "Moonlight tea garden",
+              text: "A basket of mint, a cookie made for Momo, and two little cups turned an ordinary evening into something special. A tiny teacup came home with Kitty, to remember the kindness Nancy shared.",
+              unlocked: tea.complete,
+            },
+          ]
+        : []),
+    ],
     unlocked = pages.filter((p) => p.unlocked);
   const [selected, setSelected] = useState(
     requested || unlocked[0]?.id || null,
@@ -48,6 +63,11 @@ export function Storybook() {
             {page.id === "postcard" && (
               <button onClick={() => open("photo")}>
                 Make another postcard
+              </button>
+            )}
+            {page.id === "tea" && (
+              <button className="primary" onClick={() => open("tea")}>
+                Remember our tea party ☾
               </button>
             )}
           </div>
@@ -98,6 +118,7 @@ export function Storybook() {
         ))}
       </div>
       <div className="memory-actions">
+        <button onClick={() => open("keepsakes")}>Your keepsake wall ♡</button>
         <button onClick={start}>Visit Butterfly Glade ↗</button>
         <button onClick={() => open("photo")}>Photo corner ♡</button>
         {endingUnlocked(adventure) && (

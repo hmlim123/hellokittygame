@@ -37,11 +37,13 @@ describe("continuous movement input", () => {
   it("queues the next held tile immediately and stops queuing on release", () => {
     const s = store();
     s.getState().holdMove("right");
+    expect(s.getState().moveCommand?.continuous).toBe(false);
     const first = s.getState().moveCommand?.id;
     s.getState().finishMove(false);
     expect(s.getState().adventure.x).toBe(8);
     expect(s.getState().moving).toBe(true);
     expect(s.getState().moveCommand?.id).not.toBe(first);
+    expect(s.getState().moveCommand?.continuous).toBe(true);
     expect(s.getState().heldDirection).toBe("right");
     s.getState().releaseMove("right");
     s.getState().finishMove(false);
@@ -56,6 +58,7 @@ describe("continuous movement input", () => {
     s.getState().releaseMove("up");
     s.getState().finishMove(false);
     expect(s.getState().moveCommand?.dir).toBe("up");
+    expect(s.getState().moveCommand?.continuous).toBe(false);
     s.getState().finishMove(false);
     expect(s.getState().adventure).toMatchObject({ x: 8, z: 7 });
     expect(s.getState().moving).toBe(false);

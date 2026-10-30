@@ -5,6 +5,18 @@ import {
 } from "./travel-state";
 import type { AreaId } from "./types";
 import { nearbyItemAction } from "./context-action";
+import {
+  newCookie,
+  normalizeCozy,
+  nearTea,
+  TEA_LEAVES,
+  TEA_TABLE,
+  type CookieShape,
+  type Icing,
+  type Decoration,
+  type CookieFriend,
+  type PostcardMemory,
+} from "./cozy";
 import { parseBackup, commitRestoredSave, PREVIOUS_BACKUP } from "./backup";
 import type { DiscoveryEffect } from "./types";
 import {
@@ -89,6 +101,22 @@ export interface GameState extends SaveState {
   arrangeStar(id: string): void;
   finishEnding(): void;
   savePostcard(): void;
+  keepPostcard(memory: PostcardMemory): void;
+  newCookie(): void;
+  shapeCookie(shape: CookieShape): void;
+  iceCookie(icing: Icing): void;
+  stampCookie(kind: Decoration, x?: number, y?: number): void;
+  cookieStage(stage: "shape" | "decorate" | "give"): void;
+  giveCookie(friend: CookieFriend): void;
+  startTea(): void;
+  pauseTea(): void;
+  placeTea(): void;
+  petMode: boolean;
+  startPetting(): void;
+  stopPetting(): void;
+  cuddleTeddy(): void;
+  viewOnly: boolean;
+  setViewOnly(hidden: boolean): void;
   worldRevision: number;
   stepPulse: number;
   footstep(): void;
@@ -109,7 +137,12 @@ export interface GameState extends SaveState {
   holdMove(dir: Direction, options?: { restore?: boolean }): void;
   releaseMove(dir?: Direction): void;
   moving: boolean;
-  moveCommand: { id: number; dir: Direction; issuedAt: number } | null;
+  moveCommand: {
+    id: number;
+    dir: Direction;
+    issuedAt: number;
+    continuous: boolean;
+  } | null;
   queuedDirection: Direction | null;
   sceneReady: boolean;
   saveFailed: boolean;
@@ -124,7 +157,7 @@ export interface GameState extends SaveState {
   followQuest(id: QuestId): void;
   react(kind: Gesture, text?: string): void;
   chat(message: string): void;
-  requestMove(dir: Direction): void;
+  requestMove(dir: Direction, continuous?: boolean): void;
   finishMove(blocked: boolean): void;
   interact(choice?: string): void;
   enter(type: "D" | "E" | "A" | "V"): void;
@@ -185,6 +218,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
     equipment: s.equipment,
     preferences: s.preferences,
     journal: s.journal,
+    cozy: s.cozy,
   });
   const useStore = create<GameState>()(
     persist<GameState, [], [], SaveState>(
@@ -299,6 +333,34 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               )
             : undefined;
         };
+        const checkTeaEncounter = () => {
+          const s = get();
+          if (
+            !s.cozy.tea.active ||
+            s.cozy.tea.complete ||
+            s.panel ||
+            s.dialogue
+          )
+            return;
+          if (!s.cozy.tea.leaves && nearTea(s.adventure, TEA_LEAVES)) {
+            set({
+              cozy: { ...s.cozy, tea: { ...s.cozy.tea, leaves: true } },
+              gesture: { id: ++serial, kind: "excited" },
+              notice: notify(
+                "A basket of fragrant mint",
+                "You found the tea leaves! Bake a cookie for Momo next. The basket is safe with Kitty.",
+                "bloom",
+              ),
+            });
+          } else if (s.cozy.tea.baked && nearTea(s.adventure, TEA_TABLE)) {
+            set({
+              panel: "tea",
+              heldDirection: null,
+              queuedDirection: null,
+              notice: null,
+            });
+          }
+        };
         const finishMission = (mission: Mission) => {
           const room = copy(get().room),
             journal = copy(get().journal);
@@ -336,6 +398,201 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
         };
         return {
           ...legacy,
+          petMode: false,
+          viewOnly: false,
+          setViewOnly(hidden) {
+            if (
+              get().panel ||
+              get().dialogue ||
+              get().mission ||
+              get().arrival ||
+              get().moving
+            )
+              return;
+            set({
+              viewOnly: hidden,
+              petMode: false,
+              heldDirection: null,
+              queuedDirection: null,
+            });
+          },
+          startPetting() {
+            if (get().mode !== "room" || get().mission) return;
+            set({ panel: null, petMode: true });
+            get().react(
+              "pet",
+              "Gently stroke Kitty to help her follow your hand. Choose Done petting to rotate the room again. ♡",
+            );
+          },
+          stopPetting() {
+            set({ petMode: false });
+          },
+          cuddleTeddy() {
+            if (get().mode !== "room" || get().mission) return;
+            get().equip("item", "teddy");
+            set({ panel: null, petMode: false });
+            get().react(
+              "offer",
+              "Kitty brings her teddy close for a cozy little cuddle. ♡",
+            );
+          },
+          keepPostcard(memory) {
+            const s = get(),
+              cozy = normalizeCozy({
+                ...s.cozy,
+                postcards: [memory, ...s.cozy.postcards],
+              });
+            if (!cozy.postcards.some((p) => p.id === memory.id)) return;
+            set({ cozy });
+          },
+          newCookie() {
+            set({ cozy: { ...get().cozy, cookie: newCookie() } });
+          },
+          shapeCookie(shape) {
+            const s = get();
+            if (
+              s.cozy.cookie.stage !== "shape" ||
+              !["heart", "star", "round"].includes(shape)
+            )
+              return;
+            set({ cozy: { ...s.cozy, cookie: { ...s.cozy.cookie, shape } } });
+          },
+          iceCookie(icing) {
+            const s = get();
+            if (
+              s.cozy.cookie.stage !== "decorate" ||
+              !["rose", "honey", "lavender"].includes(icing)
+            )
+              return;
+            set({ cozy: { ...s.cozy, cookie: { ...s.cozy.cookie, icing } } });
+          },
+          stampCookie(kind, x, y) {
+            const s = get(),
+              c = s.cozy.cookie,
+              i = c.stamps.length;
+            if (
+              c.stage !== "decorate" ||
+              i >= 12 ||
+              !["heart", "star", "berry"].includes(kind)
+            )
+              return;
+            const angle = i * 2.4,
+              radius = 6 + Math.floor(i / 3) * 3;
+            const next = normalizeCozy({
+              ...s.cozy,
+              cookie: {
+                ...c,
+                stamps: [
+                  ...c.stamps,
+                  {
+                    kind,
+                    x: x ?? 50 + Math.cos(angle) * radius,
+                    y: y ?? 50 + Math.sin(angle) * radius,
+                  },
+                ],
+              },
+            });
+            set({ cozy: next });
+          },
+          cookieStage(stage) {
+            const s = get(),
+              c = s.cozy.cookie;
+            if (
+              c.stage === "served" ||
+              !["shape", "decorate", "give"].includes(stage) ||
+              (stage === "give" && !c.stamps.length)
+            )
+              return;
+            set({ cozy: { ...s.cozy, cookie: { ...c, stage } } });
+          },
+          giveCookie(friend) {
+            const s = get(),
+              c = s.cozy.cookie;
+            if (
+              s.panel !== "baking" ||
+              c.stage !== "give" ||
+              !c.stamps.length ||
+              !["kitty", "momo", "pip"].includes(friend)
+            )
+              return;
+            const tea = {
+              ...s.cozy.tea,
+              cookie:
+                s.cozy.tea.cookie ??
+                (s.cozy.tea.leaves && friend === "momo"
+                  ? { ...c, stage: "served" as const, friend }
+                  : null),
+              baked:
+                s.cozy.tea.baked || (s.cozy.tea.leaves && friend === "momo"),
+            };
+            set({
+              cozy: {
+                ...s.cozy,
+                tea,
+                cookie: { ...c, stage: "served", friend },
+                cookiesGiven: s.cozy.cookiesGiven + 1,
+              },
+              gesture: { id: ++serial, kind: "excited" },
+              notice: notify(
+                "Made with a little love",
+                `${friend === "kitty" ? "Kitty" : friend === "momo" ? "Momo" : "Pip"} loves your ${c.shape} cookie. ${tea.baked && !s.cozy.tea.baked ? "The moonlight tea table is ready to set in the glade." : "You can bake another whenever you like."}`,
+                "picnic",
+              ),
+            });
+          },
+          startTea() {
+            const s = get();
+            if (s.moving || s.mission || s.arrival) return;
+            if (s.cozy.tea.complete) {
+              set({ panel: "tea" });
+              return;
+            }
+            set({
+              cozy: {
+                ...s.cozy,
+                tea: { ...s.cozy.tea, started: true, active: true },
+              },
+            });
+            get().startGlade();
+            checkTeaEncounter();
+          },
+          pauseTea() {
+            set({
+              cozy: {
+                ...get().cozy,
+                tea: { ...get().cozy.tea, active: false },
+              },
+            });
+          },
+          placeTea() {
+            const s = get(),
+              t = s.cozy.tea;
+            if (
+              s.panel !== "tea" ||
+              !t.baked ||
+              t.complete ||
+              !nearTea(s.adventure, TEA_TABLE)
+            )
+              return;
+            const table = Math.min(3, t.table + 1),
+              complete = table === 3;
+            set({
+              cozy: {
+                ...s.cozy,
+                tea: { ...t, table, complete, active: !complete },
+              },
+              ...(complete
+                ? {
+                    gesture: { id: ++serial, kind: "wave" as const },
+                    notice: notify(
+                      "A cup of kindness",
+                      "Your moonlight tea party is a storybook memory. A tiny teacup is waiting at home.",
+                      "picnic",
+                    ),
+                  }
+                : {}),
+            });
+          },
           mapOnOpen: false,
           openQuestMap() {
             if (get().moving || get().mission?.active || get().arrival) return;
@@ -405,6 +662,8 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               tracker = new EncounterTracker();
               set({
                 ...save,
+                petMode: false,
+                viewOnly: false,
                 worldRevision: get().worldRevision + 1,
                 sceneReady: false,
                 saveFailed: false,
@@ -526,10 +785,17 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             });
           },
           openMemory(id) {
+            if (get().viewOnly) return;
             const page = memoryPages(get().adventure).find(
               (p) => p.id === id && p.unlocked,
             );
-            set({ panel: "storybook", memoryPage: page?.id || null });
+            set({
+              panel: "storybook",
+              memoryPage:
+                id === "tea" && get().cozy.tea.complete
+                  ? "tea"
+                  : page?.id || null,
+            });
           },
           arrangeStar(id) {
             const s = get();
@@ -619,6 +885,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             const s = get();
             if (
               s.mode !== "adventure" ||
+              s.viewOnly ||
               s.panel ||
               s.dialogue ||
               !s.sceneReady
@@ -655,6 +922,8 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             }
             set({
               mode,
+              petMode: false,
+              viewOnly: false,
               effect: null,
               arrival: null,
               panel: null,
@@ -671,9 +940,16 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             tracker = new EncounterTracker();
           },
           openPanel(panel, tab) {
-            if (get().moving || get().mission?.active || get().arrival) return;
+            if (
+              get().viewOnly ||
+              get().moving ||
+              get().mission?.active ||
+              get().arrival
+            )
+              return;
             set({
               panel,
+              petMode: false,
               inventoryTab: tab || get().inventoryTab,
               ...(panel === "inventory" ? { mapOnOpen: false } : {}),
             });
@@ -767,10 +1043,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               gesture: { id: ++serial, kind },
             });
           },
-          requestMove(dir) {
+          requestMove(dir, continuous = false) {
             const s = get();
             if (
               s.mode !== "adventure" ||
+              s.viewOnly ||
               s.panel ||
               s.dialogue ||
               !s.sceneReady
@@ -782,7 +1059,12 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             }
             set({
               moving: true,
-              moveCommand: { id: ++serial, dir, issuedAt: performance.now() },
+              moveCommand: {
+                id: ++serial,
+                dir,
+                issuedAt: performance.now(),
+                continuous,
+              },
             });
           },
           finishMove(blocked) {
@@ -809,11 +1091,16 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               physicsContacts: s.physicsContacts + (blocked ? 1 : 0),
               heldDirection,
             });
-            if (queued && !get().dialogue) get().requestMove(queued);
+            checkTeaEncounter();
+            if (queued && !get().dialogue)
+              get().requestMove(
+                queued,
+                !blocked && !buffered && heldDirection === dir,
+              );
           },
           interact(choice) {
             const s = get();
-            if (s.moving) return;
+            if (s.moving || s.viewOnly) return;
             const a = copy(s.adventure);
             const source = choice ? s.dialogue?.source : nearbyObject(a);
             if (source && ["D", "E", "A", "V"].includes(source.type)) {
@@ -842,6 +1129,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             }
           },
           enter(type) {
+            if (get().viewOnly) return;
             const a = copy(get().adventure);
             if (enterPath(a, type).changedMap)
               applyStory(a, undefined, {
@@ -1007,6 +1295,9 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 ? rawPreferences
                 : {}),
             }),
+            cozy: normalizeCozy(
+              read(storage, "kitty-nancy-cozy-v1") ?? previous.cozy,
+            ),
             ...(progressChanged
               ? {
                   dialogue: null,

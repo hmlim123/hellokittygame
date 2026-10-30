@@ -1,4 +1,5 @@
 import type { SaveState, Preferences } from "./types";
+import { normalizeCozy } from "./cozy";
 import {
   normalizeAdventure,
   normalizeEquipment,
@@ -44,6 +45,10 @@ export function normalizePreferences(value: unknown): Preferences {
     motion: p.motion === "reduce" ? "reduce" : "system",
     quality:
       p.quality === "gentle" || p.quality === "crisp" ? p.quality : "auto",
+    textSize:
+      p.textSize === "large" || p.textSize === "larger"
+        ? p.textSize
+        : "standard",
   };
 }
 export function migrateLegacy(storage: StorageLike): SaveState {
@@ -52,6 +57,7 @@ export function migrateLegacy(storage: StorageLike): SaveState {
   );
   return {
     adventure,
+    cozy: normalizeCozy(read(storage, "kitty-nancy-cozy-v1")),
     room: normalizeRoom(
       read(storage, "kitty-room-3d-v1"),
       read(storage, "kitty-picnic-v1"),
@@ -74,6 +80,7 @@ export function sanitizeSave(value: unknown, fallback: SaveState): SaveState {
   const adventure = normalizeAdventure(s.adventure ?? fallback.adventure);
   return {
     adventure,
+    cozy: normalizeCozy(s.cozy ?? fallback.cozy),
     room: normalizeRoom(s.room ?? fallback.room),
     equipment: normalizeEquipment(s.equipment ?? fallback.equipment, adventure),
     journal: normalizeJournal(s.journal ?? fallback.journal),
@@ -87,6 +94,7 @@ export function mirrorLegacy(storage: StorageLike, s: SaveState) {
     "kitty-nancy-adventure-v1": s.adventure,
     "kitty-nancy-equipment-v1": s.equipment,
     "kitty-nancy-missions-v1": s.journal,
+    "kitty-nancy-cozy-v1": s.cozy,
     "kitty-room-preferences-v1": {
       ...(old && typeof old === "object" ? old : {}),
       ...s.preferences,

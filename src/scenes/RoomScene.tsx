@@ -6,6 +6,7 @@ import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { Souvenirs } from "./Souvenirs";
+import { KeepsakeWall } from "./KeepsakeWall";
 import { createRoomGeometry } from "../../dist/scene.js";
 import { FriendArrival } from "../../dist/friend-arrival.js";
 import { makeBow, heartMesh } from "../../dist/models.js";
@@ -158,6 +159,8 @@ function HuntTargets() {
   );
 }
 export function RoomScene() {
+  const petMode = useGameStore((s) => s.petMode),
+    viewOnly = useGameStore((s) => s.viewOnly);
   const equipment = useGameStore((s) => s.equipment),
     id = useGameStore((s) => s.room.selected),
     reset = useGameStore((s) => s.cameraReset),
@@ -175,6 +178,8 @@ export function RoomScene() {
     const onKey = (e: KeyboardEvent) => {
       if (
         !["ArrowLeft", "ArrowRight"].includes(e.key) ||
+        useGameStore.getState().viewOnly ||
+        useGameStore.getState().petMode ||
         useGameStore.getState().mission
       )
         return;
@@ -203,12 +208,13 @@ export function RoomScene() {
       <RoomEnvironment />
       <Shelf />
       <Souvenirs />
+      <KeepsakeWall />
       <Arrival />
       <Kitty
         id={id}
         equipment={equipment}
         animate
-        interactive
+        interactive={!viewOnly}
         onTouch={touch}
         position={[-0.12, 0.08, 0.65]}
         rotation={[0, 0.3, 0]}
@@ -224,6 +230,7 @@ export function RoomScene() {
         minPolarAngle={0.48}
         maxPolarAngle={1.3}
         enablePan={false}
+        enableRotate={!petMode}
         enableDamping
         rotateSpeed={0.65}
       />

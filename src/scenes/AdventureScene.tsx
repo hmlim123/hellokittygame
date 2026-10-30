@@ -498,7 +498,9 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
         x = s.adventure.x + dx,
         z = s.adventure.z + dz;
       activeCommand.current = cmd.id;
-      inputClock.current.reset(cmd.issuedAt);
+      // Automatic held steps belong to the same input budget. Resetting it at
+      // each tile discarded catch-up time and caused a visible boundary pause.
+      if (!cmd.continuous) inputClock.current.reset(cmd.issuedAt);
       m.begin(
         { x, z },
         walkable(s.adventure, x, z),

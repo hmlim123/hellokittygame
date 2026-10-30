@@ -1,4 +1,6 @@
 import { nearbyLabel } from "../game/context-action";
+import { TEA_LEAVES, TEA_TABLE, nearTea } from "../game/cozy";
+import { TeaTable } from "./TeaParty";
 import { bloomAmount, bridgeAmount } from "./effect-motion";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -230,8 +232,54 @@ export function GladeObject({ object: o }: { object: MapObject }) {
 }
 export function GladeScenery() {
   const c = useGameStore((s) => s.adventure.chapter);
+  const tea = useGameStore((s) => s.cozy.tea),
+    a = useGameStore((s) => s.adventure);
   return (
     <>
+      {tea.started && (
+        <>
+          {!tea.leaves && (
+            <group position={[TEA_LEAVES.x, 0, TEA_LEAVES.z]}>
+              <mesh position={[0, 0.11, 0]}>
+                <cylinderGeometry args={[0.24, 0.16, 0.22, 16]} />
+                <meshStandardMaterial color="#d5b088" />
+              </mesh>
+              {[-0.14, 0, 0.14].map((x, i) => (
+                <mesh
+                  key={x}
+                  position={[x, 0.35 + (i % 2) * 0.1, 0]}
+                  rotation={[0, 0, x * 3]}
+                  scale={[0.09, 0.24, 0.035]}
+                >
+                  <sphereGeometry args={[1, 12, 8]} />
+                  <meshStandardMaterial color="#91b79a" />
+                </mesh>
+              ))}
+              {nearTea(a, TEA_LEAVES) && (
+                <Html center position={[0, 0.95, 0]} zIndexRange={[2, 0]}>
+                  <span className="world-label">Fragrant mint ✧</span>
+                </Html>
+              )}
+            </group>
+          )}
+          <group position={[TEA_TABLE.x, 0, TEA_TABLE.z]} scale={0.65}>
+            <TeaTable placed={tea.table} />
+            {tea.baked && nearTea(a, TEA_TABLE) && (
+              <Html center position={[0, 1.25, 0]} zIndexRange={[2, 0]}>
+                <button
+                  className="world-label"
+                  onClick={() => useGameStore.getState().openPanel("tea")}
+                >
+                  {tea.complete
+                    ? "Remember our tea party"
+                    : "Set the tea table"}{" "}
+                  ♡
+                </button>
+              </Html>
+            )}
+          </group>
+        </>
+      )}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[7, -0.005, 6]}>
         <planeGeometry args={[1, 11]} />
         <meshStandardMaterial color="#b8d6df" roughness={0.55} />
