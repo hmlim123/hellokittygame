@@ -34,6 +34,8 @@ Physical phone and Safari playtesting remains pending. The
 [device review script](docs/phone-playtest.md) separates the real-device checks
 from automated Chromium phone emulation. The main room still has three buttons.
 
+[Cookie decorating](docs/nancy-cookie-gift.png) · [Tea-party ending](docs/nancy-tea-ending.png) · [Keepsake wall](docs/nancy-keepsake-wall.png)
+
 ## Production polish · v1.6.0
 
 The six-stage implementation is recorded in [the production plan](docs/production-plan.md).

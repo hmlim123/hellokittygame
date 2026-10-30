@@ -204,7 +204,7 @@ unconfirmed. The published game reports v1.6.1 / build 9276a03.
 Open the letter from Her room → Play together → Nancy’s letter, then break the
 heart seal. It is also available through the discovered envelope's storybook page.
 
-## Cozy expansion · v1.7.0 (in verification)
+## Cozy expansion · v1.7.0 (published; physical review pending)
 
 The user authorized the next six improvements on 2026-10-30. This is a separate
 expansion from the completed production roadmap above.
@@ -220,6 +220,29 @@ expansion from the completed production roadmap above.
 
 The room retains three main buttons. New durable fields normalize old saves and
 participate in legacy mirroring, failure handling and atomic backup/restore. No
-personal memories were invented and Nancy’s letter remains unchanged. Unit and
-new browser journey checks are being run before publication; device/Safari and
-first-time human duration remain explicitly pending.
+personal memories were invented and Nancy’s letter remains unchanged. Unit and browser checks pass; device/Safari review and first-time human
+duration remain explicitly pending.
+
+The expansion checks reproduced a held-movement pause: automatic tiles reset
+the input clock and discarded time on slow frames. They now share one budget
+until a new press/turn, with the original pre-input backlog guard intact. Normal
+and reduced-motion movement, quick taps and touch controls pass locally. The
+browser movement sample uses a longer unclamped corridor after renderer warmup;
+its camera alignment, no-backward-snap and no-boundary-pause assertions remain.
+The backup schema check now includes `cozy`, and damaged thumbnail loading is
+isolated from the room. Unit/domain verification: all 159 checks pass. The ten original local browser suites pass, and the final cozy suite passes
+after thumbnail isolation, including actual backup transfer into a fresh phone
+browser and a damaged-image check. These checks report zero page errors. The
+full eleven-suite GitHub release gate passed before publication.
+
+Deployment confirmed on 2026-10-30: [Pages run 41096613738](https://github.com/hmlim123/hellokittygame/actions/runs/41096613738)
+finished **Success** for source `5342946`. All 159 automated checks and all
+eleven CI browser suites passed before artifact upload and Pages deployment.
+Release link: <https://hmlim123.github.io/hellokittygame/?v=cozy-18>. The build is
+v1.7.0 / 5342946. Documentation-only commits do not change the deployed build.
+
+Preview evidence: [cookie decorating](nancy-cookie-gift.png),
+[moonlight tea party](nancy-tea-ending.png), and
+[keepsake wall](nancy-keepsake-wall.png). The local website archive was refreshed
+with the same version/build. Physical-device/Safari review is still pending in
+[the review script](phone-playtest.md); automated emulation is not that review.
