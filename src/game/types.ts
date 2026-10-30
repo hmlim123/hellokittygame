@@ -88,6 +88,7 @@ export interface Preferences {
   relaxed: boolean;
   letterOpened: boolean;
   motion: "system" | "reduce";
+  quality: "auto" | "gentle" | "crisp";
 }
 export interface Journal {
   completed: Record<MissionId, number>;

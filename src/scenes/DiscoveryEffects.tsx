@@ -1,10 +1,11 @@
 import { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "../game/store";
 import { useReducedMotion } from "./Kitty";
 import { effectTime } from "./effect-motion";
 export function DiscoveryEffects() {
+  const dpr = useThree((s) => s.viewport.dpr), count = dpr <= 1 ? 6 : 12;
   const effect = useGameStore((s) => s.effect),
     map = useGameStore((s) => s.adventure.map),
     group = useRef<THREE.Group>(null),
@@ -29,7 +30,7 @@ export function DiscoveryEffects() {
         child.scale.set(0.035, 0.075, 0.035);
       } else {
         const p = Math.min(1, t / 1.4),
-          angle = (i * Math.PI * 2) / 12;
+          angle = (i * Math.PI * 2) / count;
         child.position.set(
           Math.cos(angle) * p * 0.65,
           0.4 + Math.sin(p * Math.PI) * 0.65,
@@ -47,7 +48,7 @@ export function DiscoveryEffects() {
       position={[effect.at[0], 0, effect.at[1]]}
       name="Discovery animation"
     >
-      {Array.from({ length: 12 }, (_, i) => (
+      {Array.from({ length: count }, (_, i) => (
         <mesh key={i}>
           {effect.kind === "water" ? (
             <sphereGeometry args={[1, 10, 8]} />

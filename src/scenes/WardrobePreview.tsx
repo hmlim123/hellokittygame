@@ -1,4 +1,5 @@
 import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
+import { AdaptiveQuality } from "./AdaptiveQuality";
 import { Suspense, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -34,6 +35,7 @@ export default function WardrobePreview({
       }}
     >
       <PreviewLabel label={label} />
+      <AdaptiveQuality />
       <color attach="background" args={["#f8e9ef"]} />
       <CozyLights />
       <Suspense fallback={null}>

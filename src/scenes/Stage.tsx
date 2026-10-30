@@ -1,4 +1,5 @@
 import { COZY_EXPOSURE } from "./CozyLights";
+import { AdaptiveQuality } from "./AdaptiveQuality";
 import { PHYSICS_STEP } from "./tile-motor";
 import {
   Component,
@@ -111,6 +112,7 @@ export function Stage() {
           }
         >
           <Suspense fallback={null}>
+            <AdaptiveQuality />
             <Physics
               gravity={[0, 0, 0]}
               timeStep={PHYSICS_STEP}

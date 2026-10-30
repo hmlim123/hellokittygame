@@ -1,4 +1,5 @@
 import { CozyLights, WORLD_COLORS } from "./CozyLights";
+import { adventureFraming } from "./adventure-camera";
 import { TileMotor, PHYSICS_STEP } from "./tile-motor";
 import { DiscoveryEffects } from "./DiscoveryEffects";
 import { turnToward } from "./walk-animation";
@@ -528,8 +529,7 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
 function FollowCamera({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
   const a = useGameStore((s) => s.adventure),
     { size } = useThree();
-  const half = size.width < 640 ? 2.65 : 3.8,
-    aspect = size.width / size.height;
+  const { half, aspect, marginX, marginZ } = adventureFraming(size.width, size.height);
   useFrame(({ camera, gl }) => {
     if (camera instanceof THREE.OrthographicCamera) {
       camera.left = -half * aspect;
@@ -543,13 +543,16 @@ function FollowCamera({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
       p =
         anchor.current?.getWorldPosition(new THREE.Vector3()) ||
         new THREE.Vector3(a.x, 0, a.z),
-      x = THREE.MathUtils.clamp(p.x, 3, m.w - 4),
-      z = THREE.MathUtils.clamp(p.z, 3, m.h - 4);
+      x = THREE.MathUtils.clamp(p.x, marginX, m.w - 1 - marginX),
+      z = THREE.MathUtils.clamp(p.z, marginZ, m.h - 1 - marginZ);
     camera.position.set(x, 7, z + 8);
     gl.domElement.dataset.cameraX = String(x);
     gl.domElement.dataset.cameraZ = String(z);
     camera.lookAt(camera.position.x, 0, camera.position.z - 8);
     camera.updateMatrixWorld(true);
+    const screen = p.clone().add(new THREE.Vector3(0, 0.6, 0)).project(camera);
+    gl.domElement.dataset.playerScreenX = String((screen.x + 1) / 2);
+    gl.domElement.dataset.playerScreenY = String((1 - screen.y) / 2);
     gl.domElement.dataset.cameraType = camera.type;
     gl.domElement.dataset.cameraHalf = String(half);
     gl.domElement.dataset.physicsContacts = String(

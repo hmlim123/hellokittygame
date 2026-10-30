@@ -1725,3 +1725,50 @@ dialog > p, .notification p, .quest-card p, .memory-spread p { color: var(--mute
 .quest-guide, .quest-card, .backup-preview, .memory-spread { border-radius: var(--radius-card); }
 button, input, select { border-radius: var(--radius-control); }
 button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visible { outline: 3px solid #804f83; outline-offset: 3px; }
+/* Comfortable targets and a game card that fits a phone viewport. */
+.detail-setting { display: grid; gap: 9px; margin: 18px 0; font-size: 14px; }
+.detail-setting select { min-height: 44px; padding: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.detail-setting small { color: var(--muted); line-height: 1.6; }
+.close-dialog, .dismiss-notice { width: 44px; height: 44px; }
+.quest-guide summary { min-height: 44px; padding-top: 9px; }
+footer { color: var(--muted); }
+@media (max-width: 680px) {
+  main { padding-inline: max(12px, env(safe-area-inset-left)); padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  .header-actions button, .scene-tools button, .world-label.portal, .souvenir-label { min-height: 44px; }
+  .header-actions button { font-size: 11px; }
+  .header-actions > .text-button { max-width: 64px; }
+  .intro:has(.quest-guide) { padding: 16px 3px 14px; }
+  .intro:has(.quest-guide) h1 { margin: 8px 0; font-size: 32px; }
+  .quest-guide { margin-top: 12px; padding: 12px 14px; }
+  .quest-guide h2 { font-size: 17px; }
+  .quest-guide .guide-tool { font-size: 11px; }
+  .quest-guide details { margin-top: 5px; }
+  .stage.adventure { height: clamp(250px, 38svh, 330px); }
+  .notification:not(.reward-notification) { bottom: 53px; padding: 11px; }
+  .notification:not(.reward-notification) h3 { font-size: 17px; margin: 4px 0; }
+  .notification:not(.reward-notification) p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .notification:not(.reward-notification) > img { width: 54px; height: 64px; }
+  .reward-notification { bottom: 12px; max-height: calc(100% - 24px); }
+  .reward-actions button { min-height: 44px; }
+  .adventure-controls { padding: 12px; }
+  .adventure-controls button { min-height: 44px; }
+  dialog { max-height: calc(100svh - 24px); padding: 22px; overscroll-behavior: contain; }
+  dialog input:not([type=checkbox]), dialog textarea, dialog select { font-size: 16px; }
+  .small-note { font-size: 12px !important; }
+}
+@media (max-height: 550px) and (orientation: landscape) {
+  .stage.adventure { height: 230px; }
+  .intro:has(.quest-guide) > .eyebrow { display: none; }
+  .intro:has(.quest-guide) { padding-block: 8px; }
+  .intro:has(.quest-guide) h1 { font-size: 26px; }
+  .quest-guide .guide-tool { display: none; }
+}
+@media (max-width: 680px) {
+  .header-actions { flex-shrink: 0; }
+  .header-actions > .text-button { max-width: none; white-space: nowrap; }
+  .brand { min-width: 0; }
+}
+@media (max-width: 360px) {
+  .brand-bow { display: none; }
+  .brand > span:last-child { font-size: 18px; }
+}

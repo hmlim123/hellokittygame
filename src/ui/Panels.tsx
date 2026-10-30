@@ -12,7 +12,7 @@ import {
   PICNIC_SPOTS,
   THEMES,
 } from "../game/domain";
-import type { Gesture, MissionId, Theme } from "../game/types";
+import type { Gesture, MissionId, Theme, Preferences } from "../game/types";
 import { Dialog } from "./Dialog";
 import { assetUrl } from "../game/assets";
 export function MissionsPanel() {
@@ -341,6 +341,15 @@ export function SettingsPanel({
           }
         />
         Reduce motion
+      </label>
+      <label className="detail-setting">
+        Game visual detail
+        <select value={preferences.quality} onChange={(e) => set({ quality: e.target.value as Preferences["quality"] })}>
+          <option value="auto">Automatic</option>
+          <option value="gentle">Battery friendly</option>
+          <option value="crisp">Sharper</option>
+        </select>
+        <small>Automatic adjusts the room and adventure to keep movement comfortable.</small>
       </label>
       <SaveBackup />
       <p className="small-note">

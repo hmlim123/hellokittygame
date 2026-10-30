@@ -42,6 +42,7 @@ function preferences(value: unknown): Preferences {
     relaxed: p.relaxed === true,
     letterOpened: p.letterOpened === true,
     motion: p.motion === "reduce" ? "reduce" : "system",
+    quality: p.quality === "gentle" || p.quality === "crisp" ? p.quality : "auto",
   };
 }
 export function migrateLegacy(storage: StorageLike): SaveState {

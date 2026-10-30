@@ -30,7 +30,7 @@ Reuse existing quests, equipment, souvenirs, and storybook pages where possible.
 | 2. One clear next goal | Implemented; browser verified | One objective, nearby actions, missing-tool explanations, gentle optional hints. | A new player can find and revive the flowers using the game interface; record actual journey duration. |
 | 3. Satisfying discoveries | Implemented; browser verified | Watering/bloom/reward feedback, optional sound, Kitty celebrations, reward-to-inventory-to-room connection. | Each reward is understandable, granted once, wearable at home and in the adventure, and connected to a revisitable memory. |
 | 4. Consistent visual style | Implemented; browser verified | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity. | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene. |
-| 5. Comfortable phone play | Queued | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering. | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues. |
+| 5. Comfortable phone play | Implemented; device review pending | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering. | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues. |
 | 6. Dependable progress/releases | Queued | Save feedback, visible version, backup/restore, interrupted sessions, migration, and automated browser release checks. | Reopen, restore, and upgrade saves without losing rewards; failed core-journey checks prevent publication. |
 
 ## Stage 1 delivery record
@@ -113,3 +113,19 @@ Desktop and phone presentation checks pass, including measured 4.5:1 contrast
 for the tested goal/body/primary/settings text. Screenshots were visually reviewed.
 The complete reward journey and normal/reduced-motion camera, collision, touch
 and portal regressions pass. This is not a claim of a full accessibility audit.
+
+## Stage 5 delivery record
+
+Phone adventure framing now keeps Kitty larger and visible at map edges, including
+landscape. The game card uses viewport-aware height, controls have comfortable
+targets, native selects avoid small-font phone zoom, and dialog close buttons
+remain reachable after scrolling. Settings offers Automatic, Battery friendly
+and Sharper game detail. Automatic lowers pixel density only after sustained
+slow frames and recovers slowly, with a mobile cap; reduced detail also uses
+fewer discovery particles. Menu changes and rotation preserve the selected detail.
+
+Validation: 3 adaptation/migration tests pass; browser checks pass at 320×568,
+390×844 and 844×390 with touch, outfit editing, scrolled dialogs, rotation, quality
+persistence and reload. Presentation, keyboard, touch, camera, collisions and
+portal regressions pass. Physical iPhone/Android/Mac performance and Safari
+review remain pending; browser emulation does not certify those devices.
