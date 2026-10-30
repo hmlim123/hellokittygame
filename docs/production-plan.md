@@ -24,14 +24,14 @@ Reuse existing quests, equipment, souvenirs, and storybook pages where possible.
 
 ## Milestones
 
-| Stage                           | Status                                     | Scope                                                                                                                  | Acceptance                                                                                                                                           |
-| ------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Polished controls            | Delivered (browser verified)               | Keyboard/touch reliability, turning, camera, obstacles, focus loss and area transitions.                               | Quick taps are retained, holds are smooth, newer turns survive walls, and release/cancel/focus loss stop safely in desktop and phone browser checks. |
-| 2. One clear next goal          | Implemented; browser verified              | One objective, nearby actions, missing-tool explanations, gentle optional hints.                                       | A new player can find and revive the flowers using the game interface; record actual journey duration.                                               |
-| 3. Satisfying discoveries       | Implemented; browser verified              | Watering/bloom/reward feedback, optional sound, Kitty celebrations, reward-to-inventory-to-room connection.            | Each reward is understandable, granted once, wearable at home and in the adventure, and connected to a revisitable memory.                           |
-| 4. Consistent visual style      | Implemented; browser verified              | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity.                           | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene.               |
-| 5. Comfortable phone play       | Implemented; device review pending         | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering.                               | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues.   |
-| 6. Dependable progress/releases | Implemented; automated release checks pass | Save feedback, visible version, backup/restore, interrupted sessions, migration, and automated browser release checks. | Reopen, restore, and upgrade saves without losing rewards; failed core-journey checks prevent publication.                                           |
+| Stage                           | Status                             | Scope                                                                                                                  | Acceptance                                                                                                                                           |
+| ------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Polished controls            | Delivered (browser verified)       | Keyboard/touch reliability, turning, camera, obstacles, focus loss and area transitions.                               | Quick taps are retained, holds are smooth, newer turns survive walls, and release/cancel/focus loss stop safely in desktop and phone browser checks. |
+| 2. One clear next goal          | Delivered (browser verified)       | One objective, nearby actions, missing-tool explanations, gentle optional hints.                                       | A new player can find and revive the flowers using the game interface; record actual journey duration.                                               |
+| 3. Satisfying discoveries       | Delivered (browser verified)       | Watering/bloom/reward feedback, optional sound, Kitty celebrations, reward-to-inventory-to-room connection.            | Each reward is understandable, granted once, wearable at home and in the adventure, and connected to a revisitable memory.                           |
+| 4. Consistent visual style      | Delivered (browser verified)       | Pastel palette, lighting, rounded scenery, typography, icons, framing, and effect intensity.                           | Compare all screens in the target journey at desktop and phone sizes; maintain contrast, readable text, and a bright grain-free scene.               |
+| 5. Comfortable phone play       | Delivered; physical review pending | Touch targets, menus, scrolling, loading, orientation, and device-appropriate rendering.                               | Complete the journey on the target physical phone and laptop, recording browser/device and performance; fix overlap, input, or readability issues.   |
+| 6. Dependable progress/releases | Delivered; CI and browser verified | Save feedback, visible version, backup/restore, interrupted sessions, migration, and automated browser release checks. | Reopen, restore, and upgrade saves without losing rewards; failed core-journey checks prevent publication.                                           |
 
 ## Stage 1 delivery record
 
@@ -171,3 +171,9 @@ release checks, full chapter, polish, navigation, original room/quests).
 Latest game: <https://hmlim123.github.io/hellokittygame/?v=production-16>.
 Deployments: <https://github.com/hmlim123/hellokittygame/actions/workflows/pages.yml>.
 The release is published only after that workflow succeeds.
+
+Deployment confirmed: [Pages run 40979705374](https://github.com/hmlim123/hellokittygame/actions/runs/40979705374)
+finished **Success** for source commit `d2eeb6508a0eab33199c7d9dde9c2f7e6a8810a6`.
+The CI browser gate passed before publication. The deployed app reports version
+1.6.0 / build d2eeb65. This documentation-only delivery record does not change the
+deployed game build.
