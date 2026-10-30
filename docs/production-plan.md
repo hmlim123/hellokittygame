@@ -247,7 +247,7 @@ Preview evidence: [cookie decorating](nancy-cookie-gift.png),
 with the same version/build. Physical-device/Safari review is still pending in
 [the review script](phone-playtest.md); automated emulation is not that review.
 
-## Gift handoff · v1.7.1 (in verification)
+## Gift handoff · v1.7.1 (published)
 
 The user requested easier NPC interactions, a reset for Nancy’s first visit,
 and a share link. Momo, the cloud guardian and Pip now have direct model/name
@@ -269,3 +269,23 @@ including first conversations from three tiles away, persistent replies and
 choices, native backup download, reset/reload, unchanged letter, a fresh phone
 context, and real touch name/choice controls with zero page errors. The release
 gate now includes twelve suites. Physical-device/Safari review remains pending.
+
+The original four-quest browser journey and complete Butterfly Glade journey
+also pass locally, including the guardian choices, star puzzle, unchanged letter,
+ending and PNG export. CI caught a brief walking-pose observation race on its
+software renderer. That check now installs its frame observer before input and
+holds through a walk; foot lift and turning assertions are preserved. The
+focused polish suite (tools, rig, bridge, Pip and backup transfer) passes after
+that test correction. The full twelve-suite CI gate subsequently passed before publication.
+
+Deployment confirmed on 2026-10-30: [Pages run 41138033994](https://github.com/hmlim123/hellokittygame/actions/runs/41138033994)
+finished **Success** for source `593cda4eb826ae272595327123ff9684bf875289`.
+All 164 automated tests and all twelve CI browser suites passed before upload
+and Pages deployment. The deployed game is v1.7.1 / 593cda4; the local website
+archive was refreshed with the same version/build.
+
+Share the room: <https://hmlim123.github.io/hellokittygame/?v=gift-19>. No test
+progress is included in the URL. Reset was exercised in isolated test browsers;
+this environment cannot clear the user’s existing device storage remotely. A
+new browser starts fresh, while a previously used device can reset through the
+backed-up Settings action. Nancy’s letter stays available.
