@@ -20,8 +20,13 @@ with sync_playwright() as p:
  assert page.get_by_role('button',name='Use watering can',exact=True).is_visible()
  page.get_by_role('button',name='Use watering can',exact=True).click();page.wait_for_function("document.querySelector('#world canvas').dataset.discoveryEffect==='water'");assert saved()['chapter']['flowersRevived'];assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).item")=='watering'
  page.wait_for_function("(()=>{const x=Number(document.querySelector('#world canvas').dataset.petalSpread);return x>.065&&x<.119})()",timeout=5000);page.screenshot(path='/tmp/kitty-pouring-water.png',full_page=True);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.petalSpread)===.12",timeout=6000)
- page.keyboard.press('ArrowLeft');page.wait_for_function("Number(document.querySelector('#world canvas').dataset.walkWeight)>.1&&Number(document.querySelector('#world canvas').dataset.footLift)>.001",timeout=5000)
- yaw=float(page.locator('#world canvas').get_attribute('data-player-yaw'));assert -1.58<yaw<-.01;page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x===4",timeout=15000);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.walkWeight)<.01",timeout=5000)
+ # Observe before input and hold through a walk, so a slow software renderer
+ # cannot finish a 250ms tap before Playwright attaches its pose assertion.
+ page.evaluate("""()=>{window.walkPoseSamples=[];window.recordWalkPose=true;function sample(){const d=document.querySelector('#world canvas').dataset;walkPoseSamples.push({weight:Number(d.walkWeight),lift:Number(d.footLift),yaw:Number(d.playerYaw)});if(recordWalkPose)requestAnimationFrame(sample)}requestAnimationFrame(sample)}""")
+ page.keyboard.down('ArrowLeft');page.wait_for_function("walkPoseSamples.some(s=>s.weight>.1&&s.lift>.001)",timeout=5000);page.keyboard.up('ArrowLeft');page.wait_for_function("document.querySelector('#world canvas').dataset.moving==='false'",timeout=15000)
+ page.evaluate('recordWalkPose=false');poses=page.evaluate('walkPoseSamples');assert any(-1.58<s['yaw']<-.01 for s in poses),poses
+ for x in range(saved()['x']+1,5):step('ArrowRight',x,6)
+ page.wait_for_function("Number(document.querySelector('#world canvas').dataset.walkWeight)<.01",timeout=5000)
  print('PASS quick watering, gradual bloom, alternating feet and smooth turn',flush=True)
  settings()
  with page.expect_download() as download:page.get_by_role('button',name='Download save',exact=True).click()
