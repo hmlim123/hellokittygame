@@ -290,7 +290,7 @@ this environment cannot clear the user’s existing device storage remotely. A
 new browser starts fresh, while a previously used device can reset through the
 backed-up Settings action. Nancy’s letter stays available.
 
-## Start from zero · v1.7.2 (in verification)
+## Start from zero · v1.7.2 (published)
 
 The user clarified that the gift must automatically begin at zero even when a
 browser contains earlier testing progress. This explicitly supersedes the prior
@@ -313,8 +313,18 @@ continuity and marker-write rollback. The real NPC/gift browser journey seeds a
 completed old save, verifies automatic zero progress and a zero-friend counter,
 then verifies play/reload without another wipe, the unchanged letter, native
 manual-reset backups, and a new touch-phone context. All pass with zero page
-errors. Publication waits for the twelve-suite release gate.
+errors. The twelve-suite CI release gate passed before publication.
 
 Updated gift link: <https://hmlim123.github.io/hellokittygame/?v=gift-20>.
 The user's original gift-19 link performs the same one-time start; gift-20 also
 refreshes cached HTML from the earlier release. Physical Safari is unverified.
+
+Deployment confirmed on 2026-10-30: [Pages run 41141339531](https://github.com/hmlim123/hellokittygame/actions/runs/41141339531)
+finished **Success** for source `8627915bed75afcc792995f7effa74240d580472`.
+All 169 automated tests and all twelve CI browser suites passed before upload
+and Pages deployment. The deployed game is v1.7.2 / 8627915; the local website
+archive uses the same version/build.
+
+Send <https://hmlim123.github.io/hellokittygame/?v=gift-20>. Opening the updated
+gift code performs the authorized one-time reset, including an already-used
+browser; after that launch it saves new progress normally. The letter stays.
