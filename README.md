@@ -9,6 +9,21 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Start from zero · v1.7.2
+
+Open <https://hmlim123.github.io/hellokittygame/?v=gift-20> for Nancy’s gift.
+The first opening in each browser automatically resets earlier testing progress:
+zero scores, rounds, completed missions, quests, earned friends, cookie gifts and
+postcards. Only the starter Kitty and the authored letter remain. The shelf
+counts invited friends, so it starts at **0 of 5**.
+
+The original `?v=gift-19` link performs the same one-time start. Both links share
+one permanent marker; reloading, returning, changing between these links, or
+updating the game preserves Nancy’s new progress. Ordinary links do not reset
+existing saves. The previous test save is kept as a restorable backup. If saving
+is blocked, the game starts fresh in an unsaved memory session and reports that
+saving needs attention; the old disk save remains intact.
+
 ## Easier conversations and a fresh gift visit · v1.7.1
 
 Tap a nearby NPC or their **Talk to…** name, use the named action below the map,

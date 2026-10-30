@@ -7,7 +7,9 @@ not mark later stages complete because some of their features already exist.
 
 - Keep the room's three main buttons and focused secondary panels.
 - Use the actual Blender Kitty model and the existing React/TypeScript stack.
-- Preserve existing progress, shared equipment, and classic save compatibility.
+- Preserve progress, shared equipment, and classic save compatibility after the
+  explicitly authorized first gift opening. The gift-19/gift-20 links reset old
+  testing progress once per browser, then preserve Nancy’s future progress.
 - Keep the art bright, pastel, nostalgic, and free of film grain.
 - The user explicitly authorized an assistant-written letter to Nancy. The ready
   letter is in `dist/letter.js`; keep it editable and honor later personal edits.

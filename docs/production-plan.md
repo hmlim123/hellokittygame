@@ -289,3 +289,32 @@ progress is included in the URL. Reset was exercised in isolated test browsers;
 this environment cannot clear the user’s existing device storage remotely. A
 new browser starts fresh, while a previously used device can reset through the
 backed-up Settings action. Nancy’s letter stays available.
+
+## Start from zero · v1.7.2 (in verification)
+
+The user clarified that the gift must automatically begin at zero even when a
+browser contains earlier testing progress. This explicitly supersedes the prior
+handoff's manual-reset-only behavior. The gift-19 and gift-20 links now perform
+one first-opening reset before creating/rendering the game store. The starter
+Kitty and authored letter remain, but scores, rounds, completed missions, quests,
+earned friends, cookies, tea-party progress and postcards start at zero. The shelf
+now counts invited friends excluding the starter Kitty: 0 of 5 at the beginning.
+
+One permanent marker is shared by both gift links, saved atomically with the
+fresh save and a recoverable previous-save backup. Ordinary URLs, subsequent
+openings, alias changes and future releases preserve progress. On a failed
+storage transaction, the original disk data is rolled back and a fresh in-memory
+session reports unsaved writes while remaining playable. Unrelated storage stays
+untouched. The marker is not tied to the build revision.
+
+Local verification covers 169 automated tests, including rich completed saves,
+chapter reset, the one-time marker, ordinary-URL preservation, alias/reload
+continuity and marker-write rollback. The real NPC/gift browser journey seeds a
+completed old save, verifies automatic zero progress and a zero-friend counter,
+then verifies play/reload without another wipe, the unchanged letter, native
+manual-reset backups, and a new touch-phone context. All pass with zero page
+errors. Publication waits for the twelve-suite release gate.
+
+Updated gift link: <https://hmlim123.github.io/hellokittygame/?v=gift-20>.
+The user's original gift-19 link performs the same one-time start; gift-20 also
+refreshes cached HTML from the earlier release. Physical Safari is unverified.

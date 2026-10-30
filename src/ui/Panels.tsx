@@ -503,7 +503,11 @@ export function Shelf() {
   return (
     <details className="shelf-panel">
       <summary>
-        Your little shelf <small>{room.owned.length} of 6 friends</small>
+        Your little shelf{" "}
+        <small>
+          {room.owned.filter((id) => id !== 0).length} of {DOLLS.length - 1}{" "}
+          friends invited
+        </small>
       </summary>
       <p>Choose a friend to play with. Your shared outfit stays equipped.</p>
       <div className="collection-grid">

@@ -5,6 +5,7 @@ import {
 } from "./travel-state";
 import type { AreaId } from "./types";
 import { nearbyItemAction } from "./context-action";
+import { giftVisitStorage } from "./gift-launch";
 import { canTalkToNpc, isNpc, NPC_NAMES } from "./npc";
 import {
   newCookie,
@@ -1405,5 +1406,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
   };
   return useStore;
 }
-export const useGameStore = createGameStore();
+const giftVisit = giftVisitStorage();
+export const useGameStore = createGameStore(giftVisit.storage);
+if (giftVisit.started) useGameStore.getState().setMode("room");
 export const resetForTests = () => createGameStore(emptyStorage);

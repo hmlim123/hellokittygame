@@ -85,10 +85,16 @@ export function commitRestoredSave(
   current: SaveState,
   next: SaveState,
   resetLegacy = false,
+  giftStartKey?: string,
 ): string {
   let before: Map<string, string | null>;
   try {
-    before = new Map(SAVE_KEYS.map((key) => [key, storage.getItem(key)]));
+    before = new Map(
+      [...SAVE_KEYS, ...(giftStartKey ? [giftStartKey] : [])].map((key) => [
+        key,
+        storage.getItem(key),
+      ]),
+    );
   } catch {
     throw Error("Saving is unavailable. Your current game has not changed.");
   }
@@ -106,6 +112,7 @@ export function commitRestoredSave(
     }
     if (!mirrorLegacy(storage, next)) throw Error("Saving is unavailable.");
     storage.setItem("kitty-world-v2", json);
+    if (giftStartKey) storage.setItem(giftStartKey, "1");
   } catch {
     for (const [key, value] of before) {
       try {
