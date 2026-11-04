@@ -24,7 +24,8 @@ permissions:
 
 concurrency:
   group: github-pages
-  cancel-in-progress: false
+  # Superseded commits stop; the latest build must still pass every gate.
+  cancel-in-progress: true
 
 jobs:
   deploy:

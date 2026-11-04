@@ -341,7 +341,7 @@ in `dist/assets/kitty-source.json`; Mac instructions are in
 | Upgrade | Implemented behavior |
 | --- | --- |
 | Kitty actually bakes | Recipe steps play authored Stir, Cut, Present and Bow performances. Heart/star/round cutter matches selection; her tray displays the actual icing and stamps. Optional replay; no forced wait or added main buttons. |
-| NPC greetings | Actual Blender Momo waves and awake Pip wiggles her ears when explicit/automatic conversations start. Sleeping/waking eyes use the actual meshes. |
+| NPC greetings | Actual Blender Momo waves and awake Pip wiggles her ears at hello and after dialogue closes, so the reading panel does not hide their reaction. Sleeping/waking eyes use the actual meshes. |
 | Natural grips | Named paw/cup/tray sockets, baked midpoint constraint and live midpoint correction. Joined shoulders remain fixed while wrists sweep; tea ending lifts a cup. |
 | Discoveries | Named Surprise, Bow and Celebrate performances respond to discoveries and quest completions; additive gaze/walking pivots keep bind translations correct. |
 | Matching decorations | Blender-made rounded cushion, frame, little oven and cup at home; matching tray, bowl, spoon and three cutters in baking. Tap the oven to bake. |

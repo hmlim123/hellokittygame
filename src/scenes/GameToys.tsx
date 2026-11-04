@@ -1,5 +1,5 @@
 /** Low-poly toys and greetings authored in hellokitty3D/hello_kitty_game.blend. */
-import { useEffect, useMemo, type RefObject } from "react";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { createPortal, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -139,8 +139,13 @@ export function ToyFriend({
     action.clampWhenFinished = true;
     return { model, mixer, action, time: 10 };
   }, [gltf, name]);
+  const hadGreeting = useRef(false);
   useEffect(() => {
-    if (!awake || reduced || (!greeting && !greetOnMount)) return;
+    // The reading dialog can cover the friend. Repeat the short greeting on
+    // dismissal, so Nancy sees it after returning her attention to the world.
+    const respond = !!greeting || hadGreeting.current || greetOnMount;
+    hadGreeting.current = !!greeting;
+    if (!awake || reduced || !respond) return;
     instance.time = 0;
     instance.action.reset().fadeIn(0.12).play();
   }, [instance, greeting, greetOnMount, reduced, awake]);

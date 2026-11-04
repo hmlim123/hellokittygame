@@ -23,12 +23,13 @@ with sync_playwright() as p:
  for x in [6,5]:
   page.keyboard.press('ArrowLeft');page.wait_for_function("x=>JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x===x",arg=x,timeout=15000)
  page.get_by_role('button',name='Talk to Momo',exact=True).click();page.wait_for_function("document.querySelector('#world canvas').dataset.momoGreeting==='true'",timeout=15000)
- page.get_by_role('button',name='Let’s help!',exact=True).click();page.get_by_role('button',name='Keep exploring',exact=True).click();page.close()
+ page.get_by_role('button',name='Let’s help!',exact=True).click();page.wait_for_function("document.querySelector('#world canvas').dataset.momoGreeting==='false'",timeout=30000);page.get_by_role('button',name='Keep exploring',exact=True).click();page.wait_for_function("document.querySelector('#world canvas').dataset.momoGreeting==='true'",timeout=15000);page.close()
  # A returning, awake Pip greets Nancy as she starts a conversation.
  pip=b.new_page(viewport={'width':1100,'height':1060},reduced_motion='no-preference');pip.on('pageerror',lambda e:errors.append(str(e)))
  adventure={'map':'glade','accepted':True,'x':10,'z':7,'chapter':{'butterflyStep':3,'flowersRevived':True,'bridgeFixed':True,'stars':['moon','flower','heart'],'friendAwake':True}}
  pip.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-adventure-v1',"+json.dumps(json.dumps(adventure))+");")
  pip.goto(BASE+'/adventure.html');pip.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
  pip.get_by_role('button',name='Talk to Pip',exact=True).click();pip.wait_for_function("document.querySelector('#world canvas').dataset.pipGreeting==='true'",timeout=15000)
+ pip.wait_for_function("document.querySelector('#world canvas').dataset.pipGreeting==='false'",timeout=30000);pip.get_by_role('button',name='Keep exploring',exact=True).click();pip.wait_for_function("document.querySelector('#world canvas').dataset.pipGreeting==='true'",timeout=15000)
  assert not errors,errors
- print('PASS Momo waves and awake Pip wiggles her ears at conversation start; zero page errors. Physical Safari remains unverified.',flush=True);b.close()
+ print('PASS Momo waves and awake Pip wiggles her ears at hello and after readable dialogue closes; zero page errors. Physical Safari remains unverified.',flush=True);b.close()

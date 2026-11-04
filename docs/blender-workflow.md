@@ -43,7 +43,8 @@ the game has its own matching lighting in `src/scenes/CozyLights.tsx`.
   `KittyHeld` follows the live paw midpoint for a tray centered between the paws; cup, spoon and
   cutter use the individual paw sockets. Nancy's actual cookie is composed on
   the tray by `CookieMesh`; its shape, icing and stamps remain saved normally.
-- `ToyFriend` plays greetings on explicit dialogue or automatic NPC notices.
+- `ToyFriend` plays greetings on explicit dialogue or automatic NPC notices, and again after
+  dismissal so the reading panel does not hide the response.
   Sleeping Pip keeps closed eyes; her wake transition opens the actual eye meshes.
 - Baking follows recipe stages, conversation events greet, quest completions
   celebrate, and the tea ending lifts a cup. Reduced motion suppresses the motions.
