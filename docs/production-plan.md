@@ -361,3 +361,17 @@ Momo/Pip greetings and zero page errors. The thirteen-suite release gate include
 the twelve earlier controls, quest, device, save and cozy journeys. Publication
 will be recorded after the final gate; physical iPhone/Mac Safari review remains
 pending, and automated playthrough time is not Nancy's first-player duration.
+
+Local verification on 2026-11-04: all **173** automated checks pass (70 domain/model
+checks and 103 Vitest checks), and the complete **13-suite** browser gate passes.
+After the final visibility/layout refinements, the focused presentation and
+Blender-performance browser checks pass again, including greetings after reading,
+static reduced motion and preserved cookie progress. TypeScript/build pass. The
+letter, first-gift marker and backup implementation are unchanged from v1.7.2.
+Preview evidence: [Kitty's decorated tray](nancy-blender-baking.png) and
+[room with matching toys](nancy-blender-room.png). The physical review checklist
+now includes these new performances. The latest release workflow cancels
+superseded commits; every published build still requires the complete gate.
+
+Reduced motion also interrupts an active gesture immediately; model and browser
+checks cover the preference change without waiting for a clip to finish.

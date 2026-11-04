@@ -86,7 +86,7 @@ export function blenderTouchPart(object){
 export function reactBlender(hero,emotion,reduced=false){
   const b=hero.userData.blender,action=b.actions[emotion==='highfive'?'wave':emotion==='excited'?'celebrate':emotion];b.reduced=reduced;
   // Repeated taps don't restart a gesture mid-pose.
-  if(action&&b.current===action&&b.age<action.getClip().duration)return;
+  if(!reduced&&action&&b.current===action&&b.age<action.getClip().duration)return;
   if(b.current){b.current.fadeOut(.2);b.fading.push({action:b.current,left:.22});}
   b.current=null;b.reducedWink=false;b.gesture=null;b.age=0;
   if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(['wave','pet','highfive','kiss','tickle','hug'].includes(emotion)){b.resetEyes(true);b.reducedWink=true;}return;}

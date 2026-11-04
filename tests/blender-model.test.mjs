@@ -154,3 +154,11 @@ test('the shipped friend and decoration assets contain editable Blender models a
   }
  }
 });
+
+test('turning on reduced motion interrupts the active Blender gesture immediately',()=>{
+ const hero=makeBlenderKitty(asset),b=hero.userData.blender;
+ const arm=b.model.getObjectByName('CTRL_Arm_L'),rest=arm.quaternion.clone();
+ reactBlender(hero,'wave',false);updateBlender(hero,.8);assert.ok(arm.quaternion.angleTo(rest)>.3);
+ reactBlender(hero,'wave',true);assert.equal(b.current,null);assert.equal(b.fading.length,0);
+ updateBlender(hero,.02,{reduced:true});assert.ok(arm.quaternion.angleTo(rest)<1e-5);
+});

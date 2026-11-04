@@ -16,7 +16,7 @@ with sync_playwright() as p:
  page.get_by_role('button',name='Give cookie to Momo ♡',exact=True).click();page.wait_for_function("document.querySelector('.baking-preview canvas').dataset.blenderAction==='bow'",timeout=30000)
  assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).cookiesGiven") == 1
  page.emulate_media(reduced_motion='reduce');page.get_by_role('button',name='Watch Kitty again ♡',exact=True).click()
- page.wait_for_function("document.querySelector('.baking-preview canvas').dataset.blenderAction==='idle'&&Number(document.querySelector('.baking-preview canvas').dataset.pawTurn)<.0001")
+ page.wait_for_function("document.querySelector('.baking-preview canvas').dataset.blenderAction==='idle'&&Number(document.querySelector('.baking-preview canvas').dataset.pawTurn)<.0001",timeout=1500)
  page.get_by_role('button',name='Back to Kitty',exact=True).click();page.reload();ready();assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).cookiesGiven")==1
  print('PASS actual Blender stir, cutter press, live-cookie tray, thank-you bow, replay and static reduced-motion pose; earned cookie survives reload',flush=True)
  page.emulate_media(reduced_motion='no-preference');page.get_by_role('button',name='Play a mission').click();page.get_by_role('button',name='Moonflower Adventure').click();ready()

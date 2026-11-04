@@ -5,7 +5,7 @@ Physical device review is **pending**. Automated Chromium checks cover desktop,
 are not a physical iPhone, Android, Mac or Safari certification. WebKit is not
 installed in the cloud environment.
 
-Open https://hmlim123.github.io/hellokittygame/?v=cozy-18 after the v1.7.0 Pages
+Open https://hmlim123.github.io/hellokittygame/?v=toys-21 after the v1.8.0 Pages
 workflow succeeds. Check the version under Game settings. Use Settings → Keep
 your progress → Download backup before the review; do not clear your browser data.
 
@@ -55,6 +55,23 @@ For a failure, record the device/browser, game build, exact action and expected
 versus actual result. Note whether sound was enabled and whether the tab had just
 returned from the background. Screenshots or screen recordings are useful when
 available, but they are not required to record a problem.
+
+## Blender performances: additional physical checks
+
+- Open the room oven, or Play a mission → Bake cookies with Kitty. Watch stirring,
+  then choose each heart/star/round cutter and enter decorating. The matching
+  cutter should press the cookie; paws should stay connected at the shoulders.
+- Add distinctive icing and sprinkles, then choose Ready to give. The held tray
+  should show that cookie. Replay should work without changing the recipe or
+  granting another gift. Give it once and check the thank-you bow and friend.
+- Talk to Momo and awake Pip. Check the wave/ear wiggle after closing the readable
+  dialogue, then walk again: no stuck controls or lost progress.
+- In the tea ending, the teacup should move with Kitty's paw. In her room, rotate
+  the scene: the oven should clear the chair, the frame should hang on the wall,
+  and the extra cup should sit on the table. Tap the oven to bake again.
+- Turn on Reduced motion and repeat: no stirring, bouncing or waving, and all
+  recipe choices and rewards should remain usable. Reload with a half-decorated
+  cookie and confirm it persists.
 
 ## Results
 
