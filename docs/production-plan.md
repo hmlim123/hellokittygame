@@ -328,3 +328,36 @@ archive uses the same version/build.
 Send <https://hmlim123.github.io/hellokittygame/?v=gift-20>. Opening the updated
 gift code performs the authorized one-time reset, including an already-used
 browser; after that launch it saves new progress normally. The letter stays.
+
+## Blender performances · v1.8.0 (release verification running)
+
+The user authorized all five Blender/game upgrades. The new editable source is
+`hellokitty3D/hello_kitty_game.blend`, rebuilt by `create_game_assets.py` from the
+unchanged postcard animation. The latest Hawaiian static/dance editions on
+GitHub are preserved alongside it. Source commit and file SHA-256 are recorded
+in `dist/assets/kitty-source.json`; Mac instructions are in
+[the Blender workflow](blender-workflow.md).
+
+| Upgrade | Implemented behavior |
+| --- | --- |
+| Kitty actually bakes | Recipe steps play authored Stir, Cut, Present and Bow performances. Heart/star/round cutter matches selection; her tray displays the actual icing and stamps. Optional replay; no forced wait or added main buttons. |
+| NPC greetings | Actual Blender Momo waves and awake Pip wiggles her ears when explicit/automatic conversations start. Sleeping/waking eyes use the actual meshes. |
+| Natural grips | Named paw/cup/tray sockets, baked midpoint constraint and live midpoint correction. Joined shoulders remain fixed while wrists sweep; tea ending lifts a cup. |
+| Discoveries | Named Surprise, Bow and Celebrate performances respond to discoveries and quest completions; additive gaze/walking pivots keep bind translations correct. |
+| Matching decorations | Blender-made rounded cushion, frame, little oven and cup at home; matching tray, bowl, spoon and three cutters in baking. Tap the oven to bake. |
+
+Named glTF clips replace fixed frame slices, with a fallback for old imports.
+The exporter excludes studio and authoring previews, removes unused timeline
+buffers, and leaves its input `.blend` unchanged. Kitty remains below 2 MB;
+all friends and props together remain below 600 KB. Asset URLs are versioned
+for returning browsers. Reduced motion suppresses performances; the same three
+room buttons, letter, existing saves and permanent gift marker remain intact.
+
+Blender validation passes for editable clip ranges, socket parents and preview
+visibility. The actual shipped GLBs pass pose/reset, shoulder connection, cup
+lift, friend animation and payload checks. The new browser journey exercises
+stirring, cutting, decorated tray, bow, replay, reduced motion, reload continuity,
+Momo/Pip greetings and zero page errors. The thirteen-suite release gate includes
+the twelve earlier controls, quest, device, save and cozy journeys. Publication
+will be recorded after the final gate; physical iPhone/Mac Safari review remains
+pending, and automated playthrough time is not Nancy's first-player duration.

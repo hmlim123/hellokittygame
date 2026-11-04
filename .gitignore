@@ -8,3 +8,5 @@ test-results/
 public/classic/
 
 .venv-browser/
+
+__pycache__/

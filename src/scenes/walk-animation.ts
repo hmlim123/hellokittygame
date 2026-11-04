@@ -7,6 +7,8 @@ interface WalkRig {
   amount: number;
 }
 function pivotFor(object: THREE.Object3D) {
+  if (object.parent?.name === "Walk_" + object.name)
+    return object.parent as THREE.Group;
   const pivot = new THREE.Group();
   pivot.name = "Walk_" + object.name;
   pivot.position.copy(object.position);

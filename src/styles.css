@@ -2297,3 +2297,22 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   margin: 6px 0;
   min-height: 44px;
 }
+
+.baking-performance {
+  margin: 12px 0;
+  text-align: center;
+}
+.baking-preview {
+  height: clamp(200px, 32vh, 290px);
+  border-radius: 22px;
+  overflow: hidden;
+  background: #f3dce4;
+}
+.baking-performance figcaption {
+  margin: 8px auto;
+  max-width: 38em;
+  font-size: 0.92em;
+}
+.baking-performance > button {
+  min-height: 44px;
+}

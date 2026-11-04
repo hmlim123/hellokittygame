@@ -6,7 +6,7 @@ on:
     paths:
       - "dist/**"
       - "src/**"
-      - "scripts/prepare-assets.mjs"
+      - "scripts/**"
       - "tests/**"
       - "package.json"
       - "package-lock.json"
@@ -54,6 +54,9 @@ jobs:
           test -s build/index.html
           test -s build/adventure.html
           test -s build/assets/hello-kitty.glb
+          test -s build/assets/cozy-friends.glb
+          test -s build/assets/cozy-props.glb
+          test -s build/assets/kitty-source.json
           test -s build/classic/index.html
       - name: Install pinned browser checks
         run: |

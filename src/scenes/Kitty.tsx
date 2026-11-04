@@ -1,3 +1,5 @@
+import { useReducedMotion } from "./use-reduced-motion";
+import { KittyHeld, type Holding } from "./GameToys";
 import { updateWalking, walkingRig } from "./walk-animation";
 import { effectTime } from "./effect-motion";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
@@ -5,6 +7,7 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import {
+  blenderClips,
   makeBlenderKitty,
   updateBlender,
   reactBlender,
@@ -20,35 +23,12 @@ export { assetUrl } from "../game/assets";
 export function useKittyAsset() {
   const gltf = useGLTF(assetUrl("assets/hello-kitty.glb"));
   return useMemo(() => {
-    const full = new THREE.AnimationClip(
-      "Blender performance",
-      -1,
-      gltf.animations.flatMap((a) => a.tracks),
-    );
-    return {
-      scene: gltf.scene,
-      clips: {
-        wave: THREE.AnimationUtils.subclip(full, "Wave and wink", 48, 96, 24),
-        dance: THREE.AnimationUtils.subclip(full, "Little dance", 0, 49, 24),
-        offer: THREE.AnimationUtils.subclip(
-          full,
-          "Flowers for you",
-          96,
-          139,
-          24,
-        ),
-      },
-    };
+    return { scene: gltf.scene, clips: blenderClips(gltf.animations) };
   }, [gltf]);
 }
-export function useReducedMotion() {
-  const motion = useGameStore((s) => s.preferences.motion);
-  const system =
-    typeof matchMedia !== "undefined" &&
-    matchMedia("(prefers-reduced-motion: reduce)").matches;
-  return motion === "reduce" || system;
-}
+export { useReducedMotion } from "./use-reduced-motion";
 interface KittyProps {
+  holding?: Holding;
   id?: number;
   equipment?: Equipment;
   interactive?: boolean;
@@ -73,6 +53,7 @@ export function Kitty({
   performance,
   photoPose,
   locomotion,
+  holding,
 }: KittyProps) {
   const asset = useKittyAsset(),
     hero = useMemo(() => makeBlenderKitty(asset, id), [asset, id]),
@@ -119,13 +100,16 @@ export function Kitty({
     () => hero.userData.blender.normalize.position.y,
     [hero],
   );
-  const reaction = useRef({ time: 10, kind: "wave" as Gesture });
   useEffect(
     () => () => {
       // Materials belong to this clone; GLB geometries remain shared in Drei's cache.
       const materials = new Set<THREE.Material>();
       hero.traverse((object: THREE.Object3D) => {
         if (object instanceof THREE.Mesh) {
+          let ancestor: THREE.Object3D | null = object;
+          while (ancestor && !ancestor.userData.sharedToy)
+            ancestor = ancestor.parent;
+          if (ancestor) return;
           for (const material of Array.isArray(object.material)
             ? object.material
             : [object.material])
@@ -141,7 +125,6 @@ export function Kitty({
   }, [hero, equipment]);
   useEffect(() => {
     if (!animate) return;
-    reaction.current = { time: 0, kind: gesture.kind };
     if (
       gesture.kind === "offer" &&
       equipment &&
@@ -150,12 +133,7 @@ export function Kitty({
       const played = playHeldItem(hero, reduced);
       if (played.accepted)
         reactBlender(hero, equipment.item === "teddy" ? "hug" : "pet", reduced);
-    } else
-      reactBlender(
-        hero,
-        gesture.kind === "excited" ? "pet" : gesture.kind,
-        reduced,
-      );
+    } else reactBlender(hero, gesture.kind, reduced);
   }, [hero, gesture, animate, reduced]);
   useEffect(() => {
     if (!photoPose) return;
@@ -179,7 +157,6 @@ export function Kitty({
   useFrame((state, dt) => {
     if (photoPose) return;
     if (animate) {
-      reaction.current.time += dt;
       setBlenderAttention(
         hero,
         locomotion?.current.speed
@@ -196,6 +173,17 @@ export function Kitty({
     }
     updateBlender(hero, Math.min(dt, 0.1), { reduced, idle: true });
     updateHeldItem(hero, Math.min(dt, 0.1));
+    if (animate) {
+      state.gl.domElement.dataset.blenderAction =
+        hero.userData.blender.current?.getClip().name || "idle";
+      const arm = hero.userData.blender.model.getObjectByName("CTRL_Arm_R");
+      state.gl.domElement.dataset.pawTurn = String(
+        Math.abs(arm.quaternion.x) +
+          Math.abs(arm.quaternion.y) +
+          Math.abs(arm.quaternion.z),
+      );
+      state.gl.domElement.dataset.holding = holding || "none";
+    }
     if (interactive) {
       state.gl.domElement.dataset.petting = String(
         petMode && stroke.current.down,
@@ -244,15 +232,7 @@ export function Kitty({
             Math.sin(t * 8) * 0.12 * Math.sin(Math.min(1, t / 2) * Math.PI);
       }
     }
-    hero.userData.blender.normalize.position.y =
-      baseY +
-      (animate &&
-      !reduced &&
-      (!locomotion || locomotion.current.speed < 0.05) &&
-      reaction.current.kind === "excited" &&
-      reaction.current.time < 3
-        ? Math.abs(Math.sin(reaction.current.time * Math.PI)) * 0.18
-        : 0);
+    hero.userData.blender.normalize.position.y = baseY;
   });
   const touch = (e: ThreeEvent<MouseEvent>) => {
     if (!interactive || petMode) return;
@@ -308,7 +288,9 @@ export function Kitty({
         }
       }}
       dispose={null}
-    />
+    >
+      {holding && <KittyHeld hero={hero} holding={holding} />}
+    </primitive>
   );
 }
 export function useKittyTouch() {

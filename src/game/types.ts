@@ -25,6 +25,13 @@ export type QuestId =
   | "glade";
 export type MissionId = "bows" | "strawberries" | "hearts" | "picnic";
 export type Gesture =
+  | "stir"
+  | "cut"
+  | "present"
+  | "surprise"
+  | "bow"
+  | "celebrate"
+  | "sip"
   | "excited"
   | "wave"
   | "dance"

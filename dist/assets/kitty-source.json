@@ -1,11 +1,50 @@
 {
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "1fee5d514ba101055d1bb1c6e6957830aa3be646",
-  "source_file": "hello_kitty_animated.blend",
+  "source_commit": "33053dfcae2220a1904456bb5ac2908a074049c9",
+  "source_file": "hello_kitty_game.blend",
+  "source_sha256": "a8e76e09d109a484778b71e482573a8c3ab130a9e2a76a474740864922ce1a79",
   "fps": 24,
-  "frames": [
-    1,
-    144
-  ],
-  "notes": "Actual character meshes and control animation exported from the shared Blender model. Studio excluded; web meshes reduced. Wink visibility converted to glTF morph targets."
+  "clips": {
+    "dance": [
+      1,
+      49
+    ],
+    "wave": [
+      49,
+      97
+    ],
+    "offer": [
+      97,
+      140
+    ],
+    "stir": [
+      145,
+      217
+    ],
+    "cut": [
+      217,
+      265
+    ],
+    "present": [
+      265,
+      313
+    ],
+    "surprise": [
+      313,
+      349
+    ],
+    "bow": [
+      349,
+      391
+    ],
+    "celebrate": [
+      391,
+      451
+    ],
+    "sip": [
+      451,
+      511
+    ]
+  },
+  "notes": "Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets."
 }

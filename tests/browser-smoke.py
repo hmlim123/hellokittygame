@@ -9,7 +9,7 @@ with sync_playwright() as p:
     page=browser.new_page(viewport={'width':1440,'height':1120},device_scale_factor=1)
     errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
-    with page.expect_response('**/assets/hello-kitty.glb') as model_response:
+    with page.expect_response('**/assets/hello-kitty.glb*') as model_response:
         page.goto(base)
     assert model_response.value.status==200
     page.wait_for_function("!document.querySelector('#wave').disabled",timeout=60000)

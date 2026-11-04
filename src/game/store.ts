@@ -288,7 +288,15 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             a.trackedQuest =
               questJournal(a).find((q) => !q.done)?.id || "moonflower";
           if (result?.chime || result?.wave)
-            extra.gesture = { id: ++serial, kind: "excited" };
+            extra.gesture = {
+              id: ++serial,
+              kind:
+                result.questComplete || result.complete
+                  ? "celebrate"
+                  : result.wave
+                    ? "bow"
+                    : "surprise",
+            };
           if (result?.source?.type === "K" && a.chapter.letterFound)
             extra.equipment = { ...get().equipment, item: "letter" };
           if (result?.source?.type === "Z" && a.chapter.stars.length < 3) {
@@ -1043,6 +1051,13 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 "A little moment",
                 text ||
                   {
+                    stir: "A little love stirred into the dough. ♡",
+                    cut: "One little cookie, made together. ♡",
+                    present: "A fresh little gift for you. ♡",
+                    surprise: "Oh! A lovely little discovery. ♡",
+                    bow: "A happy little thank-you for Nancy. ♡",
+                    celebrate: "We did it together, Nancy! ♡",
+                    sip: "A quiet cup of tea together. ♡",
                     excited: "Three happy little hops for Nancy. ♡",
                     wave: "A paw and a wink, just for Nancy. ♡",
                     dance: "A tiny dance makes a lovely little day. ♫",

@@ -1,3 +1,4 @@
+import { Toy, ToyFriend } from "./GameToys";
 import { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -5,29 +6,9 @@ import { ACESFilmicToneMapping } from "three";
 import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import { Kitty } from "./Kitty";
 import { useGameStore } from "../game/store";
-import { makeGift } from "../../dist/gifts.js";
 import { CookieMesh } from "./CookieMesh";
-export function TeaCup({ color = "#e5b4ce" }: { color?: string }) {
-  return (
-    <group>
-      <mesh position={[0, 0.025, 0]}>
-        <cylinderGeometry args={[0.23, 0.23, 0.04, 24]} />
-        <meshStandardMaterial color="#fff2df" />
-      </mesh>
-      <mesh position={[0, 0.15, 0]}>
-        <cylinderGeometry args={[0.15, 0.11, 0.22, 24, 1, true]} />
-        <meshStandardMaterial color={color} side={2} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.246, 0]}>
-        <circleGeometry args={[0.137, 24]} />
-        <meshStandardMaterial color="#bd976d" />
-      </mesh>
-      <mesh position={[0.18, 0.16, 0]}>
-        <torusGeometry args={[0.082, 0.023, 8, 20]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </group>
-  );
+export function TeaCup() {
+  return <Toy name="Cup" scale={0.9} />;
 }
 export function TeaTable({ placed = 0 }: { placed?: number }) {
   const cookie = useGameStore((s) => s.cozy.tea.cookie ?? s.cozy.cookie);
@@ -52,7 +33,7 @@ export function TeaTable({ placed = 0 }: { placed?: number }) {
       )}
       {placed > 1 && (
         <group position={[0.38, 0.54, 0.12]} rotation={[0, Math.PI, 0]}>
-          <TeaCup color="#b9cbb1" />
+          <TeaCup />
         </group>
       )}
       {placed > 2 && (
@@ -77,8 +58,7 @@ export default function TeaPreview({
   placed: number;
 }) {
   const equipment = useGameStore((s) => s.equipment),
-    momo = useMemo(() => makeGift("teddy"), []),
-    performance = useMemo(() => ({ id: 1, kind: "wave" as const }), []);
+    performance = useMemo(() => ({ id: 1, kind: "sip" as const }), []);
   return (
     <div className="tea-preview">
       <Canvas
@@ -115,14 +95,16 @@ export default function TeaPreview({
             rotation={[0, 0.4, 0]}
             animate
             performance={performance}
+            holding="cup"
           />
         </Suspense>
         {complete && (
-          <primitive
-            object={momo}
-            position={[0.8, 0.08, -0.4]}
-            scale={1.4}
+          <ToyFriend
+            name="Momo"
+            position={[0.8, 0.02, -0.4]}
+            scale={1.1}
             rotation={[0, -0.3, 0]}
+            greetOnMount
           />
         )}
         <OrbitControls

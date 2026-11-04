@@ -10,6 +10,7 @@ import {
 } from "../game/cozy";
 import { OUTFITS } from "../game/domain";
 import { Dialog } from "./Dialog";
+const BakingPreview = lazy(() => import("../scenes/BakingScene"));
 const TeaPreview = lazy(() => import("../scenes/TeaParty"));
 const icingColors = { rose: "#efb6cb", honey: "#f5df9f", lavender: "#cec0e8" };
 const icons = { heart: "♥", star: "★", berry: "🍓" };
@@ -86,6 +87,11 @@ export function BakingPanel() {
           </li>
         ))}
       </ol>
+      <Suspense
+        fallback={<p role="status">Kitty is getting her little apron ready…</p>}
+      >
+        <BakingPreview />
+      </Suspense>
       <div className="cookie-worktop">
         {c.stage === "decorate" ? (
           <button

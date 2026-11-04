@@ -9,6 +9,25 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Blender performances · v1.8.0
+
+The actual model now stirs dough, presses the selected heart/star/round cutter,
+presents Nancy's decorated cookie on a held tray, and gives a thank-you bow.
+Open **Play a mission → Bake cookies with Kitty**, or tap the little room oven.
+The preview follows the existing recipe steps and has an optional replay button;
+there are no timers, penalties, or additional main buttons.
+
+Momo waves and awake Pip wiggles her ears when a conversation starts. Discoveries
+use authored surprise, bow and celebration clips. Kitty lifts a paw-attached
+teacup at the tea ending. Matching Blender-made cushion, frame, oven and cup
+furnish the room. Reduced-motion preferences keep the performances still.
+
+The editable source is `hellokitty3D/hello_kitty_game.blend`; the original Blender
+files are preserved. See [the asset workflow](docs/blender-workflow.md) for Mac
+editing/export instructions. New models use release-versioned URLs, so stale
+cached models do not silently miss the new clips or paw sockets. This release
+keeps Nancy's existing progress and the permanent gift-opening marker.
+
 ## Start from zero · v1.7.2
 
 Open <https://hmlim123.github.io/hellokittygame/?v=gift-20> for Nancy’s gift.

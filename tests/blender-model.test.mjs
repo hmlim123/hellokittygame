@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {GLTFLoader} from '../dist/vendor/GLTFLoader.js';
 import * as THREE from 'three';
-import {makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from '../dist/blender-kitty.js';
+import {blenderClips,makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from '../dist/blender-kitty.js';
 const bytes=await readFile(new URL('../dist/assets/hello-kitty.glb',import.meta.url));
 const gltf=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
 const full=new THREE.AnimationClip('Performance',-1,gltf.animations.flatMap(a=>a.tracks));
-const asset={scene:gltf.scene,clips:{wave:THREE.AnimationUtils.subclip(full,'wave',48,96,24),dance:THREE.AnimationUtils.subclip(full,'dance',0,49,24),offer:THREE.AnimationUtils.subclip(full,'offer',96,139,24)}};
+const asset={scene:gltf.scene,clips:blenderClips(gltf.animations)};
 
 test('the shipped GLB contains the actual Blender character, rig, and animated wink',()=>{
   const names=[];gltf.scene.traverse(o=>names.push(o.name));
@@ -116,4 +116,41 @@ test('tickles and kisses animate gently and settle; high five uses the Blender p
   reactBlender(hero,kind,true);updateBlender(hero,.3,{reduced:true});assert.equal(b.gesture,null);assert.ok(b.armIdle.every(a=>a.rotation.z===0));
  }
  const hero=makeBlenderKitty(asset);reactBlender(hero,'highfive');assert.equal(hero.userData.blender.current,hero.userData.blender.actions.wave);
+});
+
+test('authored baking and discovery clips move joined paws and settle back to their bind pose',()=>{
+ for(const kind of ['stir','cut','present','surprise','bow','celebrate','sip']){
+  assert.ok(asset.clips[kind],`missing named Blender clip ${kind}`);
+  const hero=makeBlenderKitty(asset),b=hero.userData.blender;
+  const controls=['CTRL_Head','CTRL_Body','CTRL_Arm_L','CTRL_Arm_R'].map(n=>b.model.getObjectByName(n));
+  const rest=controls.map(o=>({q:o.quaternion.clone(),p:o.position.clone()}));
+  reactBlender(hero,kind);updateBlender(hero,asset.clips[kind].duration*.5);
+  assert.ok(controls.some((o,i)=>o.quaternion.angleTo(rest[i].q)>.02||o.position.distanceTo(rest[i].p)>.01),kind+' has no visible pose');
+  for(const name of ['CTRL_Arm_L','CTRL_Arm_R'])assert.ok(b.model.getObjectByName(name).position.length()<1e-5,kind+' detaches a shoulder');
+  updateBlender(hero,4);assert.equal(b.current,null);
+  controls.forEach((o,i)=>{assert.ok(o.quaternion.angleTo(rest[i].q)<1e-5);assert.ok(o.position.distanceTo(rest[i].p)<1e-5);});
+ }
+});
+test('Blender hand sockets follow the paws and preserve a stable tray and teacup attachment',()=>{
+ const hero=makeBlenderKitty(asset),b=hero.userData.blender;
+ const paw=b.model.getObjectByName('Socket_Paw_R'),cup=b.model.getObjectByName('Socket_Teacup'),tray=b.model.getObjectByName('Socket_Tray');
+ assert.equal(paw.parent.name,'CTRL_Arm_R');assert.equal(cup.parent,paw);assert.equal(tray.parent.name,'Grip_Midpoint');
+ const start=cup.getWorldPosition(new THREE.Vector3());reactBlender(hero,'sip');updateBlender(hero,1.25);
+ assert.ok(cup.getWorldPosition(new THREE.Vector3()).y>start.y+.2);
+});
+test('the shipped friend and decoration assets contain editable Blender models and playable greetings',async()=>{
+ for(const file of ['cozy-friends','cozy-props']){
+  const data=await readFile(new URL('../dist/assets/'+file+'.glb',import.meta.url));assert.ok(data.length<350000);
+  const model=await new GLTFLoader().parseAsync(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
+  if(file==='cozy-props'){
+   for(const name of ['Cushion','Frame','Oven','Tray','Cup','Bowl','Spoon','Cutter','Cutter_Heart','Cutter_Star'])assert.ok(model.scene.getObjectByName('Toy_'+name));
+  }else{
+   for(const name of ['Momo','Pip'])assert.ok(model.scene.getObjectByName(name));
+   const action=model.animations.find(a=>a.name==='greet');assert.ok(action);
+   const mixer=new THREE.AnimationMixer(model.scene),paw=model.scene.getObjectByName('Momo_Paw_L'),ear=model.scene.getObjectByName('Pip_Ear_L');
+   const q=paw.quaternion.clone(),e=ear.quaternion.clone();mixer.clipAction(action).play();mixer.update(.8);
+   assert.ok(paw.quaternion.angleTo(q)>.5);assert.ok(ear.quaternion.angleTo(e)>.01);
+   mixer.stopAllAction();assert.ok(paw.quaternion.angleTo(q)<1e-5);
+  }
+ }
 });

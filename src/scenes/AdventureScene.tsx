@@ -1,3 +1,4 @@
+import { ToyFriend } from "./GameToys";
 import { CozyLights, WORLD_COLORS } from "./CozyLights";
 import { adventureFraming } from "./adventure-camera";
 import { InputClock } from "./input-clock";
@@ -89,13 +90,11 @@ function Prop({ object: o }: { object: MapObject }) {
     reduced = useReducedMotion();
   const gift = useMemo(
     () =>
-      o.type === "M"
-        ? makeGift("teddy")
-        : o.type === "B"
-          ? makeGift("strawberry")
-          : o.type === "R"
-            ? makeBow("#d992b3", 0.8)
-            : null,
+      o.type === "B"
+        ? makeGift("strawberry")
+        : o.type === "R"
+          ? makeBow("#d992b3", 0.8)
+          : null,
     [o],
   );
   useFrame((_, dt) => {
@@ -206,6 +205,7 @@ function Prop({ object: o }: { object: MapObject }) {
           </mesh>
         </>
       )}
+      {o.type === "M" && <ToyFriend name="Momo" scale={1.1} />}
       {gift && (
         <primitive
           object={gift}

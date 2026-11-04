@@ -1,3 +1,4 @@
+import { Toy } from "./GameToys";
 import { CozyLights } from "./CozyLights";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -209,6 +210,26 @@ export function RoomScene() {
       <Shelf />
       <Souvenirs />
       <KeepsakeWall />
+      <group
+        position={[-2.6, 0, -1.7]}
+        rotation={[0, 0.35, 0]}
+        onClick={(e) => {
+          if (e.delta < 7) {
+            e.stopPropagation();
+            useGameStore.getState().openPanel("baking");
+          }
+        }}
+      >
+        <Toy name="Oven" scale={1.1} />
+      </group>
+      <Toy name="Cushion" position={[1.9, 0.01, 1.1]} scale={1.1} />
+      <Toy
+        name="Frame"
+        position={[-2.3, 0.02, 1.2]}
+        rotation={[0, -0.25, 0]}
+        scale={0.8}
+      />
+      <Toy name="Cup" position={[2.25, 0.02, 0.4]} scale={0.8} />
       <Arrival />
       <Kitty
         id={id}

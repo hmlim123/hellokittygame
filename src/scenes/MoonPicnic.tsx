@@ -1,3 +1,4 @@
+import { ToyFriend } from "./GameToys";
 import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import * as THREE from "three";
 import { wakeAmount, effectTime } from "./effect-motion";
@@ -7,7 +8,6 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { ACESFilmicToneMapping } from "three";
 import { Kitty, useReducedMotion } from "./Kitty";
-import { makeGift } from "../../dist/gifts.js";
 import { Dialog } from "../ui/Dialog";
 import { useGameStore } from "../game/store";
 import { endingUnlocked } from "../game/chapter";
@@ -18,6 +18,7 @@ export function Pip({
   awake?: boolean;
   waking?: DiscoveryEffect | null;
 }) {
+  const eyeAmount = useRef(awake ? 1 : 0);
   const root = useRef<THREE.Group>(null),
     reduced = useReducedMotion();
   useFrame(({ gl }) => {
@@ -35,66 +36,11 @@ export function Pip({
       : !reduced && t < 2
         ? Math.sin(t * 7) * 0.035 * (1 - p)
         : 0;
-    for (let i = 0; i < 2; i++) {
-      const side = g.children[i + 2] as THREE.Group;
-      if (!side) continue;
-      const sign = i === 0 ? -1 : 1;
-      side.children[0].rotation.z = -sign * (0.45 - 0.29 * p);
-      side.children[1].rotation.z = side.children[0].rotation.z;
-      side.children[2].scale.y = 0.009 + 0.029 * p;
-    }
-    gl.domElement.dataset.pipEyeOpen = String(
-      (g.children[2] as THREE.Group).children[2].scale.y,
-    );
+    eyeAmount.current = p;
   });
   return (
     <group ref={root}>
-      <mesh position={[0, 0.32, 0]} scale={[0.3, 0.35, 0.23]}>
-        <sphereGeometry args={[1, 18, 14]} />
-        <meshStandardMaterial color="#eee0d0" />
-      </mesh>
-      <mesh position={[0, 0.78, 0]} scale={[0.37, 0.31, 0.25]}>
-        <sphereGeometry args={[1, 20, 16]} />
-        <meshStandardMaterial color="#f2e6d9" />
-      </mesh>
-      {[-1, 1].map((sign) => (
-        <group key={sign}>
-          <mesh
-            position={[sign * 0.19, 1.12, 0]}
-            rotation={[0, 0, -sign * 0.16]}
-            scale={[0.11, 0.36, 0.09]}
-          >
-            <sphereGeometry args={[1, 18, 14]} />
-            <meshStandardMaterial color="#eee0d0" />
-          </mesh>
-          <mesh
-            position={[sign * 0.19, 1.14, 0.07]}
-            rotation={[0, 0, -sign * 0.16]}
-            scale={[0.054, 0.26, 0.024]}
-          >
-            <sphereGeometry args={[1, 14, 12]} />
-            <meshStandardMaterial color="#e8bacb" />
-          </mesh>
-          <mesh
-            position={[sign * 0.13, 0.8, 0.237]}
-            scale={[0.026, awake ? 0.038 : 0.009, 0.014]}
-          >
-            <sphereGeometry args={[1, 12, 10]} />
-            <meshBasicMaterial color="#644756" />
-          </mesh>
-          <mesh
-            position={[sign * 0.2, 0.66, 0.22]}
-            scale={[0.07, 0.025, 0.012]}
-          >
-            <sphereGeometry args={[1, 12, 10]} />
-            <meshStandardMaterial color="#e5b2c6" />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 0.72, 0.26]} scale={[0.032, 0.024, 0.018]}>
-        <sphereGeometry args={[1, 12, 10]} />
-        <meshStandardMaterial color="#ce94ae" />
-      </mesh>
+      <ToyFriend name="Pip" awake={awake} eyeAmount={eyeAmount} />
     </group>
   );
 }
@@ -114,7 +60,6 @@ function PicnicScene({
   reduced: boolean;
 }) {
   const equipment = useGameStore((s) => s.equipment),
-    teddy = useMemo(() => makeGift("teddy"), []),
     time = useRef(0),
     line = useRef(-1),
     cameraMoved = useRef(false),
@@ -157,7 +102,7 @@ function PicnicScene({
         animate
         performance={performance}
       />
-      <primitive object={teddy} scale={1.4} position={[-1.2, 0.05, 0.2]} />
+      <ToyFriend name="Momo" scale={1.1} position={[-1.2, 0.03, 0.2]} />
       <group position={[1.15, 0.03, 0.15]} rotation={[0, -0.3, 0]}>
         <Pip />
       </group>

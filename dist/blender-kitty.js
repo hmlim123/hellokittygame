@@ -3,11 +3,15 @@ import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {DOLLS} from './state.js';
 
 export async function loadBlenderKitty(){
-  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL('./assets/hello-kitty.glb',import.meta.url).href);
-  // Blender exports each animated object's action separately. Combine them so
-  // the head, face, paws, bouquet and feet always play on the same clock.
-  const full=new THREE.AnimationClip('Blender performance',-1,gltf.animations.flatMap(a=>a.tracks));
-  return {scene:gltf.scene,clips:{wave:THREE.AnimationUtils.subclip(full,'Wave and wink',48,96,24),dance:THREE.AnimationUtils.subclip(full,'Little dance',0,49,24),offer:THREE.AnimationUtils.subclip(full,'Flowers for you',96,139,24)}};
+  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL('./assets/hello-kitty.glb?v=cozy-toys-1',import.meta.url).href);
+  return {scene:gltf.scene,clips:blenderClips(gltf.animations)};
+
+}
+// New exports carry real named clips. The fallback keeps older imported models playable.
+export function blenderClips(animations){
+  if(['wave','dance','offer'].every(name=>animations.some(a=>a.name===name)))return Object.fromEntries(animations.map(a=>[a.name,a]));
+  const full=new THREE.AnimationClip('Blender performance',-1,animations.flatMap(a=>a.tracks));
+  return {wave:THREE.AnimationUtils.subclip(full,'Wave and wink',48,96,24),dance:THREE.AnimationUtils.subclip(full,'Little dance',0,49,24),offer:THREE.AnimationUtils.subclip(full,'Flowers for you',96,139,24)};
 }
 export function makeBlenderKitty(asset,id=0){
   const hero=new THREE.Group(),model=asset.scene.clone(true);
@@ -22,8 +26,14 @@ export function makeBlenderKitty(asset,id=0){
     if(id!==0&&o.material.name==='Strawberry pink satin')o.material.color.set(DOLLS[id].color);
   });
   // Additive head/eye pivots preserve the exported controller animation.
-  const head=model.getObjectByName('CTRL_Head'),headIdle=new THREE.Group();
-  headIdle.name='Idle_head';headIdle.position.copy(head.position);head.parent.add(headIdle);headIdle.add(head);head.position.set(0,0,0);
+  const bases=new Map();
+  const pivotFor=(name,pivotName)=>{
+    const control=model.getObjectByName(name),pivot=new THREE.Group();
+    bases.set(name,control.position.clone());pivot.name=pivotName;
+    pivot.position.copy(control.position);control.parent.add(pivot);pivot.add(control);control.position.set(0,0,0);return pivot;
+  };
+  const headIdle=pivotFor('CTRL_Head','Idle_head');
+  for(const name of ['CTRL_Body','CTRL_Foot_L','CTRL_Foot_R'])pivotFor(name,'Walk_'+name);
   model.updateMatrixWorld(true);
   const eyes=[];
   for(const name of ['Eye_left','Eye_right']){
@@ -33,10 +43,17 @@ export function makeBlenderKitty(asset,id=0){
     pivot.position.copy(parent.worldToLocal(center));parent.add(pivot);pivot.attach(eye);eyes.push(pivot);
   }
   const armIdle=[];
-  for(const name of ['CTRL_Arm_L','CTRL_Arm_R']){const arm=model.getObjectByName(name),pivot=new THREE.Group();pivot.position.copy(arm.position);arm.parent.add(pivot);pivot.add(arm);arm.position.set(0,0,0);armIdle.push(pivot);}
+  for(const name of ['CTRL_Arm_L','CTRL_Arm_R'])armIdle.push(pivotFor(name,'Idle_'+name));
   const mixer=new THREE.AnimationMixer(model),actions={};
   for(const [name,clip] of Object.entries(asset.clips)){
-    actions[name]=mixer.clipAction(clip);actions[name].setLoop(THREE.LoopOnce,1);actions[name].clampWhenFinished=true;
+    const local=clip.clone();
+    // Controllers live inside additive gaze/walking pivots. Translation keys
+    // must be offsets from the bind pose, so they never double the shoulder.
+    for(const track of local.tracks){
+      const base=track.name.endsWith('.position')&&bases.get(track.name.slice(0,-9));
+      if(base)for(let i=0;i<track.values.length;i++)track.values[i]-=base.getComponent(i%3);
+    }
+    actions[name]=mixer.clipAction(local);actions[name].setLoop(THREE.LoopOnce,1);actions[name].clampWhenFinished=true;
   }
   const morphs=[];
   model.traverse(o=>{if(o.morphTargetDictionary)morphs.push(o);});
@@ -47,7 +64,7 @@ export function makeBlenderKitty(asset,id=0){
     }
   };
   resetEyes(false);
-  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_animated.blend'};
+  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_game.blend'};
   return hero;
 }
 export function setBlenderAttention(hero,x=0,y=0){
@@ -67,7 +84,7 @@ export function blenderTouchPart(object){
   return 'pet';
 }
 export function reactBlender(hero,emotion,reduced=false){
-  const b=hero.userData.blender,action=b.actions[emotion==='highfive'?'wave':emotion];b.reduced=reduced;
+  const b=hero.userData.blender,action=b.actions[emotion==='highfive'?'wave':emotion==='excited'?'celebrate':emotion];b.reduced=reduced;
   // Repeated taps don't restart a gesture mid-pose.
   if(action&&b.current===action&&b.age<action.getClip().duration)return;
   if(b.current){b.current.fadeOut(.2);b.fading.push({action:b.current,left:.22});}

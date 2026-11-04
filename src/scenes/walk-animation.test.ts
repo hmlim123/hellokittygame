@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
+  blenderClips,
   makeBlenderKitty,
   reactBlender,
   updateBlender,
@@ -17,15 +18,7 @@ const gltf = await new GLTFLoader().parseAsync(
   bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
   "",
 );
-const full = new THREE.AnimationClip(
-  "Performance",
-  -1,
-  gltf.animations.flatMap((a) => a.tracks),
-);
-const asset = {
-  scene: gltf.scene,
-  clips: { wave: THREE.AnimationUtils.subclip(full, "wave", 48, 96, 24) },
-};
+const asset = { scene: gltf.scene, clips: blenderClips(gltf.animations) };
 describe("walking on the Blender rig", () => {
   it("alternates actual feet, produces quiet step cues, and settles completely at rest", () => {
     const hero = makeBlenderKitty(asset),
