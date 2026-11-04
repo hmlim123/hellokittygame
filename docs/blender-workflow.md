@@ -23,8 +23,9 @@ cd path/to/hellokittygame
 npm run dev
 ```
 
-Substitute your saved working-copy path in `-b`. The exporter does not save or
-modify that input file. Rendered viewport shading previews the Blender studio;
+Substitute your saved working-copy path in `-b`. After exporting another edit,
+restart `npm run dev` and reload the page so the fresh assets are copied again.
+The exporter does not save or modify that input file. Rendered viewport shading previews the Blender studio;
 the game has its own matching lighting in `src/scenes/CozyLights.tsx`.
 
 ## Source to gameplay

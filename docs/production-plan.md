@@ -329,7 +329,7 @@ Send <https://hmlim123.github.io/hellokittygame/?v=gift-20>. Opening the updated
 gift code performs the authorized one-time reset, including an already-used
 browser; after that launch it saves new progress normally. The letter stays.
 
-## Blender performances · v1.8.0 (release verification running)
+## Blender performances · v1.8.0 (published)
 
 The user authorized all five Blender/game upgrades. The new editable source is
 `hellokitty3D/hello_kitty_game.blend`, rebuilt by `create_game_assets.py` from the
@@ -375,3 +375,19 @@ superseded commits; every published build still requires the complete gate.
 
 Reduced motion also interrupts an active gesture immediately; model and browser
 checks cover the preference change without waiting for a clip to finish.
+
+Deployment confirmed on 2026-11-04: [Pages run 41902306795](https://github.com/hmlim123/hellokittygame/actions/runs/41902306795)
+finished **Success** for source `abc59617f32dbc476af89e5d88135ebe353a6085`.
+All **173 automated checks** and all **thirteen CI browser suites** passed before
+upload and Pages deployment. The deployed build is **v1.8.0 / abc5961**; the local
+website archive has the same build. Superseded draft runs were cancelled and
+were not published. Blender source is pushed at `hellokitty3D` commit
+`33053dfcae2220a1904456bb5ac2908a074049c9`, preserving the newer Hawaiian files.
+
+Share the refreshed room:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=toys-21>.
+The extra update parameter refreshes cached HTML and does not change the permanent
+first-gift marker. Existing Nancy progress and her letter remain intact. Open
+**Play a mission → Bake cookies with Kitty**, or tap the room oven, to see the
+new performances. Original gift-19/gift-20 links continue to work. Physical
+phone/Mac Safari verification remains pending in the manual review checklist.

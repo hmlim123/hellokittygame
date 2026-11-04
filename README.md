@@ -11,6 +11,8 @@ The agreed six-stage upgrade sequence and current milestone are tracked in
 
 ## Blender performances · v1.8.0
 
+Play the updated gift: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=toys-21>.
+
 The actual model now stirs dough, presses the selected heart/star/round cutter,
 presents Nancy's decorated cookie on a held tray, and gives a thank-you bow.
 Open **Play a mission → Bake cookies with Kitty**, or tap the little room oven.
