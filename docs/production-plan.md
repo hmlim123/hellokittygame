@@ -632,7 +632,7 @@ Both the individual Silver Bunny Blender project and the five-project bundle
 contain the corrected ears; the website archive matches the tested game revision.
 Nancy’s progress, letter and permanent gift-start marker remain unchanged.
 
-## Smooth collection and rounded rabbit ears · v2.0.3 (verification)
+## Smooth collection and rounded rabbit ears · v2.0.3 (published)
 
 The creator requested smoother textures on all five and identified another
 unwanted shape near Silver Bunny’s ears. Remove fleece normals/bump textures
@@ -648,3 +648,37 @@ marker remain. Physical phone/Mac Safari review remains pending.
 Verify all five source portraits and game previews, smooth-material export,
 round rabbit tips, no extra hood rim, all expressions/dances, baking contact,
 phone framing and save compatibility before the full browser release gate.
+
+Source revision: `62b3195f3d759a380c1c5fb3932d29b90958b91d`.
+Game candidate: `7876eb455f54fae78fde9f8853c49121348d46ef`.
+All **197 automated checks** passed (80 Node/model/domain and 117 Vitest).
+The model gate now asserts smooth matte material export and the absence of
+fleece normal textures, alongside every existing dance/expression/prop-contact
+check. Rabbit fitting checks assert rounded-cap revision and no extra hood shell.
+
+All five Blender portraits were visually reviewed after restoring the original
+smooth sculpt surfaces. Rabbit profile, rear and dance renders were reviewed
+with the new round caps and one head surface. Portable Blender archives were
+verified against all five source checksums. Full release gate:
+[run 42119305391](https://github.com/hmlim123/hellokittygame/actions/runs/42119305391).
+All 197 automated checks and all 16 browser suites passed; all four browser
+groups and Pages deployment succeeded before publication.
+
+Local browser verification passed all five real model selections, distinct
+dances, wink/happy restoration, shared outfits, postcard capture/metadata,
+room/adventure walking and reload, tall-accessory baking, and 320px touch with
+reduced motion. Silver Bunny’s front/profile/rear game views and phone preview
+were visually inspected with rounded tips and no extra shell. Failure/retry,
+late-response cancellation and the classic fallback also passed with zero
+page errors. Updated review images replace the previous textured versions.
+The website archive was checked against each actual smooth model and source
+manifest. Physical-device review is still pending.
+
+Publication verified in run **42119305391** for candidate
+`7876eb455f54fae78fde9f8853c49121348d46ef`. The exact immutable tested artifact
+was deployed. Published game:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=smooth-collection-27>.
+The five-project smooth Blender bundle and website archive contain the updated
+models; source checksums and the smooth surface metadata were verified.
+Nancy’s progress, letter and permanent first-gift marker remain unchanged.
+Physical phone and Mac/Safari review remain pending.
