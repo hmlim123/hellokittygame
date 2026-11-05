@@ -470,5 +470,28 @@ This pass stays within baking and the existing cookie-delivery journey:
   once. Pip remembers the actual mint visit. Do not change earned progress,
   letter text, gift launch marker, or the three room buttons.
 
-Release verification is recorded below after the browser/deployment gate.
-Physical phone and Safari verification remains pending.
+Verified release: **v1.9.1**, tested source
+`21a5812209ba43765fa2e2259caf500889889900`, Blender source
+`c6c3410317504d780919068c8a4a84d0c5d85a25`. All **187 automated checks**
+(74 Node/model/domain + 113 Vitest) and all **14 browser suites** passed.
+[Pages run 41958463856](https://github.com/hmlim123/hellokittygame/actions/runs/41958463856)
+completed successfully, including all four browser groups and deployment of the
+same tested artifact. Published link:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=polish-23>.
+
+Local real-input checks covered stirring/cancellation, press, keyboard End,
+packed-cookie delivery, mint, direct room-URL arrival, reward persistence,
+320px touch/reduced motion, replays, and both friend greetings. The measured
+tray tilt remained zero during the oven pose, and the baked reach is checked
+against the oven position. Updated review: `docs/nancy-blender-baking.png`.
+
+An earlier candidate hit a hosted controls-check timeout that did not reproduce
+in the local full controls playthrough. The release gate blocked publication.
+Browser runners now use Ubuntu 24.04 and the installed Playwright-pinned browser;
+failure reports retain the calling test location and control-state diagnostics.
+The final full gate, including rapid turns, touch recovery and cancellation,
+passed in that environment. No check or release dependency was removed.
+
+Physical phone and Safari verification remains pending. The actual device
+checklist and Mac Blender workflow are updated in `docs/phone-playtest.md` and
+`docs/blender-workflow.md`. Preserve this boundary in future completion claims.
