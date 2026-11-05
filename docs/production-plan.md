@@ -683,7 +683,7 @@ models; source checksums and the smooth surface metadata were verified.
 Nancy’s progress, letter and permanent first-gift marker remain unchanged.
 Physical phone and Mac/Safari review remain pending.
 
-## New shelf collection and five friendship stories · v2.1.0 (verification)
+## New shelf collection and five friendship stories · v2.1.0 (published)
 
 The creator requested replacing the “0 of 5 friends invited” shelf with the new
 characters, then requested more stories and selected a mix of playable stories
@@ -723,4 +723,34 @@ The browser release gate now covers **17 suites** across the existing four
 isolated groups; coverage asserts every suite appears exactly once and deploy
 still depends on all groups passing the exact immutable build artifact.
 Nancy’s letter, permanent gift-start marker and three-button room stay intact.
-Physical phone/Mac Safari review remains pending. Publication pending.
+Physical phone/Mac Safari review remains pending. Publication verified below.
+
+Release candidate: `afe0e6c2a0063dabfbf70a5502fb9d918cd62fab` (v2.1.0).
+[Pages run 42129207730](https://github.com/hmlim123/hellokittygame/actions/runs/42129207730)
+is the full 17-suite release authority. Push initially failed with the server’s
+`fatal error in commit_refs`; a full non-thin Git pack succeeded. For the final
+record push, use `git -c pack.window=0 push --no-thin origin master` if needed.
+
+The delayed-model browser check now waits for its interception callback before
+asserting the held request, removing a harness event-order race. The actual
+retry, leave-before-load cancellation and classic fallback assertions remain
+and pass. The local connected regression also passed the original tea, petting,
+phone reading/keepsake backup and cookie-delivery journeys with zero page errors.
+
+Publication verified: all **206 automated checks** and **17 browser suites**
+passed for `afe0e6c2a0063dabfbf70a5502fb9d918cd62fab`. All four browser groups
+and the Pages deployment succeeded in run **42129207730**, deploying the exact
+immutable artifact that passed the full release gate.
+
+Published: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=shelf-stories-28>.
+Open **Your little shelf → Meet your new friends**, or **Play a mission → Five
+little friendship stories**. The local connected suite also passed the tea,
+full cookie-delivery and all five friendship stories, including direct scene
+taps, original invitation preservation, full rereading, reload, phone touch and
+zero page errors. The downloadable website bundle contains the exact candidate
+revision and all six lightweight Blender shelf models.
+
+Review: `docs/nancy-friend-shelf.png`, `docs/nancy-friend-story.png`,
+`docs/nancy-friend-story-phone.png`. Nancy’s existing invitations, letter,
+wardrobe, adventure progress and gift marker remain. Physical phone/Mac Safari
+verification remains pending.
