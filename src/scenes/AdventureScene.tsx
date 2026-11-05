@@ -490,12 +490,24 @@ function Terrain({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
   );
 }
 function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
+  const dialogue = useGameStore((s) => s.dialogue);
+  const parcelPose = useRef({
+    kind: "present" as const,
+    progress: 0.5,
+    active: false,
+  });
+  const delivery = useGameStore((s) => s.cozy.delivery);
   const a = useGameStore((s) => s.adventure),
     equipment = useGameStore((s) => s.equipment),
     command = useGameStore((s) => s.moveCommand),
     body = useRef<RapierRigidBody>(null),
     { world } = useRapier(),
     reduced = useReducedMotion();
+  parcelPose.current.active = delivery.active && delivery.step === "momo";
+  const carrying =
+    delivery.active &&
+    (delivery.step === "momo" ||
+      (delivery.step === "mint" && dialogue?.source?.type === "M"));
   const locomotion = useRef({ speed: 0 }),
     inputClock = useRef(new InputClock()),
     motor = useRef<TileMotor | null>(null),
@@ -575,7 +587,9 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
       <CapsuleCollider args={[0.18, 0.18]} position={[0, 0.39, 0]} />
       <group ref={anchor}>
         <Kitty
-          equipment={equipment}
+          equipment={carrying ? { ...equipment, item: "none" } : equipment}
+          activity={parcelPose}
+          holding={carrying ? "parcel" : undefined}
           animate
           scale={0.48}
           locomotion={locomotion}

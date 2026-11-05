@@ -1,3 +1,5 @@
+import { CozyCorner } from "./CozyCorner";
+import { RainWindow } from "./RainWindow";
 import { Toy } from "./GameToys";
 import { CozyLights } from "./CozyLights";
 import { useEffect, useMemo, useRef } from "react";
@@ -51,6 +53,9 @@ function RoomEnvironment() {
   return (
     <>
       <primitive object={model.group} />
+      {model.group.getObjectByName("Cozy_window") && (
+        <RainWindow window={model.group.getObjectByName("Cozy_window")!} />
+      )}
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider args={[4.6, 0.2, 3.9]} position={[0, -0.2, 0]} />
       </RigidBody>
@@ -160,6 +165,7 @@ function HuntTargets() {
   );
 }
 export function RoomScene() {
+  const rainy = useGameStore((s) => s.cozy.weather === "rain");
   const petMode = useGameStore((s) => s.petMode),
     viewOnly = useGameStore((s) => s.viewOnly);
   const equipment = useGameStore((s) => s.equipment),
@@ -201,11 +207,14 @@ export function RoomScene() {
       controls.current?.getAzimuthalAngle() || 0,
     );
     gl.domElement.dataset.outfit = equipment.outfit;
+    gl.domElement.dataset.corner = JSON.stringify(
+      useGameStore.getState().cozy.corner,
+    );
   });
   return (
     <>
       <color attach="background" args={["#f5ece5"]} />
-      <CozyLights />
+      <CozyLights rainy={rainy} />
       <RoomEnvironment />
       <Shelf />
       <Souvenirs />
@@ -222,13 +231,7 @@ export function RoomScene() {
       >
         <Toy name="Oven" scale={1.1} />
       </group>
-      <Toy name="Cushion" position={[1.9, 0.01, 1.1]} scale={1.1} />
-      <Toy
-        name="Frame"
-        position={[-3.9, 2.25, -3.6]}
-        rotation={[0, 0, 0]}
-        scale={0.8}
-      />
+      <CozyCorner />
       <Toy name="Cup" position={[3.25, 1.24, 1.75]} scale={0.8} />
       <Arrival />
       <Kitty

@@ -71,7 +71,7 @@ export class KittyRoom{
     const cabinetBow=makeBow('#e9afbc',.65);cabinetBow.position.set(0,3.55,.05);cabinet.add(cabinetBow);
     label(cabinet,'little things, big love',0,3.57,.16,3,.32,{size:42,color:'#9d7668'});
     // A sunlit window and soft curtains on the left wall.
-    const windowGroup=new THREE.Group();windowGroup.position.set(-4.42,2.95,-.7);windowGroup.rotation.y=Math.PI/2;this.leftWall.add(windowGroup);
+    const windowGroup=new THREE.Group();windowGroup.name='Cozy_window';windowGroup.position.set(-4.42,2.95,-.7);windowGroup.rotation.y=Math.PI/2;this.leftWall.add(windowGroup);
     const glass=material('#c4dce1');glass.emissive=new THREE.Color('#d2e7e5');glass.emissiveIntensity=.25;box(windowGroup,glass,0,0,0,1.9,2.1,.05);
     for(let x of[-1,0,1])box(windowGroup,w,x,0,.08,.075,2.25,.1);for(let y of[-1.1,0,1.1])box(windowGroup,w,0,y,.08,2.1,.075,.1);
     box(windowGroup,w,0,-1.15,.2,2.4,.12,.5);const curtainMat=material('#eed2cf',true);

@@ -9,6 +9,26 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Cozy life · v1.9.0
+
+Hands-on baking follows real input: drag a circle at the spoon, press the cutter,
+and slide the tray into the oven. Keyboard/touch alternatives and Kitty's assisted
+Bake & decorate path remain. The actual Blender arms now have soft elbow/paw
+morphs, synchronized grips, contact poses and smooth transitions.
+
+**Play a mission → A little cookie delivery** connects baking, carrying a wrapped
+cookie to Momo, gathering mint with Pip beside the glade entrance, and bringing a
+strawberry recipe and cushion home. It needs no bridge unlock; progress saves
+midway. Friends remember actual gifts and visits without friendship meters.
+
+**Your cozy corner** offers earned cushion/frame/flower placement in three neat
+spots, sunshine/rain choices and optional rain audio under the Sound control.
+Recipe cards live inside baking: butter, strawberry biscuits (delivery), moon
+cookies (three charms), and cupcakes (tea party). Each has a small matching action.
+Current progress, the letter, and the permanent first-gift marker are preserved.
+The new editable source is `hellokitty3D/hello_kitty_natural.blend`; earlier editions
+remain intact. Physical phone/Safari review is still pending.
+
 ## Blender performances · v1.8.0
 
 Play the updated gift: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=toys-21>.

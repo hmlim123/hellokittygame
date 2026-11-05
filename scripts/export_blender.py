@@ -1,5 +1,5 @@
 """Export the actual Kitty character and animation, excluding the Blender studio.
-blender -b ../hellokitty3D/hello_kitty_game.blend --python-exit-code 1 --python scripts/export_blender.py
+blender -b ../hellokitty3D/hello_kitty_natural.blend --python-exit-code 1 --python scripts/export_blender.py
 The input .blend is never saved or modified. Requires Blender 4.3+.
 """
 import bpy
@@ -30,7 +30,7 @@ for obj in character:
     for mod in list(obj.modifiers):
         if mod.type=='SUBSURF':obj.modifiers.remove(mod)
         else:bpy.ops.object.modifier_apply(modifier=mod.name)
-    if obj.type=='MESH' and obj not in [eye,wink] and len(obj.data.polygons)>300:
+    if obj.type=='MESH' and obj not in [eye,wink] and not obj.data.shape_keys and len(obj.data.polygons)>300:
         dec=obj.modifiers.new('Web mesh reduction','DECIMATE');dec.ratio=.35
         bpy.ops.object.modifier_apply(modifier=dec.name)
     obj.select_set(False)

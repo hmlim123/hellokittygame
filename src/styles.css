@@ -2316,3 +2316,84 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 .baking-performance > button {
   min-height: 44px;
 }
+
+.recipe-book,
+.corner-arranger {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #e6c8d5;
+  border-radius: 18px;
+}
+.recipe-book summary,
+.corner-arranger summary {
+  cursor: pointer;
+  padding: 8px 0;
+  font-weight: 650;
+}
+.recipe-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.recipe-cards article,
+.delivery-card {
+  padding: 14px;
+  border: 1px solid #e6c8d5;
+  border-radius: 16px;
+  background: #fff5e9;
+}
+.recipe-cards h3 {
+  font-size: 1.05em;
+  margin: 0 0 8px;
+}
+.recipe-cards p {
+  font-size: 0.88em;
+}
+.recipe-cards button {
+  width: 100%;
+  min-height: 44px;
+}
+.recipe-cards article[data-unlocked="false"] {
+  background: #f3ebe8;
+}
+.workshop-controls {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0;
+  text-align: left;
+}
+.workshop-controls progress {
+  width: 100%;
+  accent-color: #a94673;
+}
+.workshop-controls input[type="range"] {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  accent-color: #a94673;
+}
+.workshop-controls button {
+  min-height: 48px;
+}
+.rain-sound {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 0;
+}
+.rain-sound input {
+  width: 22px;
+  height: 22px;
+  accent-color: #a94673;
+}
+.friend-memory {
+  border-left: 3px solid #c98eab;
+  padding-left: 14px;
+  font-style: italic;
+}
+@media (max-width: 430px) {
+  .recipe-cards {
+    grid-template-columns: 1fr;
+  }
+}

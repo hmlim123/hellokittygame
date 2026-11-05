@@ -16,7 +16,7 @@ test('the shipped GLB contains the actual Blender character, rig, and animated w
   assert.ok(names.some(n=>n.startsWith('White_arm')));
   assert.ok(full.tracks.some(t=>t.name.includes('morphTargetInfluences')));
   assert.ok(!names.some(n=>n.includes('softbox')||n.includes('plinth')));
-  assert.ok(bytes.length<2_000_000);
+  assert.ok(bytes.length<2_500_000);
 });
 test('the Blender wave moves the paw and winks, then restores both pose and open eye',()=>{
   const hero=makeBlenderKitty(asset),b=hero.userData.blender;
@@ -161,4 +161,19 @@ test('turning on reduced motion interrupts the active Blender gesture immediatel
  reactBlender(hero,'wave',false);updateBlender(hero,.8);assert.ok(arm.quaternion.angleTo(rest)>.3);
  reactBlender(hero,'wave',true);assert.equal(b.current,null);assert.equal(b.fading.length,0);
  updateBlender(hero,.02,{reduced:true});assert.ok(arm.quaternion.angleTo(rest)<1e-5);
+});
+
+test('soft elbow morphs deform the fused Blender arms while synchronized paw sockets move with them',()=>{
+ const h=makeBlenderKitty(asset),b=h.userData.blender,arm=b.model.getObjectByName('White_arm_1'),socket=b.model.getObjectByName('Socket_Paw_R');
+ assert.ok(arm.morphTargetDictionary.Elbow_soft!==undefined);const before=socket.position.clone();reactBlender(h,'stir');updateBlender(h,1.2);
+ assert.ok(arm.morphTargetInfluences[arm.morphTargetDictionary.Elbow_soft]>.05);assert.ok(socket.position.distanceTo(before)>.005);
+ updateBlender(h,5);assert.ok(Math.abs(arm.morphTargetInfluences[arm.morphTargetDictionary.Elbow_soft])<1e-5);
+ for(const name of ['placeTray','sprinkle','handoff'])assert.ok(asset.clips[name]);
+});
+test('input scrubbing follows an authored pose without restarting its clock on every event',async()=>{
+ const {followBlenderActivity}=await import('../dist/blender-kitty.js');const h=makeBlenderKitty(asset),b=h.userData.blender;
+ const input={kind:'stir',progress:.1,active:true};followBlenderActivity(h,input,1/60);const action=b.current;
+ input.progress=.45;for(let i=0;i<8;i++){updateBlender(h,1/60);followBlenderActivity(h,input,1/60);assert.equal(b.current,action);}
+ assert.ok(action.time>.1&&action.time<action.getClip().duration*.5);input.active=false;followBlenderActivity(h,input,1/60);updateBlender(h,.3);assert.equal(b.inputAction,null);
+ input.active=true;followBlenderActivity(h,input,.1,true);assert.equal(b.current,null);
 });

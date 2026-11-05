@@ -12,7 +12,22 @@ export interface CookieStamp {
   x: number;
   y: number;
 }
+export type RecipeId = "butter" | "strawberry" | "moon" | "cupcake";
+export interface Prep {
+  stir: number;
+  pressed: boolean;
+  oven: number;
+  extra: boolean;
+}
+export interface FriendMemory {
+  gifts: number;
+  visits: number;
+  last: Cookie | null;
+}
+export type CornerSpot = "rug" | "chair" | "nook";
 export interface Cookie {
+  recipe?: RecipeId;
+  prep?: Prep;
   shape: CookieShape;
   icing: Icing;
   stamps: CookieStamp[];
@@ -30,6 +45,15 @@ export interface PostcardMemory {
 }
 export interface CozyProgress {
   version: 1;
+  weather: "sunny" | "rain";
+  rainSound: boolean;
+  corner: Record<"cushion" | "frame" | "flowers", CornerSpot>;
+  friends: Record<"momo" | "pip", FriendMemory>;
+  delivery: {
+    active: boolean;
+    step: "bake" | "momo" | "mint" | "home" | "done";
+    cookie: Cookie | null;
+  };
   cookie: Cookie;
   cookiesGiven: number;
   postcards: PostcardMemory[];
@@ -57,6 +81,8 @@ const count = (v: unknown, max: number) =>
     ? Math.max(0, Math.min(max, Math.floor(v)))
     : 0;
 export const newCookie = (): Cookie => ({
+  recipe: "butter",
+  prep: { stir: 0, pressed: false, oven: 0, extra: false },
   shape: "heart",
   icing: "rose",
   stamps: [],
@@ -83,7 +109,19 @@ function normalizeCookie(value: unknown): Cookie {
           ]
         : [];
     });
+  const prep = record(c.prep);
   return {
+    recipe: member<RecipeId>(
+      c.recipe,
+      ["butter", "strawberry", "moon", "cupcake"],
+      "butter",
+    ),
+    prep: {
+      stir: bounded(prep.stir),
+      pressed: prep.pressed === true,
+      oven: bounded(prep.oven),
+      extra: prep.extra === true,
+    },
     shape: member(c.shape, COOKIE_SHAPES, "heart"),
     icing: member(c.icing, ICINGS, "rose"),
     stamps,
@@ -135,6 +173,33 @@ export function normalizeCozy(value: unknown): CozyProgress {
   }
   return {
     version: 1,
+    weather: raw.weather === "rain" ? "rain" : "sunny",
+    rainSound: raw.rainSound === true,
+    corner: Object.fromEntries(
+      ["cushion", "frame", "flowers"].map((k) => [
+        k,
+        member(record(raw.corner)[k], ["rug", "chair", "nook"], "rug"),
+      ]),
+    ) as CozyProgress["corner"],
+    friends: Object.fromEntries(
+      ["momo", "pip"].map((k) => {
+        const f = record(record(raw.friends)[k]);
+        return [
+          k,
+          {
+            gifts: count(f.gifts, 999999),
+            visits: count(f.visits, 999999),
+            last:
+              count(f.gifts, 999999) > 0 &&
+              f.last &&
+              COOKIE_SHAPES.includes(record(f.last).shape as CookieShape)
+                ? normalizeCookie(f.last)
+                : null,
+          },
+        ];
+      }),
+    ) as CozyProgress["friends"],
+    delivery: normalizeDelivery(raw.delivery),
     cookie: normalizeCookie(raw.cookie),
     cookiesGiven: count(raw.cookiesGiven, 999999),
     postcards,
@@ -175,5 +240,115 @@ export function teaGoal(c: CozyProgress) {
     instruction:
       "Find the pink table east of the glade entrance. Set out two cups and your cookie.",
     hint: "The tea table is on the entrance side of the stream, near the southern path. Approach it to set the table.",
+  };
+}
+
+export function bounded(n: unknown) {
+  return typeof n === "number" && Number.isFinite(n)
+    ? Math.max(0, Math.min(1, n))
+    : 0;
+}
+function normalizeDelivery(value: unknown): CozyProgress["delivery"] {
+  const r = record(value),
+    step = member(r.step, ["bake", "momo", "mint", "home", "done"], "bake"),
+    cookie = r.cookie ? normalizeCookie(r.cookie) : null;
+  // A malformed carried parcel returns to baking, without granting a reward.
+  const safeStep = step !== "bake" && !cookie ? "bake" : step;
+  return {
+    active: r.active === true && safeStep !== "done",
+    step: safeStep,
+    cookie,
+  };
+}
+export const RECIPES: {
+  id: RecipeId;
+  name: string;
+  hint: string;
+  action: string;
+}[] = [
+  {
+    id: "butter",
+    name: "Little butter cookies",
+    hint: "A recipe Kitty always knows.",
+    action: "Press the cutter",
+  },
+  {
+    id: "strawberry",
+    name: "Strawberry biscuits",
+    hint: "Complete your cookie delivery and bring the recipe home.",
+    action: "Mash the berries",
+  },
+  {
+    id: "moon",
+    name: "Moon-shaped cookies",
+    hint: "Discover all three moon charms in Moonflower Garden.",
+    action: "Stamp a little moon",
+  },
+  {
+    id: "cupcake",
+    name: "Tiny cupcakes",
+    hint: "Finish the moonlight tea party with Momo.",
+    action: "Swirl the icing",
+  },
+];
+export function recipeUnlocked(id: RecipeId, c: CozyProgress, a: Adventure) {
+  return (
+    id === "butter" ||
+    (id === "strawberry" && c.delivery.step === "done") ||
+    (id === "moon" && a.charms.length === 3) ||
+    (id === "cupcake" && c.tea.complete)
+  );
+}
+export function cookieName(c: Cookie) {
+  return c.recipe && c.recipe !== "butter"
+    ? RECIPES.find((r) => r.id === c.recipe)!.name.toLowerCase()
+    : `${c.shape} cookie with ${c.icing} icing`;
+}
+export function friendLine(name: "momo" | "pip", memory: FriendMemory) {
+  if (memory.last)
+    return `I still remember the ${cookieName(memory.last)} you made for me, Nancy. ${["That was such a sweet little surprise.", "Shall we sit together for a moment?", "You always bring a little sunshine with you."][memory.visits % 3]}`;
+  return [
+    "It is lovely to spend a little time with you, Nancy.",
+    "I saved a quiet little spot for us.",
+    "Welcome back, Nancy. There is no hurry today.",
+  ][memory.visits % 3];
+}
+export function decorationUnlocked(
+  id: "cushion" | "frame" | "flowers",
+  c: CozyProgress,
+  a: Adventure,
+) {
+  return id === "cushion"
+    ? c.delivery.step === "done"
+    : id === "frame"
+      ? c.postcards.length > 0
+      : a.chapter.flowersRevived;
+}
+export function deliveryGoal(c: CozyProgress) {
+  const step = c.delivery.step;
+  return {
+    key: "delivery-" + step,
+    title:
+      step === "bake"
+        ? "A cookie to carry"
+        : step === "momo"
+          ? "A little gift for Momo"
+          : step === "mint"
+            ? "Gather mint with Pip"
+            : "Bring your recipe card home",
+    instruction:
+      step === "bake"
+        ? "Bake, decorate, and pack a cookie for your walk."
+        : step === "momo"
+          ? "Visit Momo by the village fountain. Talk to her to hand over your cookie."
+          : step === "mint"
+            ? "Visit Butterfly Glade. Walk north from the entrance to the mint beside Pip."
+            : "Return to Kitty’s room. Your strawberry recipe and cushion are waiting.",
+    hint:
+      step === "momo"
+        ? "Momo is at the fountain: from the village entrance walk left twice, then up three times."
+        : step === "mint"
+          ? "The mint is beside the glade entrance; no bridge or tool is needed."
+          : "Choose Her room above the scene. Your parcel and memories save automatically.",
   };
 }

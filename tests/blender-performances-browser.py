@@ -10,8 +10,8 @@ with sync_playwright() as p:
   page.wait_for_function("p=>{const c=document.querySelector('.baking-preview canvas');return c?.dataset.blenderAction===p[0]&&c.dataset.holding===p[1]&&Number(c.dataset.pawTurn)>.01}",arg=[kind,holding],timeout=30000)
  page.goto(BASE+'/');ready();assert page.locator('.action-bar>button').count()==3
  page.get_by_role('button',name='Play a mission').click();page.get_by_role('button',name='Bake cookies with Kitty').click();pose('stir','spoon')
- page.get_by_role('button',name='Bake & decorate →',exact=True).click();pose('cut','cutter')
- page.get_by_role('button',name='Add a heart ♥',exact=True).click();page.get_by_role('button',name='Ready to give →',exact=True).click();pose('present','tray')
+ page.get_by_role('button',name='Bake & decorate →',exact=True).click();page.get_by_role('button',name='Add a heart ♥',exact=True).click();pose('sprinkle','none')
+ page.get_by_role('button',name='Ready to give →',exact=True).click();pose('present','tray')
  page.locator('.baking-performance').screenshot(path='/tmp/nancy-blender-baking.png')
  page.get_by_role('button',name='Give cookie to Momo ♡',exact=True).click();page.wait_for_function("document.querySelector('.baking-preview canvas').dataset.blenderAction==='bow'",timeout=30000)
  assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).cookiesGiven") == 1

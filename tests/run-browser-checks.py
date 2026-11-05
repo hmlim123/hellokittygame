@@ -9,7 +9,7 @@ SUITES = [
     'controls-browser.py', 'movement-browser.py', 'npc-gift-browser.py', 'journey-browser.py',
     'presentation-browser.py', 'device-browser.py', 'release-browser.py',
     'chapter-browser.py', 'play-polish-browser.py', 'navigation-browser.py',
-    'react-browser.py', 'cozy-browser.py', 'blender-performances-browser.py',
+    'react-browser.py', 'cozy-browser.py', 'blender-performances-browser.py', 'cozy-life-browser.py',
 ]
 ROOT=Path(__file__).resolve().parent.parent
 os.chdir(ROOT)

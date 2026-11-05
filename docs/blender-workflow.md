@@ -1,6 +1,6 @@
 # Editing the game toys in Blender
 
-The source project is `../hellokitty3D/hello_kitty_game.blend` (Blender 4.3+).
+The source project is `../hellokitty3D/hello_kitty_natural.blend` (Blender 4.3+).
 It adds ten Kitty performances, paw sockets, Momo/Pip greetings, and ten rounded
 prop assemblies. The original static and animated projects remain intact.
 
@@ -18,7 +18,7 @@ prop assemblies. The original static and animated projects remain intact.
 ```sh
 cd path/to/hellokittygame
 "/Applications/Blender.app/Contents/MacOS/Blender" \
-  -b ../hellokitty3D/hello_kitty_game.blend --python-exit-code 1 \
+  -b ../hellokitty3D/hello_kitty_natural.blend --python-exit-code 1 \
   --python scripts/export_blender.py
 npm run dev
 ```
@@ -62,3 +62,16 @@ TypeScript and prepares all assets. `npm run test:browser` includes the new
 Blender-performance journey as well as the twelve previous release suites.
 Physical iPhone/Mac Safari verification remains pending; Chromium emulation is
 recorded separately and is not a substitute for that review.
+
+## Natural interactive edition (v1.9)
+
+`create_natural_game.py` builds `hello_kitty_natural.blend` from the preserved
+first game edition. Body/head use rigid controls; the fused arms have
+`Elbow_soft` / `Paw_soft` shape keys, keyed together with their sockets. Source
+baking clips provide anticipation, contact, pressure, turning and settling.
+The game damps an input clock toward the requested phase; it does not replay a
+whole gesture on every pointer event. Keyboard and reduced-motion paths remain.
+The oven has an `Oven_Door` hinge; the parcel, flower pot and moon cutter are
+editable in the props collection. The character is below 2.5 MB and all friends
+and props together remain below 650 KB. Export skips decimation on authored morph
+meshes; topology reduction already happened before the keys were created.

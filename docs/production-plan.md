@@ -391,3 +391,36 @@ first-gift marker. Existing Nancy progress and her letter remain intact. Open
 **Play a mission → Bake cookies with Kitty**, or tap the room oven, to see the
 new performances. Original gift-19/gift-20 links continue to work. Physical
 phone/Mac Safari verification remains pending in the manual review checklist.
+
+
+## Cozy life · v1.9.0 (release gate running)
+
+The user authorized six connected updates and emphasized natural motion, with an
+approximately one-hour improvement budget. All six are implemented: direct-input
+baking, remembered gifts/visits, a delivery→mint→home recipe journey, earned corner
+placement, selectable sunny/rainy atmosphere with optional audio, and four recipes
+with story-derived unlocks. The same three main room buttons remain.
+
+Blender source is `hello_kitty_natural.blend`: soft elbow/paw deformation on the
+actual fused arms, synchronized sockets, loopable spoon contact, anticipated
+cutter pressure, turning/tray placement, handover and an oven hinge. Earlier game
+and Hawaiian Blender files are preserved. Source commit/hash are recorded in the
+asset provenance. Input clocks ease toward a live pose rather than restarting
+animations on every event; shape edits, gifts and progress continue to save.
+
+The new real-browser journey passes circular pointer stirring, changed paw poses,
+pressing, native slider preparation, one real delivered parcel, mint gathering
+without bridge prerequisites, recipe/cushion unlock on returning home, Momo's
+actual icing recall, persistent room/rain choices, and 320px reduced-motion touch.
+All 183 automated checks pass (72 domain/model + 111 Vitest); TypeScript/build
+pass. The complete release gate now contains fourteen suites. Local/CI checks are
+browser emulation, not physical phone/Mac Safari testing. First-player journey
+duration remains unmeasured; the five-minute story is a design target.
+
+The delivery snapshot is separate from later cookie batches and gifts are granted
+once. Old saves gain empty friend memories rather than invented gift history.
+One side story can be active at a time; paused milestones are preserved. New
+cozy fields normalize and transfer in existing backup/legacy mirroring flows.
+Rain stays in the window, adds no grain, and sound stays opt-in. The first-gift
+marker and Nancy's letter are unchanged. Publication will be recorded after the
+complete gate succeeds.

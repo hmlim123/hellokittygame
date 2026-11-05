@@ -1,8 +1,8 @@
 {
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "33053dfcae2220a1904456bb5ac2908a074049c9",
-  "source_file": "hello_kitty_game.blend",
-  "source_sha256": "a8e76e09d109a484778b71e482573a8c3ab130a9e2a76a474740864922ce1a79",
+  "source_commit": "d99bb326edf69c9c9d38132f0b34e010369edbf4",
+  "source_file": "hello_kitty_natural.blend",
+  "source_sha256": "6161e89ae61ff2acf5cbec8de896b39956d4b604a84a74740c3356075cea1084",
   "fps": 24,
   "clips": {
     "dance": [
@@ -44,7 +44,19 @@
     "sip": [
       451,
       511
+    ],
+    "placeTray": [
+      511,
+      583
+    ],
+    "sprinkle": [
+      583,
+      655
+    ],
+    "handoff": [
+      655,
+      727
     ]
   },
-  "notes": "Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets."
+  "notes": "Actual Blender meshes with soft elbow/paw morphs, synchronized grip sockets, input-driven contact motions, oven hinge, parcel and moon cutter. Studio excluded; named sampled clips. Original Blender editions preserved."
 }

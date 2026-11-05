@@ -2,6 +2,7 @@ import { nearbyLabel } from "../game/context-action";
 import { canTalkToNpc } from "../game/npc";
 import { npcLabelPosition } from "./npc-label";
 import { TEA_LEAVES, TEA_TABLE, nearTea } from "../game/cozy";
+import { ToyFriend } from "./GameToys";
 import { TeaTable } from "./TeaParty";
 import { bloomAmount, bridgeAmount } from "./effect-motion";
 import { useMemo, useRef } from "react";
@@ -128,6 +129,9 @@ export function GladePortal({ type }: { type: "A" | "V" }) {
   );
 }
 export function GladeObject({ object: o }: { object: MapObject }) {
+  const visitingPip = useGameStore(
+    (s) => s.cozy.delivery.active && s.cozy.delivery.step === "mint",
+  );
   const adventure = useGameStore((s) => s.adventure),
     effect = useGameStore((s) => s.effect),
     c = adventure.chapter,
@@ -147,6 +151,7 @@ export function GladeObject({ object: o }: { object: MapObject }) {
       P: "A moonlit picnic",
     } as Record<string, string>
   )[o.type];
+  if (o.type === "N" && visitingPip) return null;
   if (o.type === "K" && (!c.friendAwake || c.letterFound)) return null;
   if (o.type === "L" && Number(o.id) < c.butterflyStep) return null;
   return (
@@ -252,11 +257,21 @@ export function GladeObject({ object: o }: { object: MapObject }) {
   );
 }
 export function GladeScenery() {
+  const delivery = useGameStore((s) => s.cozy.delivery);
   const c = useGameStore((s) => s.adventure.chapter);
   const tea = useGameStore((s) => s.cozy.tea),
     a = useGameStore((s) => s.adventure);
   return (
     <>
+      {delivery.active && delivery.step === "mint" && (
+        <group position={[2.75, 0, 8]}>
+          <ToyFriend name="Pip" greetOnMount />
+          <mesh position={[-0.65, 0.28, 0]} scale={[0.12, 0.3, 0.07]}>
+            <sphereGeometry args={[1, 12, 8]} />
+            <meshStandardMaterial color="#91b79a" />
+          </mesh>
+        </group>
+      )}
       {tea.started && (
         <>
           {!tea.leaves && (

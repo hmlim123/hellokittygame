@@ -1,3 +1,4 @@
+import { CozyLifePanel } from "./ui/CozyLife";
 import { nearbyItemAction } from "./game/context-action";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Storybook, StarsPanel } from "./ui/StoryPanels";
@@ -406,6 +407,7 @@ export default function App() {
       document.getElementById("hideInterface")?.focus();
     };
   }, [viewOnly]);
+  const cozyLife = useGameStore((s) => s.cozy);
   const [soundOn, setSoundOn] = useState(false),
     sound = useMemo(() => new RoomSound(), []),
     notice = useGameStore((s) => s.notice);
@@ -422,6 +424,13 @@ export default function App() {
     );
     return () => clearTimeout(timer);
   }, [effect]);
+  useEffect(
+    () =>
+      sound.setRain(
+        cozyLife.weather === "rain" && cozyLife.rainSound && mode === "room",
+      ),
+    [cozyLife.weather, cozyLife.rainSound, mode, soundOn, sound],
+  );
   useEffect(() => () => sound.stop(), [sound]);
   useEffect(() => {
     if (notice) sound.chime(notice.art ? "arrival" : "catch");
@@ -635,6 +644,7 @@ export default function App() {
         Unofficial fan-made gift · Hello Kitty © Sanrio · v{RELEASE_VERSION}
       </footer>
       {panel === "storybook" && <Storybook />}
+      {panel === "cozy" && <CozyLifePanel />}
       {panel === "baking" && <BakingPanel />}
       {panel === "keepsakes" && <KeepsakePanel />}
       {panel === "tea" && <TeaPanel />}
@@ -666,6 +676,29 @@ export default function App() {
           )}
           <h2>{dialogue.speaker}</h2>
           <p>{dialogue.text}</p>
+          {dialogue.memory && (
+            <p className="friend-memory">“{dialogue.memory}”</p>
+          )}
+          {dialogue.source?.type === "M" &&
+            cozyLife.delivery.active &&
+            cozyLife.delivery.step === "momo" && (
+              <button
+                className="primary wide"
+                onClick={() => useGameStore.getState().deliverCookie()}
+              >
+                Hand Momo your cookie ♡
+              </button>
+            )}
+          {dialogue.source?.type === "M" &&
+            cozyLife.delivery.active &&
+            cozyLife.delivery.step === "mint" && (
+              <button
+                className="primary wide"
+                onClick={() => useGameStore.getState().startGlade()}
+              >
+                Visit Pip for mint ↗
+              </button>
+            )}
           {dialogue.complete && (
             <p>
               Your Moonlight dress is unlocked. More little quests are waiting

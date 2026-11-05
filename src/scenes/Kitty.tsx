@@ -8,6 +8,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import {
   blenderClips,
+  followBlenderActivity,
   makeBlenderKitty,
   updateBlender,
   reactBlender,
@@ -27,7 +28,13 @@ export function useKittyAsset() {
   }, [gltf]);
 }
 export { useReducedMotion } from "./use-reduced-motion";
+export interface ActivityPose {
+  kind: "stir" | "cut" | "placeTray" | "sprinkle" | "handoff" | "present";
+  progress: number;
+  active: boolean;
+}
 interface KittyProps {
+  activity?: RefObject<ActivityPose>;
   holding?: Holding;
   id?: number;
   equipment?: Equipment;
@@ -54,6 +61,7 @@ export function Kitty({
   photoPose,
   locomotion,
   holding,
+  activity,
 }: KittyProps) {
   const asset = useKittyAsset(),
     hero = useMemo(() => makeBlenderKitty(asset, id), [asset, id]),
@@ -172,6 +180,7 @@ export function Kitty({
       );
     }
     updateBlender(hero, Math.min(dt, 0.1), { reduced, idle: true });
+    if (activity) followBlenderActivity(hero, activity.current, dt, reduced);
     updateHeldItem(hero, Math.min(dt, 0.1));
     if (animate) {
       state.gl.domElement.dataset.blenderAction =

@@ -1,3 +1,4 @@
+import { RecipeBook } from "./CozyLife";
 import { useState, useId, lazy, Suspense } from "react";
 import { useGameStore } from "../game/store";
 import {
@@ -18,11 +19,15 @@ const names = { kitty: "Kitty", momo: "Momo", pip: "Pip" };
 export function CookieArt({ cookie }: { cookie: Cookie }) {
   const clip = useId();
   const path =
-    cookie.shape === "heart"
-      ? "M50 84C42 77 13 58 18 36C23 16 44 18 50 32C59 16 80 19 83 36C89 58 61 78 50 84Z"
-      : cookie.shape === "star"
-        ? "M50 13L61 37L87 40L67 58L73 84L50 71L27 84L33 58L13 40L39 37Z"
-        : "M50 15A35 35 0 1 1 49.99 15Z";
+    cookie.recipe === "moon"
+      ? "M72 18C36 9 14 41 28 68C40 92 72 88 84 67C59 78 40 56 49 36C53 27 62 21 72 18Z"
+      : cookie.recipe === "cupcake"
+        ? "M25 52L32 84L68 84L75 52C91 48 80 30 69 32C68 13 43 12 40 29C24 24 12 45 25 52Z"
+        : cookie.shape === "heart"
+          ? "M50 84C42 77 13 58 18 36C23 16 44 18 50 32C59 16 80 19 83 36C89 58 61 78 50 84Z"
+          : cookie.shape === "star"
+            ? "M50 13L61 37L87 40L67 58L73 84L50 71L27 84L33 58L13 40L39 37Z"
+            : "M50 15A35 35 0 1 1 49.99 15Z";
   return (
     <svg
       viewBox="0 0 100 100"
@@ -35,7 +40,12 @@ export function CookieArt({ cookie }: { cookie: Cookie }) {
         </clipPath>
       </defs>
       <ellipse cx="50" cy="88" rx="31" ry="4" fill="#c89c8933" />
-      <path d={path} fill="#e2b87f" stroke="#c59764" strokeWidth="2" />
+      <path
+        d={path}
+        fill={cookie.recipe === "strawberry" ? "#d89883" : "#e2b87f"}
+        stroke="#c59764"
+        strokeWidth="2"
+      />
       {cookie.stage !== "shape" && (
         <path
           d={path}
@@ -80,6 +90,7 @@ export function BakingPanel() {
         No timer, no mistakes. Choose a shape, decorate it, and make a friend
         smile.
       </p>
+      <RecipeBook />
       <ol className="cozy-steps" aria-label="Cookie steps">
         {["Choose", "Decorate", "Give"].map((label, i) => (
           <li key={label} aria-current={step === i + 1 ? "step" : undefined}>
@@ -203,20 +214,28 @@ export function BakingPanel() {
       )}
       {c.stage === "give" && (
         <>
-          <fieldset>
-            <legend>Who is your cookie for?</legend>
-            <div className="photo-options">
-              {FRIENDS.map((id) => (
-                <button
-                  key={id}
-                  aria-pressed={friend === id}
-                  onClick={() => setFriend(id)}
-                >
-                  {names[id]} {id === "pip" ? "🐰" : id === "momo" ? "🎀" : "♡"}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          {cozy.delivery.active && cozy.delivery.step === "bake" && (
+            <section className="delivery-card">
+              <p>Momo is waiting for a cookie you carry to her yourself.</p>
+            </section>
+          )}
+          {!(cozy.delivery.active && cozy.delivery.step === "bake") && (
+            <fieldset>
+              <legend>Who is your cookie for?</legend>
+              <div className="photo-options">
+                {FRIENDS.map((id) => (
+                  <button
+                    key={id}
+                    aria-pressed={friend === id}
+                    onClick={() => setFriend(id)}
+                  >
+                    {names[id]}{" "}
+                    {id === "pip" ? "🐰" : id === "momo" ? "🎀" : "♡"}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
           {cozy.tea.leaves && !cozy.tea.baked && (
             <p className="small-note">
               Momo is hoping for a cookie for your moonlight tea party.
@@ -226,8 +245,17 @@ export function BakingPanel() {
             <button onClick={() => s().cookieStage("decorate")}>
               Add more love
             </button>
-            <button className="primary" onClick={() => s().giveCookie(friend)}>
-              Give cookie to {names[friend]} ♡
+            <button
+              className="primary"
+              onClick={() =>
+                cozy.delivery.active && cozy.delivery.step === "bake"
+                  ? s().packDelivery()
+                  : s().giveCookie(friend)
+              }
+            >
+              {cozy.delivery.active && cozy.delivery.step === "bake"
+                ? "Pack for Momo’s delivery ♡"
+                : `Give cookie to ${names[friend]} ♡`}
             </button>
           </div>
         </>

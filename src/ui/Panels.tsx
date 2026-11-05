@@ -46,6 +46,14 @@ export function MissionsPanel() {
           <span aria-hidden="true">↗</span>
         </button>
       )}
+      <div className="memory-actions">
+        <button onClick={() => useGameStore.getState().startDelivery()}>
+          A little cookie delivery ♡
+        </button>
+        <button onClick={() => useGameStore.getState().openPanel("cozy")}>
+          Your cozy corner ☂
+        </button>
+      </div>
       <div className="mission-grid">
         <button
           className="mission-card"
@@ -165,6 +173,9 @@ export function TogetherPanel() {
           A teddy cuddle 🧸
         </button>
         <button onClick={() => open("baking")}>Bake together 🍪</button>
+        <button onClick={() => open("cozy")}>
+          Arrange your cozy corner ☂
+        </button>
         <button onClick={() => open("keepsakes")}>Your keepsake wall ♡</button>
       </div>
       <div className="together-grid">

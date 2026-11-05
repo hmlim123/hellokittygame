@@ -5,14 +5,20 @@ export const WORLD_COLORS = {
   garden: "#eee0ef",
   glade: "#e8dfec",
 } as const;
-export function CozyLights({ evening = false }: { evening?: boolean }) {
+export function CozyLights({
+  evening = false,
+  rainy = false,
+}: {
+  evening?: boolean;
+  rainy?: boolean;
+}) {
   return (
     <>
       <hemisphereLight
         args={[
-          "#fff6ee",
+          rainy ? "#fff0df" : "#fff6ee",
           evening ? "#b9a5c6" : "#b9acb1",
-          evening ? 2.25 : 2.5,
+          rainy ? 2.7 : evening ? 2.25 : 2.5,
         ]}
       />
       <directionalLight position={[-3, 9, 6]} color="#fff1d5" intensity={2} />

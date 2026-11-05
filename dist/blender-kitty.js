@@ -64,7 +64,7 @@ export function makeBlenderKitty(asset,id=0){
     }
   };
   resetEyes(false);
-  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_game.blend'};
+  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_natural.blend'};
   return hero;
 }
 export function setBlenderAttention(hero,x=0,y=0){
@@ -124,4 +124,23 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   const blink=b.blink<0?0:Math.sin(Math.PI*b.blink/.24)**2;
   b.eyes.forEach(p=>p.scale.y=1-blink*.96);
   b.normalize.scale.y=b.baseScale*(1+(idle&&!reduced&&!b.current?Math.sin(b.time*1.6)*.005:0));
+}
+
+// Scrub the authored contact motion from live input, with a damped clock.
+// Unlike replaying a gesture on every pointer event, this keeps contact continuous.
+export function followBlenderActivity(hero,input,dt,reduced=false){
+ const b=hero.userData.blender;
+ if(!input?.active){
+  if(b.inputAction){const old=b.inputAction;old.paused=false;old.fadeOut(.18);b.fading.push({action:old,left:.2});if(b.current===old)b.current=null;b.inputAction=null;}
+  return;
+ }
+ if(reduced){if(b.inputAction){b.mixer.stopAllAction();b.inputAction=null;b.current=null;}return;}
+ const action=b.actions[input.kind];if(!action)return;
+ if(b.inputAction!==action){
+  if(b.current&&b.current!==action){b.current.fadeOut(.18);b.fading.push({action:b.current,left:.2});}action.reset().setEffectiveWeight(1).fadeIn(.16).play();action.paused=true;b.current=action;b.inputAction=action;b.inputPhase=input.progress;
+ }
+ const target=Number.isFinite(input.progress)?input.progress:0;
+ b.inputPhase+=(target-b.inputPhase)*(1-Math.exp(-Math.min(.1,Math.max(0,dt))*16));
+ const phase=input.kind==='stir'?((b.inputPhase%1)+1)%1:Math.max(0,Math.min(1,b.inputPhase));
+ action.time=phase*action.getClip().duration;b.age=0;b.mixer.update(0);
 }

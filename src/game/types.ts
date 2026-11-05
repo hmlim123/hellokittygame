@@ -25,6 +25,9 @@ export type QuestId =
   | "glade";
 export type MissionId = "bows" | "strawberries" | "hearts" | "picnic";
 export type Gesture =
+  | "placeTray"
+  | "sprinkle"
+  | "handoff"
   | "stir"
   | "cut"
   | "present"
@@ -126,6 +129,7 @@ export interface GameMap {
   spawn: number[];
 }
 export interface Story {
+  memory?: string;
   speaker: string;
   text: string;
   art?: string | null;
@@ -160,6 +164,7 @@ export interface SaveState {
   cozy: import("./cozy").CozyProgress;
 }
 export type Panel =
+  | "cozy"
   | "missions"
   | "inventory"
   | "together"

@@ -17,13 +17,18 @@ export type ToyName =
   | "Spoon"
   | "Cutter"
   | "Cutter_Heart"
-  | "Cutter_Star";
+  | "Cutter_Star"
+  | "Parcel"
+  | "Flowers"
+  | "Cutter_Moon";
 export function Toy({
   name,
   position,
   scale = 1,
   rotation,
+  open = 0,
 }: {
+  open?: number;
   name: ToyName;
   position?: [number, number, number];
   scale?: number;
@@ -35,6 +40,11 @@ export function Toy({
     o.userData.sharedToy = true;
     return o;
   }, [gltf, name]);
+  useFrame(() => {
+    const hinge = object.getObjectByName("Oven_Door");
+    if (hinge)
+      hinge.rotation.x += (open * Math.PI * 0.46 - hinge.rotation.x) * 0.25;
+  });
   return (
     <primitive
       object={object}
@@ -45,7 +55,7 @@ export function Toy({
     />
   );
 }
-export type Holding = "tray" | "cup" | "spoon" | "cutter";
+export type Holding = "tray" | "cup" | "spoon" | "cutter" | "parcel";
 export function KittyHeld({
   hero,
   holding,
@@ -55,19 +65,28 @@ export function KittyHeld({
 }) {
   const b = hero.userData.blender;
   const socket = b.model.getObjectByName(
-    holding === "tray"
+    holding === "tray" || holding === "parcel"
       ? "Socket_Tray"
       : holding === "cup"
         ? "Socket_Teacup"
         : "Socket_Paw_R",
   );
   const cookie = useGameStore((s) => s.cozy.cookie);
+  const heldGroup = useRef<THREE.Group>(null);
+  useEffect(() => {
+    if (holding === "parcel") b.parcelGiven = false;
+  }, [holding, b]);
   const point = useMemo(() => new THREE.Vector3(), []),
     other = useMemo(() => new THREE.Vector3(), []);
   useFrame(() => {
+    if (holding === "parcel" && heldGroup.current) {
+      if (b.current?.getClip().name === "handoff" && b.age > 0.9)
+        b.parcelGiven = true;
+      heldGroup.current.visible = !b.parcelGiven;
+    }
     // Recompute the grip from the live paws, including additive gaze/walking
     // layers, rather than depending only on baked constraint keys.
-    if (holding !== "tray") return;
+    if (holding !== "tray" && holding !== "parcel") return;
     hero.updateMatrixWorld(true);
     b.model.getObjectByName("Socket_Paw_L").getWorldPosition(point);
     b.model.getObjectByName("Socket_Paw_R").getWorldPosition(other);
@@ -78,20 +97,24 @@ export function KittyHeld({
   });
   if (!socket) return null;
   return createPortal(
-    <group name={"Held_" + holding}>
+    <group name={"Held_" + holding} ref={heldGroup}>
       <Toy
         name={
-          holding === "tray"
-            ? "Tray"
-            : holding === "cup"
-              ? "Cup"
-              : holding === "spoon"
-                ? "Spoon"
-                : cookie.shape === "round"
-                  ? "Cutter"
-                  : cookie.shape === "heart"
-                    ? "Cutter_Heart"
-                    : "Cutter_Star"
+          holding === "parcel"
+            ? "Parcel"
+            : holding === "tray"
+              ? "Tray"
+              : holding === "cup"
+                ? "Cup"
+                : holding === "spoon"
+                  ? "Spoon"
+                  : cookie.recipe === "moon"
+                    ? "Cutter_Moon"
+                    : cookie.shape === "round"
+                      ? "Cutter"
+                      : cookie.shape === "heart"
+                        ? "Cutter_Heart"
+                        : "Cutter_Star"
         }
       />
       {holding === "tray" && (
