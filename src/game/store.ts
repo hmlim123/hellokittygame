@@ -639,6 +639,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             set({
               cozy: {
                 ...s.cozy,
+                cookie: { ...c, friend: "momo", stage: "served", packed: true },
                 delivery: {
                   active: true,
                   step: "momo",
@@ -665,11 +666,9 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               cozy: {
                 ...s.cozy,
                 cookiesGiven: s.cozy.cookiesGiven + 1,
-                cookie:
-                  s.cozy.cookie.stage === "give" &&
-                  JSON.stringify(s.cozy.cookie) === JSON.stringify(d.cookie)
-                    ? { ...s.cozy.cookie, stage: "served", friend: "momo" }
-                    : s.cozy.cookie,
+                cookie: s.cozy.cookie.packed
+                  ? { ...s.cozy.cookie, packed: false }
+                  : s.cozy.cookie,
                 delivery: { ...d, step: "mint" },
                 friends: {
                   ...s.cozy.friends,

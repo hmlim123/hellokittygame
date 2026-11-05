@@ -412,7 +412,7 @@ The new real-browser journey passes circular pointer stirring, changed paw poses
 pressing, native slider preparation, one real delivered parcel, mint gathering
 without bridge prerequisites, recipe/cushion unlock on returning home, Momo's
 actual icing recall, persistent room/rain choices, and 320px reduced-motion touch.
-All 183 automated checks pass (72 domain/model + 111 Vitest); TypeScript/build
+All 184 automated checks pass (72 domain/model + 112 Vitest); TypeScript/build
 pass. The complete release gate now contains fourteen suites. Local/CI checks are
 browser emulation, not physical phone/Mac Safari testing. First-player journey
 duration remains unmeasured; the five-minute story is a design target.
@@ -424,3 +424,6 @@ cozy fields normalize and transfer in existing backup/legacy mirroring flows.
 Rain stays in the window, adds no grain, and sound stays opt-in. The first-gift
 marker and Nancy's letter are unchanged. Publication will be recorded after the
 complete gate succeeds.
+
+Final parcel review also covers reserving a packed cookie immediately, preventing
+re-gifting it from baking, and leaving a later baking batch untouched on delivery.

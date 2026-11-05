@@ -26,6 +26,7 @@ export interface FriendMemory {
 }
 export type CornerSpot = "rug" | "chair" | "nook";
 export interface Cookie {
+  packed?: boolean;
   recipe?: RecipeId;
   prep?: Prep;
   shape: CookieShape;
@@ -81,6 +82,7 @@ const count = (v: unknown, max: number) =>
     ? Math.max(0, Math.min(max, Math.floor(v)))
     : 0;
 export const newCookie = (): Cookie => ({
+  packed: false,
   recipe: "butter",
   prep: { stir: 0, pressed: false, oven: 0, extra: false },
   shape: "heart",
@@ -111,6 +113,7 @@ function normalizeCookie(value: unknown): Cookie {
     });
   const prep = record(c.prep);
   return {
+    packed: c.packed === true && c.stage === "served",
     recipe: member<RecipeId>(
       c.recipe,
       ["butter", "strawberry", "moon", "cupcake"],

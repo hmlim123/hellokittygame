@@ -72,7 +72,7 @@ export default function BakingPreview() {
           : "placeTray"
       : cookie.stage === "decorate"
         ? "sprinkle"
-        : cookie.stage === "give"
+        : cookie.stage === "give" || cookie.packed
           ? "present"
           : "bow";
   const activity = useRef<ActivityPose>({
@@ -84,8 +84,9 @@ export default function BakingPreview() {
       active: false,
     }),
     drag = useRef({ down: false, angle: 0, amount: 0 });
-  const holding: Holding | undefined =
-    stage === "stir"
+  const holding: Holding | undefined = cookie.packed
+    ? "parcel"
+    : stage === "stir"
       ? "spoon"
       : stage === "press"
         ? "cutter"
@@ -178,7 +179,9 @@ export default function BakingPreview() {
             ? "Add your little touches. Kitty sprinkles along with you."
             : cookie.stage === "give"
               ? "Kitty holds your decorated cookie, ready to share."
-              : "A happy little bow. Thank you for baking together, Nancy!";
+              : cookie.packed
+                ? "A safely wrapped cookie, ready to carry to Momo."
+                : "A happy little bow. Thank you for baking together, Nancy!";
   return (
     <figure className="baking-performance">
       <div
@@ -292,14 +295,16 @@ export default function BakingPreview() {
               scale={0.8}
               open={stage === "oven" ? Math.sin(oven * Math.PI) : 0}
             />
-            {cookie.stage === "served" && cookie.friend !== "kitty" && (
-              <ToyFriend
-                name={cookie.friend === "pip" ? "Pip" : "Momo"}
-                position={[1, 0, 0.15]}
-                scale={0.8}
-                greetOnMount
-              />
-            )}
+            {cookie.stage === "served" &&
+              !cookie.packed &&
+              cookie.friend !== "kitty" && (
+                <ToyFriend
+                  name={cookie.friend === "pip" ? "Pip" : "Momo"}
+                  position={[1, 0, 0.15]}
+                  scale={0.8}
+                  greetOnMount
+                />
+              )}
           </Suspense>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.015, 0]}>
             <circleGeometry args={[5, 32]} />

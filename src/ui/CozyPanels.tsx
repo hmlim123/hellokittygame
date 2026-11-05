@@ -137,7 +137,9 @@ export function BakingPanel() {
               ? `${c.stamps.length} of 12 decorations. Tap the cookie or add a sprinkle below.`
               : c.stage === "give"
                 ? "A little gift tastes sweeter when shared."
-                : `${names[c.friend]} holds your cookie close. “You made this for me? Thank you, Nancy!” ♡`}
+                : c.packed
+                  ? "Your cookie is wrapped safely in Kitty’s paws. Momo is waiting in the village."
+                  : `${names[c.friend]} holds your cookie close. “You made this for me? Thank you, Nancy!” ♡`}
         </p>
       </div>
       {c.stage === "shape" && (
@@ -262,6 +264,11 @@ export function BakingPanel() {
       )}
       {c.stage === "served" && (
         <div className="memory-actions">
+          {c.packed && (
+            <button className="primary" onClick={() => s().startDelivery()}>
+              Carry the cookie to Momo ↗
+            </button>
+          )}
           <button
             onClick={() => {
               s().newCookie();
