@@ -1,8 +1,8 @@
 {
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "9dad10b164565def0ac08f1747c13a64e12307f0",
+  "source_commit": "9f73b7f1450535d5b7abe42a3ae3336366eebd6c",
   "source_file": "hello_kitty_plush_bunny.blend",
-  "source_sha256": "b3fa327f1fe24327bdf95713c3950e38da79fefc70f37970f7e490c5b5ee0953",
+  "source_sha256": "5927002b8ac1bd3aeffc2a5e9509fd7525353bd0ad44974b60a88dcb176f7b54",
   "fps": 24,
   "clips": {
     "dance": [
@@ -58,8 +58,9 @@
       727
     ]
   },
-  "notes": "Actual editable plush Blender edition. Short merged curled fibers, packed fabric normals, deforming paw pile, 13 named motions and happy-eye morphs. Studio excluded.",
+  "notes": "Actual editable plush Blender edition. Close-cropped fleece, packed seamless fabric normals, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.",
   "variant": "bunny",
   "title": "Silver Bunny",
-  "body_height": 4.56808
+  "body_height": 4.56808,
+  "surface": "close-cropped-fleece"
 }

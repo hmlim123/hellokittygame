@@ -100,14 +100,14 @@ The source repository now contains five complete portable projects:
 `hello_kitty_plush_baby.blend`, `hello_kitty_plush_kitten.blend`, and
 `hello_kitty_plush_bunny.blend`. Textures are packed and render paths are relative.
 They preserve the original controls and all 13 named motions, with distinct soft
-dances and a two-eye happy expression. The actual paw pile carries the same
-Elbow_soft / Paw_soft deformation as the fused arm mesh.
+dances and a two-eye happy expression. The fused arms retain Elbow_soft / Paw_soft deformation. The corrected surface
+is close-cropped fleece with a packed 512px normal map, subtle continuous nap
+relief and stitched cheek whiskers. There is no exposed curly chin fringe.
 
 Export a selected edition with the same command, substituting its filename.
 `export_blender.py` recognizes the scene's `plush_variant`, writes
 `dist/assets/plush/<id>.glb` and its source manifest, and leaves the base character,
-friends and props untouched. It omits the occluded inner head pile under the
-kitten/bunny hoods. `plush-collection.json` records all five source file hashes.
+friends and props untouched. The kitten/bunny hood opening is fitted to the head. `plush-collection.json` records all five source file hashes.
 
 In game, choose Inventory → Clothes → Kitty’s plush collection. The original
 character remains available. Models load on selection; a successful load commits
@@ -117,8 +117,7 @@ A style follows Nancy into the room, adventure, baking, the photo corner and the
 classic fallback. Saved postcards retain their style.
 
 The base body stays at the original normalized scale, even under long ears or a
-witch hat, to preserve paw/prop contact. Fine geometric strands use matte web
-materials and do not receive pointer raycasts; the stuffed surface does. Tiny
-on-screen characters and Battery friendly detail retain the fabric surface and
-omit subpixel pile. No particle simulations, alpha fur cards, film grain or
+witch hat, to preserve paw/prop contact. The matte fleece uses the same packed normal texture in Blender and the game;
+there are no loose curl meshes to resemble facial hair. The stuffed surface
+receives pointer interactions. No particle simulations, alpha fur cards, film grain or
 external decoder downloads are required.

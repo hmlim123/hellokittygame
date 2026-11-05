@@ -1,10 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "models": [
     {
       "id": "cloud",
       "file": "hello_kitty_plush_cloud.blend",
-      "sha256": "a5cebef5288d1ffab56e87d629f7084e50e70c699ddfe4f3aa934ea6b153043c",
+      "sha256": "d03ba033080b78180b1b14b27aea560af08306e53a45f97a18e36d1ad465e328",
       "preview": "hello_kitty_plush_cloud.png",
       "fps": 24,
       "dance": [
@@ -23,7 +23,7 @@
     {
       "id": "witch",
       "file": "hello_kitty_plush_witch.blend",
-      "sha256": "73b419132f3916fcb716ad52c54381d780f66dbc5cb154addc3706893b39cd91",
+      "sha256": "c0b82d3a59c0aad143d6be4869f7cb9be2202c13a60040fb47528d80c6075e12",
       "preview": "hello_kitty_plush_witch.png",
       "fps": 24,
       "dance": [
@@ -42,7 +42,7 @@
     {
       "id": "baby",
       "file": "hello_kitty_plush_baby.blend",
-      "sha256": "87d459a8c06d49b7af182e45338afdd2ac3e2a4063bf681fec938f27909bed7f",
+      "sha256": "340226891b31721776df05bcf3ae0eae569db246be923b96598ee88e9b80531e",
       "preview": "hello_kitty_plush_baby.png",
       "fps": 24,
       "dance": [
@@ -61,7 +61,7 @@
     {
       "id": "kitten",
       "file": "hello_kitty_plush_kitten.blend",
-      "sha256": "30ea0e69fbe1088738cb0cb951cbb5191190dfea1d0e481b14786b0f59402cd1",
+      "sha256": "22a993f9cb9f340fcba2b061e6b7f733ee65d4e5057e60e302e82679fd2efca9",
       "preview": "hello_kitty_plush_kitten.png",
       "fps": 24,
       "dance": [
@@ -80,7 +80,7 @@
     {
       "id": "bunny",
       "file": "hello_kitty_plush_bunny.blend",
-      "sha256": "b3fa327f1fe24327bdf95713c3950e38da79fefc70f37970f7e490c5b5ee0953",
+      "sha256": "5927002b8ac1bd3aeffc2a5e9509fd7525353bd0ad44974b60a88dcb176f7b54",
       "preview": "hello_kitty_plush_bunny.png",
       "fps": 24,
       "dance": [
@@ -97,5 +97,6 @@
       ]
     }
   ],
-  "notes": "Five complete editable Blender models. Original files preserved. Short geometric curled pile, packed fabric normals, shared controls and paw morphs."
+  "notes": "Five complete editable Blender projects. Close-cropped fleece with packed seamless normal texture, stitched cheek whiskers, fused paw deformation and all 13 motions. No exposed curly chin fringe. Original sources preserved.",
+  "surface": "close-cropped-fleece"
 }

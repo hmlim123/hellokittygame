@@ -1,8 +1,8 @@
 {
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "9dad10b164565def0ac08f1747c13a64e12307f0",
+  "source_commit": "9f73b7f1450535d5b7abe42a3ae3336366eebd6c",
   "source_file": "hello_kitty_plush_cloud.blend",
-  "source_sha256": "a5cebef5288d1ffab56e87d629f7084e50e70c699ddfe4f3aa934ea6b153043c",
+  "source_sha256": "d03ba033080b78180b1b14b27aea560af08306e53a45f97a18e36d1ad465e328",
   "fps": 24,
   "clips": {
     "dance": [
@@ -58,8 +58,9 @@
       727
     ]
   },
-  "notes": "Actual editable plush Blender edition. Short merged curled fibers, packed fabric normals, deforming paw pile, 13 named motions and happy-eye morphs. Studio excluded.",
+  "notes": "Actual editable plush Blender edition. Close-cropped fleece, packed seamless fabric normals, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.",
   "variant": "cloud",
   "title": "Strawberry Cloud",
-  "body_height": 4.56808
+  "body_height": 4.56808,
+  "surface": "close-cropped-fleece"
 }

@@ -4,7 +4,7 @@ export const PLUSH_STYLES = [
  {id:'cloud',name:'Strawberry Cloud',detail:'Cream plush and a strawberry pink bow.',file:'plush/cloud.glb'},
  {id:'witch',name:'Moonlight Witch',detail:'A soft lavender hat and a little velvet cape.',file:'plush/witch.glb'},
  {id:'baby',name:'Baby Blossom',detail:'A duckling bib, pink romper and little pacifier.',file:'plush/baby.glb'},
- {id:'kitten',name:'Rose Kitten',detail:'A fluffy kitten hood and heart-shaped eye sparkles.',file:'plush/kitten.glb'},
- {id:'bunny',name:'Silver Bunny',detail:'Curled ivory pile, long ears and silver ribbons.',file:'plush/bunny.glb'},
+ {id:'kitten',name:'Rose Kitten',detail:'A soft kitten hood and heart-shaped eye sparkles.',file:'plush/kitten.glb'},
+ {id:'bunny',name:'Silver Bunny',detail:'Soft ivory fleece, long ears and silver ribbons.',file:'plush/bunny.glb'},
 ];
 export function normalizePlush(value){return PLUSH_STYLES.some(s=>s.id===value&&value!=='classic')?value:undefined;}

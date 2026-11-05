@@ -17,10 +17,11 @@ asset_file=OUT/'plush'/f'{variant}.glb' if variant else OUT/'hello-kitty.glb'
 asset_file.parent.mkdir(parents=True,exist_ok=True)
 if variant:
     bpy.data.objects['CTRL_Root']['plush_variant']=variant
+    bpy.data.objects['CTRL_Root']['plush_surface']=s.get('plush_surface','legacy-curled-pile')
     bpy.data.objects['CTRL_Root']['plush_body_height']=s.get('plush_body_height',4.56808)
 s.frame_set(1)
-# The hood already encloses the head pile. Omit that occluded inner layer
-# from the web export; retain it in the editable Blender file.
+# Compatibility for earlier curled-pile source projects: omit the occluded
+# inner layer beneath a hood. Corrected fleece editions have no pile meshes.
 if variant in ['kitten','bunny']:
     inner=bpy.data.objects.get('Plush pile Head')
     if inner:bpy.data.objects.remove(inner,do_unlink=True)
@@ -106,6 +107,6 @@ except (subprocess.CalledProcessError,FileNotFoundError):commit=None
 meta={'source_repository':'https://github.com/hmlim123/hellokitty3D',
       'source_commit':commit,'source_file':source.name,'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'fps':s.render.fps,
       'clips':ranges,'notes':'Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets.'}
-if variant:meta.update(variant=variant,title=s.get('plush_title'),body_height=s.get('plush_body_height'),notes='Actual editable plush Blender edition. Short merged curled fibers, packed fabric normals, deforming paw pile, 13 named motions and happy-eye morphs. Studio excluded.')
+if variant:meta.update(variant=variant,title=s.get('plush_title'),body_height=s.get('plush_body_height'),surface=s.get('plush_surface'),notes='Actual editable plush Blender edition. Close-cropped fleece, packed seamless fabric normals, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.')
 (OUT/'plush'/f'{variant}-source.json' if variant else OUT/'kitty-source.json').write_text(json.dumps(meta,indent=2)+'\n')
 print('BLENDER_GAME_ASSETS_EXPORTED',str(asset_file),asset_file.stat().st_size)

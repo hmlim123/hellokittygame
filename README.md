@@ -9,12 +9,12 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
-## Five Blender plush editions · v2.0.0
+## Five Blender plush editions · v2.0.1
 
-Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=plush-24>.
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=soft-plush-25>.
 Open **Inventory → Clothes → Kitty’s plush collection**. Choose Strawberry Cloud,
 Moonlight Witch, Baby Blossom, Rose Kitten or Silver Bunny; Original Kitty is
-always available. Each is a complete Blender model with short curled pile,
+always available. Each is a complete Blender model with close-cropped fleece,
 packed fabric normals, a distinct soft dance, a wink and a happy-eye expression.
 Preview the motions in Inventory, or use the existing room/play controls.
 
@@ -25,9 +25,9 @@ the current Kitty. Clothes, items, adventure progress and backups remain shared.
 Postcards remember the selected plush. Tall hats/ears have their own framing;
 body scale and paw contact stay consistent in baking.
 
-The existing three room buttons remain. Fine fibers use matte materials and are
-omitted at tiny screen sizes or Battery friendly detail; the cloth surface and
-costume remain visible. Covered room rendering pauses during 3D previews.
+The existing three room buttons remain. Dense packed fabric normals replace
+the coarse exposed curls; the chin stays clean and cheek whiskers are short
+embroidered stitches. Covered room rendering pauses during 3D previews.
 Physical phone and Safari verification remains pending.
 
 ## Completion polish · v1.9.1

@@ -541,3 +541,21 @@ progress, letter and gift-start marker remain intact.
 Physical phone/Safari review remains pending; Chromium phone emulation is not
 physical-device certification. Use `docs/phone-playtest.md` for that remaining
 review. No new main button or additional mission was added in this release.
+
+## Natural plush surface correction · v2.0.1 (in review)
+
+The exposed white curls around the chin read as facial hair in actual play.
+Replace the free curled pile with a packed seamless 512px fleece normal and
+subtle continuous nap relief, retaining the editable stuffed meshes. Fit the
+hood opening to the head, use short embroidered cheek whiskers, and remove the
+kitten hood’s overlapping ear caps. Preserve all five source
+projects, distinct dances, fused paw deformation, expressions and 13 clips.
+
+No new features or reset. Keep shared clothes, items, quests, postcards, the
+letter and the permanent gift-start marker. Version gallery images as well as
+model URLs so the old portraits do not linger in cache.
+
+Acceptance: visually inspect Blender portraits and actual browser previews;
+verify no exposed curl geometry, the packed fabric texture and all original
+motion/prop contact assertions. Run the automated checks and all release browser
+journeys before publication. Physical phone and Safari review remain pending.

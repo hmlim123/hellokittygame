@@ -109,7 +109,7 @@ collection, try all five styles. Check the complete witch hat and bunny ears in
 360-degree previews and postcards. Preview each dance, wink and happy face, then
 wait for open eyes and a resting pose. Choose a different outfit and held item;
 travel and reload. The same plush should remain, with progress intact. Check
-baking contact and whether short pile remains comfortable on Nancy's phone.
+baking contact and whether the fine fleece finish remains comfortable on Nancy's phone.
 Try Battery friendly detail if needed; it keeps the cloth/costume while reducing
 fine strands. Close Inventory during a slow download: a late response must not
 change Kitty. Turn on Reduced motion and verify all choices remain usable.
