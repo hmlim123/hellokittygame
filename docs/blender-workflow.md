@@ -143,3 +143,18 @@ matching pre-fleece vertex data only; no animation, parenting or prop socket
 was replaced. Silver Bunny uses rounded ear caps and a single oval head surface
 without an overlapping hood shell. Its fitted lining and independent settling
 remain intact.
+
+### Shelf miniatures (v2.1.0)
+
+The room shelf displays static, lightweight exports of the actual character
+projects. Run `blender -b ../hellokitty3D/hello_kitty_plush_bunny.blend
+--python-exit-code 1 --python scripts/export-shelf.py`, substituting the other
+four edition names or `hello_kitty_natural.blend` for Original Kitty.
+The source project is never saved or modified. The exporter bakes the neutral
+pose, omits the bouquet/studio/rig, normalizes the body scale, combines the
+figurine and retains its palette with about 4,500 display faces. Source file
+and checksum are embedded; the gate checks them against each main model.
+
+The full animated models remain in use for playing with a selected friend,
+arrival animations and the new friendship stories. The shelf loads only the
+invited miniatures and keeps them separate from outfit recoloring.

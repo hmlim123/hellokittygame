@@ -4,10 +4,11 @@ import {material,ball,box,cylinder,tube,makeKitty,makeBow,heartMesh,label,useSof
 import {CanvasFallback} from './CanvasFallback.js';
 import {soften,blinkAmount,expressionTarget} from './expression.js';
 import {avatarPose} from './chat.js';
-import {THEMES} from './state.js';
+import {THEMES,DOLLS} from './state.js';
+import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {FriendArrival} from './friend-arrival.js';
 import {makeStrawberry,setHeldGift,playHeldItem,updateHeldItem} from './gifts.js';
-import {makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from './blender-kitty.js?v=adventure-7';
+import {loadBlenderKitty,makeBlenderKitty,reactBlender,updateBlender,setBlenderAttention,blenderTouchPart} from './blender-kitty.js?v=adventure-7';
 import {applyEquipment} from './equipment-model.js?v=adventure-7';
 export class KittyRoom{
   constructor(container,{asset=null,onSlot=()=>{},onKitty=()=>{},onGift=()=>{},onFrame=()=>{}}={}){
@@ -27,7 +28,7 @@ export class KittyRoom{
     this.room=new THREE.Group();this.scene.add(this.room);this.wallMat=material('#f0d5d8');this.rugMat=material('#d49aab',true);this.accentMat=material('#df9cae',true);
     this.white=material('#fff7e9');this.wood=material('#d4ae8b');this.darkWood=material('#b18c70');this.buildRoom();this.gifts.forEach(g=>g.visible=false);
     this.hero=this.createKitty(0);this.hero.position.set(-.12,.08,.65);this.hero.rotation.y=.3;this.hero.scale.setScalar(1.25);this.room.add(this.hero);this.heroCache=new Map([[0,this.hero]]);
-    this.shelfDolls=[];this.shelfCache=new Map();this.slots=[[-.44,.65,-2.65],[1.0,.65,-2.65],[2.44,.65,-2.65],[-.44,2.01,-2.65],[1,2.01,-2.65],[2.44,2.01,-2.65]];this.slotTargets=[];
+    this.shelfDolls=[];this.shelfCache=new Map();this.shelfPending=new Map();this.heroRequest=0;this.slots=[[-.44,.65,-2.65],[1.0,.65,-2.65],[2.44,.65,-2.65],[-.44,2.01,-2.65],[1,2.01,-2.65],[2.44,2.01,-2.65]];this.slotTargets=[];
     const slotmat=new THREE.MeshBasicMaterial({color:'#f6ca75',transparent:true,opacity:0,depthWrite:false});
     this.slots.forEach((p,i)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.25,1.18,.7),slotmat.clone());m.position.set(p[0],p[1]+.55,p[2]);m.userData={kind:'slot',index:i};this.room.add(m);this.slotTargets.push(m)});
     this.bows=[];this.bowPositions=[[-2.75,2.7,1],[2.5,2.1,1.7],[.5,3.8,-.6],[-1.5,1.2,2.4],[2.9,3.3,-.7],[-2.4,3.6,-1.2],[1.2,1.3,2.65],[-.7,3.1,1.2]];
@@ -98,18 +99,35 @@ export class KittyRoom{
   }
   flowerPot(parent,x,y,z,s){const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(s);parent.add(g);cylinder(g,material('#cfaa8b'),0,.17,0,.23,.34,.17);const green=material('#8fa287');for(let i=0;i<5;i++){const a=i*2.4;const px=Math.cos(a)*.19,pz=Math.sin(a)*.19;tube(g,[[0,.3,0],[px,.52,pz],[px,.8+(i%2)*.15,pz]],.014,green);const yy=.8+(i%2)*.15;for(let k=0;k<5;k++)ball(g,material(i%2?'#eabcc6':'#fff1d4'),px+Math.cos(k*1.256)*.09,yy+Math.sin(k*1.256)*.09,pz,.07,.07,.035);ball(g,material('#d7b664'),px,yy,pz+.02,.035);const leaf=ball(g,green,px*.5,.54,pz,.12,.035,.05);leaf.rotation.z=a;}return g;}
   resize(){const w=this.container.clientWidth,h=this.container.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();if(!this.inspect){const distance=w/h<.85?20.5:16.5;this.camera.position.copy(new THREE.Vector3(10,8.2,12.3).normalize().multiplyScalar(distance));this.controls.target.set(0,1.6,0);}this.controls.update();}
-  updateShelf(slots,exclude=null){for(const d of this.shelfDolls)d.visible=false;this.shelfDolls=[];slots.forEach((id,i)=>{if(id===null||id===exclude)return;let k=this.shelfCache.get(id);if(!k){k=this.createKitty(id);k.scale.setScalar(.51);this.shelfCache.set(id,k);this.room.add(k);}k.visible=true;k.position.set(...this.slots[i]);k.userData.slot=i;this.shelfDolls.push(k);});}
-  welcomeFriend(id,slots,onComplete){
+  updateShelf(slots,exclude=null){
+    this.shelfLayout={slots:[...slots],exclude};
+    for(const d of this.shelfDolls)d.visible=false;this.shelfDolls=[];
+    slots.forEach((id,i)=>{
+      if(id===null)return;
+      let miniature=this.shelfCache.get(id);
+      if(miniature){miniature.visible=id!==exclude;miniature.position.set(...this.slots[i]);miniature.userData.slot=i;if(id!==exclude)this.shelfDolls.push(miniature);return;}
+      if(this.shelfPending.has(id))return;
+      const style=DOLLS[id].plush||'classic';
+      const promise=new GLTFLoader().loadAsync(new URL('./assets/shelf/'+style+'.glb?v=shelf-stories-28',import.meta.url).href).then(gltf=>{
+        const figure=gltf.scene;figure.visible=false;figure.scale.setScalar(.43);figure.userData={kind:'kitty',id};this.shelfCache.set(id,figure);this.room.add(figure);this.shelfPending.delete(id);
+        this.updateShelf(this.shelfLayout.slots,this.shelfLayout.exclude);
+      }).catch(()=>this.shelfPending.delete(id));this.shelfPending.set(id,promise);
+    });
+  }
+  async welcomeFriend(id,slots,onComplete){
     if(this.arrival)this.finishArrival();
     if(this.reduced){this.updateShelf(slots);onComplete();return;}
+    const pending={id,slots:[...slots],onComplete};this.pendingWelcome=pending;
+    let asset;try{asset=await loadBlenderKitty(DOLLS[id].plush);}catch{if(this.pendingWelcome===pending){this.pendingWelcome=null;this.updateShelf(slots);onComplete();}return;}
+    if(this.pendingWelcome!==pending)return;this.pendingWelcome=null;
     this.updateShelf(slots,id);this.inspect=true;this.controls.minDistance=6;this.controls.maxDistance=16;this.controls.target.set(.4,1.5,.2);this.camera.position.set(5.5,4.3,8.5);this.controls.update();
-    const visitor=this.createKitty(id);visitor.rotation.y=.15;this.room.add(visitor);
-    this.arrival={visitor,slots:[...slots],clock:new FriendArrival(this.slots[slots.indexOf(id)]),waved:false,onComplete};
+    const visitor=makeBlenderKitty(asset,id);applyEquipment(visitor,{version:1,outfit:"classic",item:"none",...(DOLLS[id].plush?{plush:DOLLS[id].plush}:{})});visitor.rotation.y=.15;this.room.add(visitor);
+    this.arrival={visitor,slots:[...slots],clock:new FriendArrival(this.slots[slots.indexOf(id)],false,.43),waved:false,onComplete};
   }
   finishArrival(){
-    const a=this.arrival;if(!a)return;this.arrival=null;
+    const a=this.arrival;if(!a){const pending=this.pendingWelcome;if(pending){this.pendingWelcome=null;this.updateShelf(pending.slots);this.inspectKitty();pending.onComplete();}return;}this.arrival=null;
     reactBlender(a.visitor,null);a.visitor.userData.blender.mixer.stopAllAction();
-    this.shelfCache.set(a.visitor.userData.id,a.visitor);a.visitor.rotation.y=0;
+    this.room.remove(a.visitor);
     this.updateShelf(a.slots);this.inspectKitty();a.onComplete();
   }
   updateArrival(dt){
@@ -124,7 +142,14 @@ export class KittyRoom{
     this.react('catch');
     for(let i=0;i<4;i++){const h=heartMesh(i%2?'#e5a0b9':'#f2c5d3',.045);h.position.copy(position);h.userData={velocity:new THREE.Vector3((i-1.5)*.12,.35+i*.06,0),life:.75+i*.1,heart:true};this.scene.add(h);this.confetti.push(h);}
   }
-  setHero(id){this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;if(this.equipment)this.setEquipment(this.equipment);else if(this.asset)setHeldGift(this.hero,this.heldGift);this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);}
+  setHero(id){
+    const style=this.equipment?.plush||DOLLS[id].plush||'classic',current=this.asset?.scene.getObjectByName('CTRL_Root')?.userData.plush_variant||'classic';
+    const request=++this.heroRequest;
+    if(style!==current){
+      loadBlenderKitty(style==='classic'?undefined:style).then(asset=>{if(request!==this.heroRequest)return;this.asset=asset;this.heroCache.clear();this.setHero(id);}).catch(()=>{});return;
+    }
+    this.room.remove(this.hero);let h=this.heroCache.get(id);if(!h){h=this.createKitty(id);this.heroCache.set(id,h);}h.position.set(-.12,.08,.65);h.rotation.y=.3;h.scale.setScalar(1.25);this.room.add(h);this.hero=h;if(this.equipment)this.setEquipment(this.equipment);else if(this.asset)setHeldGift(this.hero,this.heldGift);this.waveTime=1.5;if(this.rewardEquipped)this.setRewardGifts(this.rewardEquipped,this.baseRewardTheme);
+  }
   setRewardGifts(equipped={},baseTheme='rose'){
     this.rewardEquipped={...equipped};this.baseRewardTheme=baseTheme;
     const colors={sky:['#dce7f2','#b4abd5','#9cbacb'],gold:['#f5e6b9','#d8b56e','#e2c582'],twilight:['#d9d0e9','#9b8dba','#b9a1cc']}[equipped.theme];

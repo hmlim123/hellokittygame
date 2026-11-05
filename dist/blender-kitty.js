@@ -45,7 +45,7 @@ export function makeBlenderKitty(asset,id=0){
     o.material=Array.isArray(o.material)?o.material.map(localMaterial):localMaterial(o.material);
     for(const material of Array.isArray(o.material)?o.material:[o.material]){
       material.userData.plushBaseColor=material.color.getHex();
-      if(id!==0&&material.name==='Strawberry pink satin')material.color.set(DOLLS[id].color);
+      if(id!==0&&!plush&&material.name==='Strawberry pink satin')material.color.set(DOLLS[id].color);
     }
   });
   // Additive head/eye pivots preserve the exported controller animation.

@@ -1,3 +1,10 @@
+import { FRIEND_TALES } from "../game/friend-tales";
+const memoryImage = (art: string) =>
+  assetUrl(
+    art.startsWith("friend-")
+      ? "assets/plush/" + art.slice(7) + ".png"
+      : `assets/quest/${art}.svg`,
+  );
 import { useState } from "react";
 import { useGameStore } from "../game/store";
 import { memoryPages, STAR_ORDER, endingUnlocked } from "../game/chapter";
@@ -6,12 +13,21 @@ import { Dialog } from "./Dialog";
 export function Storybook() {
   const adventure = useGameStore((s) => s.adventure),
     tea = useGameStore((s) => s.cozy.tea),
+    tales = useGameStore((s) => s.cozy.tales),
     requested = useGameStore((s) => s.memoryPage),
     close = useGameStore((s) => s.closePanel),
     open = useGameStore((s) => s.openPanel),
     start = useGameStore((s) => s.startGlade);
   const pages = [
       ...memoryPages(adventure),
+      ...FRIEND_TALES.map((t) => ({
+        id: "friend-" + t.id,
+        title: t.title,
+        art: "friend-" + t.id,
+        place: t.place,
+        text: t.memory,
+        unlocked: tales[t.id].complete,
+      })),
       ...(tea.started
         ? [
             {
@@ -45,11 +61,26 @@ export function Storybook() {
       </p>
       {page ? (
         <article className="memory-spread" data-memory={page.id}>
-          <img src={assetUrl(`assets/quest/${page.art}.svg`)} alt="" />
+          <img src={memoryImage(page.art)} alt="" />
           <div>
             <span className="eyebrow">{page.place}</span>
             <h3>{page.title}</h3>
             <p>{page.text}</p>
+            {page.id.startsWith("friend-") && (
+              <button
+                className="primary"
+                onClick={() =>
+                  useGameStore
+                    .getState()
+                    .startFriendTale(
+                      FRIEND_TALES.find((t) => "friend-" + t.id === page.id)!
+                        .id,
+                    )
+                }
+              >
+                Read the full story ♡
+              </button>
+            )}
             {page.id === "letter" && (
               <button className="primary" onClick={() => open("letter")}>
                 Open your envelope 💌
@@ -112,7 +143,7 @@ export function Storybook() {
             aria-pressed={page?.id === p.id}
             onClick={() => setSelected(p.id)}
           >
-            <img alt="" src={assetUrl(`assets/quest/${p.art}.svg`)} />
+            <img alt="" src={memoryImage(p.art)} />
             <span>{p.unlocked ? p.title : "A memory still waiting"}</span>
           </button>
         ))}

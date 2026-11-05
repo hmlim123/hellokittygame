@@ -1,3 +1,7 @@
+import { Suspense, useState } from "react";
+import { DOLLS } from "../game/domain";
+import { ShelfFriend } from "./ShelfFriend";
+import { prepareKittyStyle } from "./kitty-assets";
 import { CozyCorner } from "./CozyCorner";
 import { RainWindow } from "./RainWindow";
 import { Toy } from "./GameToys";
@@ -26,6 +30,12 @@ interface RoomGeometry {
   setTheme(theme: Theme): void;
   setRewards(s: Adventure): void;
 }
+const friendEquipment = (id: number) => ({
+  version: 1,
+  outfit: "classic" as const,
+  item: "none" as const,
+  ...(DOLLS[id]?.plush ? { plush: DOLLS[id].plush } : {}),
+});
 const slots: [number, number, number][] = [
   [-0.44, 0.65, -2.65],
   [1, 0.65, -2.65],
@@ -66,14 +76,27 @@ function Shelf() {
   const arrival = useGameStore((s) => s.arrival),
     ids = useGameStore((s) => s.room.slots),
     group = useRef<THREE.Group>(null);
-  useFrame(({ camera }) => {
-    if (group.current) group.current.visible = camera.position.z > 0.35;
+  useFrame(({ camera, gl }) => {
+    if (group.current) {
+      group.current.visible = camera.position.z > 0.35;
+      const styles: string[] = [];
+      group.current.traverse((o) => {
+        if (o.userData.shelf_style) styles.push(o.userData.shelf_style);
+      });
+      gl.domElement.dataset.shelfFriends = styles.sort().join(",");
+    }
   });
   return (
     <group ref={group}>
       {ids.map((id, i) =>
-        id === null || id === arrival?.friend ? null : (
-          <Kitty key={`${i}-${id}`} id={id} position={slots[i]} scale={0.43} />
+        id === null ? null : (
+          <ShelfFriend
+            key={`${i}-${id}`}
+            id={id}
+            visible={id !== arrival?.friend}
+            style={DOLLS[id].plush || "classic"}
+            position={slots[i]}
+          />
         ),
       )}
     </group>
@@ -84,11 +107,27 @@ function Arrival() {
     slotsState = useGameStore((s) => s.room.slots),
     reduced = useReducedMotion(),
     group = useRef<THREE.Group>(null);
+  const [assetReady, setAssetReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setAssetReady(false);
+    if (arrival)
+      prepareKittyStyle(DOLLS[arrival.friend].plush || "classic")
+        .then(() => {
+          if (active) setAssetReady(true);
+        })
+        .catch(() => {
+          if (active) useGameStore.getState().finishArrival();
+        });
+    return () => {
+      active = false;
+    };
+  }, [arrival]);
   const destination = arrival
     ? slots[Math.max(0, slotsState.indexOf(arrival.friend))]
     : slots[0];
   const clock = useMemo(
-    () => new FriendArrival(destination, reduced),
+    () => new FriendArrival(destination, reduced, 0.43),
     [arrival, reduced, destination],
   );
   const performance = useMemo(
@@ -103,15 +142,22 @@ function Arrival() {
     return () => removeEventListener("keydown", skip);
   }, []);
   useFrame((_, dt) => {
-    if (!arrival || !group.current) return;
+    if (!arrival || !group.current || !assetReady) return;
     const pose = clock.advance(Math.min(dt, 0.1));
     group.current.position.set(...(pose.position as [number, number, number]));
     group.current.scale.setScalar(pose.scale);
     if (pose.justFinished) useGameStore.getState().finishArrival();
   });
-  return arrival ? (
+  return arrival && assetReady ? (
     <group ref={group}>
-      <Kitty id={arrival.friend} animate performance={performance} />
+      <Suspense fallback={null}>
+        <Kitty
+          id={arrival.friend}
+          equipment={friendEquipment(arrival.friend)}
+          animate
+          performance={performance}
+        />
+      </Suspense>
     </group>
   ) : null;
 }

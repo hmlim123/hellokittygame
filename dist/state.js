@@ -1,11 +1,18 @@
+// Stable IDs preserve every existing invitation and shelf position.
 export const DOLLS = [
-  {id:0,name:'Classic sweetheart',short:'Classic',color:'#e896b0',accent:'#dc789d',tag:'The original little love'},
-  {id:1,name:'Strawberry milk',short:'Strawberry',color:'#eda5b8',accent:'#df7799',tag:'Sweet as a pink daydream'},
-  {id:2,name:'Lavender cloud',short:'Lavender',color:'#b6a2da',accent:'#997bc5',tag:'For the softest kind of days'},
-  {id:3,name:'Honey sunshine',short:'Honey',color:'#eaca77',accent:'#d9a84c',tag:'A pocketful of golden happy'},
-  {id:4,name:'Blue daydream',short:'Daydream',color:'#94bdc9',accent:'#639eaf',tag:'A little sky to keep close'},
-  {id:5,name:'Little angel',short:'Angel',color:'#ddcdb6',accent:'#bca78c',tag:'A whole lot of love, with a bow'}
+  {id:0,name:'Original Kitty',short:'Original Kitty',color:'#e896b0',accent:'#dc789d',tag:'Your familiar little friend',plush:undefined},
+  {id:1,name:'Strawberry Cloud',short:'Strawberry Cloud',color:'#e790ac',accent:'#dc789d',tag:'A ribbon after the rain',plush:'cloud'},
+  {id:2,name:'Moonlight Witch',short:'Moonlight Witch',color:'#b6a2da',accent:'#997bc5',tag:'A pocketful of starlight',plush:'witch'},
+  {id:3,name:'Baby Blossom',short:'Baby Blossom',color:'#efb0c7',accent:'#d893b1',tag:'The sleepiest little cloud',plush:'baby'},
+  {id:4,name:'Rose Kitten',short:'Rose Kitten',color:'#f3d9df',accent:'#d99eb3',tag:'A garden full of small surprises',plush:'kitten'},
+  {id:5,name:'Silver Bunny',short:'Silver Bunny',color:'#dddfe5',accent:'#aeb5c5',tag:'An invitation from the moon',plush:'bunny'}
 ];
+export function inviteDoll(state,id){
+  if(!DOLLS.some(d=>d.id===id)||state.owned.includes(id))return null;
+  state.owned.push(id);state.owned.sort((a,b)=>a-b);
+  const slot=state.slots.indexOf(null);if(slot!==-1)state.slots[slot]=id;
+  return DOLLS[id];
+}
 export const THEMES={rose:{name:'Rose milk',wall:'#f0d5d8',rug:'#d49aab',accent:'#df9cae'},lavender:{name:'Lavender',wall:'#ddd4ec',rug:'#b2a1ca',accent:'#b8a5d3'},peach:{name:'Peach cream',wall:'#f0ddc7',rug:'#d8b39a',accent:'#dfb69b'},mint:{name:'Mint tea',wall:'#d8e4d6',rug:'#a7b9a0',accent:'#adc2ab'}};
 export function normalizeState(raw={},legacy={}){
   raw=raw||{};legacy=legacy||{};

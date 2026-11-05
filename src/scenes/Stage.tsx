@@ -68,7 +68,9 @@ export function Stage() {
   const revision = useGameStore((s) => s.worldRevision);
   const plush = useGameStore((s) => s.equipment.plush);
   const previewOpen = useGameStore((s) =>
-    ["inventory", "baking", "photo", "ending"].includes(s.panel || ""),
+    ["inventory", "baking", "photo", "ending", "friend-tales"].includes(
+      s.panel || "",
+    ),
   );
   const mode = useGameStore((s) => s.mode),
     ready = useGameStore((s) => s.sceneReady),

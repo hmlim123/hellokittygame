@@ -1,3 +1,7 @@
+import {
+  chooseShelfFriend,
+  cancelFriendSelection,
+} from "../scenes/select-friend";
 import { MAPS as WORLD } from "../game/world-map";
 import { journeyObjective, QUEST_NAMES } from "../game/navigation";
 import { SaveBackup } from "./SaveBackup";
@@ -54,6 +58,19 @@ export function MissionsPanel() {
           Your cozy corner ☂
         </button>
       </div>
+      <button
+        className="friend-stories-entry"
+        onClick={() => useGameStore.getState().startFriendTale()}
+      >
+        <span>📖</span>
+        <div>
+          <strong>Five little friendship stories</strong>
+          <small>
+            Meet the new shelf friends through gentle little quests.
+          </small>
+        </div>
+        <span aria-hidden="true">↗</span>
+      </button>
       <div className="mission-grid">
         <button
           className="mission-card"
@@ -510,9 +527,30 @@ export function Picnic() {
 }
 export function Shelf() {
   const room = useGameStore((s) => s.room),
-    select = useGameStore((s) => s.setFriend);
+    equipment = useGameStore((s) => s.equipment),
+    busy = useGameStore((s) => !!s.mission || !!s.arrival),
+    [pending, setPending] = useState<number | null>(null),
+    [message, setMessage] = useState("");
+  useEffect(() => () => cancelFriendSelection(), []);
+  const choose = async (id: number) => {
+    setPending(id);
+    setMessage("");
+    try {
+      if (await chooseShelfFriend(id))
+        setMessage(DOLLS[id].name + " is ready to play. ♡");
+    } catch {
+      setMessage("This little friend needs a moment. Try again.");
+    } finally {
+      setPending(null);
+    }
+  };
   return (
-    <details className="shelf-panel">
+    <details
+      className="shelf-panel"
+      onToggle={(e) => {
+        if (!e.currentTarget.open) cancelFriendSelection();
+      }}
+    >
       <summary>
         Your little shelf{" "}
         <small>
@@ -520,25 +558,52 @@ export function Shelf() {
           friends invited
         </small>
       </summary>
-      <p>Choose a friend to play with. Your shared outfit stays equipped.</p>
+      <p>
+        Five little friends, five little stories. Choose an invited friend to
+        play with.
+      </p>
       <div className="collection-grid">
         {DOLLS.map((d) => (
           <button
             key={d.id}
-            disabled={!room.owned.includes(d.id)}
-            aria-pressed={room.selected === d.id}
-            onClick={() => select(d.id)}
+            data-friend={d.plush || "classic"}
+            disabled={!room.owned.includes(d.id) || pending === d.id || busy}
+            aria-label={"Play with " + d.name}
+            aria-pressed={
+              (equipment.plush || "classic") === (d.plush || "classic")
+            }
+            onClick={() => void choose(d.id)}
           >
-            <span style={{ color: d.color }}>🎀</span>
-            <strong>{d.short}</strong>
+            <img
+              alt=""
+              loading="lazy"
+              src={assetUrl(
+                d.plush
+                  ? "assets/plush/" + d.plush + ".png"
+                  : "assets/shelf/classic.png",
+              )}
+            />
+            <strong>{d.name}</strong>
             <small>
-              {room.owned.includes(d.id)
-                ? "Your friend"
-                : "Play a mission to unlock"}
+              {pending === d.id
+                ? "Getting ready…"
+                : room.owned.includes(d.id)
+                  ? "Your friend"
+                  : "Meet her in a story"}
             </small>
           </button>
         ))}
       </div>
+      <p role="status" className="small-note">
+        {message}
+      </p>
+      <button
+        className="shelf-story-link"
+        disabled={busy}
+        onClick={() => useGameStore.getState().startFriendTale()}
+      >
+        Meet your new friends ↗
+      </button>
     </details>
   );
 }

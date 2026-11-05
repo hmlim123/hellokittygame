@@ -166,6 +166,7 @@ export interface SaveState {
   cozy: import("./cozy").CozyProgress;
 }
 export type Panel =
+  | "friend-tales"
   | "cozy"
   | "missions"
   | "inventory"

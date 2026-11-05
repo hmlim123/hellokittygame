@@ -1,3 +1,4 @@
+import { normalizeTales, type TaleCollection } from "./friend-tales";
 import { normalizePlush } from "../../dist/plush-state.js";
 import type { Adventure, OutfitId, PlushId } from "./types";
 export const COOKIE_SHAPES = ["heart", "star", "round"] as const;
@@ -47,6 +48,7 @@ export interface PostcardMemory {
   createdAt: string;
 }
 export interface CozyProgress {
+  tales: TaleCollection;
   version: 1;
   weather: "sunny" | "rain";
   rainSound: boolean;
@@ -205,6 +207,7 @@ export function normalizeCozy(value: unknown): CozyProgress {
         ];
       }),
     ) as CozyProgress["friends"],
+    tales: normalizeTales(raw.tales),
     delivery: normalizeDelivery(raw.delivery),
     cookie: normalizeCookie(raw.cookie),
     cookiesGiven: count(raw.cookiesGiven, 999999),

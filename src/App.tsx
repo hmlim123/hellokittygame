@@ -1,3 +1,4 @@
+import { FriendTalesPanel } from "./ui/FriendTales";
 import { CozyLifePanel } from "./ui/CozyLife";
 import { nearbyItemAction } from "./game/context-action";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -643,6 +644,7 @@ export default function App() {
       <footer>
         Unofficial fan-made gift · Hello Kitty © Sanrio · v{RELEASE_VERSION}
       </footer>
+      {panel === "friend-tales" && <FriendTalesPanel />}
       {panel === "storybook" && <Storybook />}
       {panel === "cozy" && <CozyLifePanel />}
       {panel === "baking" && <BakingPanel />}

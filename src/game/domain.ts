@@ -225,6 +225,7 @@ export const DOLLS = room.DOLLS as {
   color: string;
   accent: string;
   tag: string;
+  plush?: import("./types").PlushId;
 }[];
 export const THEMES = room.THEMES as Record<
   Room["theme"],
@@ -232,6 +233,10 @@ export const THEMES = room.THEMES as Record<
 >;
 export const rewardDoll = room.rewardDoll as (
   state: Room,
+) => (typeof DOLLS)[number] | null;
+export const inviteDoll = room.inviteDoll as (
+  state: Room,
+  id: number,
 ) => (typeof DOLLS)[number] | null;
 export const placeDoll = room.placeDoll as (
   state: Room,

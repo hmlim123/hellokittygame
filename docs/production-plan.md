@@ -682,3 +682,45 @@ The five-project smooth Blender bundle and website archive contain the updated
 models; source checksums and the smooth surface metadata were verified.
 Nancy’s progress, letter and permanent first-gift marker remain unchanged.
 Physical phone and Mac/Safari review remain pending.
+
+## New shelf collection and five friendship stories · v2.1.0 (verification)
+
+The creator requested replacing the “0 of 5 friends invited” shelf with the new
+characters, then requested more stories and selected a mix of playable stories
+and illustrated tales. Stable IDs 1–5 now map to Strawberry Cloud, Moonlight
+Witch, Baby Blossom, Rose Kitten and Silver Bunny; ID 0 is Original Kitty.
+Existing invitations, selected slots and progress are retained.
+
+The actual Blender sources are baked into lightweight, static shelf figurines
+with their source hashes embedded. They have no animation rigs and retain each
+character’s palette and costume. The main selected friend and arrival use the
+full animated model. Shelf selection preloads the requested model before
+committing, cancels stale responses, preserves outfits/items and rejects locked
+characters. Miniatures preload invisibly during arrival; the ending scale
+matches the shelf. The classic fallback shares the collection and offers a
+progress-preserving link to the friendship stories.
+
+Each friend has a three-part playable kindness story and an illustrated saved
+page. Direct 3D object taps and equivalent picture buttons support pointer,
+touch and keyboard; sequence hints have no penalty and there is no timer.
+Progress resumes after pausing/reloading. Finishing invites the matching friend
+once and saves a storybook page. Already invited friends gain the story without
+a duplicate reward; completed stories support full rereading. Partial/completed
+stories are normalized in cozy progress and included in backups. An older
+classic cozy mirror that omits the field cannot erase the new primary progress.
+
+All **206 automated checks** pass (83 Node/model/domain and 123 Vitest), including
+source provenance/payload bounds for all six miniature models, exact one-time
+invitations in any story order, locked choices, harmless wrong/duplicate actions,
+partial/reload/backup continuity, older-save compatibility and arrival scale.
+A real browser playthrough completed all five stories, selected every invited
+edition, returned to Original Kitty, read the illustrated/full story, reloaded
+all completed progress and used the 320px touch layout without page errors.
+The first ribbon was collected with a real 3D scene click. Existing fallback
+load/retry/cancellation checks also passed.
+
+The browser release gate now covers **17 suites** across the existing four
+isolated groups; coverage asserts every suite appears exactly once and deploy
+still depends on all groups passing the exact immutable build artifact.
+Nancy’s letter, permanent gift-start marker and three-button room stay intact.
+Physical phone/Mac Safari review remains pending. Publication pending.

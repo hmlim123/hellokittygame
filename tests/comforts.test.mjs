@@ -32,3 +32,8 @@ test('rapid sound toggles cannot create duplicate music timers while audio resum
   try{const pending=sound.toggle();assert.equal(await sound.toggle(),false);assert.equal(created,1);resume();assert.equal(await pending,true);sound.stop();assert.equal(sound.enabled,false);assert.equal(sound.timer,null);}
   finally{sound.stop();if(saved)globalThis.AudioContext=saved;else delete globalThis.AudioContext;}
 });
+
+test('new Blender friends finish at the same scale as the static shelf miniature',()=>{
+ const target=[1,2,-2.65],pose=new FriendArrival(target,false,.43).advance(5);
+ assert.equal(pose.phase,'done');assert.deepEqual(pose.position,target);assert.ok(Math.abs(pose.scale-.43)<1e-8);
+});

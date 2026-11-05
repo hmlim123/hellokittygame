@@ -1,3 +1,5 @@
+import { FRIEND_TALES, advanceTale } from "./friend-tales";
+import type { PlushId } from "./types";
 import { normalizePlush } from "../../dist/plush-state.js";
 import {
   normalizeJourney,
@@ -84,6 +86,8 @@ import {
   recordMission,
   replayMemory,
   rewardDoll,
+  inviteDoll,
+  DOLLS,
   tickMission,
 } from "./domain";
 import {
@@ -105,6 +109,10 @@ const initialMode = (): Mode =>
 export interface GameState extends SaveState {
   mode: Mode;
   panel: Panel;
+  activeTale: PlushId | null;
+  startFriendTale(id?: PlushId): void;
+  playFriendTale(token: string): boolean;
+  finishFriendTale(): void;
   inventoryTab: "clothes" | "items" | "quest";
   memoryPage: string | null;
   greet(): void;
@@ -1099,9 +1107,15 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             set({
               panel: "storybook",
               memoryPage:
-                id === "tea" && get().cozy.tea.complete
-                  ? "tea"
-                  : page?.id || null,
+                id?.startsWith("friend-") &&
+                FRIEND_TALES.some(
+                  (t) =>
+                    "friend-" + t.id === id && get().cozy.tales[t.id].complete,
+                )
+                  ? id
+                  : id === "tea" && get().cozy.tea.complete
+                    ? "tea"
+                    : page?.id || null,
             });
           },
           arrangeStar(id) {
@@ -1317,6 +1331,94 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                     ),
                   }
                 : {}),
+            });
+          },
+          activeTale: null,
+          startFriendTale(id) {
+            const s = get();
+            if (
+              (id !== undefined && !FRIEND_TALES.some((t) => t.id === id)) ||
+              s.moving ||
+              s.mission?.active ||
+              s.arrival ||
+              s.viewOnly
+            )
+              return;
+            if (s.mode !== "room") get().setMode("room");
+            if (id === undefined) {
+              set({ activeTale: null, panel: "friend-tales" });
+              return;
+            }
+            const cozy = copy(get().cozy);
+            cozy.tales[id].started = true;
+            set({
+              cozy,
+              activeTale: id,
+              petMode: false,
+              panel: "friend-tales",
+              dialogue: null,
+              heldDirection: null,
+              moving: false,
+              moveCommand: null,
+              queuedDirection: null,
+            });
+          },
+          playFriendTale(token) {
+            const s = get(),
+              tale = FRIEND_TALES.find((t) => t.id === s.activeTale);
+            if (s.panel !== "friend-tales" || !tale) return false;
+            const next = advanceTale(tale, s.cozy.tales[tale.id], token);
+            if (!next) return false;
+            const cozy = copy(s.cozy);
+            cozy.tales[tale.id] = next;
+            set({
+              cozy,
+              ...(next.step !== s.cozy.tales[tale.id].step
+                ? {
+                    gesture: {
+                      id: ++serial,
+                      kind:
+                        next.step === 3
+                          ? ("celebrate" as const)
+                          : ("bow" as const),
+                    },
+                  }
+                : {}),
+            });
+            return true;
+          },
+          finishFriendTale() {
+            const s = get(),
+              tale = FRIEND_TALES.find((t) => t.id === s.activeTale);
+            if (
+              s.panel !== "friend-tales" ||
+              !tale ||
+              s.cozy.tales[tale.id].step !== 3
+            )
+              return;
+            if (s.cozy.tales[tale.id].complete) {
+              set({ panel: null });
+              return;
+            }
+            const cozy = copy(s.cozy),
+              room = copy(s.room);
+            cozy.tales[tale.id].complete = true;
+            const friend = inviteDoll(room, tale.friend),
+              result = {
+                title: tale.title,
+                text: friend
+                  ? tale.name +
+                    " is joining your shelf. Your story is waiting in the storybook."
+                  : tale.name +
+                    " is glad you spent this little moment together. A new storybook memory is ready.",
+              };
+            set({
+              cozy,
+              room,
+              panel: null,
+              gesture: { id: ++serial, kind: "celebrate" },
+              arrival: friend ? { friend: friend.id, result } : null,
+              result: friend ? null : result,
             });
           },
           setPlush(id) {
@@ -1611,11 +1713,23 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             set({ preferences: { ...get().preferences, ...patch } });
           },
           setFriend(id) {
-            if (get().room.owned.includes(id))
-              set({
-                room: { ...get().room, selected: id },
-                gesture: { id: ++serial, kind: "wave" },
-              });
+            const s = get(),
+              friend = DOLLS.find((d) => d.id === id);
+            if (
+              !friend ||
+              !s.room.owned.includes(id) ||
+              s.mission?.active ||
+              s.arrival
+            )
+              return;
+            const equipment = { ...s.equipment };
+            if (friend.plush) equipment.plush = friend.plush;
+            else delete equipment.plush;
+            set({
+              room: { ...s.room, selected: id },
+              equipment,
+              gesture: { id: ++serial, kind: "wave" },
+            });
           },
           markLetterOpened() {
             set({ preferences: { ...get().preferences, letterOpened: true } });
@@ -1693,9 +1807,17 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 ? rawPreferences
                 : {}),
             }),
-            cozy: normalizeCozy(
-              read(storage, "kitty-nancy-cozy-v1") ?? previous.cozy,
-            ),
+            cozy: normalizeCozy({
+              ...previous.cozy,
+              ...((read(storage, "kitty-nancy-cozy-v1") ??
+                previous.cozy) as object),
+              tales:
+                (
+                  read(storage, "kitty-nancy-cozy-v1") as {
+                    tales?: unknown;
+                  } | null
+                )?.tales ?? previous.cozy.tales,
+            }),
             ...(progressChanged
               ? {
                   dialogue: null,

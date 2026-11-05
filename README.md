@@ -9,6 +9,31 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Five shelf friends and friendship stories · v2.1.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=shelf-stories-28>.
+Open **Your little shelf → Meet your new friends**, or **Play a mission → Five
+little friendship stories**. Each friend has a three-part playable story with
+an illustrated storybook memory when completed:
+
+- Strawberry Cloud · A ribbon after the rain.
+- Moonlight Witch · A pocketful of starlight.
+- Baby Blossom · The sleepiest little cloud.
+- Rose Kitten · The garden’s quiet surprise.
+- Silver Bunny · An invitation from the moon.
+
+Tap the scene objects or use their accessible picture buttons. Gentle hints,
+no timer and no penalties. Pause or reload and continue at the same step.
+Completing a story invites that specific friend once. Existing mission rewards
+still invite the next missing friend; old invitation IDs and shelf positions
+carry over. Already invited friends gain a new story without a duplicate reward.
+
+The shelf uses actual Blender miniature exports, about 210–280 KB each, without
+animation rigs. The five unique costumes replace the old recolored copies. Choose
+an invited friend to use the full animated edition, keeping clothes and held
+items. The storybook keeps completed pages and full rereading; backup/restore
+includes partial and completed stories. The three main room buttons remain.
+
 ## Five Blender plush editions · v2.0.3
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=smooth-collection-27>.

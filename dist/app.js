@@ -141,9 +141,9 @@ function save(){
   catch{$('saveStatus').textContent='Saving unavailable. Keep this tab open to keep playing.';}
 }
 function say(text){$('toast').textContent=text;$('toast').classList.add('visible');toastLeft=3.4;}
-function portrait(d){return `<svg viewBox="0 0 80 95" aria-hidden="true"><ellipse cx="40" cy="77" rx="20" ry="13" fill="${d.color}"/><ellipse cx="29" cy="88" rx="10" ry="6" fill="#fffaf1"/><ellipse cx="51" cy="88" rx="10" ry="6" fill="#fffaf1"/><path d="M12 33 13 9q1-6 18 9M49 18Q66 3 67 9l1 24" fill="#fffaf1"/><ellipse cx="40" cy="41" rx="33" ry="27" fill="#fffaf1"/><g fill="#21171d"><ellipse cx="27" cy="42" rx="3" ry="4.5"/><ellipse cx="53" cy="42" rx="3" ry="4.5"/></g><ellipse cx="40" cy="51" rx="4" ry="2.7" fill="#edc462"/><g stroke="#33212c" stroke-width="1.8" stroke-linecap="round"><path d="m3 39 11 1M2 47h11M4 55l10-2m52-13 11-1m-10 8h11m-12 6 10 2"/></g><g fill="${d.accent}"><ellipse cx="55" cy="22" rx="9" ry="11" transform="rotate(-30 55 22)"/><ellipse cx="67" cy="26" rx="9" ry="11" transform="rotate(-30 67 26)"/><circle cx="61" cy="24" r="6"/></g></svg>`;}
+function portrait(d){return `<img src="./assets/${d.plush?'plush/'+d.plush+'.png?v=shelf-stories-28':'shelf/classic.png?v=shelf-stories-28'}" alt="" width="70" height="80" style="object-fit:contain;border-radius:10px">`;}
 function collection(){
-  $('collectionCount').textContent=`${state.owned.length} of 6 friends`;
+  $('collectionCount').textContent=`${state.owned.filter(id=>id!==0).length} of 5 friends invited`;
   $('collection').innerHTML=DOLLS.map(d=>{const owned=state.owned.includes(d.id);return `<button class="doll-card${owned?'':' locked'}" data-doll="${d.id}" aria-label="${d.name}${owned?'':', not collected'}" aria-pressed="${state.selected===d.id}" ${!ready||hunt?.active||celebrating?'disabled':''}>${portrait(d)}<span>${d.short}</span><small>${owned?'Your friend':'Play a mission to unlock'}</small></button>`;}).join('');
   document.querySelectorAll('[data-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.theme===state.theme)));
 }
@@ -151,7 +151,7 @@ $('collection').onclick=e=>{
   const b=e.target.closest('[data-doll]');if(!b||!ready||hunt?.active||celebrating)return;
   const id=Number(b.dataset.doll);
   if(!state.owned.includes(id)){say(`Complete a mission to meet ${nextDoll(state)?.name||'a new friend'}.`);return;}
-  state.selected=id;save();room.setHero(id);room.inspectKitty();collection();say(`Hello, ${DOLLS[id].short}. ♡`);
+  state.selected=id;if(DOLLS[id].plush)equipment.plush=DOLLS[id].plush;else delete equipment.plush;try{localStorage.setItem(EQUIPMENT_KEY,JSON.stringify(equipment));}catch{}save();room.setEquipment(equipment);room.setHero(id);room.inspectKitty();collection();say(`Hello, ${DOLLS[id].short}. ♡`);
 };
 document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{
   state.theme=b.dataset.theme;room?.setTheme(state.theme);save();collection();
@@ -288,7 +288,7 @@ try{
       const p=room.project(b.position);targets[i].style.left=p.x+'px';targets[i].style.top=p.y+'px';targets[i].hidden=!p.visible;
     });
   }});
-  room.updateShelf(state.slots);room.setHero(state.selected);syncEquipment();room.setTheme(state.theme);room.setNight(false);room.inspectKitty();
+  room.updateShelf(state.slots);room.setEquipment(equipment);room.setHero(state.selected);syncEquipment();room.setTheme(state.theme);room.setNight(false);room.inspectKitty();
   $('loading').hidden=true;ready=true;controls();save();
   room.renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause(true);$('webglError').hidden=false;});
 }catch(error){console.error('Kitty room failed to start:',error);$('loading').hidden=true;$('webglError').hidden=false;}
