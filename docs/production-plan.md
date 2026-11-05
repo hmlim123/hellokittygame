@@ -427,3 +427,9 @@ complete gate succeeds.
 
 Final parcel review also covers reserving a packed cookie immediately, preventing
 re-gifting it from baking, and leaving a later baking batch untouched on delivery.
+
+The fourteen browser suites now run across four isolated CI runners. An explicit
+coverage check ensures every suite appears exactly once; publication waits for
+the unit/build job and all four browser groups, then downloads the same immutable
+build artifact. No checks are removed. The Blender performance check now uses
+the new Stir control before observing the real input-driven pose.

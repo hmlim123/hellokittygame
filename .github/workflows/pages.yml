@@ -24,28 +24,22 @@ permissions:
 
 concurrency:
   group: github-pages
-  # Superseded commits stop; the latest build must still pass every gate.
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
+    name: Build and check game rules
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 10
     steps:
       - name: Check out the game
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24
           cache: npm
-      - name: Install locked dependencies
-        run: npm ci
+      - run: npm ci
       - name: Check game rules and save migration
         run: npm test
       - name: Build the React game
@@ -59,25 +53,74 @@ jobs:
           test -s build/assets/cozy-props.glb
           test -s build/assets/kitty-source.json
           test -s build/classic/index.html
+      - name: Keep the exact build for testing and publication
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tested-site
+          path: build/
+          if-no-files-found: error
+          retention-days: 2
+
+  browsers:
+    name: Browser journeys ${{ matrix.shard }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Download the exact build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: tested-site
+          path: build
       - name: Install pinned browser checks
         run: |
           python3 -m venv .venv-browser
           .venv-browser/bin/python -m pip install -r tests/browser-requirements.txt
           .venv-browser/bin/python -m playwright install --with-deps chromium
-      - name: Play the complete release journeys
+      - name: Play the release journeys
+        env:
+          KITTY_TEST_SHARD: ${{ matrix.shard }}
         run: .venv-browser/bin/python tests/run-browser-checks.py
       - name: Keep browser failure diagnostics
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: browser-check-diagnostics
+          name: browser-check-diagnostics-${{ matrix.shard }}
           path: test-results/
           if-no-files-found: ignore
           retention-days: 7
+
+  deploy:
+    name: Publish the tested game
+    needs: [build, browsers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
+      - name: Download the exact tested build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: tested-site
+          path: build
       - name: Upload the playable website
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: build
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e

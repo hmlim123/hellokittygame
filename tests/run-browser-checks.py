@@ -11,6 +11,18 @@ SUITES = [
     'chapter-browser.py', 'play-polish-browser.py', 'navigation-browser.py',
     'react-browser.py', 'cozy-browser.py', 'blender-performances-browser.py', 'cozy-life-browser.py',
 ]
+# Isolated CI runners split the full suite; local execution still runs all.
+SHARDS = [
+ ['controls-browser.py','movement-browser.py','npc-gift-browser.py','journey-browser.py'],
+ ['chapter-browser.py','play-polish-browser.py','navigation-browser.py','release-browser.py'],
+ ['react-browser.py','presentation-browser.py','device-browser.py','blender-performances-browser.py'],
+ ['cozy-browser.py','cozy-life-browser.py'],
+]
+assert sorted(suite for group in SHARDS for suite in group)==sorted(SUITES), 'Every release suite must run exactly once'
+if 'KITTY_TEST_SHARD' in os.environ:
+ shard=int(os.environ['KITTY_TEST_SHARD'])
+ if shard<0 or shard>=len(SHARDS):raise SystemExit('Invalid browser test shard')
+ SUITES=SHARDS[shard]
 ROOT=Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 if not (ROOT/'build/adventure.html').is_file():
