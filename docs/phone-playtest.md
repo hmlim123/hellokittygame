@@ -5,7 +5,7 @@ Physical device review is **pending**. Automated Chromium checks cover desktop,
 are not a physical iPhone, Android, Mac or Safari certification. WebKit is not
 installed in the cloud environment.
 
-Open https://hmlim123.github.io/hellokittygame/?v=toys-21 after the v1.8.0 Pages
+Open https://hmlim123.github.io/hellokittygame/?v=cozy-22 after the v1.9.0 Pages
 workflow succeeds. Check the version under Game settings. Use Settings → Keep
 your progress → Download backup before the review; do not clear your browser data.
 
@@ -77,3 +77,15 @@ available, but they are not required to record a problem.
 
 No physical-device results have been supplied yet. Keep this section open until
 Nancy’s actual phone and Mac/Safari have completed the journey above.
+
+## v1.9 natural cozy-life review
+
+Physical review is pending. Try circular spoon dragging, pointer cancellation,
+cutter pressing and the native oven slider; the paws should follow smoothly,
+keep their shoulders joined and remain with the props. The assisted bake button
+and keyboard/touch alternatives should also work. Try the delivery through Momo,
+Pip's entrance-side mint and return home. A packed cookie must stay reserved;
+a later batch must survive handing over the parcel. Check remembered gift text,
+strawberry/moon/cupcake unlocks, saved decoration spots, rain confined to the
+window, and optional sound under the master Sound switch. Repeat with Reduced
+motion, including a reload halfway through preparation or delivery.

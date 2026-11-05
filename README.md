@@ -11,6 +11,8 @@ The agreed six-stage upgrade sequence and current milestone are tracked in
 
 ## Cozy life · v1.9.0
 
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=cozy-22>.
+
 Hands-on baking follows real input: drag a circle at the spoon, press the cutter,
 and slide the tray into the oven. Keyboard/touch alternatives and Kitty's assisted
 Bake & decorate path remain. The actual Blender arms now have soft elbow/paw

@@ -393,7 +393,7 @@ new performances. Original gift-19/gift-20 links continue to work. Physical
 phone/Mac Safari verification remains pending in the manual review checklist.
 
 
-## Cozy life · v1.9.0 (release gate running)
+## Cozy life · v1.9.0 (published)
 
 The user authorized six connected updates and emphasized natural motion, with an
 approximately one-hour improvement budget. All six are implemented: direct-input
@@ -433,3 +433,20 @@ coverage check ensures every suite appears exactly once; publication waits for
 the unit/build job and all four browser groups, then downloads the same immutable
 build artifact. No checks are removed. The Blender performance check now uses
 the new Stir control before observing the real input-driven pose.
+
+Deployment confirmed on 2026-11-04 (client date): [Pages run 41951571618](https://github.com/hmlim123/hellokittygame/actions/runs/41951571618)
+finished **Success** for source `ecef64eb9b5dcffba9a8978b0c48f0ffb6ac3eca`.
+All **184 automated checks** and **14 browser suites**, across four successful
+isolated groups, passed before Pages publication. The exact immutable build
+artifact passed every group and was then deployed. The live game and local
+website archive are **v1.9.0 / ecef64e**. Natural Blender source is pushed at
+`d99bb326edf69c9c9d38132f0b34e010369edbf4`; original editions remain intact.
+
+Share: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=cozy-22>.
+Choose **Play a mission → A little cookie delivery**, or open baking to use the
+spoon, cutter and oven slider. **Your cozy corner** contains earned placement
+and rain choices; the folded recipe book is inside baking. The refreshed URL
+keeps the permanent gift-start marker, Nancy's letter, and her earned progress.
+The implementation/local checks fit the requested approximately one-hour work
+window; final remote publication completed just after it. Physical Safari/phone
+review and first-time human journey timing remain pending.
