@@ -133,3 +133,13 @@ calls the fitting after the fleece pass. It is idempotent.
 The web exporter retains the fitted ear/lining topology and the oval head
 surface, so mesh reduction cannot pull the lining away. The other editions,
 all 13 motion clips, paw sockets, costumes and saved equipment remain compatible.
+
+### Smooth matte finish (v2.0.3)
+
+The collection generator finishes all five with `smooth_collection_finish.py`.
+It removes fleece normal/bump textures, retains the original smooth sculpt and
+paw morphs, and sets soft matte materials. Existing files were restored from
+matching pre-fleece vertex data only; no animation, parenting or prop socket
+was replaced. Silver Bunny uses rounded ear caps and a single oval head surface
+without an overlapping hood shell. Its fitted lining and independent settling
+remain intact.

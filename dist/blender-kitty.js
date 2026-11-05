@@ -5,7 +5,7 @@ import {DOLLS} from './state.js';
 
 export async function loadBlenderKitty(plush){
   plush=normalizePlush(plush);
-  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=silver-bunny-26':'./assets/hello-kitty.glb?v=cozy-toys-1',import.meta.url).href);
+  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=smooth-collection-27':'./assets/hello-kitty.glb?v=cozy-toys-1',import.meta.url).href);
   return {scene:gltf.scene,clips:blenderClips(gltf.animations)};
 
 }

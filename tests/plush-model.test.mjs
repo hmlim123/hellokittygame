@@ -12,23 +12,24 @@ for(const style of PLUSH_STYLES.filter(s=>s.id!=='classic')){
  const bytes=await readFile(new URL('../dist/assets/'+style.file,import.meta.url));
  const jsonLength=bytes.readUInt32LE(12),doc=JSON.parse(bytes.subarray(20,20+jsonLength).toString());
  // Node has no image decoder. Keep the real mesh/morph/animation data and
- // material bindings; inspect the embedded PNG separately, render it in browsers.
+ // material bindings; verify exported surface settings and render them in browsers.
  const loader=new GLTFLoader().register(()=>({name:'NodeTextureBinding',loadTexture(){return Promise.resolve(new THREE.Texture());}}));
  const gltf=await loader.parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
  models.push({style,bytes,doc,gltf,asset:{scene:gltf.scene,clips:blenderClips(gltf.animations)}});
 }
-test('all five exports are distinct complete Blender plush models with packed fabric and bounded payloads',async()=>{
+test('all five exports are distinct complete Blender plush models with smooth matte surfaces and bounded payloads',async()=>{
  assert.equal(models.length,5);assert.equal(new Set(models.map(m=>createHash('sha256').update(m.bytes).digest('hex'))).size,5);
  for(const {style,bytes,doc,gltf} of models){
   assert.ok(bytes.length<4_000_000,style.id+' exceeds its lazy-loaded model budget');
   const root=gltf.scene.getObjectByName('CTRL_Root');assert.equal(root.userData.plush_variant,style.id);
-  assert.equal(root.userData.plush_surface,'close-cropped-fleece');
+  assert.equal(root.userData.plush_surface,'smooth-matte');
   assert.equal(doc.nodes.filter(n=>n.extras?.plush_fur||/^Plush_pile/.test(n.name||'')).length,0,'no exposed chin fringe');
   assert.equal(doc.nodes.filter(n=>n.extras?.plush_embroidery).length,6,'six stitched cheek whiskers');
-  assert.ok(doc.materials.some(m=>m.normalTexture),'packed fabric normal is missing');
-  assert.ok(doc.images.length>=1);const image=doc.images[0],view=doc.bufferViews[image.bufferView];
-  const binaryStart=20+bytes.readUInt32LE(12)+8;const png=bytes.subarray(binaryStart+(view.byteOffset||0),binaryStart+(view.byteOffset||0)+view.byteLength);
-  assert.equal(png.subarray(1,4).toString(),'PNG');assert.ok(png.readUInt32BE(16)>=512);
+  assert.ok(doc.materials.every(m=>!m.normalTexture),'fleece normals should be removed from the smooth collection');
+  for(const name of ['Plush cream fabric','Strawberry pink satin']){
+   const material=doc.materials.find(m=>m.name===name);assert.ok(material,name+' is missing');
+   assert.ok(material.pbrMetallicRoughness.roughnessFactor>=.55&&material.pbrMetallicRoughness.roughnessFactor<=.7,'soft matte finish must survive export');
+  }
   assert.ok(!doc.nodes.some(n=>/softbox|Portrait_camera|plinth/i.test(n.name||'')));
   const meta=JSON.parse(await readFile(new URL('../dist/assets/plush/'+style.id+'-source.json',import.meta.url),'utf8'));
   assert.equal(meta.variant,style.id);assert.equal(meta.source_file,'hello_kitty_plush_'+style.id+'.blend');assert.match(meta.source_sha256,/^[a-f0-9]{64}$/);assert.equal(meta.source_sha256,collection.models.find(m=>m.id===style.id).sha256);assert.match(meta.source_commit,/^[a-f0-9]{40}$/);
@@ -76,7 +77,8 @@ test('unknown plush choices fall back without changing the original equipment sc
 });
 test('Silver Bunny has sewn-in ear roots, flush fabric lining and independent soft settling',()=>{
  const {asset}=models.find(m=>m.style.id==='bunny');const hero=makeBlenderKitty(asset),b=hero.userData.blender;
- assert.equal(b.model.getObjectByName('CTRL_Root').userData.plush_ear_shape,'soft-curved-v1');
+ assert.equal(b.model.getObjectByName('CTRL_Root').userData.plush_ear_shape,'rounded-curved-v2');
+ assert.ok(!b.model.getObjectByName('Plush_bunny_hood'),'no extra overlapping shell beside the ears');
  hero.updateMatrixWorld(true);const head=b.model.getObjectByName('Head'),headControl=b.model.getObjectByName('CTRL_Head');
  head.geometry.computeBoundingBox();const box=head.geometry.boundingBox,center=box.getCenter(new THREE.Vector3()),radius=box.getSize(new THREE.Vector3()).multiplyScalar(.5);
  const controls=[-1,1].map(sign=>b.model.getObjectByName('CTRL_Plush_Ear_'+sign));

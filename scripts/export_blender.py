@@ -108,6 +108,6 @@ except (subprocess.CalledProcessError,FileNotFoundError):commit=None
 meta={'source_repository':'https://github.com/hmlim123/hellokitty3D',
       'source_commit':commit,'source_file':source.name,'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'fps':s.render.fps,
       'clips':ranges,'notes':'Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets.'}
-if variant:meta.update(variant=variant,title=s.get('plush_title'),body_height=s.get('plush_body_height'),surface=s.get('plush_surface'),ear_shape=s.get('plush_ear_shape'),notes='Actual editable plush Blender edition. Close-cropped fleece, packed seamless fabric normals, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.')
+if variant:meta.update(variant=variant,title=s.get('plush_title'),body_height=s.get('plush_body_height'),surface=s.get('plush_surface'),ear_shape=s.get('plush_ear_shape'),notes='Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.')
 (OUT/'plush'/f'{variant}-source.json' if variant else OUT/'kitty-source.json').write_text(json.dumps(meta,indent=2)+'\n')
 print('BLENDER_GAME_ASSETS_EXPORTED',str(asset_file),asset_file.stat().st_size)

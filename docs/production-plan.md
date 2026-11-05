@@ -631,3 +631,20 @@ Published: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=silver-b
 Both the individual Silver Bunny Blender project and the five-project bundle
 contain the corrected ears; the website archive matches the tested game revision.
 Nancy’s progress, letter and permanent gift-start marker remain unchanged.
+
+## Smooth collection and rounded rabbit ears · v2.0.3 (verification)
+
+The creator requested smoother textures on all five and identified another
+unwanted shape near Silver Bunny’s ears. Remove fleece normals/bump textures
+and tiny surface relief, use a smooth matte finish and soften the silver bow
+response. Retain each edition’s palette, all 13 clips, morphs and paw sockets.
+
+Silver Bunny now uses explicit round ear caps, oval flush lining and a single
+clean oval head. The duplicate hood shell near the ear bases is removed.
+Ear roots and independent settling use the same existing head controls.
+The original game character, three room buttons, letter, progress and gift-start
+marker remain. Physical phone/Mac Safari review remains pending.
+
+Verify all five source portraits and game previews, smooth-material export,
+round rabbit tips, no extra hood rim, all expressions/dances, baking contact,
+phone framing and save compatibility before the full browser release gate.

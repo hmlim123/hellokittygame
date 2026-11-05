@@ -1,8 +1,8 @@
 {
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "9f73b7f1450535d5b7abe42a3ae3336366eebd6c",
+  "source_commit": "62b3195f3d759a380c1c5fb3932d29b90958b91d",
   "source_file": "hello_kitty_plush_witch.blend",
-  "source_sha256": "c0b82d3a59c0aad143d6be4869f7cb9be2202c13a60040fb47528d80c6075e12",
+  "source_sha256": "5a3aba55f350fdcf726edcb4ccfc97d1152baaeecaafc0ace2e760b3a86e5364",
   "fps": 24,
   "clips": {
     "dance": [
@@ -58,9 +58,10 @@
       727
     ]
   },
-  "notes": "Actual editable plush Blender edition. Close-cropped fleece, packed seamless fabric normals, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.",
+  "notes": "Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.",
   "variant": "witch",
   "title": "Moonlight Witch",
   "body_height": 4.56808,
-  "surface": "close-cropped-fleece"
+  "surface": "smooth-matte",
+  "ear_shape": null
 }

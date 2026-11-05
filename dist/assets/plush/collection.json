@@ -1,10 +1,10 @@
 {
-  "version": 2,
+  "version": 3,
   "models": [
     {
       "id": "cloud",
       "file": "hello_kitty_plush_cloud.blend",
-      "sha256": "d03ba033080b78180b1b14b27aea560af08306e53a45f97a18e36d1ad465e328",
+      "sha256": "6bec268e743eb46b2f2631eb334845d786b9579974bc708c401c76c35fe3d153",
       "preview": "hello_kitty_plush_cloud.png",
       "fps": 24,
       "dance": [
@@ -23,7 +23,7 @@
     {
       "id": "witch",
       "file": "hello_kitty_plush_witch.blend",
-      "sha256": "c0b82d3a59c0aad143d6be4869f7cb9be2202c13a60040fb47528d80c6075e12",
+      "sha256": "5a3aba55f350fdcf726edcb4ccfc97d1152baaeecaafc0ace2e760b3a86e5364",
       "preview": "hello_kitty_plush_witch.png",
       "fps": 24,
       "dance": [
@@ -42,7 +42,7 @@
     {
       "id": "baby",
       "file": "hello_kitty_plush_baby.blend",
-      "sha256": "340226891b31721776df05bcf3ae0eae569db246be923b96598ee88e9b80531e",
+      "sha256": "f4daa4bf8efefd4037fdd580dea4c207c91da2e0ead08ce4ab21c1b16e13d8eb",
       "preview": "hello_kitty_plush_baby.png",
       "fps": 24,
       "dance": [
@@ -61,7 +61,7 @@
     {
       "id": "kitten",
       "file": "hello_kitty_plush_kitten.blend",
-      "sha256": "22a993f9cb9f340fcba2b061e6b7f733ee65d4e5057e60e302e82679fd2efca9",
+      "sha256": "ab467500a7ca99a938137185e8eaa34206fc1b9ce4c8a44520cd97554333295d",
       "preview": "hello_kitty_plush_kitten.png",
       "fps": 24,
       "dance": [
@@ -80,7 +80,7 @@
     {
       "id": "bunny",
       "file": "hello_kitty_plush_bunny.blend",
-      "sha256": "95101fee11380d2846288a4b469d12d02d3c29f68d0d50959867c736a692b16b",
+      "sha256": "8e67eb03cfe6160570e27b2877e72fbe10523c27591de1192d5079c960c55f11",
       "preview": "hello_kitty_plush_bunny.png",
       "fps": 24,
       "dance": [
@@ -95,9 +95,9 @@
         391,
         451
       ],
-      "ear_shape": "soft-curved-v1"
+      "ear_shape": "rounded-curved-v2"
     }
   ],
-  "notes": "Five complete editable Blender projects. Close-cropped fleece with packed seamless normal texture, stitched cheek whiskers, fused paw deformation and all 13 motions. No exposed curly chin fringe. Original sources preserved.",
-  "surface": "close-cropped-fleece"
+  "notes": "Five editable animated Blender editions with smooth matte materials and original smooth sculpt surfaces. No fleece normal/bump maps or nap relief. Rounded rabbit ears, no extra hood shell; all 13 motions, morphs and sockets retained.",
+  "surface": "smooth-matte"
 }
