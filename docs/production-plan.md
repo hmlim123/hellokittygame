@@ -516,5 +516,28 @@ cameras. Covered 3D room rendering pauses, fine strands use matte materials,
 small/distant or Battery friendly characters omit fine pile, and picking targets
 the stuffed surface. Gesture timing no longer loses most elapsed time at low FPS.
 
-Verification and publication result are recorded after the full release gate.
-Physical phone/Safari review remains pending.
+Verified **v2.0.0**, tested game source
+`ad57da8e99ee6c09f950ebb90a58a335b3e52697`, Blender source
+`9dad10b164565def0ac08f1747c13a64e12307f0`. All **196 automated checks** (79 Node/model/domain +
+117 Vitest) and **16 browser suites** passed. All four browser groups and the
+Pages deployment succeeded in
+[run 42082839427](https://github.com/hmlim123/hellokittygame/actions/runs/42082839427).
+The published site uses the exact artifact that passed the gate:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=plush-24>.
+
+Real-input browser checks covered all five models, distinct dances, wink/happy
+restoration, one lazy model request per selection, complete tall-accessory
+framing, shared outfits, room/adventure/baking, walking/reload, postcard style,
+320px touch, reduced motion and return to Original Kitty. Failure/retry and late
+response cancellation passed; the classic fallback loads and retains the chosen
+edition. The existing connected cozy-life journey also passed locally.
+
+The five portable `.blend` files were packaged together with portraits and a
+source manifest, and every file checksum in the bundle was verified. Updating
+render paths to relative paths left all five exported model binaries identical.
+Review images: `docs/nancy-plush-*.png`. The original source projects, current
+progress, letter and gift-start marker remain intact.
+
+Physical phone/Safari review remains pending; Chromium phone emulation is not
+physical-device certification. Use `docs/phone-playtest.md` for that remaining
+review. No new main button or additional mission was added in this release.
