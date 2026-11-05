@@ -23,6 +23,15 @@ with sync_playwright() as p:
   page.get_by_role('button',name='Preview a wink',exact=True).click();page.wait_for_function("document.querySelector('.outfit-preview canvas').dataset.expression==='wink'",timeout=30000)
   page.get_by_role('button',name='Preview a happy face',exact=True).click();page.wait_for_function("document.querySelector('.outfit-preview canvas').dataset.expression==='happy'",timeout=30000)
   page.wait_for_function("document.querySelector('.outfit-preview canvas').dataset.expression==='open'&&document.querySelector('.outfit-preview canvas').dataset.blenderAction==='idle'",timeout=30000)
+  if style=='bunny':
+   canvas=page.locator('.outfit-preview canvas');r=canvas.bounding_box();cx=r['x']+r['width']/2;cy=r['y']+r['height']/2
+   page.locator('.outfit-preview').screenshot(path='/tmp/nancy-silver-bunny-front.png')
+   for angle in ['profile','rear']:
+    page.mouse.move(cx,cy);page.mouse.down();page.mouse.move(cx+r['height']*.25,cy,steps=15);page.mouse.up()
+    page.evaluate("()=>new Promise(resolve=>{let n=0;function next(){if(++n>24)resolve();else requestAnimationFrame(next)}next()})")
+    page.locator('.outfit-preview').screenshot(path='/tmp/nancy-silver-bunny-'+angle+'.png')
+   page.mouse.move(cx,cy);page.mouse.down();page.mouse.move(cx-r['height']*.5,cy,steps=25);page.mouse.up()
+   print('PASS Silver Bunny front, profile and rear rotation captured without losing its selected style',flush=True)
   print('PASS '+name+' loads its actual Blender mesh once, dances, winks and restores a happy face',flush=True)
  for style,_ in STYLES:assert sum('/assets/plush/'+style+'.glb' in u for u in requests)==1,(style,requests)
  page.get_by_role('button',name='Sky sailor',exact=True).click();assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).plush")== 'bunny'
@@ -43,7 +52,11 @@ with sync_playwright() as p:
  print('PASS room dance, shared clothes, bunny postcard metadata, adventure walking/reload and tall-accessory baking all retain the selected plush',flush=True)
  page.close()
  phone=b.new_page(viewport={'width':320,'height':568},is_mobile=True,has_touch=True,reduced_motion='reduce');phone.on('pageerror',lambda e:errors.append(str(e)))
- phone.goto(BASE+'/');ready(phone);wardrobe(phone);phone.get_by_role('button',name='Choose Baby Blossom',exact=True).tap();model('.outfit-preview canvas','baby',phone)
+ phone.goto(BASE+'/');ready(phone);wardrobe(phone)
+ phone.get_by_role('button',name='Choose Silver Bunny',exact=True).tap();model('.outfit-preview canvas','bunny',phone)
+ phone.wait_for_function("Number(document.querySelector('.outfit-preview canvas').dataset.modelTop)<.95",timeout=15000)
+ phone.locator('.outfit-preview').screenshot(path='/tmp/nancy-silver-bunny-phone.png')
+ phone.get_by_role('button',name='Choose Baby Blossom',exact=True).tap();model('.outfit-preview canvas','baby',phone)
  phone.get_by_role('button',name='Preview a dance',exact=True).tap();phone.wait_for_function("document.querySelector('.outfit-preview canvas').dataset.blenderAction==='idle'&&Number(document.querySelector('.outfit-preview canvas').dataset.pawTurn)<.001",timeout=30000)
  assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth')
  phone.get_by_role('button',name='Choose Original Kitty',exact=True).tap();model('.outfit-preview canvas','classic',phone);assert 'plush'not in phone.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1'))")

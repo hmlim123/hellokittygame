@@ -1,8 +1,8 @@
 {
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "9f73b7f1450535d5b7abe42a3ae3336366eebd6c",
+  "source_commit": "d4e0fd92bc53ddce87015a45032872fd4da93798",
   "source_file": "hello_kitty_plush_bunny.blend",
-  "source_sha256": "5927002b8ac1bd3aeffc2a5e9509fd7525353bd0ad44974b60a88dcb176f7b54",
+  "source_sha256": "95101fee11380d2846288a4b469d12d02d3c29f68d0d50959867c736a692b16b",
   "fps": 24,
   "clips": {
     "dance": [
@@ -62,5 +62,6 @@
   "variant": "bunny",
   "title": "Silver Bunny",
   "body_height": 4.56808,
-  "surface": "close-cropped-fleece"
+  "surface": "close-cropped-fleece",
+  "ear_shape": "soft-curved-v1"
 }

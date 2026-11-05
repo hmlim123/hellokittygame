@@ -582,3 +582,28 @@ game revision. The five portable Blender projects and their portraits are bundle
 with a source manifest, and every bundled source checksum was verified.
 No reset marker, quest, saved outfit or personal letter changed. Physical phone
 and Safari verification remain pending.
+
+## Silver Bunny ear correction · v2.0.2 (release verification)
+
+The creator identified unnatural ears after the fleece correction. The previous
+ears were identical upright ellipsoids with separate thick metallic inserts.
+Silver Bunny now has broad buried bases, gentle outward curvature, slightly
+different forward-bending tips and thin satin lining that follows the actual
+outer surface. A clean oval head and fitted hood remove the leftover cat-ear
+bumps. Existing controls have small independent settling beats and return to rest.
+
+Blender source: `d4e0fd92bc53ddce87015a45032872fd4da93798`.
+The other four projects are unchanged. All 13 clips and paw sockets remain;
+there is no progress reset, UI feature, quest or letter change. Model and gallery
+URLs use the new release version, including the classic fallback model URL.
+
+All **197 automated checks** passed (80 Node/model/domain and 117 Vitest).
+The added actual-model check measures root containment, lining-to-surface
+distance, fabric material response, independent settling, attachment during
+dancing and restoration to rest. The exporter retains the fitted ear/head
+topology so reduction cannot separate these surfaces.
+
+Front, profile, rear and dance Blender renders were visually inspected. The
+existing full plush browser check now also captures actual side/back rotation
+of Silver Bunny. Publication is pending the complete release gate. Physical
+phone and Mac/Safari review remain pending.

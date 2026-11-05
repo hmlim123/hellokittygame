@@ -74,3 +74,34 @@ test('happy eyes and fused paw deformation play and restore on every edition',()
 test('unknown plush choices fall back without changing the original equipment schema',()=>{
  assert.equal(normalizePlush('invented'),undefined);assert.equal(normalizePlush('classic'),undefined);assert.equal(normalizePlush('bunny'),'bunny');
 });
+test('Silver Bunny has sewn-in ear roots, flush fabric lining and independent soft settling',()=>{
+ const {asset}=models.find(m=>m.style.id==='bunny');const hero=makeBlenderKitty(asset),b=hero.userData.blender;
+ assert.equal(b.model.getObjectByName('CTRL_Root').userData.plush_ear_shape,'soft-curved-v1');
+ hero.updateMatrixWorld(true);const head=b.model.getObjectByName('Head'),headControl=b.model.getObjectByName('CTRL_Head');
+ head.geometry.computeBoundingBox();const box=head.geometry.boundingBox,center=box.getCenter(new THREE.Vector3()),radius=box.getSize(new THREE.Vector3()).multiplyScalar(.5);
+ const controls=[-1,1].map(sign=>b.model.getObjectByName('CTRL_Plush_Ear_'+sign));
+ const anchors=controls.map(control=>{
+  const world=control.getWorldPosition(new THREE.Vector3());const p=head.worldToLocal(world.clone()).sub(center).divide(radius);
+  assert.ok(p.lengthSq()<.95,'ear root must remain buried in the stuffed head');
+  return headControl.worldToLocal(world);
+ });
+ const meshes=[];b.model.traverse(o=>{if(o.isMesh&&o.userData.plush_ear_role)meshes.push(o);});assert.equal(meshes.length,4);
+ for(const side of [-1,1]){
+  const outer=meshes.find(o=>o.userData.plush_ear_role==='stuffed-outer'&&o.userData.plush_ear_side===side),inner=meshes.find(o=>o.userData.plush_ear_role==='flush-lining'&&o.userData.plush_ear_side===side);
+  assert.ok(inner.material.metalness<.2&&inner.material.roughness>.7,'lining should look like soft fabric');
+  const vertices=outer.geometry.attributes.position,index=outer.geometry.index,triangle=new THREE.Triangle(),closest=new THREE.Vector3();
+  const lining=inner.geometry.attributes.position;
+  for(let sample=0;sample<lining.count;sample+=31){
+   const p=inner.localToWorld(new THREE.Vector3().fromBufferAttribute(lining,sample));let distance=Infinity;
+   for(let i=0;i<index.count;i+=3){
+    for(const [corner,offset]of [[triangle.a,0],[triangle.b,1],[triangle.c,2]])outer.localToWorld(corner.fromBufferAttribute(vertices,index.getX(i+offset)));
+    triangle.closestPointToPoint(p,closest);distance=Math.min(distance,p.distanceTo(closest));
+   }
+   assert.ok(distance<.012*b.baseScale,'silver lining must follow the curved outer fabric: '+distance);
+  }
+ }
+ reactBlender(hero,'dance');updateBlender(hero,.8);hero.updateMatrixWorld(true);
+ assert.ok(controls[0].quaternion.angleTo(controls[1].quaternion)>.002,'ears should settle independently');
+ controls.forEach((control,i)=>assert.ok(headControl.worldToLocal(control.getWorldPosition(new THREE.Vector3())).distanceTo(anchors[i])<1e-5,'dance must not detach an ear root'));
+ updateBlender(hero,5);controls.forEach(control=>assert.ok(control.quaternion.angleTo(new THREE.Quaternion())<1e-5,'ears must return to rest'));
+});

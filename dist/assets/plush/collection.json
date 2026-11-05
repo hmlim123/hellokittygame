@@ -80,7 +80,7 @@
     {
       "id": "bunny",
       "file": "hello_kitty_plush_bunny.blend",
-      "sha256": "5927002b8ac1bd3aeffc2a5e9509fd7525353bd0ad44974b60a88dcb176f7b54",
+      "sha256": "95101fee11380d2846288a4b469d12d02d3c29f68d0d50959867c736a692b16b",
       "preview": "hello_kitty_plush_bunny.png",
       "fps": 24,
       "dance": [
@@ -94,7 +94,8 @@
       "happy_expression": [
         391,
         451
-      ]
+      ],
+      "ear_shape": "soft-curved-v1"
     }
   ],
   "notes": "Five complete editable Blender projects. Close-cropped fleece with packed seamless normal texture, stitched cheek whiskers, fused paw deformation and all 13 motions. No exposed curly chin fringe. Original sources preserved.",

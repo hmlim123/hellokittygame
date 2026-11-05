@@ -121,3 +121,15 @@ witch hat, to preserve paw/prop contact. The matte fleece uses the same packed n
 there are no loose curl meshes to resemble facial hair. The stuffed surface
 receives pointer interactions. No particle simulations, alpha fur cards, film grain or
 external decoder downloads are required.
+
+### Silver Bunny ear fit (v2.0.2)
+
+`refine_silver_bunny.py` in the source repository replaces the rigid oval ears
+with curved stuffed surfaces and flush satin lining, using the original two
+ear controls. Their roots sit inside a clean oval hood; the tips settle
+independently during the dance and return to rest. The collection generator
+calls the fitting after the fleece pass. It is idempotent.
+
+The web exporter retains the fitted ear/lining topology and the oval head
+surface, so mesh reduction cannot pull the lining away. The other editions,
+all 13 motion clips, paw sockets, costumes and saved equipment remain compatible.

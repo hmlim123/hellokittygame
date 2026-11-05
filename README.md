@@ -9,14 +9,16 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
-## Five Blender plush editions · v2.0.1
+## Five Blender plush editions · v2.0.2
 
-Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=soft-plush-25>.
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=silver-bunny-26>.
 Open **Inventory → Clothes → Kitty’s plush collection**. Choose Strawberry Cloud,
 Moonlight Witch, Baby Blossom, Rose Kitten or Silver Bunny; Original Kitty is
 always available. Each is a complete Blender model with close-cropped fleece,
 packed fabric normals, a distinct soft dance, a wink and a happy-eye expression.
 Preview the motions in Inventory, or use the existing room/play controls.
+Silver Bunny’s ears now have sewn-in bases, curved asymmetric tips and flush
+silver fabric lining. The head has a clean oval hood without cat-ear bumps.
 
 The five editable `.blend` files were created first in `hellokitty3D`, then their
 actual meshes, costumes and 13 named motions were exported to the game. Model
