@@ -305,7 +305,7 @@ export default function BakingPreview() {
         }}
       >
         <Canvas
-          camera={{ position: [-2, 1.7, 4.3], fov: 38 }}
+          camera={{ position: [2, 1.7, 4.3], fov: 38 }}
           dpr={[1, 1.5]}
           onCreated={({ gl, camera }) => {
             gl.toneMapping = ACESFilmicToneMapping;
