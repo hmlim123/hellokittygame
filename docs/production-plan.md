@@ -583,7 +583,7 @@ with a source manifest, and every bundled source checksum was verified.
 No reset marker, quest, saved outfit or personal letter changed. Physical phone
 and Safari verification remain pending.
 
-## Silver Bunny ear correction · v2.0.2 (release verification)
+## Silver Bunny ear correction · v2.0.2 (published)
 
 The creator identified unnatural ears after the fleece correction. The previous
 ears were identical upright ellipsoids with separate thick metallic inserts.
@@ -605,5 +605,29 @@ topology so reduction cannot separate these surfaces.
 
 Front, profile, rear and dance Blender renders were visually inspected. The
 existing full plush browser check now also captures actual side/back rotation
-of Silver Bunny. Publication is pending the complete release gate. Physical
-phone and Mac/Safari review remain pending.
+of Silver Bunny. All 197 automated checks and all 16 browser suites passed
+before publication. Physical phone and Mac/Safari review remain pending.
+
+Local actual-input browser verification also passed all five editions’ dance,
+wink and happy restoration, shared clothes, adventure walking/reload, postcards,
+and tall-accessory baking. Silver Bunny was visually reviewed in front/profile/
+rear game views and a 320px touch/reduced-motion preview. Failed-download retry,
+late selection cancellation and the classic fallback passed with no page errors.
+
+Game candidate: `2e482f4ac2b7352900445724c7babe0c63a8eeae`.
+Release gate: [run 42099187591](https://github.com/hmlim123/hellokittygame/actions/runs/42099187591).
+The corrected source bundle was verified against all five project checksums;
+the website archive contains the actual corrected model and source manifest.
+Review images: `docs/nancy-silver-bunny-*.png` and
+`docs/silver-bunny-blender-*.png`. No physical-device result is inferred from
+these browser checks.
+
+Publication verified: all four browser groups and the Pages deployment succeeded
+in run **42099187591** for the game candidate above. The same immutable tested
+artifact was deployed. The deployment job’s fresh step results were checked after
+the summary page initially cached an unfinished deployment.
+
+Published: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=silver-bunny-26>.
+Both the individual Silver Bunny Blender project and the five-project bundle
+contain the corrected ears; the website archive matches the tested game revision.
+Nancy’s progress, letter and permanent gift-start marker remain unchanged.
