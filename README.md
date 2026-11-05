@@ -9,6 +9,20 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Completion polish · v1.9.1
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=polish-23>.
+
+This update finishes the existing baking and delivery flow. The kitchen stays
+in place; Kitty starts with the spoon ready, keeps her tray level, turns toward
+the real oven cavity, deposits it and withdraws her paws. Touch and keyboard
+input use the same authored motion, and replays return to the ready pose.
+Returning through the room URL also completes a pending delivery exactly once.
+Pip remembers gathering mint. Existing saves and the gift marker stay intact.
+
+The updated editable source is `hellokitty3D/hello_kitty_natural.blend`.
+No new activity or main button is added. Physical phone/Safari testing is pending.
+
 ## Cozy life · v1.9.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=cozy-22>.

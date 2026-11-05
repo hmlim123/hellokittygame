@@ -307,9 +307,15 @@ export function cookieName(c: Cookie) {
     ? RECIPES.find((r) => r.id === c.recipe)!.name.toLowerCase()
     : `${c.shape} cookie with ${c.icing} icing`;
 }
-export function friendLine(name: "momo" | "pip", memory: FriendMemory) {
+export function friendLine(
+  name: "momo" | "pip",
+  memory: FriendMemory,
+  gatheredMint = false,
+) {
   if (memory.last)
     return `I still remember the ${cookieName(memory.last)} you made for me, Nancy. ${["That was such a sweet little surprise.", "Shall we sit together for a moment?", "You always bring a little sunshine with you."][memory.visits % 3]}`;
+  if (name === "pip" && gatheredMint)
+    return "I loved gathering mint with you, Nancy. Shall we make another quiet afternoon of it?";
   return [
     "It is lovely to spend a little time with you, Nancy.",
     "I saved a quiet little spot for us.",

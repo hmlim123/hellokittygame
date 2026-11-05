@@ -271,7 +271,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             const who = result.source.type === "M" ? "momo" : "pip";
             result = {
               ...result,
-              memory: friendLine(who, get().cozy.friends[who]),
+              memory: friendLine(
+                who,
+                get().cozy.friends[who],
+                ["home", "done"].includes(get().cozy.delivery.step),
+              ),
             };
           }
           const before = get().adventure;
@@ -394,6 +398,13 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               cozy: {
                 ...s.cozy,
                 delivery: { ...s.cozy.delivery, step: "home" },
+                friends: {
+                  ...s.cozy.friends,
+                  pip: {
+                    ...s.cozy.friends.pip,
+                    visits: s.cozy.friends.pip.visits + 1,
+                  },
+                },
               },
               notice: notify(
                 "A recipe to bring home",
@@ -616,6 +627,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               get().setMode("adventure");
               set({ adventure: a });
             } else if (s.cozy.delivery.step === "mint") get().startGlade();
+            else if (s.cozy.delivery.step === "home") get().setMode("room");
           },
           pauseDelivery() {
             set({
@@ -1600,6 +1612,16 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           },
           setSceneReady(sceneReady) {
             set({ sceneReady });
+            // Opening the room URL after gathering mint is also a real arrival.
+            // Finish once, using the same transition as the Return home button.
+            const s = get();
+            if (
+              sceneReady &&
+              s.mode === "room" &&
+              s.cozy.delivery.active &&
+              s.cozy.delivery.step === "home"
+            )
+              s.setMode("room");
           },
           resetCamera() {
             set({ cameraReset: get().cameraReset + 1 });

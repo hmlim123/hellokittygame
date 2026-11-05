@@ -136,6 +136,36 @@ describe("connected cozy life", () => {
     expect(st.getState().cozy.friends.momo.last?.shape).toBe("heart");
     expect(st.getState().cozy.cookiesGiven).toBe(1);
   });
+  it("finishes a resumed home arrival once and retains the actual mint visit", () => {
+    const m = memory(),
+      st = createGameStore(m),
+      s = st.getState();
+    const c = st.getState().cozy;
+    st.setState({
+      cozy: {
+        ...c,
+        delivery: {
+          active: true,
+          step: "home",
+          cookie: { ...c.cookie, stage: "give" },
+        },
+      },
+    });
+    const returning = createGameStore(m),
+      r = returning.getState();
+    expect(r.cozy.delivery.step).toBe("home");
+    r.setSceneReady(true);
+    expect(returning.getState().cozy.delivery.step).toBe("done");
+    expect(returning.getState().panel).toBe("cozy");
+    const gesture = returning.getState().gesture.id;
+    r.setSceneReady(true);
+    expect(returning.getState().gesture.id).toBe(gesture);
+    s.pauseDelivery();
+    s.startDelivery();
+    expect(st.getState().cozy.delivery.step).toBe("done");
+    expect(st.getState().mode).toBe("room");
+    expect(friendLine("pip", c.friends.pip, true)).toContain("gathering mint");
+  });
   it("keeps one active side story and resumes its saved milestone", () => {
     const st = createGameStore(emptyStorage),
       s = st.getState();

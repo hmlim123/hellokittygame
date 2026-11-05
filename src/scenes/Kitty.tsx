@@ -32,6 +32,7 @@ export interface ActivityPose {
   kind: "stir" | "cut" | "placeTray" | "sprinkle" | "handoff" | "present";
   progress: number;
   active: boolean;
+  renderedProgress?: number;
 }
 interface KittyProps {
   activity?: RefObject<ActivityPose>;
@@ -132,7 +133,7 @@ export function Kitty({
     if (equipment) applyHeroEquipment(hero, equipment);
   }, [hero, equipment]);
   useEffect(() => {
-    if (!animate) return;
+    if (!animate || (activity?.current.active && !reduced)) return;
     if (
       gesture.kind === "offer" &&
       equipment &&
@@ -180,7 +181,12 @@ export function Kitty({
       );
     }
     updateBlender(hero, Math.min(dt, 0.1), { reduced, idle: true });
-    if (activity) followBlenderActivity(hero, activity.current, dt, reduced);
+    if (activity) {
+      followBlenderActivity(hero, activity.current, dt, reduced);
+      activity.current.renderedProgress = reduced
+        ? activity.current.progress
+        : hero.userData.blender.inputPhase;
+    }
     updateHeldItem(hero, Math.min(dt, 0.1));
     if (animate) {
       state.gl.domElement.dataset.blenderAction =

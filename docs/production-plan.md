@@ -17,6 +17,7 @@ Reuse existing quests, equipment, souvenirs, and storybook pages where possible.
 ## Guardrails
 
 - Preserve the three main room buttons, existing saves, and the actual Blender model.
+- Prioritize completeness and polish over adding more features, as requested on 2026-11-04.
 - Keep interactions gentle, with no penalties, grain, or mandatory sound.
 - Keep the current React + TypeScript, React Three Fiber, Zustand, Rapier and Drei stack.
 - The user authorized an assistant-written letter in v1.6.1. Keep it editable and do not fabricate shared memories or the author's name.
@@ -450,3 +451,24 @@ keeps the permanent gift-start marker, Nancy's letter, and her earned progress.
 The implementation/local checks fit the requested approximately one-hour work
 window; final remote publication completed just after it. Physical Safari/phone
 review and first-time human journey timing remain pending.
+
+## Completeness polish · v1.9.1 (2026-11-04)
+
+Nancy's creator asked to prioritize completion and polish over more features.
+This pass stays within baking and the existing cookie-delivery journey:
+
+- Preserve the kitchen worktop across steps; keep held trays level, retain the
+  Blender-authored prop scale, and fit the real tray inside a real oven cavity.
+- Align the authored turn/reach with the oven. Deposit the tray, withdraw empty
+  paws, and close the door using the rendered motion phase. Keyboard End travels
+  through the motion; step completion waits for the visible pose.
+- Correct Blender SCENE frame-time trimming (frame 1 is 1/fps) and close the spoon
+  contact loop before Cut starts. Keep input poses in control of the animation;
+  repeated clicks cannot replace an in-progress completion callback. Replays
+  return to the ready pose.
+- Resume a pending home arrival from the room URL or Continue delivery exactly
+  once. Pip remembers the actual mint visit. Do not change earned progress,
+  letter text, gift launch marker, or the three room buttons.
+
+Release verification is recorded below after the browser/deployment gate.
+Physical phone and Safari verification remains pending.

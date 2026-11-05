@@ -139,6 +139,9 @@ export function followBlenderActivity(hero,input,dt,reduced=false){
  if(b.inputAction!==action){
   if(b.current&&b.current!==action){b.current.fadeOut(.18);b.fading.push({action:b.current,left:.2});}action.reset().setEffectiveWeight(1).fadeIn(.16).play();action.paused=true;b.current=action;b.inputAction=action;b.inputPhase=input.progress;
  }
+ // Input owns this pose until release. A transient greeting must not leave
+ // the paused contact action playing underneath a competing gesture.
+ if(b.current!==action){if(b.current){b.current.fadeOut(.18);b.fading.push({action:b.current,left:.2});}b.current=action;action.enabled=true;action.setEffectiveWeight(1);action.play();action.paused=true;}
  const target=Number.isFinite(input.progress)?input.progress:0;
  b.inputPhase+=(target-b.inputPhase)*(1-Math.exp(-Math.min(.1,Math.max(0,dt))*16));
  const phase=input.kind==='stir'?((b.inputPhase%1)+1)%1:Math.max(0,Math.min(1,b.inputPhase));

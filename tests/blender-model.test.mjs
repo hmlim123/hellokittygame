@@ -52,7 +52,7 @@ test('idle attention is bounded, blinking returns open, and reduced motion is st
 test('switching gestures preserves the current paw pose and cleans up faded actions',()=>{
   const hero=makeBlenderKitty(asset),b=hero.userData.blender,arm=b.model.getObjectByName('CTRL_Arm_L');
   reactBlender(hero,'wave');updateBlender(hero,.8);const before=arm.quaternion.clone();
-  reactBlender(hero,'dance');assert.ok(arm.quaternion.angleTo(before)<1e-6);
+  reactBlender(hero,'dance');assert.deepEqual(arm.quaternion.toArray(),before.toArray());
   updateBlender(hero,.01);assert.ok(arm.quaternion.angleTo(before)<.2);
   updateBlender(hero,.3);assert.equal(b.fading.length,0);
   updateBlender(hero,4);assert.equal(b.current,null);
@@ -176,4 +176,25 @@ test('input scrubbing follows an authored pose without restarting its clock on e
  input.progress=.45;for(let i=0;i<8;i++){updateBlender(h,1/60);followBlenderActivity(h,input,1/60);assert.equal(b.current,action);}
  assert.ok(action.time>.1&&action.time<action.getClip().duration*.5);input.active=false;followBlenderActivity(h,input,1/60);updateBlender(h,.3);assert.equal(b.inputAction,null);
  input.active=true;followBlenderActivity(h,input,.1,true);assert.equal(b.current,null);
+});
+test('contact input reclaims its pose after a competing greeting and the oven deposit stays level',async()=>{
+ const {followBlenderActivity}=await import('../dist/blender-kitty.js');
+ const h=makeBlenderKitty(asset),b=h.userData.blender;
+ const input={kind:'stir',progress:.3,active:true};followBlenderActivity(h,input,.1);
+ reactBlender(h,'wave');updateBlender(h,.1);followBlenderActivity(h,input,.1);
+ assert.equal(b.current,b.actions.stir);assert.equal(b.current.paused,true);
+ input.active=false;followBlenderActivity(h,input,.1);updateBlender(h,.4);
+ reactBlender(h,'placeTray');updateBlender(h,asset.clips.placeTray.duration*.76);
+ h.position.set(-.2,0,-.15);h.updateMatrixWorld(true);
+ const tray=b.model.getObjectByName('Socket_Tray'),q=tray.getWorldQuaternion(new THREE.Quaternion()),p=tray.getWorldPosition(new THREE.Vector3());
+ assert.ok(new THREE.Vector3(0,1,0).applyQuaternion(q).distanceTo(new THREE.Vector3(0,1,0))<.001,'baked tray tips with the body');
+ assert.ok(p.distanceTo(new THREE.Vector3(1.05,.512,.35))<.025,'authored paw reach misses the oven cavity: '+p.toArray());
+});
+test('stirring starts in contact and closes its loop without importing a bind frame',async()=>{
+ const {followBlenderActivity}=await import('../dist/blender-kitty.js');
+ const h=makeBlenderKitty(asset),b=h.userData.blender,arm=b.model.getObjectByName('CTRL_Arm_R');
+ for(let i=0;i<30;i++){updateBlender(h,1/60);followBlenderActivity(h,{kind:'stir',progress:0,active:true},1/60);}
+ const ready=arm.quaternion.clone();assert.ok(Math.abs(ready.x)>.2,'spoon hangs at the bind pose before first input');
+ b.current.time=b.current.getClip().duration;b.mixer.update(0);
+ assert.ok(arm.quaternion.angleTo(ready)<.001,'spoon snaps out of contact at the loop boundary');
 });

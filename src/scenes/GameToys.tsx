@@ -27,8 +27,10 @@ export function Toy({
   scale = 1,
   rotation,
   open = 0,
+  opening,
 }: {
   open?: number;
+  opening?: RefObject<number>;
   name: ToyName;
   position?: [number, number, number];
   scale?: number;
@@ -40,19 +42,18 @@ export function Toy({
     o.userData.sharedToy = true;
     return o;
   }, [gltf, name]);
-  useFrame(() => {
+  useFrame(({ gl }, dt) => {
     const hinge = object.getObjectByName("Oven_Door");
     if (hinge)
-      hinge.rotation.x += (open * Math.PI * 0.46 - hinge.rotation.x) * 0.25;
+      hinge.rotation.x +=
+        ((opening?.current ?? open) * Math.PI * 0.46 - hinge.rotation.x) *
+        (1 - Math.exp(-Math.min(dt, 0.1) * 14));
+    if (hinge) gl.domElement.dataset.ovenDoorAngle = String(hinge.rotation.x);
   });
   return (
-    <primitive
-      object={object}
-      position={position}
-      scale={scale}
-      rotation={rotation}
-      dispose={null}
-    />
+    <group position={position} scale={scale} rotation={rotation}>
+      <primitive object={object} dispose={null} />
+    </group>
   );
 }
 export type Holding = "tray" | "cup" | "spoon" | "cutter" | "parcel";
@@ -69,7 +70,9 @@ export function KittyHeld({
       ? "Socket_Tray"
       : holding === "cup"
         ? "Socket_Teacup"
-        : "Socket_Paw_R",
+        : holding === "spoon"
+          ? "Socket_Spoon"
+          : "Socket_Paw_R",
   );
   const cookie = useGameStore((s) => s.cozy.cookie);
   const heldGroup = useRef<THREE.Group>(null);
@@ -78,7 +81,14 @@ export function KittyHeld({
   }, [holding, b]);
   const point = useMemo(() => new THREE.Vector3(), []),
     other = useMemo(() => new THREE.Vector3(), []);
-  useFrame(() => {
+  const heading = useMemo(() => new THREE.Quaternion(), []),
+    facing = useMemo(() => new THREE.Quaternion(), []);
+  useFrame(({ gl }) => {
+    if (holding === "tray" && heldGroup.current) {
+      heldGroup.current.visible = !(
+        b.inputAction?.getClip().name === "placeTray" && b.inputPhase >= 0.74
+      );
+    }
     if (holding === "parcel" && heldGroup.current) {
       if (b.current?.getClip().name === "handoff" && b.age > 0.9)
         b.parcelGiven = true;
@@ -93,6 +103,16 @@ export function KittyHeld({
     const midpoint = b.model.getObjectByName("Grip_Midpoint");
     midpoint.position.copy(
       midpoint.parent.worldToLocal(point.add(other).multiplyScalar(0.5)),
+    );
+    // Counter the body lean, preserving the character's world heading.
+    // This also covers additive walking layers that were not baked in Blender.
+    socket.parent.getWorldQuaternion(heading).invert();
+    socket.quaternion.copy(heading.multiply(hero.getWorldQuaternion(facing)));
+    socket.updateWorldMatrix(true, false);
+    socket.getWorldQuaternion(heading);
+    point.set(0, 1, 0).applyQuaternion(heading);
+    gl.domElement.dataset.trayTilt = String(
+      Math.acos(Math.max(-1, Math.min(1, point.y))),
     );
   });
   if (!socket) return null;
@@ -118,7 +138,7 @@ export function KittyHeld({
         }
       />
       {holding === "tray" && (
-        <group position={[0, 0.045, 0]} scale={1.5}>
+        <group position={[0, 0.035, 0]} scale={1.05}>
           <CookieMesh cookie={cookie} />
         </group>
       )}

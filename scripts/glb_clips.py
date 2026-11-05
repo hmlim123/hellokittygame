@@ -21,7 +21,9 @@ def split_clips(path, ranges, fps=24):
         doc['accessors'].append(a);return len(doc['accessors'])-1
     animations=[]
     for name,(first,last) in ranges.items():
-        start,end=(first-1)/fps,(last-1)/fps;clip={'name':name,'channels':[],'samplers':[]}
+        # Blender's SCENE export retains absolute frame time (frame 1 = 1/fps).
+        # Subtracting a frame pulls the preceding bind pose into contact loops.
+        start,end=first/fps,last/fps;clip={'name':name,'channels':[],'samplers':[]}
         for old in doc.get('animations',[]):
             for channel in old['channels']:
                 sm=old['samplers'][channel['sampler']];assert sm.get('interpolation','LINEAR')=='LINEAR'

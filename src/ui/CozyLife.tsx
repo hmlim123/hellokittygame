@@ -171,7 +171,9 @@ export function CozyLifePanel() {
             <strong>{who === "momo" ? "Momo" : "Pip"}</strong> ·{" "}
             {c.friends[who].last
               ? `Your ${cookieName(c.friends[who].last!)}, lovingly remembered.`
-              : "A little memory waiting to happen."}
+              : who === "pip" && ["home", "done"].includes(c.delivery.step)
+                ? "The fragrant mint you gathered together."
+                : "A little memory waiting to happen."}
           </p>
         ))}
       </details>
