@@ -92,3 +92,33 @@ An End-key slide follows the same motion. Replays return to the ready pose and
 cannot replace an in-progress baking callback. The original kitchen camera is
 retained so Kitty remains visible. Existing source editions and game saves stay
 intact; no new activity is introduced.
+
+## Five plush editions (v2.0)
+
+The source repository now contains five complete portable projects:
+`hello_kitty_plush_cloud.blend`, `hello_kitty_plush_witch.blend`,
+`hello_kitty_plush_baby.blend`, `hello_kitty_plush_kitten.blend`, and
+`hello_kitty_plush_bunny.blend`. Textures are packed and render paths are relative.
+They preserve the original controls and all 13 named motions, with distinct soft
+dances and a two-eye happy expression. The actual paw pile carries the same
+Elbow_soft / Paw_soft deformation as the fused arm mesh.
+
+Export a selected edition with the same command, substituting its filename.
+`export_blender.py` recognizes the scene's `plush_variant`, writes
+`dist/assets/plush/<id>.glb` and its source manifest, and leaves the base character,
+friends and props untouched. It omits the occluded inner head pile under the
+kitten/bunny hoods. `plush-collection.json` records all five source file hashes.
+
+In game, choose Inventory → Clothes → Kitty’s plush collection. The original
+character remains available. Models load on selection; a successful load commits
+the shared `equipment.plush` field. Old saves retain their exact original schema.
+Failed requests and late responses cannot silently change the selected Kitty.
+A style follows Nancy into the room, adventure, baking, the photo corner and the
+classic fallback. Saved postcards retain their style.
+
+The base body stays at the original normalized scale, even under long ears or a
+witch hat, to preserve paw/prop contact. Fine geometric strands use matte web
+materials and do not receive pointer raycasts; the stuffed surface does. Tiny
+on-screen characters and Battery friendly detail retain the fabric surface and
+omit subpixel pile. No particle simulations, alpha fur cards, film grain or
+external decoder downloads are required.

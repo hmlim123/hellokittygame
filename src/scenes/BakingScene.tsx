@@ -42,10 +42,10 @@ function ActivityClock({
     if (!run.current.active) return;
     pose.current.progress = Math.min(
       1,
-      pose.current.progress + Math.min(0.1, dt) / 0.9,
+      pose.current.progress + Math.min(0.25, dt) / 0.9,
     );
     if (run.current.wait) {
-      run.current.wait = Math.max(0, run.current.wait - Math.min(0.1, dt));
+      run.current.wait = Math.max(0, run.current.wait - Math.min(0.25, dt));
       if (run.current.wait > 0) return;
     }
     if (pose.current.progress >= 1) {
@@ -305,13 +305,25 @@ export default function BakingPreview() {
         }}
       >
         <Canvas
-          camera={{ position: [2, 1.7, 4.3], fov: 38 }}
+          camera={{
+            position:
+              equipment.plush === "witch" || equipment.plush === "bunny"
+                ? [2, 2, 5.3]
+                : [2, 1.7, 4.3],
+            fov: 38,
+          }}
           dpr={[1, 1.5]}
           onCreated={({ gl, camera }) => {
             gl.toneMapping = ACESFilmicToneMapping;
             gl.toneMappingExposure = COZY_EXPOSURE;
             gl.domElement.setAttribute("aria-label", caption);
-            camera.lookAt(0, 1.05, 0.2);
+            camera.lookAt(
+              0,
+              equipment.plush === "witch" || equipment.plush === "bunny"
+                ? 1.35
+                : 1.05,
+              0.2,
+            );
           }}
         >
           <color attach="background" args={["#f3dce4"]} />

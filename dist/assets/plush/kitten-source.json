@@ -1,0 +1,65 @@
+{
+  "source_repository": "https://github.com/hmlim123/hellokitty3D",
+  "source_commit": "9dad10b164565def0ac08f1747c13a64e12307f0",
+  "source_file": "hello_kitty_plush_kitten.blend",
+  "source_sha256": "30ea0e69fbe1088738cb0cb951cbb5191190dfea1d0e481b14786b0f59402cd1",
+  "fps": 24,
+  "clips": {
+    "dance": [
+      1,
+      49
+    ],
+    "wave": [
+      49,
+      97
+    ],
+    "offer": [
+      97,
+      140
+    ],
+    "stir": [
+      145,
+      216
+    ],
+    "cut": [
+      217,
+      265
+    ],
+    "present": [
+      265,
+      313
+    ],
+    "surprise": [
+      313,
+      349
+    ],
+    "bow": [
+      349,
+      391
+    ],
+    "celebrate": [
+      391,
+      451
+    ],
+    "sip": [
+      451,
+      511
+    ],
+    "placeTray": [
+      511,
+      583
+    ],
+    "sprinkle": [
+      583,
+      655
+    ],
+    "handoff": [
+      655,
+      727
+    ]
+  },
+  "notes": "Actual editable plush Blender edition. Short merged curled fibers, packed fabric normals, deforming paw pile, 13 named motions and happy-eye morphs. Studio excluded.",
+  "variant": "kitten",
+  "title": "Rose Kitten",
+  "body_height": 4.56808
+}

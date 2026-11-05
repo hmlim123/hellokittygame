@@ -101,3 +101,15 @@ The worktop stays in place, the tray stays level, and completion waits for the
 visible motion. Finish Momo's delivery and gather mint; open the room URL directly
 instead of the return button. The recipe/cushion should unlock once and Pip
 should recall gathering mint. Reload again: rewards and progress must remain.
+
+## v2.0 plush collection review
+
+Physical review remains pending. In Inventory → Clothes → Kitty’s plush
+collection, try all five styles. Check the complete witch hat and bunny ears in
+360-degree previews and postcards. Preview each dance, wink and happy face, then
+wait for open eyes and a resting pose. Choose a different outfit and held item;
+travel and reload. The same plush should remain, with progress intact. Check
+baking contact and whether short pile remains comfortable on Nancy's phone.
+Try Battery friendly detail if needed; it keeps the cloth/costume while reducing
+fine strands. Close Inventory during a slow download: a late response must not
+change Kitty. Turn on Reduced motion and verify all choices remain usable.

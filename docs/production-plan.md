@@ -495,3 +495,26 @@ passed in that environment. No check or release dependency was removed.
 Physical phone and Safari verification remains pending. The actual device
 checklist and Mac Blender workflow are updated in `docs/phone-playtest.md` and
 `docs/blender-workflow.md`. Preserve this boundary in future completion claims.
+
+## Five complete Blender plush editions · v2.0.0 (2026-11-05)
+
+User requested all five reference-inspired Blender models first, then game
+integration with dances and expressions. Created Strawberry Cloud, Moonlight
+Witch, Baby Blossom, Rose Kitten and Silver Bunny as separate self-contained
+`.blend` projects, retaining the natural edition and all earlier source files.
+Packed fabric normals, real short curled fibers, fused paw deformation, costume
+meshes, distinct soft dances, wink and two-eye happy expressions are editable.
+Render paths are relative for use on Mac; no external texture/cache is needed.
+
+Game integration stays in Inventory → Clothes → Kitty’s plush collection. It
+keeps the three room buttons, existing clothes/items, letter, gift marker and
+progress. The optional shared equipment field is whitelisted and backed up;
+postcards retain the actual style. Models load lazily once per selection and are
+shared between scenes. Failed/interrupted requests keep the current Kitty.
+Body normalization preserves baking contact; tall accessories fit preview/photo
+cameras. Covered 3D room rendering pauses, fine strands use matte materials,
+small/distant or Battery friendly characters omit fine pile, and picking targets
+the stuffed surface. Gesture timing no longer loses most elapsed time at low FPS.
+
+Verification and publication result are recorded after the full release gate.
+Physical phone/Safari review remains pending.

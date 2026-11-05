@@ -37,7 +37,7 @@ export function applyEquipment(hero,equipment){
  const outfit=OUTFITS.find(o=>o.id===equipment.outfit)||OUTFITS[0];
  b.wardrobe??={materials:[],cache:new Map()};
  if(!b.wardrobe.materials.length)b.model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material])if(['Strawberry pink satin','Ribbon fold rose'].includes(m.name))b.wardrobe.materials.push(m);});
- for(const m of b.wardrobe.materials)m.color.set(m.name==='Ribbon fold rose'?outfit.accent:outfit.color);
+ for(const m of b.wardrobe.materials)m.color.set(b.plush&&outfit.id==='classic'?m.userData.plushBaseColor:m.name==='Ribbon fold rose'?outfit.accent:outfit.color);
  for(const g of b.wardrobe.cache.values())g.visible=false;
  if(outfit.id!=='classic'){
   let detail=b.wardrobe.cache.get(outfit.id);if(!detail){detail=outfitDetails(outfit.id);b.model.getObjectByName('CTRL_Body').add(detail);b.wardrobe.cache.set(outfit.id,detail);}detail.visible=true;

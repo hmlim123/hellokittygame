@@ -1,4 +1,5 @@
-import type { Adventure, OutfitId } from "./types";
+import { normalizePlush } from "../../dist/plush-state.js";
+import type { Adventure, OutfitId, PlushId } from "./types";
 export const COOKIE_SHAPES = ["heart", "star", "round"] as const;
 export const ICINGS = ["rose", "honey", "lavender"] as const;
 export const DECORATIONS = ["heart", "star", "berry"] as const;
@@ -36,6 +37,7 @@ export interface Cookie {
   friend: CookieFriend;
 }
 export interface PostcardMemory {
+  plush?: PlushId;
   id: string;
   image: string;
   outfit: OutfitId;
@@ -158,6 +160,7 @@ export function normalizeCozy(value: unknown): CozyProgress {
       continue;
     postcards.push({
       id: p.id,
+      ...(normalizePlush(p.plush) ? { plush: normalizePlush(p.plush) } : {}),
       image: p.image,
       createdAt: new Date(p.createdAt).toISOString(),
       outfit: member(

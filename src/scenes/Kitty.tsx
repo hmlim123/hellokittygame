@@ -4,7 +4,7 @@ import { updateWalking, walkingRig } from "./walk-animation";
 import { effectTime } from "./effect-motion";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { readKittyAsset } from "./kitty-assets";
 import * as THREE from "three";
 import {
   blenderClips,
@@ -21,11 +21,8 @@ import type { Equipment, Gesture } from "../game/types";
 import { useGameStore } from "../game/store";
 import { assetUrl } from "../game/assets";
 export { assetUrl } from "../game/assets";
-export function useKittyAsset() {
-  const gltf = useGLTF(assetUrl("assets/hello-kitty.glb"));
-  return useMemo(() => {
-    return { scene: gltf.scene, clips: blenderClips(gltf.animations) };
-  }, [gltf]);
+export function useKittyAsset(plush?: string) {
+  return readKittyAsset(plush);
 }
 export { useReducedMotion } from "./use-reduced-motion";
 export interface ActivityPose {
@@ -64,14 +61,18 @@ export function Kitty({
   holding,
   activity,
 }: KittyProps) {
-  const asset = useKittyAsset(),
+  const asset = useKittyAsset(equipment?.plush),
     hero = useMemo(() => makeBlenderKitty(asset, id), [asset, id]),
     reduced = useReducedMotion();
   const effect = useGameStore((s) => s.effect);
   const petMode = useGameStore((s) => s.petMode);
+  const quality = useGameStore((s) => s.preferences.quality);
   const canvas = useThree((s) => s.gl.domElement);
+  const invalidate = useThree((s) => s.invalidate);
   const stroke = useRef({ down: false, x: 0, y: 0 });
   const headPoint = useMemo(() => new THREE.Vector3(), []);
+  const topPoint = useMemo(() => new THREE.Vector3(), []);
+  const footPoint = useMemo(() => new THREE.Vector3(), []);
   const petCapture = useRef<{
     id: number;
     target: { releasePointerCapture(id: number): void };
@@ -131,6 +132,7 @@ export function Kitty({
   );
   useEffect(() => {
     if (equipment) applyHeroEquipment(hero, equipment);
+    invalidate();
   }, [hero, equipment]);
   useEffect(() => {
     if (!animate || (activity?.current.active && !reduced)) return;
@@ -164,7 +166,46 @@ export function Kitty({
     if (photoPose === "wink") b.resetEyes(true);
   }, [hero, photoPose]);
   useFrame((state, dt) => {
-    if (photoPose) return;
+    const rig = hero.userData.blender;
+    state.gl.domElement.dataset.plush = rig.plush || "classic";
+    hero.updateWorldMatrix(true, false);
+    topPoint
+      .set(0, rig.modelHeight, 0)
+      .applyMatrix4(hero.matrixWorld)
+      .project(state.camera);
+    state.gl.domElement.dataset.modelTop = String(topPoint.y);
+    if (rig.plush) {
+      footPoint
+        .set(0, 0, 0)
+        .applyMatrix4(hero.matrixWorld)
+        .project(state.camera);
+      const pixels =
+        (Math.abs(topPoint.y - footPoint.y) *
+          state.size.height *
+          state.gl.getPixelRatio()) /
+        2;
+      const detailed =
+        quality !== "gentle" && pixels > (rig.pileVisible ? 90 : 115);
+      if (detailed !== rig.pileVisible) {
+        for (const mesh of rig.pile) mesh.visible = detailed;
+        rig.pileVisible = detailed;
+      }
+    }
+    const expression = () => {
+      const has = (name: string) =>
+        rig.morphs.some((mesh: THREE.Mesh) => {
+          const index = mesh.morphTargetDictionary?.[name];
+          return (
+            index !== undefined &&
+            (mesh.morphTargetInfluences?.[index] || 0) > 0.75
+          );
+        });
+      return has("JoyClosed") ? "happy" : has("Closed") ? "wink" : "open";
+    };
+    if (photoPose) {
+      state.gl.domElement.dataset.expression = expression();
+      return;
+    }
     if (animate) {
       setBlenderAttention(
         hero,
@@ -180,7 +221,7 @@ export function Kitty({
             : state.pointer.y,
       );
     }
-    updateBlender(hero, Math.min(dt, 0.1), { reduced, idle: true });
+    updateBlender(hero, Math.min(dt, 0.25), { reduced, idle: true });
     if (activity) {
       followBlenderActivity(hero, activity.current, dt, reduced);
       activity.current.renderedProgress = reduced
@@ -188,7 +229,9 @@ export function Kitty({
         : hero.userData.blender.inputPhase;
     }
     updateHeldItem(hero, Math.min(dt, 0.1));
+    state.gl.domElement.dataset.expression = expression();
     if (animate) {
+      state.gl.domElement.dataset.motionTime = String(rig.age);
       state.gl.domElement.dataset.blenderAction =
         hero.userData.blender.current?.getClip().name || "idle";
       const arm = hero.userData.blender.model.getObjectByName("CTRL_Arm_R");

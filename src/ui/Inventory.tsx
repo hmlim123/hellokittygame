@@ -1,5 +1,8 @@
+import { PLUSH_STYLES } from "../../dist/plush-state.js";
 import { TravelMap } from "./TravelMap";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
+import { PlushPicker } from "./PlushPicker";
+import type { Gesture } from "../game/types";
 const WardrobePreview = lazy(() => import("../scenes/WardrobePreview"));
 import { useGameStore } from "../game/store";
 import { ITEMS, OUTFITS, questJournal, questText } from "../game/domain";
@@ -12,6 +15,10 @@ const art = (kind: "outfit" | "item", id: string) =>
       : `assets/inventory/${id}.svg`,
   );
 export function Inventory() {
+  const [performance, setPerformance] = useState<{
+    id: number;
+    kind: Gesture;
+  }>();
   const equipment = useGameStore((s) => s.equipment),
     quest = useGameStore((s) => s.adventure),
     tab = useGameStore((s) => s.inventoryTab),
@@ -20,8 +27,11 @@ export function Inventory() {
     follow = useGameStore((s) => s.followQuest),
     close = useGameStore((s) => s.closePanel),
     failed = useGameStore((s) => s.saveFailed);
+  const plush = PLUSH_STYLES.find((p) => p.id === equipment.plush);
   const outfit = OUTFITS.find((o) => o.id === equipment.outfit)!,
     item = ITEMS.find((i) => i.id === equipment.item)!;
+  const outfitName =
+    plush && outfit.id === "classic" ? "Signature outfit" : outfit.name;
   const tabs = ["clothes", "items", "quest"] as const;
   return (
     <Dialog
@@ -78,11 +88,13 @@ export function Inventory() {
               <Suspense fallback={<span>Getting dressed…</span>}>
                 <WardrobePreview
                   equipment={equipment}
-                  label={`${outfit.name}, ${item.name}`}
+                  performance={performance}
+                  label={`${plush ? plush.name + ", " : ""}${outfitName}, ${item.name}`}
                 />
               </Suspense>
             </div>
-            <strong>{outfit.name}</strong>
+            <strong>{plush?.name || outfitName}</strong>
+            {plush && <span>{outfitName}</span>}
             <span>{item.name}</span>
             <small>Drag to look around · 360°</small>
           </section>
@@ -93,18 +105,34 @@ export function Inventory() {
             id="inventory-panel-clothes"
             aria-labelledby="inventory-clothes"
           >
+            <PlushPicker
+              onPreview={(kind) =>
+                setPerformance((p) => ({ id: (p?.id || 0) + 1, kind }))
+              }
+            />
             <p>Pick a little outfit. Kitty changes right away.</p>
             <div className="equipment-grid">
               {OUTFITS.map((o) => (
                 <button
                   key={o.id}
-                  aria-label={o.name}
+                  aria-label={
+                    plush && o.id === "classic" ? "Signature outfit" : o.name
+                  }
                   aria-pressed={equipment.outfit === o.id}
                   disabled={!o.unlock(quest)}
                   onClick={() => equip("outfit", o.id)}
                 >
-                  <img alt="" src={art("outfit", o.id)} />
-                  <strong>{o.name}</strong>
+                  <img
+                    alt=""
+                    src={
+                      plush && o.id === "classic"
+                        ? assetUrl(`assets/plush/${plush.id}.png`)
+                        : art("outfit", o.id)
+                    }
+                  />
+                  <strong>
+                    {plush && o.id === "classic" ? "Signature outfit" : o.name}
+                  </strong>
                   <small>
                     {!o.unlock(quest)
                       ? o.hint
@@ -204,7 +232,8 @@ export function Inventory() {
         </button>
       </div>
       <p className="inventory-status" role="status">
-        Wearing {outfit.name} · {item.name}
+        Wearing {plush ? plush.name + " · " : ""}
+        {outfitName} · {item.name}
       </p>
       <p className="save-note">
         {failed

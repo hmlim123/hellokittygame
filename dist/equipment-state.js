@@ -1,3 +1,4 @@
+import {normalizePlush} from './plush-state.js';
 export const EQUIPMENT_KEY='kitty-nancy-equipment-v1';
 export const OUTFITS=[
  {id:'classic',name:'Rose dress',color:'#e896b0',accent:'#d9789d',detail:'Your classic pink dress.',unlock:()=>true},
@@ -18,7 +19,8 @@ export function normalizeEquipment(raw={},quest={},legacy={}){
  raw=raw&&typeof raw==='object'?raw:{};quest=quest&&typeof quest==='object'?quest:{};legacy=legacy&&typeof legacy==='object'?legacy:{};
  const outfit=OUTFITS.find(o=>o.id===raw.outfit&&o.unlock(quest))?.id||'classic';
  const item=HELD_ITEMS.some(i=>i.id===raw.item)?raw.item:HELD_ITEMS.some(i=>i.id===legacy.heldGift)?legacy.heldGift:'flowers';
- return {version:1,outfit,item};
+ const plush=normalizePlush(raw.plush);
+ return {version:1,outfit,item,...(plush?{plush}:{})};
 }
 export function equip(equipment,kind,id,quest={}){
  if(kind==='outfit'){

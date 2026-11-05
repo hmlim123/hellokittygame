@@ -9,11 +9,11 @@ SUITES = [
     'controls-browser.py', 'movement-browser.py', 'npc-gift-browser.py', 'journey-browser.py',
     'presentation-browser.py', 'device-browser.py', 'release-browser.py',
     'chapter-browser.py', 'play-polish-browser.py', 'navigation-browser.py',
-    'react-browser.py', 'cozy-browser.py', 'blender-performances-browser.py', 'cozy-life-browser.py',
+    'react-browser.py', 'cozy-browser.py', 'blender-performances-browser.py', 'cozy-life-browser.py', 'plush-browser.py', 'plush-loading-browser.py',
 ]
 # Isolated CI runners split the full suite; local execution still runs all.
 SHARDS = [
- ['controls-browser.py','movement-browser.py','npc-gift-browser.py','journey-browser.py'],
+ ['controls-browser.py','movement-browser.py','npc-gift-browser.py','journey-browser.py','plush-browser.py','plush-loading-browser.py'],
  ['chapter-browser.py','play-polish-browser.py','navigation-browser.py','release-browser.py'],
  ['react-browser.py','presentation-browser.py','device-browser.py','blender-performances-browser.py'],
  ['cozy-browser.py','cozy-life-browser.py'],
@@ -60,7 +60,7 @@ with (results/'preview.log').open('w') as log:
                 for line in process.stdout:
                     print(line,end='',flush=True);suite_log.write(line);tail.append(line)
                     if line.startswith('PASS '):previous_pass.append(line)
-                    if '/tests/' in line and 'File ' in line:context.append(line)
+                    if ('/tests/' in line and 'File ' in line) or line.startswith('CONTROL CHECK'):context.append(line)
                 returncode=process.wait()
             report.append({'suite':suite,'passed':returncode==0,'seconds':round(time.monotonic()-started,2)})
             (results/'browser-summary.json').write_text(json.dumps(report,indent=2))

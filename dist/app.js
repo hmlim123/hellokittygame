@@ -266,7 +266,7 @@ addEventListener('storage',event=>{
 });
 collection();
 try{
-  const asset=await loadBlenderKitty();
+  const asset=await loadBlenderKitty(equipment.plush);
   roomAsset=asset;
   room=new KittyRoom($('stage'),{asset,onKitty:(id,hero,part)=>{
     if(!hunt?.active&&!celebrating&&hero){

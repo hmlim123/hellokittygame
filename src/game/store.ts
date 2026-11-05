@@ -1,3 +1,4 @@
+import { normalizePlush } from "../../dist/plush-state.js";
 import {
   normalizeJourney,
   rememberStop,
@@ -186,6 +187,7 @@ export interface GameState extends SaveState {
   openPanel(panel: Panel, tab?: "clothes" | "items" | "quest"): void;
   closePanel(): void;
   equip(kind: "outfit" | "item", id: string): void;
+  setPlush(id: string): void;
   followQuest(id: QuestId): void;
   react(kind: Gesture, text?: string): void;
   chat(message: string): void;
@@ -1316,6 +1318,14 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                   }
                 : {}),
             });
+          },
+          setPlush(id) {
+            if (id !== "classic" && !normalizePlush(id)) return;
+            const s = get(),
+              equipment = { ...s.equipment };
+            if (id === "classic") delete equipment.plush;
+            else equipment.plush = normalizePlush(id);
+            set({ equipment, gesture: { id: ++serial, kind: "wave" } });
           },
           followQuest(id) {
             const adventure = { ...get().adventure, trackedQuest: id };

@@ -1,3 +1,4 @@
+import { PLUSH_STYLES } from "../../dist/plush-state.js";
 import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
@@ -102,12 +103,16 @@ export default function PhotoCorner() {
     bg = BACKGROUNDS.find((b) => b.id === background)!,
     camera = useMemo(
       () => ({
-        position: [0, 1.45, 5] as [number, number, number],
+        position: [
+          0,
+          1.45,
+          equipment.plush === "witch" || equipment.plush === "bunny" ? 6.2 : 5,
+        ] as [number, number, number],
         fov: 36,
         near: 0.1,
         far: 30,
       }),
-      [],
+      [equipment.plush],
     );
   const save = async () => {
     if (!capture.current || !ready.current) {
@@ -118,7 +123,7 @@ export default function PhotoCorner() {
     try {
       const blob = await postcard(
         capture.current(),
-        `${OUTFITS.find((o) => o.id === equipment.outfit)?.name} · ${bg.name}`,
+        `${equipment.plush ? PLUSH_STYLES.find((p) => p.id === equipment.plush)?.name : OUTFITS.find((o) => o.id === equipment.outfit)?.name} · ${bg.name}`,
       );
       const image = await thumbnail(blob),
         s = useGameStore.getState();
@@ -135,6 +140,7 @@ export default function PhotoCorner() {
         id: crypto.randomUUID(),
         image,
         outfit: equipment.outfit,
+        ...(equipment.plush ? { plush: equipment.plush } : {}),
         background: bg.name,
         pose,
         place:
@@ -185,7 +191,23 @@ export default function PhotoCorner() {
           <Capture capture={capture} />
           <OrbitControls
             makeDefault
-            target={[0, 1.14, 0]}
+            target={[
+              0,
+              equipment.plush === "witch" || equipment.plush === "bunny"
+                ? 1.4
+                : 1.14,
+              0,
+            ]}
+            minDistance={
+              equipment.plush === "witch" || equipment.plush === "bunny"
+                ? 6.2
+                : 5
+            }
+            maxDistance={
+              equipment.plush === "witch" || equipment.plush === "bunny"
+                ? 6.2
+                : 5
+            }
             enablePan={false}
             enableZoom={false}
             minPolarAngle={0.5}

@@ -1,9 +1,11 @@
+import {normalizePlush} from './plush-state.js';
 import * as THREE from 'three';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {DOLLS} from './state.js';
 
-export async function loadBlenderKitty(){
-  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL('./assets/hello-kitty.glb?v=cozy-toys-1',import.meta.url).href);
+export async function loadBlenderKitty(plush){
+  plush=normalizePlush(plush);
+  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=plush-24':'./assets/hello-kitty.glb?v=cozy-toys-1',import.meta.url).href);
   return {scene:gltf.scene,clips:blenderClips(gltf.animations)};
 
 }
@@ -17,13 +19,34 @@ export function makeBlenderKitty(asset,id=0){
   const hero=new THREE.Group(),model=asset.scene.clone(true);
   const normalize=new THREE.Group();normalize.add(model);hero.add(normalize);
   const bounds=new THREE.Box3().setFromObject(model),height=bounds.max.y-bounds.min.y;
-  const scale=2.27/height;normalize.scale.setScalar(scale);normalize.position.y=-bounds.min.y*scale;
+  const plush=model.getObjectByName('CTRL_Root').userData.plush_variant;
+  const scale=2.27/(plush?model.getObjectByName('CTRL_Root').userData.plush_body_height:height);normalize.scale.setScalar(scale);
+  let floor=bounds.min.y;
+  if(plush){
+    // Ground the stuffed foot itself; short pile can compress into the floor
+    // without lifting the paws away from the authored baking contact points.
+    const foot=model.getObjectByName('Foot_-1');
+    if(foot?.geometry){foot.geometry.computeBoundingBox();floor=foot.geometry.boundingBox.clone().applyMatrix4(foot.matrixWorld).min.y;}
+  }
+  normalize.position.y=-floor*scale;
   model.traverse(o=>{
     if(!o.isMesh)return;
     o.castShadow=o.receiveShadow=false;
+    // Pet the stuffed surface, rather than raycasting thousands of tiny fibers.
+    if(o.userData.plush_fur)o.raycast=()=>{};
     // Each variant is the actual Blender mesh, with a local outfit recolor.
-    o.material=o.material.clone();
-    if(id!==0&&o.material.name==='Strawberry pink satin')o.material.color.set(DOLLS[id].color);
+    const localMaterial=m=>{
+      if(!o.userData.plush_fur)return m.clone();
+      // Strand geometry supplies its own fine normals. A matte material avoids
+      // expensive layered sheen and tiny normal-map glints on each filament.
+      const matte=new THREE.MeshStandardMaterial({color:m.color,roughness:.98,metalness:0,side:m.side});
+      matte.name=m.name;return matte;
+    };
+    o.material=Array.isArray(o.material)?o.material.map(localMaterial):localMaterial(o.material);
+    for(const material of Array.isArray(o.material)?o.material:[o.material]){
+      material.userData.plushBaseColor=material.color.getHex();
+      if(id!==0&&material.name==='Strawberry pink satin')material.color.set(DOLLS[id].color);
+    }
   });
   // Additive head/eye pivots preserve the exported controller animation.
   const bases=new Map();
@@ -37,9 +60,9 @@ export function makeBlenderKitty(asset,id=0){
   model.updateMatrixWorld(true);
   const eyes=[];
   for(const name of ['Eye_left','Eye_right']){
-    const eye=model.getObjectByName(name);eye.geometry.computeBoundingBox();
+    const eye=model.getObjectByName(name);eye.updateWorldMatrix(true,true);
     const pivot=new THREE.Group();pivot.name='Blink_'+name;
-    const parent=eye.parent,center=eye.localToWorld(eye.geometry.boundingBox.getCenter(new THREE.Vector3()));
+    const parent=eye.parent,center=new THREE.Box3().setFromObject(eye).getCenter(new THREE.Vector3());
     pivot.position.copy(parent.worldToLocal(center));parent.add(pivot);pivot.attach(eye);eyes.push(pivot);
   }
   const armIdle=[];
@@ -55,8 +78,8 @@ export function makeBlenderKitty(asset,id=0){
     }
     actions[name]=mixer.clipAction(local);actions[name].setLoop(THREE.LoopOnce,1);actions[name].clampWhenFinished=true;
   }
-  const morphs=[];
-  model.traverse(o=>{if(o.morphTargetDictionary)morphs.push(o);});
+  const morphs=[],pile=[];
+  model.traverse(o=>{if(o.morphTargetDictionary)morphs.push(o);if(o.isMesh&&o.userData.plush_fur)pile.push(o);});
   const resetEyes=closed=>{
     for(const o of morphs){
       if(o.morphTargetDictionary.Closed!==undefined)o.morphTargetInfluences[o.morphTargetDictionary.Closed]=closed?1:0;
@@ -64,7 +87,7 @@ export function makeBlenderKitty(asset,id=0){
     }
   };
   resetEyes(false);
-  hero.userData={kind:'kitty',id,blender:{model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:'hellokitty3D/hello_kitty_natural.blend'};
+  hero.userData={kind:'kitty',id,blender:{pile,pileVisible:true,plush,modelHeight:(bounds.max.y-floor)*scale,model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:plush?'hellokitty3D/hello_kitty_plush_'+plush+'.blend':'hellokitty3D/hello_kitty_natural.blend'};
   return hero;
 }
 export function setBlenderAttention(hero,x=0,y=0){
@@ -143,7 +166,7 @@ export function followBlenderActivity(hero,input,dt,reduced=false){
  // the paused contact action playing underneath a competing gesture.
  if(b.current!==action){if(b.current){b.current.fadeOut(.18);b.fading.push({action:b.current,left:.2});}b.current=action;action.enabled=true;action.setEffectiveWeight(1);action.play();action.paused=true;}
  const target=Number.isFinite(input.progress)?input.progress:0;
- b.inputPhase+=(target-b.inputPhase)*(1-Math.exp(-Math.min(.1,Math.max(0,dt))*16));
+ b.inputPhase+=(target-b.inputPhase)*(1-Math.exp(-Math.min(.25,Math.max(0,dt))*16));
  const phase=input.kind==='stir'?((b.inputPhase%1)+1)%1:Math.max(0,Math.min(1,b.inputPhase));
  action.time=phase*action.getClip().duration;b.age=0;b.mixer.update(0);
 }

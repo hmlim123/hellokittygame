@@ -5,7 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { ACESFilmicToneMapping } from "three";
 import { Kitty } from "./Kitty";
-import type { Equipment } from "../game/types";
+import type { Equipment, Gesture } from "../game/types";
 function PreviewLabel({ label }: { label: string }) {
   const { gl } = useThree();
   useEffect(() => {
@@ -16,13 +16,24 @@ function PreviewLabel({ label }: { label: string }) {
 export default function WardrobePreview({
   equipment,
   label,
+  performance,
 }: {
   equipment: Equipment;
   label: string;
+  performance?: { id: number; kind: Gesture };
 }) {
   return (
     <Canvas
-      camera={{ position: [0, 1.35, 5], fov: 35, near: 0.1, far: 25 }}
+      camera={{
+        position: [
+          0,
+          1.45,
+          equipment.plush === "witch" || equipment.plush === "bunny" ? 6.2 : 5,
+        ],
+        fov: 35,
+        near: 0.1,
+        far: 25,
+      }}
       dpr={[1, 1.25]}
       gl={{ antialias: true }}
       onCreated={({ gl }) => {
@@ -39,11 +50,27 @@ export default function WardrobePreview({
       <color attach="background" args={["#f8e9ef"]} />
       <CozyLights />
       <Suspense fallback={null}>
-        <Kitty equipment={equipment} />
+        <Kitty
+          equipment={equipment}
+          animate={!!performance}
+          performance={performance}
+        />
       </Suspense>
       <OrbitControls
         makeDefault
-        target={[0, 1.13, 0]}
+        target={[
+          0,
+          equipment.plush === "witch" || equipment.plush === "bunny"
+            ? 1.4
+            : 1.13,
+          0,
+        ]}
+        minDistance={
+          equipment.plush === "witch" || equipment.plush === "bunny" ? 6.2 : 5
+        }
+        maxDistance={
+          equipment.plush === "witch" || equipment.plush === "bunny" ? 6.2 : 5
+        }
         enablePan={false}
         enableZoom={false}
         minPolarAngle={0.6}

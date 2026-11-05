@@ -1,3 +1,4 @@
+import { PLUSH_STYLES } from "../../dist/plush-state.js";
 import { RecipeBook } from "./CozyLife";
 import { useState, useId, lazy, Suspense } from "react";
 import { useGameStore } from "../game/store";
@@ -319,7 +320,14 @@ export function KeepsakePanel() {
               <h3>For Nancy ♡</h3>
               <dl>
                 <dt>Outfit</dt>
-                <dd>{OUTFITS.find((o) => o.id === p.outfit)?.name}</dd>
+                <dd>
+                  {p.plush
+                    ? `${PLUSH_STYLES.find((s) => s.id === p.plush)?.name} · `
+                    : ""}
+                  {p.plush && p.outfit === "classic"
+                    ? "Signature outfit"
+                    : OUTFITS.find((o) => o.id === p.outfit)?.name}
+                </dd>
                 <dt>Where</dt>
                 <dd>{p.place}</dd>
                 <dt>Atmosphere</dt>

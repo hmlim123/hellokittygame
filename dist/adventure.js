@@ -184,7 +184,7 @@ function followCamera(snap=false,dt=.016){
  for(const l of labels){const p=l.point.clone().project(camera);l.el.hidden=(l.object?.type==='R'&&state.ribbons.includes(l.object.id))||p.x<-1||p.x>1||p.y<-1||p.y>1;l.el.style.left=(p.x*.5+.5)*$('world').clientWidth+'px';l.el.style.top=(-p.y*.5+.5)*$('world').clientHeight+'px';}
 }
 try{
- const asset=await loadBlenderKitty();loadedAsset=asset;scene=new THREE.Scene();world=new THREE.Group();scene.add(world);
+ const asset=await loadBlenderKitty(equipment.plush);loadedAsset=asset;scene=new THREE.Scene();world=new THREE.Group();scene.add(world);
  const probe=document.createElement('canvas'),gl=probe.getContext('webgl2',{antialias:true});
  renderer=gl?new THREE.WebGLRenderer({canvas:probe,context:gl,antialias:true}):new CanvasFallback();
  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.shadowMap.enabled=false;

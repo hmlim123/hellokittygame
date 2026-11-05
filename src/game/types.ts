@@ -45,7 +45,9 @@ export type Gesture =
   | "highfive"
   | "tickle"
   | "kiss";
+export type PlushId = "cloud" | "witch" | "baby" | "kitten" | "bunny";
 export interface Equipment {
+  plush?: PlushId;
   version: number;
   outfit: OutfitId;
   item: ItemId;

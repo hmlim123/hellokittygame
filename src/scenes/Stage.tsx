@@ -66,10 +66,14 @@ function Loader() {
 }
 export function Stage() {
   const revision = useGameStore((s) => s.worldRevision);
+  const plush = useGameStore((s) => s.equipment.plush);
+  const previewOpen = useGameStore((s) =>
+    ["inventory", "baking", "photo", "ending"].includes(s.panel || ""),
+  );
   const mode = useGameStore((s) => s.mode),
     ready = useGameStore((s) => s.sceneReady),
     [error, setError] = useState(false);
-  useEffect(() => setError(false), [mode, revision]);
+  useEffect(() => setError(false), [mode, revision, plush]);
   const camera = useMemo(
     () => ({
       fov: 37,
@@ -81,10 +85,14 @@ export function Stage() {
   );
   return (
     <div className={`stage ${mode}`} id={mode === "room" ? "stage" : "world"}>
-      <SceneBoundary key={`${mode}-${revision}`} onError={() => setError(true)}>
+      <SceneBoundary
+        key={`${mode}-${revision}-${plush || "classic"}`}
+        onError={() => setError(true)}
+      >
         <Canvas
-          key={`${mode}-${revision}`}
+          key={`${mode}-${revision}-${plush || "classic"}`}
           shadows={false}
+          frameloop={previewOpen ? "demand" : "always"}
           dpr={[1, 1.5]}
           orthographic={mode === "adventure"}
           camera={camera}
@@ -114,6 +122,7 @@ export function Stage() {
           <Suspense fallback={null}>
             <AdaptiveQuality />
             <Physics
+              paused={previewOpen}
               gravity={[0, 0, 0]}
               timeStep={PHYSICS_STEP}
               interpolate
@@ -134,6 +143,11 @@ export function Stage() {
             version.
           </p>
           <button onClick={() => location.reload()}>Try again</button>
+          {plush && (
+            <button onClick={() => useGameStore.getState().setPlush("classic")}>
+              Use original Kitty
+            </button>
+          )}
           <a href={assetUrl("classic/")}>Open classic version</a>
         </div>
       )}
