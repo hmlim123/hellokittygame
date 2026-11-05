@@ -542,7 +542,7 @@ Physical phone/Safari review remains pending; Chromium phone emulation is not
 physical-device certification. Use `docs/phone-playtest.md` for that remaining
 review. No new main button or additional mission was added in this release.
 
-## Natural plush surface correction · v2.0.1 (in review)
+## Natural plush surface correction · v2.0.1
 
 The exposed white curls around the chin read as facial hair in actual play.
 Replace the free curled pile with a packed seamless 512px fleece normal and
@@ -559,3 +559,26 @@ Acceptance: visually inspect Blender portraits and actual browser previews;
 verify no exposed curl geometry, the packed fabric texture and all original
 motion/prop contact assertions. Run the automated checks and all release browser
 journeys before publication. Physical phone and Safari review remain pending.
+
+Local verification: all 196 automated checks passed (79 Node/model/domain and
+117 Vitest). All five actual browser models danced, winked, restored happy eyes
+and kept shared clothes; adventure walking/reload, postcards, baking, 320px touch
+and reduced motion passed. Failure/retry, late-response cancellation and the
+classic fallback passed. Source portraits and actual game previews were reviewed, including a side-by-side
+comparison against the previous in-game model. The existing full cozy-life
+baking/delivery journey also passed locally, with zero page errors.
+Model payloads are now 2.95–3.28 MB, with no exposed pile meshes.
+
+Blender source: `9f73b7f1450535d5b7abe42a3ae3336366eebd6c`.
+Game candidate: `a3f564e22969063add8262c0f12e074e13499b6e`.
+The corrected five-project download was verified against every source checksum.
+Published after all **196 automated checks** and **16 browser suites** passed.
+All four browser groups and the Pages deployment succeeded in
+[run 42096173464](https://github.com/hmlim123/hellokittygame/actions/runs/42096173464).
+The deployed site uses the exact artifact that passed that gate:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=soft-plush-25>.
+The local downloadable website also contains the corrected models and the tested
+game revision. The five portable Blender projects and their portraits are bundled
+with a source manifest, and every bundled source checksum was verified.
+No reset marker, quest, saved outfit or personal letter changed. Physical phone
+and Safari verification remain pending.
