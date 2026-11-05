@@ -16,9 +16,12 @@ with sync_playwright() as p:
  page.unroute('**/assets/plush/cloud.glb*');page.get_by_role('button',name='Choose Strawberry Cloud',exact=True).click();model('cloud')
  print('PASS failed cosmetic load retains original Kitty and progress; explicit retry loads the actual model',flush=True)
  page.get_by_role('button',name='Choose Original Kitty',exact=True).click();model('classic')
- held=[];page.route('**/assets/plush/witch.glb*',lambda route:held.append(route))
+ held=[]
+ def hold_model(route):
+  held.append(route);page.evaluate("window.plushModelHeld=true")
+ page.route('**/assets/plush/witch.glb*',hold_model)
  with page.expect_request('**/assets/plush/witch.glb*'):page.get_by_role('button',name='Choose Moonlight Witch',exact=True).click()
- assert held;page.get_by_role('button',name='Back to Kitty',exact=True).click();page.get_by_role('dialog',name='Kitty’s inventory').wait_for(state='hidden')
+ page.wait_for_function("window.plushModelHeld===true");assert held;page.get_by_role('button',name='Back to Kitty',exact=True).click();page.get_by_role('dialog',name='Kitty’s inventory').wait_for(state='hidden')
  with page.expect_event('requestfinished',predicate=lambda r:'/assets/plush/witch.glb' in r.url,timeout=30000):held[0].continue_()
  # Wait for the completed GLB parse too, so a stale success callback has time to run.
  page.wait_for_timeout(1200);model('classic','#stage canvas');assert not page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).plush || null")
