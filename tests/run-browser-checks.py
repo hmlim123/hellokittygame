@@ -31,7 +31,9 @@ results=ROOT/'test-results';results.mkdir(exist_ok=True)
 port=int(os.environ.get('KITTY_TEST_PORT','8066'))
 env=os.environ.copy();env['KITTY_BASE_URL']=f'http://127.0.0.1:{port}'
 if not env.get('CHROMIUM_PATH'):
-    installed=shutil.which('chromium') or shutil.which('chromium-browser')
+    # CI installs the version pinned by Playwright. Do not silently select a
+    # preinstalled system browser from a changing runner image instead.
+    installed=None if os.environ.get('CI') else (shutil.which('chromium') or shutil.which('chromium-browser'))
     if installed:env['CHROMIUM_PATH']=installed
     else:
         with sync_playwright() as p:env['CHROMIUM_PATH']=p.chromium.executable_path
@@ -52,16 +54,18 @@ with (results/'preview.log').open('w') as log:
             time.sleep(.2)
         for suite in SUITES:
             print('\nChecking '+suite,flush=True);started=time.monotonic()
-            tail=deque(maxlen=20)
+            tail=deque(maxlen=20); context=[]; previous_pass=[]
             with (results/(suite+'.log')).open('w') as suite_log:
                 process=subprocess.Popen([sys.executable,'-u',str(ROOT/'tests'/suite)],env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
                 for line in process.stdout:
                     print(line,end='',flush=True);suite_log.write(line);tail.append(line)
+                    if line.startswith('PASS '):previous_pass.append(line)
+                    if '/tests/' in line and 'File ' in line:context.append(line)
                 returncode=process.wait()
             report.append({'suite':suite,'passed':returncode==0,'seconds':round(time.monotonic()-started,2)})
             (results/'browser-summary.json').write_text(json.dumps(report,indent=2))
             if returncode:
-                diagnostic=(suite+' failed:\n'+''.join(tail)[-3000:]).replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+                diagnostic=(suite+' failed:\n'+''.join(previous_pass[-2:])+''.join(context[-4:])+''.join(tail)[-3000:]).replace('%','%25').replace('\r','%0D').replace('\n','%0A')
                 print('::error title=Browser journey failed::'+diagnostic,flush=True)
                 raise SystemExit(returncode)
         print('\nPASS all release browser journeys',flush=True)

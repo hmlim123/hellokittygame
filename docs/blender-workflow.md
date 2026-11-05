@@ -1,8 +1,8 @@
 # Editing the game toys in Blender
 
 The source project is `../hellokitty3D/hello_kitty_natural.blend` (Blender 4.3+).
-It adds ten Kitty performances, paw sockets, Momo/Pip greetings, and ten rounded
-prop assemblies. The original static and animated projects remain intact.
+It contains 13 named Kitty performances, paw sockets, Momo/Pip greetings, and
+13 rounded prop assemblies. The original static and animated projects remain intact.
 
 ## On your Mac
 
@@ -10,9 +10,10 @@ prop assemblies. The original static and animated projects remain intact.
 2. Use the timeline markers to find Stir, Cut, Present, Surprise, Bow, Celebrate,
    and Sip. Existing Dance, Wave, Wink and Offer sections remain at the beginning.
 3. Select `CTRL_*` empties to edit poses in the Dope Sheet or Graph Editor.
-   Keep object names and shoulder pivots; this is a rigid toy rig without fingers.
+   Keep object names and shoulder pivots; body/head use toy controls and the fused
+   arms use Elbow_soft / Paw_soft morphs. There are no articulated fingers.
 4. Expand **GAME — cozy props** or **GAME — friends** to edit matching models.
-   `Socket_Paw_L/R`, `Socket_Teacup` and `Socket_Tray` define the grips.
+   `Socket_Paw_L/R`, `Socket_Teacup`, `Socket_Spoon` and `Socket_Tray` define the grips.
 5. Export your working copy, then run the game:
 
 ```sh
@@ -30,19 +31,23 @@ the game has its own matching lighting in `src/scenes/CozyLights.tsx`.
 
 ## Source to gameplay
 
-- `create_game_assets.py` in hellokitty3D rebuilds the new `.blend` reproducibly.
-  It replaces only the game edition, so back up manual edits first.
+- In hellokitty3D, rebuild the first game edition with `create_game_assets.py`,
+  then the natural edition with `create_natural_game.py`, then apply
+  `refine_natural_flow.py`. These replace generated files; back up manual edits.
 - `scripts/export_blender.py` exports the actual Kitty/control collections,
   converts the wink to morph targets, reduces meshes, and excludes the studio
   and authoring-only preview. Friends and props become separate small GLBs.
 - `scripts/glb_clips.py` splits sampled object timelines into synchronized named
   glTF clips, interpolates boundaries, and removes unused timeline buffer data.
+  Blender SCENE timestamps are frame/fps: frame 1 is 1/fps, not zero. The Stir
+  loop closes at frame 216 before Cut starts at 217.
   Games consume names rather than hard-coded frame slices. Legacy models still load.
 - `dist/assets/kitty-source.json` records the source repository, commit, file,
   SHA-256, frame ranges and fps. Each game release versions the model URLs.
 - `dist/blender-kitty.js` preserves bind poses inside additive gaze/walk pivots.
   `KittyHeld` follows the live paw midpoint for a tray centered between the paws; cup, spoon and
-  cutter use the individual paw sockets. Nancy's actual cookie is composed on
+  cutter use the individual paw sockets. The spoon has its own angled grip; the
+  tray counters body lean and preserves the size authored in Blender. Nancy's actual cookie is composed on
   the tray by `CookieMesh`; its shape, icing and stamps remain saved normally.
 - `ToyFriend` plays greetings on explicit dialogue or automatic NPC notices, and again after
   dismissal so the reading panel does not hide the response.
@@ -50,8 +55,8 @@ the game has its own matching lighting in `src/scenes/CozyLights.tsx`.
 - Baking follows recipe stages, conversation events greet, quest completions
   celebrate, and the tea ending lifts a cup. Reduced motion suppresses the motions.
 
-The main Kitty GLB stays below 2 MB; friends and all props together are below
-600 KB. No cloth simulation, fur, real-time shadows or grain are introduced.
+The main Kitty GLB stays below 2.5 MB; friends and all props together are below
+650 KB. No cloth simulation, fur, real-time shadows or grain are introduced.
 
 ## Verification
 
@@ -59,7 +64,7 @@ The main Kitty GLB stays below 2 MB; friends and all props together are below
 shoulders, socket hierarchy, cup lift, friend motion, and small model payloads,
 in addition to existing controls, save and quest rules. `npm run build` validates
 TypeScript and prepares all assets. `npm run test:browser` includes the new
-Blender-performance journey as well as the twelve previous release suites.
+Blender-performance and connected cozy-life journeys, for 14 browser suites.
 Physical iPhone/Mac Safari verification remains pending; Chromium emulation is
 recorded separately and is not a substitute for that review.
 
@@ -75,3 +80,15 @@ The oven has an `Oven_Door` hinge; the parcel, flower pot and moon cutter are
 editable in the props collection. The character is below 2.5 MB and all friends
 and props together remain below 650 KB. Export skips decimation on authored morph
 meshes; topology reduction already happened before the keys were created.
+
+
+## Contact polish (v1.9.1)
+
+`refine_natural_flow.py` keeps the serving tray level, sizes it for the oven,
+opens a real oven cavity, aligns the PlaceTray reach and return, and matches the
+spoon/cutter contact to the worktop. The browser uses the rendered input phase
+for the door and deposit, then waits for the visible motion before advancing.
+An End-key slide follows the same motion. Replays return to the ready pose and
+cannot replace an in-progress baking callback. The original kitchen camera is
+retained so Kitty remains visible. Existing source editions and game saves stay
+intact; no new activity is introduced.

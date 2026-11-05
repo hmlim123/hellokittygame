@@ -25,7 +25,11 @@ with sync_playwright() as p:
         return page
 
     def stopped(page, x, z):
-        page.wait_for_function("([x,z])=>{const a=JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'));return a.x===x&&a.z===z&&document.querySelector('#world canvas').dataset.moving==='false'}", arg=[x, z], timeout=15000)
+        try:
+            page.wait_for_function("([x,z])=>{const a=JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'));return a.x===x&&a.z===z&&document.querySelector('#world canvas').dataset.moving==='false'}", arg=[x, z], timeout=15000)
+        except Exception:
+            print('CONTROL CHECK expected '+str([x,z])+' actual '+str(page.evaluate("({adventure:JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')),canvas:{...document.querySelector('#world canvas').dataset},dialog:document.querySelector('dialog[open]')?.textContent})")),flush=True)
+            raise
 
     def taps(page, keys):
         # Dispatch within one event-loop task: even a very quick press must not disappear.

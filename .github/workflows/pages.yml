@@ -29,7 +29,7 @@ concurrency:
 jobs:
   build:
     name: Build and check game rules
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Check out the game
@@ -64,7 +64,7 @@ jobs:
   browsers:
     name: Browser journeys ${{ matrix.shard }}
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -103,7 +103,7 @@ jobs:
   deploy:
     name: Publish the tested game
     needs: [build, browsers]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment:
       name: github-pages

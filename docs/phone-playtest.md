@@ -5,7 +5,7 @@ Physical device review is **pending**. Automated Chromium checks cover desktop,
 are not a physical iPhone, Android, Mac or Safari certification. WebKit is not
 installed in the cloud environment.
 
-Open https://hmlim123.github.io/hellokittygame/?v=cozy-22 after the v1.9.0 Pages
+Open https://hmlim123.github.io/hellokittygame/?v=polish-23 after the v1.9.1 Pages
 workflow succeeds. Check the version under Game settings. Use Settings → Keep
 your progress → Download backup before the review; do not clear your browser data.
 
@@ -89,3 +89,15 @@ a later batch must survive handing over the parcel. Check remembered gift text,
 strawberry/moon/cupcake unlocks, saved decoration spots, rain confined to the
 window, and optional sound under the master Sound switch. Repeat with Reduced
 motion, including a reload halfway through preparation or delivery.
+
+
+## v1.9.1 completion review
+
+Before stirring, the spoon should already rest at the bowl. Replay and return
+from a backgrounded tab; preparation must remain usable. Press the cutter twice
+quickly: only one press should finish, with the dough under the cutter. Slide
+partway, leave and reopen baking, then finish with touch or the keyboard End key.
+The worktop stays in place, the tray stays level, and completion waits for the
+visible motion. Finish Momo's delivery and gather mint; open the room URL directly
+instead of the return button. The recipe/cushion should unlock once and Pip
+should recall gathering mint. Reload again: rewards and progress must remain.
