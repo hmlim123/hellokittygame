@@ -93,7 +93,12 @@ export function makeBlenderKitty(asset,id=0){
   };
   const resetFace=()=>{for(const o of morphs)for(const name of [...Object.values(FACE_SHAPES),'Warmth']){const i=o.morphTargetDictionary[name];if(i!==undefined)o.morphTargetInfluences[i]=0;}};
   resetEyes(false);resetFace();
-  const bouquet=model.getObjectByName('CTRL_Bouquet');if(bouquet)bouquet.traverse(o=>{if(o.isMesh)o.visible=false;});
+  const bouquet=model.getObjectByName('CTRL_Bouquet');if(bouquet)bouquet.traverse(o=>{
+    if(!o.isMesh)return;
+    // Three's raycaster includes hidden meshes. Empty paws must not leave an
+    // invisible flower touch target in front of Kitty's body or hands.
+    const raycast=o.raycast;o.raycast=function(ray,hits){if(this.visible)raycast.call(this,ray,hits);};o.visible=false;
+  });
   for(const o of morphs){const i=o.morphTargetDictionary.EmptyRest;if(i!==undefined)o.morphTargetInfluences[i]=1;}
   hero.userData={kind:'kitty',id,blender:{pile,pileVisible:true,plush,modelHeight:(bounds.max.y-floor)*scale,model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,resetFace,restWeight:1,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:plush?'hellokitty3D/hello_kitty_plush_'+plush+'.blend':'hellokitty3D/hello_kitty_natural.blend'};
   return hero;

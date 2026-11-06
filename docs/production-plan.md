@@ -796,3 +796,11 @@ zero page errors. Source portraits and browser captures were visually reviewed,
 including Silver Bunny's ears and the lowered paws. The full release gate now
 covers **18 suites** across the same four isolated groups. Physical phone and
 Mac Safari remain unverified. Publication is pending the full release gate.
+
+The local regression also passed actual baking/contact/replay and both NPC
+greetings, failed/retried/cancelled cosmetic downloads, classic fallback,
+all five complete friendship stories, six shelf selections, storybook rereading,
+reload and the phone touch layout. Review found that Three's raycaster includes
+hidden meshes: the optional bouquet now skips raycasts while hidden, so empty
+paws leave no invisible flower target. Selected flowers remain touchable.
+The six-model test verifies both states; all 210 automated checks still pass.

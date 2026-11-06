@@ -43,8 +43,11 @@ test('empty paws lower the fused arm surface; held items and baking retain their
    assert.equal(arm.morphTargetInfluences[i],1);
   }
   const bouquet=b.model.getObjectByName('CTRL_Bouquet');let visible=false;bouquet.traverse(o=>{if(o.isMesh&&o.visible)visible=true;});assert.equal(visible,false);
+  hero.updateMatrixWorld(true);const center=new THREE.Box3().setFromObject(bouquet).getCenter(new THREE.Vector3());
+  const ray=new THREE.Raycaster(center.clone().add(new THREE.Vector3(0,0,10)),new THREE.Vector3(0,0,-1));
+  assert.equal(ray.intersectObject(bouquet,true).length,0,'hidden flowers must not capture touches');
   applyEquipment(hero,{outfit:'classic',item:'flowers'});updateBlender(hero,1);
-  assert.ok(b.restWeight<.001);assert.ok(b.gifts.original.every(o=>o.visible));
+  assert.ok(b.restWeight<.001);assert.ok(b.gifts.original.every(o=>o.visible));assert.ok(ray.intersectObject(bouquet,true).length>0,'selected flowers must remain touchable');
   reactBlender(hero,'shy');updateBlender(hero,1);assert.ok(b.restWeight<.001,'expression must not move paws away from their gift');
   applyEquipment(hero,{outfit:'classic',item:'none'});updateBlender(hero,5);assert.ok(b.restWeight>.99);
   b.heldAttachment='spoon';updateBlender(hero,1);assert.ok(b.restWeight<.001);
