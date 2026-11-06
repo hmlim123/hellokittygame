@@ -835,3 +835,28 @@ The complete baking/parcel/Momo/Pip/recipe/room-weather journey and its 320px
 reduced-motion controls also pass, including the previously missing Momo label.
 No browser assertion was removed or weakened. Publication remains gated on all
 18 suites for the final code revision.
+
+Publication verified: **v2.2.0**, candidate `e142c6e6236d5ce1b779eb7f70788b7ce2087af3`.
+All **211 automated checks** and **18 browser suites** passed. All four browser
+groups and the Pages deployment succeeded in
+[run 42137281296](https://github.com/hmlim123/hellokittygame/actions/runs/42137281296),
+publishing the exact immutable artifact that passed the release gate.
+
+Published: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=expressions-29>.
+All six characters start with relaxed empty paws; flowers remain optional.
+Use Play together → More little expressions or the folded Inventory control.
+The photo corner includes all five new faces. All six Blender projects open
+at frame 1105 with their lowered-paw pose; source commit `4e18999`.
+The verified six-project bundle is `/workspace/hello-kitty-expressions-blenders.zip`;
+the website bundle contains candidate `e142c6e6236d5ce1b779eb7f70788b7ce2087af3`.
+
+Local final regression also passed the full tea/souvenir/storybook/postcard loop,
+rendered keepsake frame, petting/teddy/high-five, large reading, 320px touch,
+clean-view restoration and cross-device tea/keepsake backup with zero page errors.
+The older gift-20 save upgrade preserves invitations, outfit, edition, charms,
+story progress and the permanent gift marker after clearing the automatic
+bouquet once. Nancy’s letter remains unchanged. Physical phone/Mac Safari
+review remains pending; browser emulation is not physical-device verification.
+
+Review images: `docs/nancy-expression-cloud.png`,
+`docs/nancy-expression-postcard.png`.
