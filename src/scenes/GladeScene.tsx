@@ -7,7 +7,7 @@ import { TeaTable } from "./TeaParty";
 import { bloomAmount, bridgeAmount } from "./effect-motion";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import * as THREE from "three";
 import { Pip } from "./MoonPicnic";
 import { makeGift } from "../../dist/gifts.js";

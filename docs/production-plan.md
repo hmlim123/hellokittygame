@@ -819,3 +819,19 @@ checks to **211** (87 Node/model/domain and 124 Vitest), all passing.
 Cached teddy, strawberry, letter and adventure-tool groups also skip raycasts
 when hidden, so switching back to empty paws leaves no invisible prop target.
 Actual-ray tests verify visible props are interactive and hidden props are not.
+
+The next full gate found a Drei HTML lifecycle problem during scene replacement:
+`play-polish-browser.py` reported a React DOM removeChild error after restore,
+and `cozy-life-browser.py` could lose Momo's label after returning to the village.
+Both were reproduced locally. SceneHtml now gives every label a stable, owned
+portal host instead of mounting foreign React roots into the Canvas-owned DOM.
+Detaching the host leaves its children attached until Drei disposes them;
+changing the event target no longer rebuilds a root in a reused label element.
+Buttons/links remain interactive and noninteractive labels pass pointer input
+through. The restore test retains browser error stacks for future diagnosis.
+
+The exact failing restore/phone-transfer journey now passes with zero errors.
+The complete baking/parcel/Momo/Pip/recipe/room-weather journey and its 320px
+reduced-motion controls also pass, including the previously missing Momo label.
+No browser assertion was removed or weakened. Publication remains gated on all
+18 suites for the final code revision.

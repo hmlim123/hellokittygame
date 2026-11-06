@@ -8,7 +8,8 @@ import { turnToward } from "./walk-animation";
 import { nearbyLabel } from "../game/context-action";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Html, OrthographicCamera } from "@react-three/drei";
+import { OrthographicCamera } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import {
   CuboidCollider,
   CapsuleCollider,
