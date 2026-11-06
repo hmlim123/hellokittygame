@@ -521,6 +521,7 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
       world.removeCharacterController(c);
     };
   }, [world]);
+  useFrame(() => inputClock.current.beginFrame(performance.now()), -2);
   useBeforePhysicsStep(() => {
     const s = useGameStore.getState(),
       cmd = s.moveCommand,
@@ -540,7 +541,7 @@ function Player({ anchor }: { anchor: RefObject<THREE.Group | null> }) {
         s.heldDirection === cmd.dir,
       );
     }
-    if (cmd && !inputClock.current.consume(performance.now())) return;
+    if (cmd && !inputClock.current.consume()) return;
     m.beforeStep(PHYSICS_STEP);
     locomotion.current.speed = m.speed;
   });

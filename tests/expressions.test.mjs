@@ -49,7 +49,14 @@ test('empty paws lower the fused arm surface; held items and baking retain their
   applyEquipment(hero,{outfit:'classic',item:'flowers'});updateBlender(hero,1);
   assert.ok(b.restWeight<.001);assert.ok(b.gifts.original.every(o=>o.visible));assert.ok(ray.intersectObject(bouquet,true).length>0,'selected flowers must remain touchable');
   reactBlender(hero,'shy');updateBlender(hero,1);assert.ok(b.restWeight<.001,'expression must not move paws away from their gift');
-  applyEquipment(hero,{outfit:'classic',item:'none'});updateBlender(hero,5);assert.ok(b.restWeight>.99);
+  for(const item of ['teddy','letter','strawberry']){
+   applyEquipment(hero,{outfit:'classic',item});hero.updateMatrixWorld(true);
+   const prop=b.gifts.cache.get(item),p=new THREE.Box3().setFromObject(prop).getCenter(new THREE.Vector3());
+   const touch=new THREE.Raycaster(p.clone().add(new THREE.Vector3(0,0,10)),new THREE.Vector3(0,0,-1));
+   assert.ok(touch.intersectObject(prop,true).length>0,item+' should be touchable while equipped');
+   applyEquipment(hero,{outfit:'classic',item:'none'});assert.equal(touch.intersectObject(prop,true).length,0,item+' should not intercept empty-paw touches');
+  }
+  updateBlender(hero,5);assert.ok(b.restWeight>.99);
   b.heldAttachment='spoon';updateBlender(hero,1);assert.ok(b.restWeight<.001);
   b.heldAttachment=null;reactBlender(hero,'placeTray');updateBlender(hero,2.28);assert.ok(b.restWeight<.001);
  }

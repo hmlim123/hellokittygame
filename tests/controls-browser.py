@@ -45,11 +45,12 @@ with sync_playwright() as p:
     page.close()
 
     page = setup()
-    page.evaluate("""()=>new Promise(resolve=>requestAnimationFrame(()=>{
+    probe = page.evaluate("""()=>new Promise(resolve=>requestAnimationFrame(()=>{
       const until=performance.now()+350;while(performance.now()<until){}
-      dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
-      requestAnimationFrame(()=>{dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowRight',bubbles:true}));resolve()});
+      const started=performance.now();dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+      requestAnimationFrame(()=>{dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowRight',bubbles:true}));resolve({heldMs:performance.now()-started,x:JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x})});
     }))""")
+    print("SLOW FRAME INPUT",probe,flush=True)
     stopped(page, 8, 8)
     page.wait_for_timeout(300)
     stopped(page, 8, 8)

@@ -18,6 +18,8 @@ export function makeStrawberry(){
 }
 export function makeGift(id){
  const g=new THREE.Group();g.name='Present_'+id;g.userData.interaction='offer';
+ // A cached, hidden gift must not leave an invisible target over empty paws.
+ g.raycast=()=>g.visible?undefined:false;
  if(id==='strawberry'){g.add(makeStrawberry());g.position.set(.18,.12,0);}
  else if(id==='teddy'){
   const honey=mat('#c99869'),cream=mat('#f7dfba'),ink=new THREE.MeshBasicMaterial({color:'#39252b'});

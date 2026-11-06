@@ -804,3 +804,18 @@ reload and the phone touch layout. Review found that Three's raycaster includes
 hidden meshes: the optional bouquet now skips raycasts while hidden, so empty
 paws leave no invisible flower target. Selected flowers remain touchable.
 The six-model test verifies both states; all 210 automated checks still pass.
+
+The full release gate for `44bd1dc` stopped publication after the existing
+slow-frame steering check caught one extra held step. Physics catch-up was
+sampling the wall clock on every substep, allowing its own processing time to
+increase the input budget. InputClock now samples once per render frame before
+Rapier and shares that fixed budget across the batch. Continuous walking keeps
+its clock across tiles. The loading indicator also waits for the first scene
+draw/material upload before enabling input, including demand-rendered wardrobe
+changes. The existing slow-frame browser assertion is retained; it now logs the
+press duration for diagnosis. A new timing boundary test brings the automated
+checks to **211** (87 Node/model/domain and 124 Vitest), all passing.
+
+Cached teddy, strawberry, letter and adventure-tool groups also skip raycasts
+when hidden, so switching back to empty paws leaves no invisible prop target.
+Actual-ray tests verify visible props are interactive and hidden props are not.

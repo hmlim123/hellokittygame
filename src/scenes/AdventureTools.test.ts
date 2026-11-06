@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { Box3, Raycaster, Vector3 } from "three";
 import { readFile } from "node:fs/promises";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { makeBlenderKitty } from "../../dist/blender-kitty.js";
@@ -40,6 +41,13 @@ describe("adventure tools on the actual Blender rig", () => {
     applyHeroEquipment(b, { version: 1, outfit: "classic", item: "watering" });
     applyHeroEquipment(a, { version: 1, outfit: "classic", item: "none" });
     expect(b.userData.blender.chapterTools.get("watering").visible).toBe(true);
-    expect(a.userData.blender.chapterTools.get("lantern").visible).toBe(false);
+    const lantern = a.userData.blender.chapterTools.get("lantern");
+    expect(lantern.visible).toBe(false);
+    a.updateMatrixWorld(true);
+    const center = new Box3().setFromObject(lantern).getCenter(new Vector3());
+    const ray = new Raycaster(center.clone().add(new Vector3(0, 0, 10)), new Vector3(0, 0, -1));
+    expect(ray.intersectObject(lantern, true)).toHaveLength(0);
+    lantern.visible = true;
+    expect(ray.intersectObject(lantern, true).length).toBeGreaterThan(0);
   });
 });

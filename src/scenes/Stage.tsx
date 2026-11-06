@@ -6,11 +6,12 @@ import {
   Suspense,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { useProgress } from "@react-three/drei";
 import { ACESFilmicToneMapping } from "three";
@@ -42,8 +43,14 @@ function Ready({
   revision: number;
 }) {
   const set = useGameStore((s) => s.setSceneReady);
+  const frames = useRef(0);
+  // Let the first scene draw compile/upload its materials before enabling input.
+  useFrame(({ invalidate }) => {
+    frames.current++;
+    if (frames.current === 1) invalidate();
+    if (frames.current === 2) set(true);
+  });
   useEffect(() => {
-    set(true);
     return () => {
       if (
         useGameStore.getState().mode === mode &&

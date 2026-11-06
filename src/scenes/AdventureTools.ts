@@ -35,6 +35,7 @@ function cylinder(
 export function makeAdventureTool(id: string) {
   const g = new THREE.Group();
   g.name = "Adventure_tool_" + id;
+  g.raycast = () => g.visible ? undefined : false;
   g.userData.interaction = "offer";
   const rose = material("#d785a9"),
     cream = material("#fff0d1"),
