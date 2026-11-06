@@ -896,3 +896,27 @@ controllers retain their original bind positions, and the rounded upper-arm
 surfaces overlap the actual sleeves. Existing baking/prop contacts and all
 19 clips pass. Blender source commit: `8f56330` in the private repository.
 The six-project download includes the new sculpt and its reproducible script.
+
+Publication verified: **v2.2.1**, candidate `85806115ca355716144c159273e4429604de104d`.
+All **212 automated checks** and **18 browser suites** passed. All four browser
+groups and the Pages deployment succeeded in
+[run 42271529748](https://github.com/hmlim123/hellokittygame/actions/runs/42271529748),
+publishing the exact immutable artifact that passed the complete release gate.
+
+Published: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=natural-paws-30>.
+All six characters were captured and reviewed from front and profile in the
+real browser; Blender front/profile/three-quarter renders were reviewed too.
+The new mesh has smooth rounded side arms, without the previous inward curl
+or the crease seen in a rejected shoulder-pinning prototype. The browser checks
+verify that the unoccupied paw remains down during a wave. Photo Wave → Still
+and Wave → Wink resolve the complete resting pose. Optional flowers retain
+their grip and survive reload. 320px touch/reduced motion and all five expressions
+pass with zero page errors. Local baking/contact, tray, replay and both NPC
+greetings passed again after the correction. Nancy’s progress and letter remain.
+Physical phone/Mac Safari testing remains pending.
+
+Blender source: `8f563301af67f2b652d49b6ae93c7eb6bee1acd1`.
+Verified six-project archive: `/workspace/hello-kitty-natural-paws-blenders.zip`.
+The website archive contains the tested candidate `85806115ca355716144c159273e4429604de104d`.
+Review: `docs/kitty-natural-paws-front.png`, `docs/kitty-natural-paws-side.png`,
+`docs/kitty-natural-paws-game-front.png`, `docs/kitty-natural-paws-game-side.png`.
