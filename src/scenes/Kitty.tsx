@@ -159,6 +159,9 @@ export function Kitty({
     b.gesture = null;
     b.headIdle.rotation.set(0, 0, 0);
     b.armIdle.forEach((arm: THREE.Group) => arm.rotation.set(0, 0, 0));
+    b.restWeights = [1, 1];
+    b.restWeight = 1;
+    updateBlender(hero, 0, { idle: false, reduced: false });
     if (photoPose === "wave") {
       reactBlender(hero, "wave", false);
       updateBlender(hero, 0.72, { idle: false, reduced: false });
@@ -172,12 +175,14 @@ export function Kitty({
       reactBlender(hero, photoPose, false);
       updateBlender(hero, b.actions[photoPose].getClip().duration / 2, { idle: false, reduced: false });
     }
-    if (photoPose === "still") updateBlender(hero, 0, { idle: false, reduced: false });
+    if (photoPose === "still" || photoPose === "wink") updateBlender(hero, 1, { idle: false, reduced: false });
   }, [hero, photoPose]);
   useFrame((state, dt) => {
     const rig = hero.userData.blender;
     state.gl.domElement.dataset.plush = rig.plush || "classic";
     state.gl.domElement.dataset.emptyPawWeight = String(rig.restWeight);
+    state.gl.domElement.dataset.emptyPawLeft = String(rig.restWeights[0]);
+    state.gl.domElement.dataset.emptyPawRight = String(rig.restWeights[1]);
     state.gl.domElement.dataset.heldItem = hero.userData.equipment?.item || "none";
     hero.updateWorldMatrix(true, false);
     topPoint

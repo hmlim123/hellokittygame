@@ -21,6 +21,7 @@ if variant:
     if s.get('plush_ear_shape'):bpy.data.objects['CTRL_Root']['plush_ear_shape']=s['plush_ear_shape']
     bpy.data.objects['CTRL_Root']['plush_body_height']=s.get('plush_body_height',4.56808)
 bpy.data.objects['CTRL_Root']['expression_library']=s.get('expression_library','legacy')
+bpy.data.objects['CTRL_Root']['empty_paw_pose']=s.get('empty_paw_pose','legacy')
 s.frame_set(1)
 # Compatibility for earlier curled-pile source projects: omit the occluded
 # inner layer beneath a hood. Corrected fleece editions have no pile meshes.
@@ -107,7 +108,7 @@ if not variant:
 source=Path(bpy.data.filepath)
 try:commit=subprocess.check_output(['git','-C',str(source.parent),'rev-parse','HEAD'],text=True).strip()
 except (subprocess.CalledProcessError,FileNotFoundError):commit=None
-meta={'expression_library':s.get('expression_library'),'source_repository':'https://github.com/hmlim123/hellokitty3D',
+meta={'empty_paw_pose':s.get('empty_paw_pose'),'expression_library':s.get('expression_library'),'source_repository':'https://github.com/hmlim123/hellokitty3D',
       'source_commit':commit,'source_file':source.name,'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'fps':s.render.fps,
       'clips':ranges,'notes':'Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets.'}
 if variant:meta.update(variant=variant,title=s.get('plush_title'),body_height=s.get('plush_body_height'),surface=s.get('plush_surface'),ear_shape=s.get('plush_ear_shape'),notes='Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 19 named clips: 13 existing motions, five mouthless expressions and a relaxed-paw showcase. Sculpted empty-paw shape and happy-eye morphs. No exposed curl geometry. Studio excluded.')

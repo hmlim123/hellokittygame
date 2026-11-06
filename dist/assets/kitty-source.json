@@ -1,9 +1,10 @@
 {
+  "empty_paw_pose": "soft-sides-v2",
   "expression_library": "expressions-v1",
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "4e189995057db8ca5efbabf1409159a1559b1f00",
+  "source_commit": "8f563301af67f2b652d49b6ae93c7eb6bee1acd1",
   "source_file": "hello_kitty_natural.blend",
-  "source_sha256": "73528bd2457b8f6cc9b59e8e89f0f15a5cfa55a5ad3b6cd759481519a2c4cb55",
+  "source_sha256": "f80ec333b7c49ff5c855e1f5846b69a08312fc221b29637bad578a0d8abbf279",
   "fps": 24,
   "clips": {
     "dance": [
@@ -83,5 +84,5 @@
       1141
     ]
   },
-  "notes": "Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets. Expressions-v1 adds five authored mouthless facial clips, Warmth blush and EmptyRest fused-arm shape; 19 clips total. Optional bouquet defaults to hidden."
+  "notes": "Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets."
 }

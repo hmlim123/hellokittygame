@@ -1,10 +1,10 @@
 {
-  "version": 4,
+  "version": 5,
   "models": [
     {
       "id": "cloud",
       "file": "hello_kitty_plush_cloud.blend",
-      "sha256": "8c5511f5587cd5276162a95b903890b5269ffa84834dc8992625f9b53a871849",
+      "sha256": "81eb23d1fc325e08099143e9494c44421f08f2dab86bbb197818579a7e1e9523",
       "preview": "hello_kitty_plush_cloud.png",
       "fps": 24,
       "dance": [
@@ -45,12 +45,13 @@
           1141
         ]
       },
-      "default_empty_frame": 1105
+      "default_empty_frame": 1105,
+      "empty_paw_pose": "soft-sides-v2"
     },
     {
       "id": "witch",
       "file": "hello_kitty_plush_witch.blend",
-      "sha256": "8b6c6ce9eefd434d10cfdbd74fb626f3c7d0c547d6f9d216d69a55e1d1697c82",
+      "sha256": "be2ae548ca568a2a0a6c014ee32b6cc2916005b5e0bc422339732f83edb5c849",
       "preview": "hello_kitty_plush_witch.png",
       "fps": 24,
       "dance": [
@@ -91,12 +92,13 @@
           1141
         ]
       },
-      "default_empty_frame": 1105
+      "default_empty_frame": 1105,
+      "empty_paw_pose": "soft-sides-v2"
     },
     {
       "id": "baby",
       "file": "hello_kitty_plush_baby.blend",
-      "sha256": "89c6509a0ab632172b6c726a3862319e0c47db46a56cb586274b99befeb11667",
+      "sha256": "f474e0694f8f19c90b70ab41594bc800f73ab743f6f8b17a7c47d3b19d166f8d",
       "preview": "hello_kitty_plush_baby.png",
       "fps": 24,
       "dance": [
@@ -137,12 +139,13 @@
           1141
         ]
       },
-      "default_empty_frame": 1105
+      "default_empty_frame": 1105,
+      "empty_paw_pose": "soft-sides-v2"
     },
     {
       "id": "kitten",
       "file": "hello_kitty_plush_kitten.blend",
-      "sha256": "2563413903247b03a13b6a2487b4c31026c26e735d46d90c7f04337e2332e066",
+      "sha256": "ee4a831d857ab80c40c05de3c23fcee64f2f65395b951c5cd72e5ff3defb3280",
       "preview": "hello_kitty_plush_kitten.png",
       "fps": 24,
       "dance": [
@@ -183,12 +186,13 @@
           1141
         ]
       },
-      "default_empty_frame": 1105
+      "default_empty_frame": 1105,
+      "empty_paw_pose": "soft-sides-v2"
     },
     {
       "id": "bunny",
       "file": "hello_kitty_plush_bunny.blend",
-      "sha256": "ebbc82ad7e26e16e579048aee31402feb62369fe4e7b69100c0167cfdb6147ff",
+      "sha256": "df5810dcf44cfa76ecb333c7b97aef098ef899920a544fdd5f44f2a59a799880",
       "preview": "hello_kitty_plush_bunny.png",
       "fps": 24,
       "dance": [
@@ -230,11 +234,13 @@
           1141
         ]
       },
-      "default_empty_frame": 1105
+      "default_empty_frame": 1105,
+      "empty_paw_pose": "soft-sides-v2"
     }
   ],
-  "notes": "Five smooth matte editable Blender editions with five new mouthless eye expressions, a sculpted relaxed empty-paw posture and the original 13 performances. Optional flowers are hidden by default. Rounded silver rabbit ears retained.",
+  "notes": "Five smooth matte editable editions with independently sculpted, softly rounded side-rest arms. Empty paws do not retain the bouquet-holding curl. All 19 clips, eye expressions, original grip geometry, sockets and rounded silver rabbit ears retained.",
   "surface": "smooth-matte",
   "expression_library": "expressions-v1",
-  "default_item": "none"
+  "default_item": "none",
+  "empty_paw_pose": "soft-sides-v2"
 }

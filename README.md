@@ -9,6 +9,17 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Corrected empty-paw posture · v2.2.1
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=natural-paws-30>.
+
+All six Blender models now have a separately sculpted, rounded resting arm at
+each side. Empty paws sit beside the dress and closer to the body in profile.
+Head pats, tilts, bows and empty-paw dances retain the resting shape; a wave
+moves one paw while the other stays down. Held items and baking keep their
+original grip and contact poses. The photo corner resolves the complete pose
+when switching back to Still or Wink. Progress and Nancy’s letter remain intact.
+
 ## Expressions and relaxed paws · v2.2.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=expressions-29>.

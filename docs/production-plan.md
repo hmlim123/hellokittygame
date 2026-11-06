@@ -860,3 +860,39 @@ review remains pending; browser emulation is not physical-device verification.
 
 Review images: `docs/nancy-expression-cloud.png`,
 `docs/nancy-expression-postcard.png`.
+
+### Corrected resting arm silhouette — v2.2.1
+
+The previous EmptyRest only rotated the old bouquet-holding arm. Review from
+front and profile confirmed that the paws still curled inward. The corrected
+shape resculpts the arm as a smooth, rounded oval beside the skirt, closer to
+the body in profile. The complete surface is reshaped while the shoulder
+controller stays fixed and the upper arm overlaps its actual sleeve. Keeping
+a large patch of the old surface produced a crease and was rejected in review.
+Shoulder connectivity is now checked against the actual sleeve volume and
+fixed controller, rather than assuming a particular vertex stays unchanged.
+Original Basis/grip meshes, contact keys, sockets, all nineteen clips and the
+six editions’ costumes/rounded rabbit ears remain.
+
+Runtime pose selection also keeps empty paws down during head pats, tilts,
+kisses, bows, head-only surprises, dances and celebrations. A wave uses the
+authored waving paw while the other paw rests at the side. Held props and
+baking retain their established contact poses. Photo Still/Wink resolves the
+complete rest/held pose after switching, rather than freezing an intermediate
+blend. No item default, gift marker, story progress or letter is reset.
+
+Verification includes actual palm coordinates in each of the six exported
+models: the old curl remained near x ±0.318 and front z 0.321 in game units.
+The acceptance check requires the empty palms to sit beside the skirt at
+|x| > 0.46 and back from the chest at z < 0.26, below y 0.66. It also checks
+real shoulder/sleeve overlap and independent paw selection during a wave.
+Front/profile renders and real-browser rotation captures supplement these
+geometric checks. Full verification and publication are pending below.
+
+All **212 automated checks** pass (88 Node/model/domain, 124 Vitest).
+The corrected palms sit at approximately x ±0.510, y 0.603, front z 0.193
+in game units (exact measurements are checked per edition). Both shoulder
+controllers retain their original bind positions, and the rounded upper-arm
+surfaces overlap the actual sleeves. Existing baking/prop contacts and all
+19 clips pass. Blender source commit: `8f56330` in the private repository.
+The six-project download includes the new sculpt and its reproducible script.

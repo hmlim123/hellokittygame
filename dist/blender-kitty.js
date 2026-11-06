@@ -10,7 +10,7 @@ export function blenderExpression(hero){
 }
 export async function loadBlenderKitty(plush){
   plush=normalizePlush(plush);
-  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=expressions-29':'./assets/hello-kitty.glb?v=expressions-29',import.meta.url).href);
+  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=natural-paws-30':'./assets/hello-kitty.glb?v=natural-paws-30',import.meta.url).href);
   return {scene:gltf.scene,clips:blenderClips(gltf.animations)};
 
 }
@@ -100,7 +100,7 @@ export function makeBlenderKitty(asset,id=0){
     const raycast=o.raycast;o.raycast=function(ray,hits){if(this.visible)raycast.call(this,ray,hits);};o.visible=false;
   });
   for(const o of morphs){const i=o.morphTargetDictionary.EmptyRest;if(i!==undefined)o.morphTargetInfluences[i]=1;}
-  hero.userData={kind:'kitty',id,blender:{pile,pileVisible:true,plush,modelHeight:(bounds.max.y-floor)*scale,model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,resetFace,restWeight:1,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:plush?'hellokitty3D/hello_kitty_plush_'+plush+'.blend':'hellokitty3D/hello_kitty_natural.blend'};
+  hero.userData={kind:'kitty',id,blender:{pile,pileVisible:true,plush,modelHeight:(bounds.max.y-floor)*scale,model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,resetFace,restWeight:1,restWeights:[1,1],current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:plush?'hellokitty3D/hello_kitty_plush_'+plush+'.blend':'hellokitty3D/hello_kitty_natural.blend'};
   return hero;
 }
 export function setBlenderAttention(hero,x=0,y=0){
@@ -139,12 +139,20 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   }
   if(b.reducedWink&&b.age>1.2){b.resetEyes(false);b.reducedWink=false;}
   if(b.reducedFace&&b.age>1.2){b.resetFace();b.reducedFace=null;}
-  const facial=b.current&&FACE_SHAPES[b.current.getClip().name];
+  const clip=b.current?.getClip().name;
   const empty=(!hero.userData.equipment?.item||hero.userData.equipment.item==='none')&&!b.heldAttachment;
-  const targetRest=empty&&!b.inputAction&&(!b.current||facial)&&!b.gesture?1:0;
-  b.restWeight+=(targetRest-b.restWeight)*(1-Math.exp(-dt*16));
-  if(Math.abs(b.restWeight-targetRest)<.0001)b.restWeight=targetRest;
-  for(const o of b.morphs){const i=o.morphTargetDictionary.EmptyRest;if(i!==undefined)o.morphTargetInfluences[i]=b.restWeight;}
+  // Head pats, looking, bowing and dancing do not need a bouquet grip. The
+  // unoccupied paw also stays at her side while the other paw waves.
+  const relaxed=!clip||FACE_SHAPES[clip]||['dance','celebrate','surprise','bow','relax'].includes(clip);
+  const touching=['hug','tickle'].includes(b.gesture);
+  const available=empty&&!b.inputAction&&!touching;
+  const targets=available?(clip==='wave'?[0,1]:relaxed?[1,1]:[0,0]):[0,0];
+  for(let side=0;side<2;side++){
+    b.restWeights[side]+=(targets[side]-b.restWeights[side])*(1-Math.exp(-dt*16));
+    if(Math.abs(b.restWeights[side]-targets[side])<.0001)b.restWeights[side]=targets[side];
+  }
+  b.restWeight=(b.restWeights[0]+b.restWeights[1])/2;
+  for(const o of b.morphs){const i=o.morphTargetDictionary.EmptyRest;if(i!==undefined)o.morphTargetInfluences[i]=b.restWeights[o.name==='White_arm_-1'?0:1];}
   const smooth=1-Math.exp(-dt*5),attentive=idle&&!reduced&&!b.current;
   b.look.lerp(attentive?b.target:new THREE.Vector2(),smooth);
   b.headIdle.rotation.set(-b.look.y*.065,b.look.x*.10,0);

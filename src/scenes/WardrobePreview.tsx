@@ -1,7 +1,7 @@
 import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import { AdaptiveQuality } from "./AdaptiveQuality";
 import { Suspense, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { ACESFilmicToneMapping } from "three";
 import { Kitty } from "./Kitty";
@@ -11,6 +11,9 @@ function PreviewLabel({ label }: { label: string }) {
   useEffect(() => {
     gl.domElement.setAttribute("aria-label", `${label}. Drag to rotate Kitty.`);
   }, [gl, label]);
+  useFrame(({ camera }) => {
+    gl.domElement.dataset.viewAngle = String(Math.atan2(camera.position.x, camera.position.z));
+  });
   return null;
 }
 export default function WardrobePreview({

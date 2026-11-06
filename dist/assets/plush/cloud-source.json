@@ -1,9 +1,10 @@
 {
+  "empty_paw_pose": "soft-sides-v2",
   "expression_library": "expressions-v1",
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "4e189995057db8ca5efbabf1409159a1559b1f00",
+  "source_commit": "8f563301af67f2b652d49b6ae93c7eb6bee1acd1",
   "source_file": "hello_kitty_plush_cloud.blend",
-  "source_sha256": "8c5511f5587cd5276162a95b903890b5269ffa84834dc8992625f9b53a871849",
+  "source_sha256": "81eb23d1fc325e08099143e9494c44421f08f2dab86bbb197818579a7e1e9523",
   "fps": 24,
   "clips": {
     "dance": [
@@ -83,7 +84,7 @@
       1141
     ]
   },
-  "notes": "Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded. Expressions-v1 adds five authored mouthless facial clips, Warmth blush and EmptyRest fused-arm shape; 19 clips total. Optional bouquet defaults to hidden.",
+  "notes": "Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 19 named clips: 13 existing motions, five mouthless expressions and a relaxed-paw showcase. Sculpted empty-paw shape and happy-eye morphs. No exposed curl geometry. Studio excluded.",
   "variant": "cloud",
   "title": "Strawberry Cloud",
   "body_height": 4.56808,
