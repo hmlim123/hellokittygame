@@ -1,8 +1,9 @@
 {
+  "expression_library": "expressions-v1",
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "62b3195f3d759a380c1c5fb3932d29b90958b91d",
+  "source_commit": "4e189995057db8ca5efbabf1409159a1559b1f00",
   "source_file": "hello_kitty_plush_baby.blend",
-  "source_sha256": "f4daa4bf8efefd4037fdd580dea4c207c91da2e0ead08ce4ab21c1b16e13d8eb",
+  "source_sha256": "89c6509a0ab632172b6c726a3862319e0c47db46a56cb586274b99befeb11667",
   "fps": 24,
   "clips": {
     "dance": [
@@ -56,9 +57,33 @@
     "handoff": [
       655,
       727
+    ],
+    "sleepy": [
+      733,
+      805
+    ],
+    "surprised": [
+      805,
+      853
+    ],
+    "softHappy": [
+      853,
+      925
+    ],
+    "shy": [
+      925,
+      997
+    ],
+    "curious": [
+      997,
+      1069
+    ],
+    "relax": [
+      1069,
+      1141
     ]
   },
-  "notes": "Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.",
+  "notes": "Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded. Expressions-v1 adds five authored mouthless facial clips, Warmth blush and EmptyRest fused-arm shape; 19 clips total. Optional bouquet defaults to hidden.",
   "variant": "baby",
   "title": "Baby Blossom",
   "body_height": 4.56808,

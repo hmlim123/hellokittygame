@@ -754,3 +754,45 @@ Review: `docs/nancy-friend-shelf.png`, `docs/nancy-friend-story.png`,
 `docs/nancy-friend-story-phone.png`. Nancy’s existing invitations, letter,
 wardrobe, adventure progress and gift marker remain. Physical phone/Mac Safari
 verification remains pending.
+
+### Expressions and relaxed empty paws — v2.2.0
+
+All six actual Blender sources now contain five new mouthless facial clips:
+sleepy, surprised, happy squint, bashful and curious. Real eye shape keys,
+small authored head movements and a surface-projected blush supply the looks.
+The existing thirteen clips and baking sockets remain; an extra relaxed-paw
+showcase brings each library to nineteen clips. The fused arm meshes carry an
+EmptyRest shape anchored at the shoulder. Sources open at frame 1105 with
+lowered empty paws; the optional bouquet is hidden. Silver Bunny's rounded
+ears and the smooth matte materials are retained.
+
+The game blends the empty-paw shape after animation mixing, and uses the
+established grip during a hand performance, equipped item or baking attachment.
+Faces work with either pose. More little expressions is a folded secondary
+control in Play together and Inventory, with matching static photo poses.
+Intermediate friendship-story moments use the appropriate new face. Reduced
+motion presents a brief static face and returns to normal. No fourth main
+room button was added.
+
+Fresh saves start with empty paws. The previous automatic bouquet is cleared
+once using a separate cosmetic migration marker; other items remain. Flowers
+chosen afterward survive reload and future openings. The permanent gift-start
+marker, letter, earned invitations, wardrobe and adventure/story progress are
+retained. Classic room/adventure share the migration. The exporter retains
+static bind channels with two endpoints instead of repeated frame samples,
+keeping the six lazy models within their existing size budgets (Original's
+expanded 19-clip budget is 3.2MB; the five editions remain below 4MB each).
+
+Blender source commit: `4e18999` in the private hellokitty3D repository.
+All six full game models and shelf miniatures are exported from the updated
+source files, with hashes recorded. The downloadable Blender bundle includes
+Original Kitty and all five editions. Verification and publication follow.
+
+Local verification: all **210 automated checks** pass (87 Node/model/domain,
+123 Vitest). The new real-browser suite exercised five faces on all six models,
+restoration/interruptions, held-flower posture, selection/reload, empty-paw
+return, a saved bashful postcard, 320px touch and static reduced motion with
+zero page errors. Source portraits and browser captures were visually reviewed,
+including Silver Bunny's ears and the lowered paws. The full release gate now
+covers **18 suites** across the same four isolated groups. Physical phone and
+Mac Safari remain unverified. Publication is pending the full release gate.

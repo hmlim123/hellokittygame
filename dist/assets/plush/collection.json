@@ -1,10 +1,10 @@
 {
-  "version": 3,
+  "version": 4,
   "models": [
     {
       "id": "cloud",
       "file": "hello_kitty_plush_cloud.blend",
-      "sha256": "6bec268e743eb46b2f2631eb334845d786b9579974bc708c401c76c35fe3d153",
+      "sha256": "8c5511f5587cd5276162a95b903890b5269ffa84834dc8992625f9b53a871849",
       "preview": "hello_kitty_plush_cloud.png",
       "fps": 24,
       "dance": [
@@ -18,12 +18,39 @@
       "happy_expression": [
         391,
         451
-      ]
+      ],
+      "expressions": {
+        "sleepy": [
+          733,
+          805
+        ],
+        "surprised": [
+          805,
+          853
+        ],
+        "softHappy": [
+          853,
+          925
+        ],
+        "shy": [
+          925,
+          997
+        ],
+        "curious": [
+          997,
+          1069
+        ],
+        "relax": [
+          1069,
+          1141
+        ]
+      },
+      "default_empty_frame": 1105
     },
     {
       "id": "witch",
       "file": "hello_kitty_plush_witch.blend",
-      "sha256": "5a3aba55f350fdcf726edcb4ccfc97d1152baaeecaafc0ace2e760b3a86e5364",
+      "sha256": "8b6c6ce9eefd434d10cfdbd74fb626f3c7d0c547d6f9d216d69a55e1d1697c82",
       "preview": "hello_kitty_plush_witch.png",
       "fps": 24,
       "dance": [
@@ -37,12 +64,39 @@
       "happy_expression": [
         391,
         451
-      ]
+      ],
+      "expressions": {
+        "sleepy": [
+          733,
+          805
+        ],
+        "surprised": [
+          805,
+          853
+        ],
+        "softHappy": [
+          853,
+          925
+        ],
+        "shy": [
+          925,
+          997
+        ],
+        "curious": [
+          997,
+          1069
+        ],
+        "relax": [
+          1069,
+          1141
+        ]
+      },
+      "default_empty_frame": 1105
     },
     {
       "id": "baby",
       "file": "hello_kitty_plush_baby.blend",
-      "sha256": "f4daa4bf8efefd4037fdd580dea4c207c91da2e0ead08ce4ab21c1b16e13d8eb",
+      "sha256": "89c6509a0ab632172b6c726a3862319e0c47db46a56cb586274b99befeb11667",
       "preview": "hello_kitty_plush_baby.png",
       "fps": 24,
       "dance": [
@@ -56,12 +110,39 @@
       "happy_expression": [
         391,
         451
-      ]
+      ],
+      "expressions": {
+        "sleepy": [
+          733,
+          805
+        ],
+        "surprised": [
+          805,
+          853
+        ],
+        "softHappy": [
+          853,
+          925
+        ],
+        "shy": [
+          925,
+          997
+        ],
+        "curious": [
+          997,
+          1069
+        ],
+        "relax": [
+          1069,
+          1141
+        ]
+      },
+      "default_empty_frame": 1105
     },
     {
       "id": "kitten",
       "file": "hello_kitty_plush_kitten.blend",
-      "sha256": "ab467500a7ca99a938137185e8eaa34206fc1b9ce4c8a44520cd97554333295d",
+      "sha256": "2563413903247b03a13b6a2487b4c31026c26e735d46d90c7f04337e2332e066",
       "preview": "hello_kitty_plush_kitten.png",
       "fps": 24,
       "dance": [
@@ -75,12 +156,39 @@
       "happy_expression": [
         391,
         451
-      ]
+      ],
+      "expressions": {
+        "sleepy": [
+          733,
+          805
+        ],
+        "surprised": [
+          805,
+          853
+        ],
+        "softHappy": [
+          853,
+          925
+        ],
+        "shy": [
+          925,
+          997
+        ],
+        "curious": [
+          997,
+          1069
+        ],
+        "relax": [
+          1069,
+          1141
+        ]
+      },
+      "default_empty_frame": 1105
     },
     {
       "id": "bunny",
       "file": "hello_kitty_plush_bunny.blend",
-      "sha256": "8e67eb03cfe6160570e27b2877e72fbe10523c27591de1192d5079c960c55f11",
+      "sha256": "ebbc82ad7e26e16e579048aee31402feb62369fe4e7b69100c0167cfdb6147ff",
       "preview": "hello_kitty_plush_bunny.png",
       "fps": 24,
       "dance": [
@@ -95,9 +203,38 @@
         391,
         451
       ],
-      "ear_shape": "rounded-curved-v2"
+      "ear_shape": "rounded-curved-v2",
+      "expressions": {
+        "sleepy": [
+          733,
+          805
+        ],
+        "surprised": [
+          805,
+          853
+        ],
+        "softHappy": [
+          853,
+          925
+        ],
+        "shy": [
+          925,
+          997
+        ],
+        "curious": [
+          997,
+          1069
+        ],
+        "relax": [
+          1069,
+          1141
+        ]
+      },
+      "default_empty_frame": 1105
     }
   ],
-  "notes": "Five editable animated Blender editions with smooth matte materials and original smooth sculpt surfaces. No fleece normal/bump maps or nap relief. Rounded rabbit ears, no extra hood shell; all 13 motions, morphs and sockets retained.",
-  "surface": "smooth-matte"
+  "notes": "Five smooth matte editable Blender editions with five new mouthless eye expressions, a sculpted relaxed empty-paw posture and the original 13 performances. Optional flowers are hidden by default. Rounded silver rabbit ears retained.",
+  "surface": "smooth-matte",
+  "expression_library": "expressions-v1",
+  "default_item": "none"
 }

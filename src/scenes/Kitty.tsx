@@ -8,6 +8,8 @@ import { readKittyAsset } from "./kitty-assets";
 import * as THREE from "three";
 import {
   blenderClips,
+  blenderExpression,
+  FACE_SHAPES,
   followBlenderActivity,
   makeBlenderKitty,
   updateBlender,
@@ -44,7 +46,7 @@ interface KittyProps {
   onTouch?: (part: string) => void;
   performance?: { id: number; kind: Gesture };
   locomotion?: RefObject<{ speed: number }>;
-  photoPose?: "still" | "wave" | "cuddle" | "wink";
+  photoPose?: import("./PhotoCorner").PhotoPose;
 }
 export function Kitty({
   id = 0,
@@ -130,6 +132,7 @@ export function Kitty({
     },
     [hero],
   );
+  useEffect(() => { hero.userData.blender.heldAttachment = holding || null; }, [hero, holding]);
   useEffect(() => {
     if (equipment) applyHeroEquipment(hero, equipment);
     invalidate();
@@ -151,6 +154,7 @@ export function Kitty({
     const b = hero.userData.blender;
     b.mixer.stopAllAction();
     b.resetEyes(false);
+    b.resetFace();
     b.current = null;
     b.gesture = null;
     b.headIdle.rotation.set(0, 0, 0);
@@ -164,10 +168,17 @@ export function Kitty({
       updateBlender(hero, 0.65, { idle: true, reduced: false });
     }
     if (photoPose === "wink") b.resetEyes(true);
+    if (photoPose in FACE_SHAPES) {
+      reactBlender(hero, photoPose, false);
+      updateBlender(hero, b.actions[photoPose].getClip().duration / 2, { idle: false, reduced: false });
+    }
+    if (photoPose === "still") updateBlender(hero, 0, { idle: false, reduced: false });
   }, [hero, photoPose]);
   useFrame((state, dt) => {
     const rig = hero.userData.blender;
     state.gl.domElement.dataset.plush = rig.plush || "classic";
+    state.gl.domElement.dataset.emptyPawWeight = String(rig.restWeight);
+    state.gl.domElement.dataset.heldItem = hero.userData.equipment?.item || "none";
     hero.updateWorldMatrix(true, false);
     topPoint
       .set(0, rig.modelHeight, 0)
@@ -191,17 +202,7 @@ export function Kitty({
         rig.pileVisible = detailed;
       }
     }
-    const expression = () => {
-      const has = (name: string) =>
-        rig.morphs.some((mesh: THREE.Mesh) => {
-          const index = mesh.morphTargetDictionary?.[name];
-          return (
-            index !== undefined &&
-            (mesh.morphTargetInfluences?.[index] || 0) > 0.75
-          );
-        });
-      return has("JoyClosed") ? "happy" : has("Closed") ? "wink" : "open";
-    };
+    const expression = () => blenderExpression(hero);
     if (photoPose) {
       state.gl.domElement.dataset.expression = expression();
       return;

@@ -1,3 +1,4 @@
+import { Expressions } from "./Expressions";
 import {
   chooseShelfFriend,
   cancelFriendSelection,
@@ -209,6 +210,7 @@ export function TogetherPanel() {
           </button>
         ))}
       </div>
+      <Expressions onPreview={play} />
       <div className="present-play">
         <span>
           In Kitty’s paws · {ITEMS.find((i) => i.id === equipment.item)?.name}

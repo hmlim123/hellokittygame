@@ -44,6 +44,11 @@ def split_clips(path, ranges, fps=24):
                             result=[x+(y-x)*ratio for x,y in zip(a,b)];length=math.sqrt(sum(x*x for x in result));result=[x/length for x in result]
                     else:result=[x+(y-x)*ratio for x,y in zip(a,b)]
                     output.extend(result)
+                # Keep a bind channel even when it is static, but two identical
+                # endpoints are enough. This preserves blend/reset behavior and
+                # avoids resampling every inactive face/costume in every clip.
+                if len(selected)>2 and all(abs(output[i]-output[i%stride])<1e-8 for i in range(stride,len(output))):
+                    selected=[selected[0],selected[-1]];output=output[:stride]+output[-stride:]
                 index=len(clip['samplers']);clip['samplers'].append({'input':add([t-start for t in selected],'SCALAR',1),'output':add(output,doc['accessors'][sm['output']]['type'],width),'interpolation':'LINEAR'})
                 clip['channels'].append({'sampler':index,'target':channel['target']})
         animations.append(clip)

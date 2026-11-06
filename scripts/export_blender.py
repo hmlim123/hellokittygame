@@ -20,6 +20,7 @@ if variant:
     bpy.data.objects['CTRL_Root']['plush_surface']=s.get('plush_surface','legacy-curled-pile')
     if s.get('plush_ear_shape'):bpy.data.objects['CTRL_Root']['plush_ear_shape']=s['plush_ear_shape']
     bpy.data.objects['CTRL_Root']['plush_body_height']=s.get('plush_body_height',4.56808)
+bpy.data.objects['CTRL_Root']['expression_library']=s.get('expression_library','legacy')
 s.frame_set(1)
 # Compatibility for earlier curled-pile source projects: omit the occluded
 # inner layer beneath a hood. Corrected fleece editions have no pile meshes.
@@ -43,14 +44,14 @@ for obj in character:
     for mod in list(obj.modifiers):
         if mod.type=='SUBSURF':obj.modifiers.remove(mod)
         else:bpy.ops.object.modifier_apply(modifier=mod.name)
-    if obj.type=='MESH' and obj not in [eye,wink] and not obj.data.shape_keys and not obj.get('plush_fur') and not obj.get('plush_ear_shape') and not obj.get('plush_hood_surface') and len(obj.data.polygons)>300:
+    if obj.type=='MESH' and obj not in [eye,wink] and not obj.data.shape_keys and not obj.get('plush_fur') and not obj.get('plush_ear_shape') and not obj.get('plush_hood_surface') and not obj.get('expression_detail') and len(obj.data.polygons)>300:
         dec=obj.modifiers.new('Web mesh reduction','DECIMATE');dec.ratio=.35
         bpy.ops.object.modifier_apply(modifier=dec.name)
     obj.select_set(False)
 # Reacquire converted curves, retaining their original mesh and parent transforms.
 eye=bpy.data.objects['Eye right'];wink=bpy.data.objects['Wink — closed eye']
 for obj,inverted in [(eye,False),(wink,True)]:
-    obj.shape_key_add(name='Basis')
+    if not obj.data.shape_keys:obj.shape_key_add(name='Basis')
     hidden=obj.shape_key_add(name='Closed' if not inverted else 'Hidden')
     center=sum((v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
     for v in hidden.data:v.co=center+(v.co-center)*.0001
@@ -60,7 +61,8 @@ for obj,inverted in [(eye,False),(wink,True)]:
         hidden.value=1-closed if inverted else closed
         hidden.keyframe_insert('value',frame=frame)
 if variant:
-    left=bpy.data.objects['Eye left'];left.shape_key_add(name='Basis')
+    left=bpy.data.objects['Eye left']
+    if not left.data.shape_keys:left.shape_key_add(name='Basis')
     closed=left.shape_key_add(name='JoyClosed')
     center=sum((v.co for v in left.data.vertices),Vector())/len(left.data.vertices)
     for v in closed.data:v.co=center+(v.co-center)*.0001
@@ -105,9 +107,9 @@ if not variant:
 source=Path(bpy.data.filepath)
 try:commit=subprocess.check_output(['git','-C',str(source.parent),'rev-parse','HEAD'],text=True).strip()
 except (subprocess.CalledProcessError,FileNotFoundError):commit=None
-meta={'source_repository':'https://github.com/hmlim123/hellokitty3D',
+meta={'expression_library':s.get('expression_library'),'source_repository':'https://github.com/hmlim123/hellokitty3D',
       'source_commit':commit,'source_file':source.name,'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'fps':s.render.fps,
       'clips':ranges,'notes':'Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets.'}
-if variant:meta.update(variant=variant,title=s.get('plush_title'),body_height=s.get('plush_body_height'),surface=s.get('plush_surface'),ear_shape=s.get('plush_ear_shape'),notes='Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 13 named motions and happy-eye morphs. No exposed curl geometry. Studio excluded.')
+if variant:meta.update(variant=variant,title=s.get('plush_title'),body_height=s.get('plush_body_height'),surface=s.get('plush_surface'),ear_shape=s.get('plush_ear_shape'),notes='Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 19 named clips: 13 existing motions, five mouthless expressions and a relaxed-paw showcase. Sculpted empty-paw shape and happy-eye morphs. No exposed curl geometry. Studio excluded.')
 (OUT/'plush'/f'{variant}-source.json' if variant else OUT/'kitty-source.json').write_text(json.dumps(meta,indent=2)+'\n')
 print('BLENDER_GAME_ASSETS_EXPORTED',str(asset_file),asset_file.stat().st_size)

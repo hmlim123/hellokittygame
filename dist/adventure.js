@@ -1,3 +1,4 @@
+import {startEmptyPaws} from './empty-paws.js';
 import {renderQuestJournal,questJournal} from './adventure-quests.js?v=adventure-7';
 import * as THREE from 'three';
 import {CanvasFallback} from './CanvasFallback.js';
@@ -17,7 +18,8 @@ const state=normalizeAdventure(read(KEY)),sound=new RoomSound();
 let loadedAsset,preview;
 const storage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
 let wardrobe=readWardrobe(storage,{quest:state});
-const equipment={...wardrobe.equipment};
+const equipment={...startEmptyPaws(storage,wardrobe.equipment)};
+wardrobe.equipment=equipment;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const encounters=new AdventureEncounters(),effects=new DiscoveryEffects($('effects'),{reduced});
 let pendingEncounter=true,discoveryTime=0,storySource=null;

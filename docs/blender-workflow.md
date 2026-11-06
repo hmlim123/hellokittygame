@@ -158,3 +158,30 @@ and checksum are embedded; the gate checks them against each main model.
 The full animated models remain in use for playing with a selected friend,
 arrival animations and the new friendship stories. The shelf loads only the
 invited miniatures and keeps them separate from outfit recoloring.
+
+### Mouthless expressions and empty paws (v2.2.0)
+
+All six Blender projects open at frame 1105, with the optional bouquet hidden
+and the actual fused arm meshes sculpted into a relaxed EmptyRest shape.
+The shoulder cap remains anchored. Original holding/baking frames 1–727
+retain a zero value for this shape; paw sockets and the 13 existing clips remain.
+
+New 24fps ranges: sleepy 733–805, surprised 805–853, happy squint 853–925,
+bashful 925–997, curious 997–1069, relaxed-paw showcase 1069–1141.
+Eye meshes contain Sleepy, Surprise, SoftSmile, Shy and Curious keys.
+A curved projected cheek patch carries Warmth. Existing wink/happy targets
+are added in the web export alongside these keys. The runtime blends EmptyRest
+after the mixer, using the authored grip whenever Kitty holds a prop or plays
+an existing hand performance. Facial clips can play with either paw posture.
+
+`add_character_expressions.py` in the private source repository authors this
+library; the collection builder calls it automatically. Source commit `4e18999`.
+Re-export both full models and static shelf models after changing a source.
+`export-shelf.py` bakes the default empty frame, preserving the source hash.
+Constant animation channels keep their bind values with two endpoint samples;
+animated channels retain the sampled timing and interpolation.
+
+Play together or Inventory → More little expressions previews the clips.
+The photo corner samples their authored midpoint and can save the chosen face.
+Reduced motion uses static eye/blush targets without head movement.
+The six-project download is `/workspace/hello-kitty-expressions-blenders.zip`.

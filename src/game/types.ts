@@ -24,7 +24,9 @@ export type QuestId =
   | "lanterns"
   | "glade";
 export type MissionId = "bows" | "strawberries" | "hearts" | "picnic";
+export type FaceExpression = "sleepy" | "surprised" | "softHappy" | "shy" | "curious";
 export type Gesture =
+  | FaceExpression
   | "placeTray"
   | "sprinkle"
   | "handoff"

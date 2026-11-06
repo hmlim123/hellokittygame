@@ -1,3 +1,4 @@
+import { Expressions } from "./Expressions";
 import { useEffect, useRef, useState } from "react";
 import { PLUSH_STYLES } from "../../dist/plush-state.js";
 import { useGameStore } from "../game/store";
@@ -38,6 +39,7 @@ export function PlushPicker({
     }
   };
   return (
+    <>
     <details className="plush-picker">
       <summary>
         Kitty’s plush collection ·{" "}
@@ -94,5 +96,7 @@ export function PlushPicker({
         {pending ? "Kitty is getting her soft little outfit ready…" : message}
       </p>
     </details>
+    <Expressions onPreview={onPreview} />
+    </>
   );
 }

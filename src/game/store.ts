@@ -1,3 +1,4 @@
+import { startEmptyPaws } from "../../dist/empty-paws.js";
 import { FRIEND_TALES, advanceTale } from "./friend-tales";
 import type { PlushId } from "./types";
 import { normalizePlush } from "../../dist/plush-state.js";
@@ -1380,7 +1381,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                       kind:
                         next.step === 3
                           ? ("celebrate" as const)
-                          : ("bow" as const),
+                          : ((tale.id === "baby" ? "sleepy" : tale.id === "witch" ? "curious" : tale.id === "kitten" ? "shy" : tale.id === "bunny" ? "surprised" : "softHappy") as Gesture),
                     },
                   }
                 : {}),
@@ -1440,6 +1441,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                 "A little moment",
                 text ||
                   {
+                    sleepy: "A sleepy little pause beside Nancy. ♡",
+                    surprised: "Oh! A lovely little surprise. ♡",
+                    softHappy: "A soft happy squint, just for you. ♡",
+                    shy: "Kitty feels a little bashful. ♡",
+                    curious: "What shall we discover together? ♡",
                     placeTray: "Into the little oven, gently. ♡",
                     sprinkle: "A little finishing touch. ♡",
                     handoff: "Made with love, carried to you. ♡",
@@ -1858,5 +1864,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
 }
 const giftVisit = giftVisitStorage();
 export const useGameStore = createGameStore(giftVisit.storage);
+const emptyPaws = startEmptyPaws(giftVisit.storage, useGameStore.getState().equipment);
+if (emptyPaws.item !== useGameStore.getState().equipment.item) useGameStore.getState().equip("item", "none");
 if (giftVisit.started) useGameStore.getState().setMode("room");
 export const resetForTests = () => createGameStore(emptyStorage);

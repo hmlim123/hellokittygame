@@ -8,7 +8,8 @@ import { Kitty } from "./Kitty";
 import { Dialog } from "../ui/Dialog";
 import { useGameStore } from "../game/store";
 import { OUTFITS, MAPS } from "../game/domain";
-export type PhotoPose = "still" | "wave" | "cuddle" | "wink";
+import { EXPRESSIONS } from "../ui/Expressions";
+export type PhotoPose = "still" | "wave" | "cuddle" | "wink" | import("../game/types").FaceExpression;
 const BACKGROUNDS = [
   { id: "rose", name: "Rose milk", color: "#f3d6e2" },
   { id: "garden", name: "Garden morning", color: "#dce8d0" },
@@ -219,7 +220,7 @@ export default function PhotoCorner() {
       <fieldset>
         <legend>A little pose</legend>
         <div className="photo-options">
-          {(["still", "wave", "cuddle", "wink"] as PhotoPose[]).map((p) => (
+          {(["still", "wave", "cuddle", "wink", ...EXPRESSIONS.map(([kind]) => kind)] as PhotoPose[]).map((p) => (
             <button
               key={p}
               aria-pressed={pose === p}
@@ -231,6 +232,7 @@ export default function PhotoCorner() {
                   wave: "A little wave",
                   cuddle: "Cuddle",
                   wink: "Wink ♡",
+                  sleepy: "Sleepy", surprised: "Surprised", softHappy: "Happy squint", shy: "Bashful", curious: "Curious",
                 }[p]
               }
             </button>

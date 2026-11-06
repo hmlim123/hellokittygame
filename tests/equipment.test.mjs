@@ -4,7 +4,7 @@ import {normalizeEquipment,equip,OUTFITS} from '../dist/equipment-state.js';
 test('equipment migrates the room gift without changing old saves and repairs invalid selections',()=>{
  const legacy={heldGift:'teddy'},raw={outfit:'missing',item:'bad'};
  assert.deepEqual(normalizeEquipment(raw,{},legacy),{version:1,outfit:'classic',item:'teddy'});assert.deepEqual(legacy,{heldGift:'teddy'});
- assert.deepEqual(normalizeEquipment(null,null),{version:1,outfit:'classic',item:'flowers'});
+ assert.deepEqual(normalizeEquipment(null,null),{version:1,outfit:'classic',item:'none'});
  assert.equal(normalizeEquipment({outfit:'sailor',item:'none'}).item,'none');
  assert.equal(normalizeEquipment({outfit:'picnic',item:'letter'}).outfit,'classic');
 });

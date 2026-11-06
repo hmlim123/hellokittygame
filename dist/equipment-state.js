@@ -18,7 +18,7 @@ export const HELD_ITEMS=[
 export function normalizeEquipment(raw={},quest={},legacy={}){
  raw=raw&&typeof raw==='object'?raw:{};quest=quest&&typeof quest==='object'?quest:{};legacy=legacy&&typeof legacy==='object'?legacy:{};
  const outfit=OUTFITS.find(o=>o.id===raw.outfit&&o.unlock(quest))?.id||'classic';
- const item=HELD_ITEMS.some(i=>i.id===raw.item)?raw.item:HELD_ITEMS.some(i=>i.id===legacy.heldGift)?legacy.heldGift:'flowers';
+ const item=HELD_ITEMS.some(i=>i.id===raw.item)?raw.item:HELD_ITEMS.some(i=>i.id===legacy.heldGift)?legacy.heldGift:'none';
  const plush=normalizePlush(raw.plush);
  return {version:1,outfit,item,...(plush?{plush}:{})};
 }

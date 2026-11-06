@@ -42,7 +42,7 @@ export function applyEquipment(hero,equipment){
  if(outfit.id!=='classic'){
   let detail=b.wardrobe.cache.get(outfit.id);if(!detail){detail=outfitDetails(outfit.id);b.model.getObjectByName('CTRL_Body').add(detail);b.wardrobe.cache.set(outfit.id,detail);}detail.visible=true;
  }
- const item=HELD_ITEMS.some(i=>i.id===equipment.item)?equipment.item:'flowers';
+ const item=HELD_ITEMS.some(i=>i.id===equipment.item)?equipment.item:'none';
  setHeldGift(hero,item==='none'?'flowers':item);
  if(item==='none'){for(const o of b.gifts.original)o.visible=false;b.gift='none';}
  hero.userData.equipment={outfit:outfit.id,item};

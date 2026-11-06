@@ -9,6 +9,25 @@ room, Moonflower Adventure, and Butterfly Glade.
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Expressions and relaxed paws · v2.2.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=expressions-29>.
+
+Kitty starts with empty paws and rests her hands naturally beside her dress.
+Flowers remain an optional inventory item. The previous automatic bouquet is
+cleared once; other items and all adventure/story progress remain. Choosing
+flowers again keeps that choice after reload.
+
+Original Kitty and all five smooth editions share five new authored Blender
+expressions: sleepy, surprised, happy squint, bashful and curious. Open
+**Play together → More little expressions**, or the same folded control in
+Inventory. The photo corner can save each look. Friendship stories use the
+new faces during their intermediate moments. The existing dance, wink and
+baking contacts remain, with static faces for reduced motion.
+
+All six editable Blender projects open at frame 1105 with relaxed empty paws.
+See [the Blender workflow](docs/blender-workflow.md) for shape keys and ranges.
+
 ## Five shelf friends and friendship stories · v2.1.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=shelf-stories-28>.

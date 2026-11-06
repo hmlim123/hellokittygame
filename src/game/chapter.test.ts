@@ -211,6 +211,6 @@ describe("Butterfly Glade chapter", () => {
     expect(restored.adventure.chapter.postcardSaved).toBe(true);
     expect(restored.adventure.charms).toEqual(["honey"]);
     expect(restored.equipment.item).toBe("watering");
-    expect(normalizeEquipment({ item: "not-a-tool" }).item).toBe("flowers");
+    expect(normalizeEquipment({ item: "not-a-tool" }).item).toBe("none");
   });
 });

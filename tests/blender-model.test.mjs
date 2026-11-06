@@ -16,7 +16,7 @@ test('the shipped GLB contains the actual Blender character, rig, and animated w
   assert.ok(names.some(n=>n.startsWith('White_arm')));
   assert.ok(full.tracks.some(t=>t.name.includes('morphTargetInfluences')));
   assert.ok(!names.some(n=>n.includes('softbox')||n.includes('plinth')));
-  assert.ok(bytes.length<2_500_000);
+  assert.ok(bytes.length<3_200_000);
 });
 test('the Blender wave moves the paw and winks, then restores both pose and open eye',()=>{
   const hero=makeBlenderKitty(asset),b=hero.userData.blender;

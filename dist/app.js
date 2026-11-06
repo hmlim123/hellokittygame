@@ -1,3 +1,4 @@
+import {startEmptyPaws} from './empty-paws.js';
 import {renderQuestJournal} from './adventure-quests.js?v=adventure-7';
 import {DOLLS,normalizeState,nextDoll,rewardDoll} from './state.js';
 import {KittyRoom} from './scene.js?v=adventure-7';
@@ -21,7 +22,8 @@ let room=null,hunt=null,ready=false,handled=false,toastLeft=0,celebrating=false,
 const sound=new RoomSound(),preferences=read('kitty-room-preferences-v1');
 const wardrobeStorage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
 let wardrobe=readWardrobe(wardrobeStorage),wardrobePreview,roomAsset;
-const equipment={...wardrobe.equipment};
+const equipment={...startEmptyPaws(wardrobeStorage,wardrobe.equipment)};
+wardrobe.equipment=equipment;
 $('relaxed').checked=preferences.relaxed===true;
 $('relaxed').onchange=()=>{preferences.relaxed=$('relaxed').checked;try{localStorage.setItem('kitty-room-preferences-v1',JSON.stringify(preferences));}catch{say('This play pace will last for this visit.');}};
 $('sound').onclick=async()=>{const on=await sound.toggle();$('sound').setAttribute('aria-pressed',String(on));$('sound').textContent=on?'♫ On':'♫ Off';$('sound').setAttribute('aria-label',on?'Turn sound off':'Turn sound on');};

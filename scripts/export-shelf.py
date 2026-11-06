@@ -4,7 +4,7 @@ Run with Blender against one edition; never saves/modifies the source .blend.
 import bpy,hashlib,json
 from pathlib import Path
 from mathutils import Matrix,Vector
-s=bpy.context.scene;s.frame_set(1);style=s.get('plush_variant','classic')
+s=bpy.context.scene;s.frame_set(s.get("default_empty_frame",1));style=s.get('plush_variant','classic')
 source=Path(bpy.data.filepath);out=Path(__file__).resolve().parents[1]/'dist/assets/shelf';out.mkdir(parents=True,exist_ok=True)
 coll=bpy.data.collections['HELLO KITTY — editable parts'];graph=bpy.context.evaluated_depsgraph_get()
 foot=bpy.data.objects['Foot -1'];floor=min((foot.matrix_world@Vector(c)).z for c in foot.bound_box)

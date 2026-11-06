@@ -3,9 +3,14 @@ import * as THREE from 'three';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {DOLLS} from './state.js';
 
+export const FACE_SHAPES={sleepy:'Sleepy',surprised:'Surprise',softHappy:'SoftSmile',shy:'Shy',curious:'Curious'};
+export function blenderExpression(hero){
+ const has=name=>hero.userData.blender.morphs.some(o=>o.morphTargetDictionary[name]!==undefined&&o.morphTargetInfluences[o.morphTargetDictionary[name]]>.75);
+ return Object.keys(FACE_SHAPES).find(name=>has(FACE_SHAPES[name]))||(has('JoyClosed')?'happy':has('Closed')?'wink':'open');
+}
 export async function loadBlenderKitty(plush){
   plush=normalizePlush(plush);
-  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=smooth-collection-27':'./assets/hello-kitty.glb?v=cozy-toys-1',import.meta.url).href);
+  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=expressions-29':'./assets/hello-kitty.glb?v=expressions-29',import.meta.url).href);
   return {scene:gltf.scene,clips:blenderClips(gltf.animations)};
 
 }
@@ -86,8 +91,11 @@ export function makeBlenderKitty(asset,id=0){
       if(o.morphTargetDictionary.Hidden!==undefined)o.morphTargetInfluences[o.morphTargetDictionary.Hidden]=closed?0:1;
     }
   };
-  resetEyes(false);
-  hero.userData={kind:'kitty',id,blender:{pile,pileVisible:true,plush,modelHeight:(bounds.max.y-floor)*scale,model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:plush?'hellokitty3D/hello_kitty_plush_'+plush+'.blend':'hellokitty3D/hello_kitty_natural.blend'};
+  const resetFace=()=>{for(const o of morphs)for(const name of [...Object.values(FACE_SHAPES),'Warmth']){const i=o.morphTargetDictionary[name];if(i!==undefined)o.morphTargetInfluences[i]=0;}};
+  resetEyes(false);resetFace();
+  const bouquet=model.getObjectByName('CTRL_Bouquet');if(bouquet)bouquet.traverse(o=>{if(o.isMesh)o.visible=false;});
+  for(const o of morphs){const i=o.morphTargetDictionary.EmptyRest;if(i!==undefined)o.morphTargetInfluences[i]=1;}
+  hero.userData={kind:'kitty',id,blender:{pile,pileVisible:true,plush,modelHeight:(bounds.max.y-floor)*scale,model,normalize,baseScale:scale,headIdle,armIdle,eyes,mixer,actions,morphs,resetEyes,resetFace,restWeight:1,current:null,fading:[],age:0,time:0,blink:-1,nextBlink:3.4+id*.31,look:new THREE.Vector2(),target:new THREE.Vector2(),gesture:null,reduced:false,reducedWink:false},source:plush?'hellokitty3D/hello_kitty_plush_'+plush+'.blend':'hellokitty3D/hello_kitty_natural.blend'};
   return hero;
 }
 export function setBlenderAttention(hero,x=0,y=0){
@@ -111,8 +119,8 @@ export function reactBlender(hero,emotion,reduced=false){
   // Repeated taps don't restart a gesture mid-pose.
   if(!reduced&&action&&b.current===action&&b.age<action.getClip().duration)return;
   if(b.current){b.current.fadeOut(.2);b.fading.push({action:b.current,left:.22});}
-  b.current=null;b.reducedWink=false;b.gesture=null;b.age=0;
-  if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(['wave','pet','highfive','kiss','tickle','hug'].includes(emotion)){b.resetEyes(true);b.reducedWink=true;}return;}
+  b.current=null;b.reducedWink=false;b.reducedFace=null;b.gesture=null;b.age=0;b.resetFace();
+  if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(FACE_SHAPES[emotion]){b.reducedFace=emotion;for(const o of b.morphs)for(const name of [FACE_SHAPES[emotion],...(emotion==='shy'?['Warmth']:[])]){const i=o.morphTargetDictionary[name];if(i!==undefined)o.morphTargetInfluences[i]=1;}}if(['wave','pet','highfive','kiss','tickle','hug'].includes(emotion)){b.resetEyes(true);b.reducedWink=true;}return;}
   if(action){action.reset().fadeIn(.2).play();b.current=action;}
   else if(['pet','tilt','catch','hug','kiss','tickle'].includes(emotion))b.gesture=emotion;
 }
@@ -122,9 +130,16 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   if(b.current){
     const end=b.current.getClip().duration;
     if(b.age>=end&&b.age-dt<end)b.current.fadeOut(.2);
-    if(b.age>end+.22){b.current.stop();b.current=null;b.resetEyes(false);}
+    if(b.age>end+.22){b.current.stop();b.current=null;b.resetEyes(false);b.resetFace();}
   }
   if(b.reducedWink&&b.age>1.2){b.resetEyes(false);b.reducedWink=false;}
+  if(b.reducedFace&&b.age>1.2){b.resetFace();b.reducedFace=null;}
+  const facial=b.current&&FACE_SHAPES[b.current.getClip().name];
+  const empty=(!hero.userData.equipment?.item||hero.userData.equipment.item==='none')&&!b.heldAttachment;
+  const targetRest=empty&&!b.inputAction&&(!b.current||facial)&&!b.gesture?1:0;
+  b.restWeight+=(targetRest-b.restWeight)*(1-Math.exp(-dt*16));
+  if(Math.abs(b.restWeight-targetRest)<.0001)b.restWeight=targetRest;
+  for(const o of b.morphs){const i=o.morphTargetDictionary.EmptyRest;if(i!==undefined)o.morphTargetInfluences[i]=b.restWeight;}
   const smooth=1-Math.exp(-dt*5),attentive=idle&&!reduced&&!b.current;
   b.look.lerp(attentive?b.target:new THREE.Vector2(),smooth);
   b.headIdle.rotation.set(-b.look.y*.065,b.look.x*.10,0);
