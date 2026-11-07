@@ -947,3 +947,13 @@ preview and step/cheer stills were reviewed. Publication gate is pending.
 Review: `docs/kitty-happy-dance-step.png`, `docs/kitty-happy-dance-cheer.png`.
 Six editable projects: `/workspace/hello-kitty-happy-dance-blenders.zip`.
 Preview: `/workspace/hello-kitty-happy-dance-preview.mp4`.
+
+
+All 217 automated checks and all 19 browser suites passed in run 42318797679.
+The Pages deployment then exceeded its ten-minute job timeout; the run is
+Cancelled, so publication is not yet verified. A guarded publication retry
+checks the original source SHA, successful build and all four successful browser
+jobs, then downloads that run’s exact unexpired tested-site artifact. It verifies
+the embedded release commit before uploading; it does not rebuild or skip tests.
+The recovery gives the publishing service twenty minutes within a 25-minute job.
+The temporary push trigger is removed after this recovery completes.
