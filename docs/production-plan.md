@@ -920,3 +920,30 @@ Verified six-project archive: `/workspace/hello-kitty-natural-paws-blenders.zip`
 The website archive contains the tested candidate `85806115ca355716144c159273e4429604de104d`.
 Review: `docs/kitty-natural-paws-front.png`, `docs/kitty-natural-paws-side.png`,
 `docs/kitty-natural-paws-game-front.png`, `docs/kitty-natural-paws-game-side.png`.
+
+
+### Bigger happy dance — v2.3.0
+
+User request: replace the tiny dance with a visibly happy full performance.
+Original Kitty and all five editions now have a six-second authored Blender
+dance with eight step touches, alternating raised paws, two hops, happy eyes
+and a cheer/bow finish. The matching occupied-paw take retains grip and all
+footwork. Equipment changes preserve the beat; walking and other interactions
+can interrupt. Reduced motion uses a still happy face. Existing rest shapes,
+baking contacts, rounded bunny ears, progress and Nancy’s letter remain.
+
+Source: `1595fd5` in hellokitty3D. Release verification is recorded below after
+completion; physical phone/Mac Safari review remains pending.
+
+Local verification: all **217 automated checks** pass (93 Node/model/domain,
+124 Vitest). The new real-browser suite passes the full empty-paw and
+occupied-paw dances, happy eyes, settled rest, item persistence after reload,
+320px touch and static reduced motion, with no page errors. Model checks sample
+all six routines at 60 Hz: broad paw rotation, lateral steps, both-foot hops,
+actual mesh floor clearance and planted-foot stability. Grip and phase survive
+equipment changes; waving interrupts cleanly. A rendered six-second browser
+preview and step/cheer stills were reviewed. Publication gate is pending.
+
+Review: `docs/kitty-happy-dance-step.png`, `docs/kitty-happy-dance-cheer.png`.
+Six editable projects: `/workspace/hello-kitty-happy-dance-blenders.zip`.
+Preview: `/workspace/hello-kitty-happy-dance-preview.mp4`.

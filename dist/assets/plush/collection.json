@@ -1,15 +1,15 @@
 {
-  "version": 5,
+  "version": 6,
   "models": [
     {
       "id": "cloud",
       "file": "hello_kitty_plush_cloud.blend",
-      "sha256": "81eb23d1fc325e08099143e9494c44421f08f2dab86bbb197818579a7e1e9523",
+      "sha256": "9550c7e5655bfa22ff889d5fc4af6d7cd8380a246fe2a266c65fcc6a5f26b316",
       "preview": "hello_kitty_plush_cloud.png",
       "fps": 24,
       "dance": [
-        1,
-        49
+        1153,
+        1297
       ],
       "wave_and_wink": [
         49,
@@ -46,17 +46,22 @@
         ]
       },
       "default_empty_frame": 1105,
-      "empty_paw_pose": "soft-sides-v2"
+      "empty_paw_pose": "soft-sides-v2",
+      "dance_held": [
+        1309,
+        1453
+      ],
+      "dance_library": "happy-step-v1"
     },
     {
       "id": "witch",
       "file": "hello_kitty_plush_witch.blend",
-      "sha256": "be2ae548ca568a2a0a6c014ee32b6cc2916005b5e0bc422339732f83edb5c849",
+      "sha256": "8a172a6d59545e7426a663399760a5ac47378686905571232a380815a430e23d",
       "preview": "hello_kitty_plush_witch.png",
       "fps": 24,
       "dance": [
-        1,
-        49
+        1153,
+        1297
       ],
       "wave_and_wink": [
         49,
@@ -93,17 +98,22 @@
         ]
       },
       "default_empty_frame": 1105,
-      "empty_paw_pose": "soft-sides-v2"
+      "empty_paw_pose": "soft-sides-v2",
+      "dance_held": [
+        1309,
+        1453
+      ],
+      "dance_library": "happy-step-v1"
     },
     {
       "id": "baby",
       "file": "hello_kitty_plush_baby.blend",
-      "sha256": "f474e0694f8f19c90b70ab41594bc800f73ab743f6f8b17a7c47d3b19d166f8d",
+      "sha256": "0dc77159d747bf738b248754558038d2ccb9e292ae2eb0e2432c8715318b7f51",
       "preview": "hello_kitty_plush_baby.png",
       "fps": 24,
       "dance": [
-        1,
-        49
+        1153,
+        1297
       ],
       "wave_and_wink": [
         49,
@@ -140,17 +150,22 @@
         ]
       },
       "default_empty_frame": 1105,
-      "empty_paw_pose": "soft-sides-v2"
+      "empty_paw_pose": "soft-sides-v2",
+      "dance_held": [
+        1309,
+        1453
+      ],
+      "dance_library": "happy-step-v1"
     },
     {
       "id": "kitten",
       "file": "hello_kitty_plush_kitten.blend",
-      "sha256": "ee4a831d857ab80c40c05de3c23fcee64f2f65395b951c5cd72e5ff3defb3280",
+      "sha256": "17017c01fcdd90363e91ba5a59dd78ce090070e475136c676a26cfd1474088d7",
       "preview": "hello_kitty_plush_kitten.png",
       "fps": 24,
       "dance": [
-        1,
-        49
+        1153,
+        1297
       ],
       "wave_and_wink": [
         49,
@@ -187,17 +202,22 @@
         ]
       },
       "default_empty_frame": 1105,
-      "empty_paw_pose": "soft-sides-v2"
+      "empty_paw_pose": "soft-sides-v2",
+      "dance_held": [
+        1309,
+        1453
+      ],
+      "dance_library": "happy-step-v1"
     },
     {
       "id": "bunny",
       "file": "hello_kitty_plush_bunny.blend",
-      "sha256": "df5810dcf44cfa76ecb333c7b97aef098ef899920a544fdd5f44f2a59a799880",
+      "sha256": "681258dada951f9b5934e083d6ab9ae4888bcf6baa3229020ec6e21a594412d0",
       "preview": "hello_kitty_plush_bunny.png",
       "fps": 24,
       "dance": [
-        1,
-        49
+        1153,
+        1297
       ],
       "wave_and_wink": [
         49,
@@ -235,12 +255,18 @@
         ]
       },
       "default_empty_frame": 1105,
-      "empty_paw_pose": "soft-sides-v2"
+      "empty_paw_pose": "soft-sides-v2",
+      "dance_held": [
+        1309,
+        1453
+      ],
+      "dance_library": "happy-step-v1"
     }
   ],
-  "notes": "Five smooth matte editable editions with independently sculpted, softly rounded side-rest arms. Empty paws do not retain the bouquet-holding curl. All 19 clips, eye expressions, original grip geometry, sockets and rounded silver rabbit ears retained.",
+  "notes": "Six-second grounded happy step-touch dance with broad paw swings, two hops, smiling eyes and a cheer/bow finish. A matching occupied-paw take keeps gifts in her paws. Smooth rounded empty arms, all previous contact performances, expressions and rounded bunny ears retained.",
   "surface": "smooth-matte",
   "expression_library": "expressions-v1",
   "default_item": "none",
-  "empty_paw_pose": "soft-sides-v2"
+  "empty_paw_pose": "soft-sides-v2",
+  "dance_library": "happy-step-v1"
 }

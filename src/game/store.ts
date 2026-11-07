@@ -1458,7 +1458,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                     sip: "A quiet cup of tea together. ♡",
                     excited: "Three happy little hops for Nancy. ♡",
                     wave: "A paw and a wink, just for Nancy. ♡",
-                    dance: "A tiny dance makes a lovely little day. ♫",
+                    dance: "A happy dance, just for Nancy! ♫",
                     hug: "A soft little cuddle for Nancy. ♡",
                     highfive: "High five! A tiny paw and a happy wink. ♡",
                     tickle: "Tiny tickles, happy wiggles! ♡",

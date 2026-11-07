@@ -266,7 +266,7 @@ export function TogetherPanel() {
           ))
         ) : (
           <p className="kitty">
-            <span>Kitty</span>Hello, Nancy. Want a cuddle or a tiny dance? ♡
+            <span>Kitty</span>Hello, Nancy. Want a cuddle or a happy dance? ♡
           </p>
         )}
       </div>

@@ -172,7 +172,7 @@ function controls(){
   collection();
 }
 $('wave').onclick=()=>{if(!ready||hunt?.active||celebrating)return;room.react('wave');say('A little wave and a wink, just for you. ♡');};
-$('dance').onclick=()=>{if(!ready||hunt?.active||celebrating)return;room.react('dance');say('A tiny dance makes a lovely little day. ♫');};
+$('dance').onclick=()=>{if(!ready||hunt?.active||celebrating)return;room.react('dance');say('A happy dance, just for Nancy! ♫');};
 $('resetCamera').onclick=()=>{if(ready&&!hunt?.active&&!celebrating)room.inspectKitty();};
 const targets=Array.from({length:4},(_,i)=>{
   const b=document.createElement('button');b.className='bow-target';b.hidden=true;

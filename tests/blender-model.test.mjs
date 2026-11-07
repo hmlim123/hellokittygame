@@ -55,7 +55,7 @@ test('switching gestures preserves the current paw pose and cleans up faded acti
   reactBlender(hero,'dance');assert.deepEqual(arm.quaternion.toArray(),before.toArray());
   updateBlender(hero,.01);assert.ok(arm.quaternion.angleTo(before)<.2);
   updateBlender(hero,.3);assert.equal(b.fading.length,0);
-  updateBlender(hero,4);assert.equal(b.current,null);
+  updateBlender(hero,b.actions.dance.getClip().duration+.3);assert.equal(b.current,null);
 });
 test('touch targets use the actual bow and bouquet meshes; offering moves the bouquet',()=>{
   const hero=makeBlenderKitty(asset),b=hero.userData.blender;
@@ -127,7 +127,7 @@ test('authored baking and discovery clips move joined paws and settle back to th
   reactBlender(hero,kind);updateBlender(hero,asset.clips[kind].duration*.5);
   assert.ok(controls.some((o,i)=>o.quaternion.angleTo(rest[i].q)>.02||o.position.distanceTo(rest[i].p)>.01),kind+' has no visible pose');
   for(const name of ['CTRL_Arm_L','CTRL_Arm_R'])assert.ok(b.model.getObjectByName(name).position.length()<1e-5,kind+' detaches a shoulder');
-  updateBlender(hero,4);assert.equal(b.current,null);
+  updateBlender(hero,b.actions.dance.getClip().duration+.3);assert.equal(b.current,null);
   controls.forEach((o,i)=>{assert.ok(o.quaternion.angleTo(rest[i].q)<1e-5);assert.ok(o.position.distanceTo(rest[i].p)<1e-5);});
  }
 });

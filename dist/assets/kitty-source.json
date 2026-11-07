@@ -1,15 +1,16 @@
 {
+  "dance_library": "happy-step-v1",
   "empty_paw_pose": "soft-sides-v2",
   "expression_library": "expressions-v1",
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "8f563301af67f2b652d49b6ae93c7eb6bee1acd1",
+  "source_commit": "1595fd583a0636f5d609e1d7603a6a18c0b1201a",
   "source_file": "hello_kitty_natural.blend",
-  "source_sha256": "f80ec333b7c49ff5c855e1f5846b69a08312fc221b29637bad578a0d8abbf279",
+  "source_sha256": "d3311b5ed73680ccb3309248a56c28ba6a6c378c1524653de1b16991dfbb408f",
   "fps": 24,
   "clips": {
     "dance": [
-      1,
-      49
+      1153,
+      1297
     ],
     "wave": [
       49,
@@ -82,6 +83,10 @@
     "relax": [
       1069,
       1141
+    ],
+    "danceHeld": [
+      1309,
+      1453
     ]
   },
   "notes": "Actual Blender character, constrained paw sockets, authored performances, friends and toy props. Studio excluded. Named clips are trimmed from the authoring timeline; wink uses glTF morph targets."

@@ -17,7 +17,7 @@ test('all six Blender models have five distinct authored expressions that restor
  for(const {style,asset} of assets){
   const hero=makeBlenderKitty(asset),b=hero.userData.blender;
   assert.equal(b.model.getObjectByName('CTRL_Root').userData.expression_library,'expressions-v1');
-  assert.equal(Object.keys(b.actions).length,19);
+  assert.equal(Object.keys(b.actions).length,20);
   assert.equal(b.model.getObjectByName('CTRL_Root').userData.empty_paw_pose,'soft-sides-v2');
   for(const [name,shape] of Object.entries(FACE_SHAPES)){
    reactBlender(hero,name);updateBlender(hero,b.actions[name].getClip().duration/2);

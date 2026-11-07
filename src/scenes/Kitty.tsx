@@ -75,6 +75,7 @@ export function Kitty({
   const headPoint = useMemo(() => new THREE.Vector3(), []);
   const topPoint = useMemo(() => new THREE.Vector3(), []);
   const footPoint = useMemo(() => new THREE.Vector3(), []);
+  const dancePoint = useMemo(() => new THREE.Vector3(), []);
   const petCapture = useRef<{
     id: number;
     target: { releasePointerCapture(id: number): void };
@@ -227,6 +228,8 @@ export function Kitty({
             : state.pointer.y,
       );
     }
+    if (locomotion && locomotion.current.speed > 0.05 && ["dance", "danceHeld"].includes(rig.current?.getClip().name))
+      reactBlender(hero, null, reduced);
     updateBlender(hero, Math.min(dt, 0.25), { reduced, idle: true });
     if (activity) {
       followBlenderActivity(hero, activity.current, dt, reduced);
@@ -238,8 +241,16 @@ export function Kitty({
     state.gl.domElement.dataset.expression = expression();
     if (animate) {
       state.gl.domElement.dataset.motionTime = String(rig.age);
+      const danceTake = rig.current?.getClip().name;
+      state.gl.domElement.dataset.danceTake = danceTake === "danceHeld" ? "holding" : "empty";
+      if (danceTake === "dance" || danceTake === "danceHeld") {
+        rig.model.getObjectByName("CTRL_Root").getWorldPosition(dancePoint);
+        state.gl.domElement.dataset.danceX = String(dancePoint.x);
+        state.gl.domElement.dataset.danceY = String(dancePoint.y);
+        state.gl.domElement.dataset.danceDuration = String(rig.current.getClip().duration);
+      }
       state.gl.domElement.dataset.blenderAction =
-        hero.userData.blender.current?.getClip().name || "idle";
+        (hero.userData.blender.current?.getClip().name || "idle").replace(/^danceHeld$/, "dance");
       const arm = hero.userData.blender.model.getObjectByName("CTRL_Arm_R");
       state.gl.domElement.dataset.pawTurn = String(
         Math.abs(arm.quaternion.x) +

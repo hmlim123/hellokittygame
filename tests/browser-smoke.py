@@ -36,7 +36,7 @@ with sync_playwright() as p:
     page.locator('#wave').click();page.wait_for_timeout(1000)
     page.screenshot(path=str(out/'simple-room-wink.png'),full_page=True)
     page.locator('#dance').click();page.wait_for_timeout(500)
-    assert page.locator('#toast').inner_text().startswith('A tiny dance')
+    assert page.locator('#toast').inner_text().startswith('A happy dance')
     page.locator('#shelfPanel summary').click()
     assert page.locator('[data-doll]').count()==6
     print('START',page.locator('#collectionCount').inner_text())

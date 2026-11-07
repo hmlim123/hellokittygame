@@ -1,15 +1,16 @@
 {
+  "dance_library": "happy-step-v1",
   "empty_paw_pose": "soft-sides-v2",
   "expression_library": "expressions-v1",
   "source_repository": "https://github.com/hmlim123/hellokitty3D",
-  "source_commit": "8f563301af67f2b652d49b6ae93c7eb6bee1acd1",
+  "source_commit": "1595fd583a0636f5d609e1d7603a6a18c0b1201a",
   "source_file": "hello_kitty_plush_bunny.blend",
-  "source_sha256": "df5810dcf44cfa76ecb333c7b97aef098ef899920a544fdd5f44f2a59a799880",
+  "source_sha256": "681258dada951f9b5934e083d6ab9ae4888bcf6baa3229020ec6e21a594412d0",
   "fps": 24,
   "clips": {
     "dance": [
-      1,
-      49
+      1153,
+      1297
     ],
     "wave": [
       49,
@@ -82,9 +83,13 @@
     "relax": [
       1069,
       1141
+    ],
+    "danceHeld": [
+      1309,
+      1453
     ]
   },
-  "notes": "Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 19 named clips: 13 existing motions, five mouthless expressions and a relaxed-paw showcase. Sculpted empty-paw shape and happy-eye morphs. No exposed curl geometry. Studio excluded.",
+  "notes": "Actual editable plush Blender edition. Smooth matte materials without fleece normal or bump textures, stitched cheek whiskers, fused paw deformation, 20 named clips, including a six-second happy dance and its occupied-paw take, the existing contact motions, five mouthless expressions and a relaxed-paw showcase. Sculpted empty-paw shape and happy-eye morphs. No exposed curl geometry. Studio excluded.",
   "variant": "bunny",
   "title": "Silver Bunny",
   "body_height": 4.56808,

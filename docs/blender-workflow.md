@@ -185,3 +185,23 @@ Play together or Inventory → More little expressions previews the clips.
 The photo corner samples their authored midpoint and can save the chosen face.
 Reduced motion uses static eye/blush targets without head movement.
 The six-project download is `/workspace/hello-kitty-expressions-blenders.zip`.
+
+
+### Six-second happy dance (v2.3.0)
+
+`author_happy_dance.py` in the private source repository authors both takes in
+all six models; source commit `1595fd5`. At 24 fps, `dance` is frames 1153–1297
+and `danceHeld` is 1309–1453. The older frames 1–49 remain editable legacy motion.
+There are now 20 named clips. Models still open at frame 1105 with empty paws.
+
+The choreography transfers weight across eight step touches, followed by two
+hops and a cheer/bow finish. Each planted foot keeps its world position; toe
+height is corrected against the actual mesh floor. Empty paws swing broadly
+using the rounded EmptyRest shape. The occupied-paw take keeps the original
+grip and paw sockets while retaining the same root, head and foot timing.
+SoftSmile eye morphs and delayed costume motion are authored in Blender.
+
+The browser chooses the occupied-paw take for an inventory item or adventure
+tool, preserves phase when equipment changes, and interrupts for walking or
+another interaction. Reduced motion uses static happy eyes. Re-export full and
+shelf models after authoring; source checksums are retained in both assets.

@@ -52,7 +52,7 @@ test('all five have different soft dances, joined shoulders and a usable wink',(
   reactBlender(hero,'dance');updateBlender(hero,.7);
   const arm=b.model.getObjectByName('CTRL_Arm_R');assert.ok(arm.position.length()<1e-5);
   dances.push([...arm.quaternion.toArray(),...b.model.getObjectByName('CTRL_Root').quaternion.toArray()].map(n=>n.toFixed(5)).join(','));
-  updateBlender(hero,4);assert.equal(b.current,null);
+  updateBlender(hero,b.actions.dance.getClip().duration+.3);assert.equal(b.current,null);
   reactBlender(hero,'wave');updateBlender(hero,1.3);
   assert.ok(b.morphs.some(o=>o.morphTargetDictionary.Closed!==undefined&&o.morphTargetInfluences[o.morphTargetDictionary.Closed]>.8),style.id+' cannot wink');
   updateBlender(hero,4);assert.ok(b.morphs.every(o=>o.morphTargetDictionary.Closed===undefined||o.morphTargetInfluences[o.morphTargetDictionary.Closed]<.001));
@@ -105,5 +105,5 @@ test('Silver Bunny has sewn-in ear roots, flush fabric lining and independent so
  reactBlender(hero,'dance');updateBlender(hero,.8);hero.updateMatrixWorld(true);
  assert.ok(controls[0].quaternion.angleTo(controls[1].quaternion)>.002,'ears should settle independently');
  controls.forEach((control,i)=>assert.ok(headControl.worldToLocal(control.getWorldPosition(new THREE.Vector3())).distanceTo(anchors[i])<1e-5,'dance must not detach an ear root'));
- updateBlender(hero,5);controls.forEach(control=>assert.ok(control.quaternion.angleTo(new THREE.Quaternion())<1e-5,'ears must return to rest'));
+ updateBlender(hero,b.actions.dance.getClip().duration+.3);controls.forEach(control=>assert.ok(control.quaternion.angleTo(new THREE.Quaternion())<1e-5,'ears must return to rest'));
 });

@@ -1,13 +1,24 @@
 # Nancy’s Hello Kitty · A little happy place
 
 A cozy browser game for Nancy, using our actual animated Blender Hello Kitty.
-The room keeps three main buttons: **Wave hello**, **Little dance**, and
+The room keeps three main buttons: **Wave hello**, **Happy dance**, and
 **Play a mission**. Inventory, settings, and playful interactions open in focused
 panels. The same clothes, items, collection, and quests follow Kitty between her
 room, Moonflower Adventure, and Butterfly Glade.
 
 The agreed six-stage upgrade sequence and current milestone are tracked in
 [Nancy's production plan](docs/production-plan.md).
+
+## Happy dance · v2.3.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=happy-dance-31>.
+
+Tap **Happy dance** for a six-second performance: side-to-side step touches,
+broad alternating paw swings, two happy hops, smiling eyes and a little bow.
+Original Kitty and all five editions use choreography authored in their actual
+Blender projects. Held items select a matching take with steady paws; changing
+items keeps the beat. Walking can interrupt the dance, and reduced motion shows
+a still happy face. The resting pose, Nancy’s letter and saved progress remain.
 
 ## Corrected empty-paw posture · v2.2.1
 
@@ -525,7 +536,7 @@ The modern app needs HTTP hosting; upload **the contents of `build/`** after
 
 `dist/assets/hello-kitty.glb` comes from the private
 [hmlim123/hellokitty3D](https://github.com/hmlim123/hellokitty3D) repository:
-`hello_kitty_animated.blend`, commit `1fee5d514ba101055d1bb1c6e6957830aa3be646`.
+`hello_kitty_natural.blend` and the five plush projects, source commit `1595fd5`.
 It contains the actual head, bow, bouquet, rounded paws, controllers, wave,
 dance and animated wink. It is not a primitive replacement for the character.
 Provenance is recorded in `dist/assets/kitty-source.json`.
@@ -533,7 +544,7 @@ Provenance is recorded in `dist/assets/kitty-source.json`.
 To re-export after checking out that source revision alongside this repository:
 
 ```sh
-blender -b ../hellokitty3D/hello_kitty_animated.blend --threads 5 --python-exit-code 1 --python scripts/export_blender.py
+blender -b ../hellokitty3D/hello_kitty_natural.blend --threads 5 --python-exit-code 1 --python scripts/export_blender.py
 ```
 
 The exporter excludes the Blender studio and converts eye visibility into glTF

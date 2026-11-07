@@ -10,7 +10,7 @@ export function blenderExpression(hero){
 }
 export async function loadBlenderKitty(plush){
   plush=normalizePlush(plush);
-  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=natural-paws-30':'./assets/hello-kitty.glb?v=natural-paws-30',import.meta.url).href);
+  const gltf=await new GLTFLoader().loadAsync(globalThis.KITTY_MODEL_URL||new URL(plush?'./assets/plush/'+plush+'.glb?v=happy-dance-31':'./assets/hello-kitty.glb?v=happy-dance-31',import.meta.url).href);
   return {scene:gltf.scene,clips:blenderClips(gltf.animations)};
 
 }
@@ -119,18 +119,28 @@ export function blenderTouchPart(object){
   }
   return 'pet';
 }
+function heldForDance(hero){const b=hero.userData.blender,item=hero.userData.equipment?.item??b.gift??'none';return !!b.heldAttachment||item!=='none';}
 export function reactBlender(hero,emotion,reduced=false){
-  const b=hero.userData.blender,action=b.actions[emotion==='highfive'?'wave':emotion==='excited'?'celebrate':emotion];b.reduced=reduced;
+  const b=hero.userData.blender,key=emotion==='dance'&&heldForDance(hero)&&b.actions.danceHeld?'danceHeld':emotion==='highfive'?'wave':emotion==='excited'?'celebrate':emotion,action=b.actions[key];b.reduced=reduced;
   // Repeated taps don't restart a gesture mid-pose.
   if(!reduced&&action&&b.current===action&&b.age<action.getClip().duration)return;
   if(b.current){b.current.fadeOut(.2);b.fading.push({action:b.current,left:.22});}
   b.current=null;b.reducedWink=false;b.reducedFace=null;b.gesture=null;b.age=0;b.resetFace();
-  if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(FACE_SHAPES[emotion]){b.reducedFace=emotion;for(const o of b.morphs)for(const name of [FACE_SHAPES[emotion],...(emotion==='shy'?['Warmth']:[])]){const i=o.morphTargetDictionary[name];if(i!==undefined)o.morphTargetInfluences[i]=1;}}if(['wave','pet','highfive','kiss','tickle','hug'].includes(emotion)){b.resetEyes(true);b.reducedWink=true;}return;}
+  if(reduced){b.mixer.stopAllAction();b.fading=[];b.resetEyes(false);if(FACE_SHAPES[emotion]||emotion==='dance'){const face=emotion==='dance'?'softHappy':emotion;b.reducedFace=face;for(const o of b.morphs)for(const name of [FACE_SHAPES[face],...(face==='shy'?['Warmth']:[])]){const i=o.morphTargetDictionary[name];if(i!==undefined)o.morphTargetInfluences[i]=1;}}if(['wave','pet','highfive','kiss','tickle','hug'].includes(emotion)){b.resetEyes(true);b.reducedWink=true;}return;}
   if(action){action.reset().fadeIn(.2).play();b.current=action;}
   else if(['pet','tilt','catch','hug','kiss','tickle'].includes(emotion))b.gesture=emotion;
 }
 export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idle=true}={}){
-  const b=hero.userData.blender;dt=Number.isFinite(dt)?Math.max(0,dt):0;b.age+=dt;b.time+=dt;b.mixer.update(dt);
+  const b=hero.userData.blender;dt=Number.isFinite(dt)?Math.max(0,dt):0;
+  if(b.current&&['dance','danceHeld'].includes(b.current.getClip().name)){
+    const desired=heldForDance(hero)&&b.actions.danceHeld?b.actions.danceHeld:b.actions.dance;
+    if(desired&&desired!==b.current){
+      const previous=b.current,time=previous.time;
+      previous.fadeOut(.2);b.fading.push({action:previous,left:.22});
+      desired.reset().fadeIn(.2).play();desired.time=time;b.current=desired;
+    }
+  }
+  b.age+=dt;b.time+=dt;b.mixer.update(dt);
   for(let i=b.fading.length-1;i>=0;i--){const f=b.fading[i];f.left-=dt;if(f.left<=0){if(f.action!==b.current)f.action.stop();b.fading.splice(i,1);}}
   if(b.current){
     const end=b.current.getClip().duration;
@@ -143,7 +153,7 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   const empty=(!hero.userData.equipment?.item||hero.userData.equipment.item==='none')&&!b.heldAttachment;
   // Head pats, looking, bowing and dancing do not need a bouquet grip. The
   // unoccupied paw also stays at her side while the other paw waves.
-  const relaxed=!clip||FACE_SHAPES[clip]||['dance','celebrate','surprise','bow','relax'].includes(clip);
+  const relaxed=!clip||FACE_SHAPES[clip]||['dance','danceHeld','celebrate','surprise','bow','relax'].includes(clip);
   const touching=['hug','tickle'].includes(b.gesture);
   const available=empty&&!b.inputAction&&!touching;
   const targets=available?(clip==='wave'?[0,1]:relaxed?[1,1]:[0,0]):[0,0];

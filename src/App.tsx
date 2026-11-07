@@ -608,8 +608,8 @@ export default function App() {
               onClick={() => react("dance")}
             >
               <span>♫</span>
-              <strong>Little dance</strong>
-              <small>A happy wiggle</small>
+              <strong>Happy dance</strong>
+              <small>Steps, hops &amp; happy paws</small>
             </button>
             <button
               id="startHunt"
