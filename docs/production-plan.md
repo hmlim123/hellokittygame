@@ -957,3 +957,24 @@ jobs, then downloads that run’s exact unexpired tested-site artifact. It verif
 the embedded release commit before uploading; it does not rebuild or skip tests.
 The recovery gives the publishing service twenty minutes within a 25-minute job.
 The temporary push trigger is removed after this recovery completes.
+
+
+Publication verified: **v2.3.0**, candidate `7e08a5a75988a928e1a9f58810059d27cb67b8a6`.
+All **217 automated checks** and **19 browser suites** passed in
+[run 42318797679](https://github.com/hmlim123/hellokittygame/actions/runs/42318797679).
+The original ten-minute Pages job timed out after testing. The guarded recovery
+verified all five successful build/browser jobs, source revision and immutable
+artifact, then successfully published that exact tested artifact in
+[run 42321499294](https://github.com/hmlim123/hellokittygame/actions/runs/42321499294).
+Its source/artifact guards and Pages deployment steps all succeeded. No rebuild
+or skipped test gate was used. The temporary push trigger and pinned fallback
+inputs have been removed; future recovery requires an explicit workflow dispatch.
+The guard was also checked locally against a valid run and eight rejection cases,
+including failed/additional checks, missing jobs, wrong source and expired assets.
+
+Published: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=happy-dance-31>.
+Tap Happy dance. All six real Blender projects contain the six-second routine
+and occupied-paw take. Local baking/contact, tray, replay and both NPC greeting
+checks passed again with no page errors. Source archive checksums match private
+Blender source `1595fd5`; the website archive contains candidate `7e08a5a`.
+Nancy’s progress and letter remain. Physical phone/Mac Safari review is pending.

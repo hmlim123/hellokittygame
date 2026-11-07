@@ -591,6 +591,14 @@ configuration on `master`, the workflow installs locked dependencies, runs tests
 builds the typed application, passes the browser release gate, and deploys **`build/`**. No deploy key is needed.
 A successful workflow run confirms deployment; a successful push alone does not.
 
+If Pages times out after the build and all browser groups pass, **Actions →
+Republish a tested game build → Run workflow** accepts the source run ID and
+full source commit SHA. Recovery requires an unexpired artifact from a completed
+`master` push, checks every non-publication job passed, then publishes that exact
+artifact with a longer service timeout. It does not rebuild or bypass the test
+gate. Artifacts expire after two days; an expired build needs a new full release.
+
+
 Game: <https://hmlim123.github.io/hellokittygame/>
 
 Adventure: <https://hmlim123.github.io/hellokittygame/adventure.html>

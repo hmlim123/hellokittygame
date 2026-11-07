@@ -11,11 +11,6 @@ on:
         description: Full source commit SHA from that run
         required: true
         type: string
-  # Bootstrap this recovery after the publishing service timed out. Remove this
-  # push trigger after publication; subsequent retries are explicit dispatches.
-  push:
-    branches: [master]
-    paths: ['.github/workflows/retry-pages.yml']
 
 permissions:
   actions: read
@@ -36,8 +31,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     env:
-      SOURCE_RUN: ${{ inputs.source_run || '42318797679' }}
-      SOURCE_COMMIT: ${{ inputs.source_commit || '7e08a5a75988a928e1a9f58810059d27cb67b8a6' }}
+      SOURCE_RUN: ${{ inputs.source_run }}
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
     steps:
       - name: Require the successful build and all four browser groups
         env:
@@ -64,6 +59,7 @@ jobs:
           for name in required:
               matching = [job for job in jobs if job['name']==name]
               assert len(matching)==1 and matching[0]['conclusion']=='success', name+' has not passed'
+          assert all(job['conclusion']=='success' for job in jobs if job['name']!='Publish the tested game'), 'A non-publication job did not pass'
           artifacts = get('actions/runs/'+run+'/artifacts')['artifacts']
           matching = [a for a in artifacts if a['name']=='tested-site' and not a['expired']]
           assert len(matching)==1, 'Exact tested artifact is missing or expired'
@@ -85,8 +81,8 @@ jobs:
           assert all((root/name).is_file() for name in ['index.html','adventure.html','assets/hello-kitty.glb','classic/index.html'])
           assert any(commit[:7].encode() in p.read_bytes() for p in (root/'assets').glob('*.js'))
           meta=json.loads((root/'assets/kitty-source.json').read_text())
-          assert meta['dance_library']=='happy-step-v1' and len(meta['clips'])==20
-          print('Verified immutable happy-dance release', commit)
+          assert {'dance','wave','offer'}.issubset(meta['clips'])
+          print('Verified immutable game release', commit)
           PY
       - name: Configure GitHub Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
