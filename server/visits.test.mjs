@@ -362,3 +362,39 @@ test("leaving deliberately frees the visitor place without exposing the old tick
     /visit service is ready/,
   );
 });
+
+test("a movement packet can span a corner without rejecting a real walk or permitting wall shortcuts", async (t) => {
+  const s = await pair(t);
+  const before = { x: 3.7705860137939453, z: 2.4816415309906006 };
+  const after = { x: 2.661547899246216, z: 2.0297515392303467 };
+  await walk(s, s.guest, before);
+  s.advance(1000);
+  s.guest.clear();
+  s.guest.send({ type: "move", ...after, yaw: -1.6 });
+  await s.guest.until(
+    (m) =>
+      m.type === "state" &&
+      m.players.some(
+        (p) =>
+          p.id === "guest" && Math.hypot(p.x - after.x, p.z - after.z) < 0.01,
+      ),
+  );
+  assert.equal(
+    s.guest.messages.some((m) => m.type === "correction"),
+    false,
+  );
+  const player = s.service.rooms.get(s.ticket.roomId).guest;
+  assert.ok(
+    player.budget < 1.8 - Math.hypot(after.x - before.x, after.z - before.z),
+    "charge the longer route around Pip, not its straight chord",
+  );
+  await walk(s, s.guest, { x: 3.6, z: 3.2 });
+  s.advance(1000);
+  s.guest.clear();
+  s.guest.send({ type: "move", x: 2.4, z: 2.1, yaw: 1 });
+  await s.guest.until((m) => m.type === "correction");
+  assert.ok(
+    s.service.rooms.get(s.ticket.roomId).guest.x > 3.5,
+    "a wall shortcut exceeds the route budget",
+  );
+});

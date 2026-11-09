@@ -8,6 +8,7 @@ import {
   VILLAGE_ACTIONS,
   villageWalkable,
   moveVillage,
+  villagePath,
 } from "../shared/village-world.mjs";
 
 const token = () => randomBytes(32).toString("base64url");
@@ -469,17 +470,31 @@ export function createVisitService({
           });
           return;
         }
-        const next = moveVillage(player, m.x - player.x, m.z - player.z);
+        let next = moveVillage(player, m.x - player.x, m.z - player.z),
+          travelled = distance;
         if (Math.hypot(next.x - m.x, next.z - m.z) > 0.12) {
-          send(ws, {
-            type: "correction",
-            x: player.x,
-            z: player.z,
-            yaw: player.yaw,
-          });
-          return;
+          // A packet can span a turn around a friend or a building corner.
+          // Validate the reachable route, charging its full walking distance,
+          // rather than treating the straight chord as a walk through a wall.
+          const route = villagePath(player, m);
+          let from = player;
+          travelled = 0;
+          for (const point of route) {
+            travelled += Math.hypot(point.x - from.x, point.z - from.z);
+            from = point;
+          }
+          if (!route.length || travelled > player.budget + 0.03) {
+            send(ws, {
+              type: "correction",
+              x: player.x,
+              z: player.z,
+              yaw: player.yaw,
+            });
+            return;
+          }
+          next = { x: m.x, z: m.z };
         }
-        player.budget = Math.max(0, player.budget - distance);
+        player.budget = Math.max(0, player.budget - travelled);
         player.area = ["village", "home", "story"].includes(m.area)
           ? m.area
           : "village";
@@ -489,7 +504,7 @@ export function createVisitService({
         player.tool = m.tool === "watering" ? "watering" : null;
         player.speed =
           distance > 0.015 && player.area === "village"
-            ? Math.min(2.8, distance / Math.max(0.05, elapsed))
+            ? Math.min(2.8, travelled / Math.max(0.05, elapsed))
             : 0;
         player.x = next.x;
         player.z = next.z;

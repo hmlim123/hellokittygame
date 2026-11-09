@@ -1082,7 +1082,7 @@ Render infrastructure and account-owner instructions are ready in
 account connection has been supplied, so publicly hosted online visits remain
 unconfigured. Single-player village play is independent of that setup.
 
-Verification: 93 domain checks, 137 app checks and 10 server checks pass locally.
+Verification: 93 domain checks, 137 app checks and 11 server checks pass locally.
 The fresh browser journey passes greeting, café baking, wrapping/carrying, a
 one-time gift, all three flower beds, recipe unlocks, placement in the actual
 room, reload and preservation of earlier stories. Real touch events pass at
@@ -1097,3 +1097,15 @@ position now recalculates a tapped walking route rather than silently cancelling
 it; the release browser check forces a rejected packet to verify that recovery.
 Publication evidence follows the final release checks. Physical phone and Mac Safari acceptance remains pending; Chromium touch
 emulation does not establish physical-device performance or Safari compatibility.
+
+
+### Visit movement correction
+
+A slow-renderer/two-player check exposed repeated position corrections while
+turning around Pip. A movement packet may span a corner; validating only its
+straight chord incorrectly rejected a real, navigable walk. The server now
+accepts a bounded reachable route and charges its full path length against the
+same distance budget. A regression uses the exact recorded positions, verifies
+that the real corner is accepted and charged, and still rejects a shortcut
+whose detour exceeds the budget. The client retains its tapped destination when
+settling a correction. Current rule/app/server total: 241 checks.
