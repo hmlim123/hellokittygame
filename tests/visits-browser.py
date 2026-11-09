@@ -29,6 +29,9 @@ with (results/'visits-service.log').open('w') as log:
             owner=browser.new_context(viewport={'width':1100,'height':1000},reduced_motion='no-preference')
             visitor=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce')
             host=owner.new_page();guest=visitor.new_page()
+            guest.add_init_script("""window.visitFocusEvents=[];
+                addEventListener('blur',()=>visitFocusEvents.push(['blur',Date.now()]));
+                document.addEventListener('visibilitychange',()=>visitFocusEvents.push([document.visibilityState,Date.now()]));""")
             corrections=[]
             def record_frame(payload):
                 try:
@@ -122,10 +125,19 @@ with (results/'visits-service.log').open('w') as log:
             }""")
             guest.get_by_role('button',name='Walk to the picnic table ↗',exact=True).tap()
             try:
-                guest.get_by_role('dialog',name='A picnic in the village',exact=True).wait_for(timeout=45000)
+                arrival=guest.get_by_role('dialog',name='A picnic in the village',exact=True)
+                try:
+                    arrival.wait_for(timeout=45000)
+                except Exception:
+                    motion=guest.locator('#world canvas').evaluate('(c)=>({...c.dataset})')
+                    if int(motion.get('villageRoute','0'))<1 or float(motion.get('villageSpeed','0'))<.1:
+                        raise
+                    print('SLOW SOFTWARE RENDERER: visitor is still walking',json.dumps(motion),flush=True)
+                    arrival.wait_for(timeout=45000)
             except Exception:
                 guest.screenshot(path='/tmp/kitty-village-visitor-route-failure.png',full_page=True)
-                print('VISITOR ROUTE',guest.locator('#world canvas').evaluate('(c)=>({...c.dataset})'),'corrections',corrections,flush=True)
+                detail=json.dumps({'canvas':guest.locator('#world canvas').evaluate('(c)=>({...c.dataset})'),'corrections':corrections,'focus':guest.evaluate('window.visitFocusEvents')})
+                print('::error title=Visitor route diagnostics::'+detail.replace('%','%25').replace('\n','%0A'),flush=True)
                 raise
             assert guest.evaluate('window.visitCorrectionInjected') and corrections, 'the rejected packet must exercise correction recovery'
             host.get_by_role('button',name='Lay the cloth',exact=True).click()
