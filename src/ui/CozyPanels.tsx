@@ -72,6 +72,7 @@ export function CookieArt({ cookie }: { cookie: Cookie }) {
   );
 }
 export function BakingPanel() {
+  const village = useGameStore((s) => s.mode === "village");
   const cozy = useGameStore((s) => s.cozy),
     c = cozy.cookie,
     close = useGameStore((s) => s.closePanel);
@@ -251,14 +252,18 @@ export function BakingPanel() {
             <button
               className="primary"
               onClick={() =>
-                cozy.delivery.active && cozy.delivery.step === "bake"
-                  ? s().packDelivery()
-                  : s().giveCookie(friend)
+                village
+                  ? s().packVillageCookie()
+                  : cozy.delivery.active && cozy.delivery.step === "bake"
+                    ? s().packDelivery()
+                    : s().giveCookie(friend)
               }
             >
-              {cozy.delivery.active && cozy.delivery.step === "bake"
-                ? "Pack for Momo’s delivery ♡"
-                : `Give cookie to ${names[friend]} ♡`}
+              {village
+                ? "Wrap for a village friend ♡"
+                : cozy.delivery.active && cozy.delivery.step === "bake"
+                  ? "Pack for Momo’s delivery ♡"
+                  : `Give cookie to ${names[friend]} ♡`}
             </button>
           </div>
         </>

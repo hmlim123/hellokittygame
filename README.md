@@ -2,12 +2,34 @@
 
 A cozy browser game for Nancy, using our actual animated Blender Hello Kitty.
 The room keeps three main buttons: **Wave hello**, **Happy dance**, and
-**Play a mission**. Inventory, settings, and playful interactions open in focused
-panels. The same clothes, items, collection, and quests follow Kitty between her
-room, Moonflower Adventure, and Butterfly Glade.
+**Visit the village**. Inventory, settings and little activities open in focused
+panels. Clothes, items, keepsakes and existing story progress stay shared.
 
-The agreed six-stage upgrade sequence and current milestone are tracked in
+The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
+
+## Nancy’s cozy village · v3.0.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=village-32>.
+
+Leave home for an open village with a plaza, Momo’s café and Pip’s garden.
+Tap the ground or a friend to walk there, use the thumb control on a phone,
+or steer with WASD/arrows. One nearby action keeps the interface simple.
+Bake and wrap a cookie, give it to a friend, water three flower beds, and bring
+an earned cushion, flower pot or café frame home to place in a neat spot.
+Village gifts and gardening unlock recipes without requiring an older quest.
+
+The actual Blender characters retain their walking, greeting, dancing and
+holding animations. Earlier Moonflower/Butterfly stories remain available under
+**Little activities → Earlier storybook adventures**, or `stories.html`.
+Existing saves, Nancy’s letter, outfits and the permanent gift-opening marker
+are preserved; this release does not reset her progress again.
+
+Private two-player visits are implemented, with separate avatars, chat, waves,
+a shared garden and a picnic. An account owner must first deploy the small
+Render service: [step-by-step setup](docs/private-visits-setup.md). GitHub Pages
+alone cannot host visits. Personal rooms and saves stay private to each browser.
+Phone touch emulation is tested; physical phone and Safari review is pending.
 
 ## Happy dance · v2.3.0
 

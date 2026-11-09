@@ -18,6 +18,8 @@ import { ACESFilmicToneMapping } from "three";
 import { useGameStore } from "../game/store";
 import { RoomScene } from "./RoomScene";
 import { AdventureScene } from "./AdventureScene";
+import { VillageScene } from "./VillageScene";
+import type { Mode } from "../game/types";
 import { assetUrl } from "./Kitty";
 class SceneBoundary extends Component<
   { children: ReactNode; onError: () => void },
@@ -35,13 +37,7 @@ class SceneBoundary extends Component<
     return this.state.failed ? null : this.props.children;
   }
 }
-function Ready({
-  mode,
-  revision,
-}: {
-  mode: "room" | "adventure";
-  revision: number;
-}) {
+function Ready({ mode, revision }: { mode: Mode; revision: number }) {
   const set = useGameStore((s) => s.setSceneReady);
   const frames = useRef(0);
   // Let the first scene draw compile/upload its materials before enabling input.
@@ -103,7 +99,7 @@ export function Stage() {
           shadows={false}
           frameloop={previewOpen ? "demand" : "always"}
           dpr={[1, 1.5]}
-          orthographic={mode === "adventure"}
+          orthographic={mode !== "room"}
           camera={camera}
           gl={{
             antialias: true,
@@ -117,7 +113,9 @@ export function Stage() {
               "aria-label",
               mode === "room"
                 ? "Interactive 3D Kitty room. Drag to rotate 360 degrees; arrow keys rotate the focused view."
-                : "Moonflower Adventure. Arrow keys or WASD to walk.",
+                : mode === "village"
+                  ? "Nancy’s village. Tap to walk or use the thumb control. Press E for a nearby action."
+                  : "Moonflower Adventure. Arrow keys or WASD to walk.",
             );
             gl.domElement.dataset.renderer = "react-three-fiber";
           }}
@@ -137,7 +135,13 @@ export function Stage() {
               interpolate
               updatePriority={-1}
             >
-              {mode === "room" ? <RoomScene /> : <AdventureScene />}
+              {mode === "room" ? (
+                <RoomScene />
+              ) : mode === "village" ? (
+                <VillageScene />
+              ) : (
+                <AdventureScene />
+              )}
               <Ready mode={mode} revision={revision} />
             </Physics>
           </Suspense>

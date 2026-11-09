@@ -23,6 +23,7 @@ export default defineConfig({
       input: {
         room: resolve(import.meta.dirname, "index.html"),
         adventure: resolve(import.meta.dirname, "adventure.html"),
+        stories: resolve(import.meta.dirname, "stories.html"),
       },
     },
   },

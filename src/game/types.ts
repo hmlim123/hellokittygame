@@ -1,4 +1,4 @@
-export type Mode = "room" | "adventure";
+export type Mode = "room" | "adventure" | "village";
 export type Direction = "up" | "down" | "left" | "right";
 export type Theme = "rose" | "lavender" | "peach" | "mint";
 export type OutfitId =
@@ -168,6 +168,8 @@ export interface SaveState {
   cozy: import("./cozy").CozyProgress;
 }
 export type Panel =
+  | "village"
+  | "visits"
   | "friend-tales"
   | "cozy"
   | "missions"

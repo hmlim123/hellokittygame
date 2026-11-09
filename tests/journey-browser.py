@@ -27,7 +27,7 @@ with sync_playwright() as p:
         for key,nx,nz in route:
             page.keyboard.press(key)
             page.wait_for_function("p=>{const a=JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'));return a.x===p[0]&&a.z===p[1]}",arg=[nx,nz],timeout=15000)
-    started=time.monotonic();page.goto(BASE+'/adventure.html');ready()
+    started=time.monotonic();page.goto(BASE+'/stories.html');ready()
     guide=page.get_by_role('complementary',name='Your next goal')
     assert guide.get_by_role('heading',name='Follow the glowing butterflies').is_visible()
     guide.get_by_text('A little hint',exact=True).click()

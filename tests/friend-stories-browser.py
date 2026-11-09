@@ -45,7 +45,7 @@ with sync_playwright()as p:
  for style,_,_ in TALES:
   page.locator('[data-friend='+style+']').click();page.wait_for_function("s=>document.querySelector('#stage canvas').dataset.plush===s",arg=style,timeout=60000);assert save()['equipment']['plush']==style
  page.locator('[data-friend=classic]').click();page.wait_for_function("document.querySelector('#stage canvas').dataset.plush==='classic'",timeout=60000)
- page.get_by_role('button',name='Play a mission',exact=False).click();page.get_by_role('button',name='Your storybook',exact=False).click();assert page.locator('[aria-label^="Read "]').count()>=5
+ page.get_by_role('button',name='Little activities',exact=False).click();page.get_by_role('button',name='Your storybook',exact=False).click();assert page.locator('[aria-label^="Read "]').count()>=5
  page.get_by_role('button',name='Read An invitation from the moon',exact=True).click();assert 'saved her a seat'in page.locator('.memory-spread').inner_text();page.get_by_role('button',name='Read the full story',exact=False).click();assert page.locator('.tale-reading').is_visible();assert len(save()['room']['owned'])==6
  page.get_by_role('button',name='Back to Kitty',exact=True).click();page.reload();ready();assert sum(t['complete']for t in save()['cozy']['tales'].values())==5
  print('PASS all six real shelf miniatures, all five friend selections, storybook/full reading and reload preserve invitations',flush=True)

@@ -3,6 +3,7 @@ import { DOLLS } from "../game/domain";
 import { ShelfFriend } from "./ShelfFriend";
 import { prepareKittyStyle } from "./kitty-assets";
 import { CozyCorner } from "./CozyCorner";
+import { VillageHome } from "./VillageHome";
 import { RainWindow } from "./RainWindow";
 import { Toy } from "./GameToys";
 import { CozyLights } from "./CozyLights";
@@ -279,6 +280,7 @@ export function RoomScene() {
         <Toy name="Oven" scale={1.1} />
       </group>
       <CozyCorner />
+      <VillageHome />
       <Toy name="Cup" position={[3.25, 1.24, 1.75]} scale={0.8} />
       <Arrival />
       <Kitty

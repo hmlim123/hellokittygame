@@ -335,3 +335,30 @@ test("visitors can help the shared garden only from a nearby bed and cannot rese
     false,
   ]);
 });
+
+test("leaving deliberately frees the visitor place without exposing the old ticket", async (t) => {
+  const s = await pair(t);
+  s.guest.send({ type: "leave" });
+  await s.guest.until((m) => m.type === "ended");
+  assert.equal(s.service.rooms.get(s.ticket.roomId).guest, null);
+  const next = await client(s.base, {
+    type: "join",
+    roomId: s.ticket.roomId,
+    invite: s.ticket.invite,
+    name: "Returning friend",
+  });
+  const welcome = await next.until((m) => m.type === "welcome");
+  assert.equal(welcome.role, "guest");
+  assert.notEqual(welcome.token, s.guestWelcome.token);
+  const old = await client(s.base, {
+    type: "hello",
+    roomId: s.ticket.roomId,
+    token: s.guestWelcome.token,
+  });
+  await new Promise((r) => setTimeout(r, 25));
+  assert.equal(old.closed(), 1008);
+  assert.match(
+    await (await fetch(s.base + "/")).text(),
+    /visit service is ready/,
+  );
+});

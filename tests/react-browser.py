@@ -49,17 +49,17 @@ with sync_playwright() as p:
  inventory();page.get_by_role('button',name='Sky sailor',exact=True).click();page.wait_for_selector('.outfit-preview canvas');page.wait_for_function("document.querySelector('.outfit-preview canvas').getAttribute('aria-label')?.startsWith('Sky sailor')")
  assert page.get_by_role('button',name='Moonlight dress',exact=True).is_disabled();page.get_by_role('tab',name='Items',exact=True).click();page.get_by_role('button',name='Cuddle teddy',exact=True).click();close_inventory()
  page.get_by_role('button',name='Play together ↗',exact=True).click();page.get_by_label('Message to Kitty').fill('dance please');page.get_by_role('button',name='Send ♡').click();assert page.locator('.chat-list p').count()==2;page.keyboard.press('Escape')
- print('ROOM UI PASS',flush=True);page.get_by_role('button',name='Play a mission').click();page.locator('[data-mission="bows"]').click()
+ print('ROOM UI PASS',flush=True);page.get_by_role('button',name='Little activities').click();page.locator('[data-mission="bows"]').click()
  for _ in range(8):page.get_by_role('button',name='Collect bow 1',exact=True).click()
  page.get_by_role('button',name='Back to Kitty',exact=True).wait_for(timeout=15000);assert len(saved('kitty-room-3d-v1')['owned'])==2;page.get_by_role('button',name='Back to Kitty',exact=True).click()
  # Picnic must reset its placed gifts when replayed.
  for run in range(2):
-  page.get_by_role('button',name='Play a mission').click();page.locator('[data-mission="picnic"]').click()
+  page.get_by_role('button',name='Little activities').click();page.locator('[data-mission="picnic"]').click()
   for item,spot in [('teddy','blanket'),('strawberry','plate'),('flowers','vase'),('letter','heart')]:
    page.locator(f'[data-picnic-item="{item}"]').click();page.locator(f'[data-picnic-slot="{spot}"]').click()
   page.get_by_role('button',name='Back to Kitty',exact=True).wait_for(timeout=15000);page.get_by_role('button',name='Back to Kitty',exact=True).click()
  page.screenshot(path='/tmp/react-room-verified.png',full_page=True)
- page.get_by_role('button',name='Play a mission').click();page.locator('.adventure-link:not(.glade-link)').click();ready();assert page.url.endswith('adventure.html');assert saved('kitty-nancy-equipment-v1')['outfit']=='sailor'
+ page.get_by_role('button',name='Little activities').click();page.locator('details.earlier-stories > summary').click();page.locator('.adventure-link:not(.glade-link)').click();ready();assert page.url.endswith('stories.html');assert saved('kitty-nancy-equipment-v1')['outfit']=='sailor'
  # Actual blocked-wall movement, not a logical-only collision assertion.
  walk(4,8);page.keyboard.press('ArrowLeft');page.wait_for_function("Number(document.querySelector('#world canvas').dataset.physicsContacts)>0",timeout=15000);assert saved()['x']==4
  for x,z in [(5,3),(12,9),(4,5)]:walk(x,z)
@@ -81,7 +81,7 @@ with sync_playwright() as p:
  count=len(saved('kitty-room-3d-v1')['owned']);page.get_by_role('button',name='← Her room').click();ready();assert canvas.get_attribute('data-outfit')=='berry';page.reload();ready();assert len(saved('kitty-room-3d-v1')['owned'])==count
  page.screenshot(path='/tmp/react-earned-room.png',full_page=True)
  # Phone touch controls and native inventory modal; no horizontal overflow.
- mobile=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce');mobile.on('pageerror',lambda e:errors.append(str(e)));mobile.goto(BASE+'/adventure.html');mobile.wait_for_function("!document.querySelector('.dpad button').disabled",timeout=60000);mobile.get_by_role('button',name='Walk left',exact=True).tap();mobile.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x===6",timeout=15000);mobile.get_by_role('button',name='Inventory ♡',exact=True).tap();mobile.get_by_role('tab',name='Quest',exact=True).tap();assert mobile.locator('.quest-card').count()==5;assert mobile.evaluate('document.documentElement.scrollWidth<=innerWidth');mobile.screenshot(path='/tmp/react-mobile-verified.png',full_page=True)
+ mobile=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce');mobile.on('pageerror',lambda e:errors.append(str(e)));mobile.goto(BASE+'/stories.html');mobile.wait_for_function("!document.querySelector('.dpad button').disabled",timeout=60000);mobile.get_by_role('button',name='Walk left',exact=True).tap();mobile.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x===6",timeout=15000);mobile.get_by_role('button',name='Inventory ♡',exact=True).tap();mobile.get_by_role('tab',name='Quest',exact=True).tap();assert mobile.locator('.quest-card').count()==5;assert mobile.evaluate('document.documentElement.scrollWidth<=innerWidth');mobile.screenshot(path='/tmp/react-mobile-verified.png',full_page=True)
  assert not errors,errors
  print('PASS React room, 360 controls, settings, chat, wardrobe, mission rewards, picnic replay, Rapier collision, all four adventure quests, reload, shared room rewards, mobile touch; zero page errors.',flush=True)
  browser.close()

@@ -1,4 +1,13 @@
 import { startEmptyPaws } from "../../dist/empty-paws.js";
+import {
+  normalizeVillage,
+  villageWalkable,
+  villageKeepsakes,
+  VILLAGE_ACTIONS,
+  type VillageFriend,
+  type VillageKeepsake,
+  type VillageSpot,
+} from "./village";
 import { FRIEND_TALES, advanceTale } from "./friend-tales";
 import type { PlushId } from "./types";
 import { normalizePlush } from "../../dist/plush-state.js";
@@ -105,9 +114,19 @@ const copy = <T>(v: T): T => structuredClone(v);
 const initialMode = (): Mode =>
   typeof location !== "undefined" &&
   location.pathname.endsWith("adventure.html")
-    ? "adventure"
-    : "room";
+    ? "village"
+    : typeof location !== "undefined" &&
+        location.pathname.endsWith("stories.html")
+      ? "adventure"
+      : "room";
 export interface GameState extends SaveState {
+  enterVillage(): void;
+  saveVillagePosition(x: number, z: number, yaw: number): void;
+  villageHello(friend: VillageFriend, visitorName?: string): void;
+  packVillageCookie(): void;
+  villageGift(friend: VillageFriend): void;
+  villageWater(index: number): void;
+  placeVillageKeepsake(item: VillageKeepsake, spot: VillageSpot): void;
   mode: Mode;
   panel: Panel;
   activeTale: PlushId | null;
@@ -489,6 +508,207 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
         };
         return {
           ...legacy,
+          enterVillage() {
+            if (get().mission?.active) return;
+            get().setMode("village");
+            set({ panel: null });
+          },
+          saveVillagePosition(x, z, yaw) {
+            if (
+              get().mode !== "village" ||
+              !villageWalkable(x, z) ||
+              !Number.isFinite(yaw)
+            )
+              return;
+            const s = get(),
+              v = normalizeVillage({ ...s.cozy.village, x, z, yaw });
+            if (
+              Math.hypot(v.x - s.cozy.village.x, v.z - s.cozy.village.z) <
+                0.015 &&
+              Math.abs(v.yaw - s.cozy.village.yaw) < 0.02
+            )
+              return;
+            set({ cozy: { ...s.cozy, village: v } });
+          },
+          villageHello(friend, visitorName) {
+            const s = get(),
+              v = s.cozy.village,
+              o = VILLAGE_ACTIONS.find((o) => o.id === friend);
+            if (
+              s.mode !== "village" ||
+              !o ||
+              Math.hypot(v.x - o.x, v.z - o.z) > 2.5
+            )
+              return;
+            const first = !v.greeted.includes(friend),
+              memory = s.cozy.friends[friend];
+            set({
+              cozy: {
+                ...s.cozy,
+                village: {
+                  ...v,
+                  greeted: first ? [...v.greeted, friend] : v.greeted,
+                },
+                friends: {
+                  ...s.cozy.friends,
+                  [friend]: { ...memory, visits: memory.visits + 1 },
+                },
+              },
+              gesture: { id: ++serial, kind: "wave" },
+              notice: null,
+              dialogue: {
+                speaker: friend === "momo" ? "Momo" : "Pip",
+                source: {
+                  type: friend === "momo" ? "VM" : "VP",
+                  x: o.x,
+                  z: o.z,
+                },
+                text: visitorName
+                  ? `Hello, ${visitorName.slice(0, 24)}! It’s lovely to see you in Nancy’s village. ${friend === "momo" ? "The café is just behind me. Bring a cookie or join your friend for a picnic." : "You can help our flower beds bloom. A little drink makes their day."}`
+                  : friend === "momo"
+                    ? first
+                      ? "Welcome to our little village, Nancy! The café is just behind me. You can bake a cookie, wander through the garden, or simply sit for a while. I left a little welcome cushion for your home."
+                      : "I saved you a cozy little spot by the café. What shall we make today?"
+                    : first
+                      ? "Hello, Nancy! These three little flower beds need a drink. Tap a bed to walk over, then water it. When they all bloom, I have a little flower pot for your home."
+                      : "Our garden feels sweeter when you visit. Shall we give the flowers a little drink?",
+                memory: friendLine(
+                  friend,
+                  memory,
+                  false,
+                  visitorName || "Nancy",
+                ),
+              },
+            });
+          },
+          packVillageCookie() {
+            const s = get(),
+              c = s.cozy.cookie;
+            if (
+              s.mode !== "village" ||
+              s.panel !== "baking" ||
+              c.stage !== "give" ||
+              !c.stamps.length
+            )
+              return;
+            set({
+              cozy: {
+                ...s.cozy,
+                cookie: { ...c, stage: "served", packed: true },
+              },
+              panel: null,
+              gesture: { id: ++serial, kind: "present" },
+              notice: notify(
+                "A little gift to carry",
+                "Your cookie is wrapped safely. Walk over to Momo or Pip to give it to them.",
+              ),
+            });
+          },
+          villageGift(friend) {
+            const s = get(),
+              v = s.cozy.village,
+              c = s.cozy.cookie,
+              o = VILLAGE_ACTIONS.find((o) => o.id === friend);
+            if (
+              s.mode !== "village" ||
+              !o ||
+              Math.hypot(v.x - o.x, v.z - o.z) > 2.5 ||
+              !c.packed ||
+              c.stage !== "served"
+            )
+              return;
+            const memory = s.cozy.friends[friend],
+              first = v.gifts[friend] === 0;
+            set({
+              cozy: {
+                ...s.cozy,
+                cookie: { ...c, packed: false, friend },
+                cookiesGiven: s.cozy.cookiesGiven + 1,
+                village: {
+                  ...v,
+                  gifts: { ...v.gifts, [friend]: v.gifts[friend] + 1 },
+                },
+                friends: {
+                  ...s.cozy.friends,
+                  [friend]: {
+                    ...memory,
+                    gifts: memory.gifts + 1,
+                    last: copy(c),
+                  },
+                },
+              },
+              gesture: { id: ++serial, kind: "handoff" },
+              dialogue: null,
+              notice: notify(
+                friend === "momo"
+                  ? "Momo loves your cookie ♡"
+                  : "Pip loves your cookie ♡",
+                first && friend === "momo"
+                  ? "A cookie made with love. Momo gave you a café memory frame to take home."
+                  : `Your ${c.shape} cookie made a friend smile. They will remember your little gift.`,
+              ),
+            });
+          },
+          villageWater(index) {
+            const s = get(),
+              v = s.cozy.village,
+              o = VILLAGE_ACTIONS.find((o) => o.id === "flowers" + index);
+            if (
+              s.mode !== "village" ||
+              !o ||
+              !Number.isInteger(index) ||
+              index < 0 ||
+              index > 2 ||
+              Math.hypot(v.x - o.x, v.z - o.z) > 2.3
+            )
+              return;
+            const flowers = [...v.flowers];
+            flowers[index] = true;
+            const earned = flowers.every(Boolean) && !v.flowers.every(Boolean);
+            set({
+              cozy: { ...s.cozy, village: { ...v, flowers } },
+              gesture: { id: ++serial, kind: "bow" },
+              effect: {
+                id: ++serial,
+                kind: "water",
+                map: s.adventure.map,
+                at: [o.x, o.z],
+                startedAt: performance.now(),
+                duration: 2.4,
+              },
+              notice: notify(
+                earned
+                  ? "A little garden to bring home"
+                  : "A little drink for the flowers",
+                earned
+                  ? "All three beds are blooming! Pip’s flower pot is ready to place in your room."
+                  : "The flowers lift their faces toward Nancy. No rush; they will keep their bloom.",
+              ),
+            });
+          },
+          placeVillageKeepsake(item, spot) {
+            const s = get(),
+              v = s.cozy.village;
+            if (
+              !["window", "nook", "table"].includes(spot) ||
+              !villageKeepsakes(v).some((k) => k.id === item)
+            )
+              return;
+            const placed = { ...v.placed },
+              old = placed[item],
+              occupant = Object.entries(placed).find(
+                ([id, at]) => id !== item && at === spot,
+              )?.[0] as VillageKeepsake | undefined;
+            if (occupant) {
+              if (old) placed[occupant] = old;
+              else delete placed[occupant];
+            }
+            placed[item] = spot;
+            set({
+              cozy: { ...s.cozy, village: { ...v, placed } },
+              gesture: { id: ++serial, kind: "softHappy" },
+            });
+          },
           petMode: false,
           viewOnly: false,
           setViewOnly(hidden) {
@@ -554,8 +774,20 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               !decorationUnlocked(item, s.cozy, s.adventure)
             )
               return;
+            const placed = { ...s.cozy.village.placed },
+              key =
+                item === "cushion"
+                  ? "welcome"
+                  : item === "frame"
+                    ? "cafe"
+                    : "flowers";
+            delete placed[key];
             set({
-              cozy: { ...s.cozy, corner: { ...s.cozy.corner, [item]: spot } },
+              cozy: {
+                ...s.cozy,
+                corner: { ...s.cozy.corner, [item]: spot },
+                village: { ...s.cozy.village, placed },
+              },
             });
           },
           chooseRecipe(id) {
@@ -1238,6 +1470,20 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           physicsContacts: 0,
           cameraReset: 0,
           setMode(mode) {
+            if (mode === "room" && get().mode === "village") {
+              const s = get();
+              set({
+                cozy: {
+                  ...s.cozy,
+                  village: {
+                    ...s.cozy.village,
+                    returned:
+                      villageKeepsakes(s.cozy.village).length > 0 ||
+                      s.cozy.village.returned,
+                  },
+                },
+              });
+            }
             const c = get().cozy;
             const finishedDelivery =
               mode === "room" &&
@@ -1381,7 +1627,15 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
                       kind:
                         next.step === 3
                           ? ("celebrate" as const)
-                          : ((tale.id === "baby" ? "sleepy" : tale.id === "witch" ? "curious" : tale.id === "kitten" ? "shy" : tale.id === "bunny" ? "surprised" : "softHappy") as Gesture),
+                          : ((tale.id === "baby"
+                              ? "sleepy"
+                              : tale.id === "witch"
+                                ? "curious"
+                                : tale.id === "kitten"
+                                  ? "shy"
+                                  : tale.id === "bunny"
+                                    ? "surprised"
+                                    : "softHappy") as Gesture),
                     },
                   }
                 : {}),
@@ -1646,6 +1900,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           },
           closeDialogue() {
             set({ dialogue: null });
+            if (get().mode !== "adventure") return;
             const a = copy(get().adventure);
             applyStory(a, autoEncounter(a));
           },
@@ -1864,7 +2119,11 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
 }
 const giftVisit = giftVisitStorage();
 export const useGameStore = createGameStore(giftVisit.storage);
-const emptyPaws = startEmptyPaws(giftVisit.storage, useGameStore.getState().equipment);
-if (emptyPaws.item !== useGameStore.getState().equipment.item) useGameStore.getState().equip("item", "none");
+const emptyPaws = startEmptyPaws(
+  giftVisit.storage,
+  useGameStore.getState().equipment,
+);
+if (emptyPaws.item !== useGameStore.getState().equipment.item)
+  useGameStore.getState().equip("item", "none");
 if (giftVisit.started) useGameStore.getState().setMode("room");
 export const resetForTests = () => createGameStore(emptyStorage);

@@ -173,14 +173,12 @@ export function createVisitService({
           guest: restore(r.guest, "guest"),
           revision: 0,
           chat: Array.isArray(r.chat)
-            ? r.chat
-                .slice(-20)
-                .map((m) => ({
-                  id: text(m.id, 60),
-                  role: m.role === "guest" ? "guest" : "host",
-                  name: text(m.name, 24),
-                  text: text(m.text, 240),
-                }))
+            ? r.chat.slice(-20).map((m) => ({
+                id: text(m.id, 60),
+                role: m.role === "guest" ? "guest" : "host",
+                name: text(m.name, 24),
+                text: text(m.text, 240),
+              }))
             : [],
           picnic: [0, 1, 2].map((i) => r.picnic?.[i] === true),
           garden: [0, 1, 2].map((i) => r.garden?.[i] === true),
@@ -213,6 +211,17 @@ export function createVisitService({
   }
   const server = createServer(async (req, res) => {
     const origin = req.headers.origin;
+    if (req.method === "GET" && req.url === "/") {
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      res.end(
+        "Nancy’s private village visit service is ready.\nPlay the game at https://hmlim123.github.io/hellokittygame/\n",
+      );
+      return;
+    }
     if (req.method === "GET" && req.url === "/health") {
       response(
         res,
@@ -558,6 +567,14 @@ export function createVisitService({
         if (room.picnic.every(Boolean))
           for (const a of [room.host, room.guest])
             a.gesture = { id: a.gesture.id + 1, kind: "softHappy" };
+        broadcast(room);
+        dirty();
+      } else if (m.type === "leave") {
+        if (player.id !== "guest") return;
+        room.guest = null;
+        room.guestHash = null;
+        send(ws, { type: "ended" });
+        ws.close(1000, "You left the visit.");
         broadcast(room);
         dirty();
       } else if (m.type === "end") {

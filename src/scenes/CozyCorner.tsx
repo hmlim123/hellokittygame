@@ -21,24 +21,30 @@ export function CozyCorner() {
   } as const;
   return (
     <>
-      <Toy
-        name="Cushion"
-        position={[
-          ...cushion[
-            decorationUnlocked("cushion", c, a) ? c.corner.cushion : "rug"
-          ],
-        ]}
-        scale={1.1}
-      />
-      <Toy
-        name="Frame"
-        position={[
-          ...frame[decorationUnlocked("frame", c, a) ? c.corner.frame : "rug"],
-        ]}
-        rotation={[0, c.corner.frame === "chair" ? Math.PI / 2 : 0, 0]}
-        scale={0.8}
-      />
-      {decorationUnlocked("flowers", c, a) && (
+      {!c.village.placed.welcome && (
+        <Toy
+          name="Cushion"
+          position={[
+            ...cushion[
+              decorationUnlocked("cushion", c, a) ? c.corner.cushion : "rug"
+            ],
+          ]}
+          scale={1.1}
+        />
+      )}
+      {!c.village.placed.cafe && (
+        <Toy
+          name="Frame"
+          position={[
+            ...frame[
+              decorationUnlocked("frame", c, a) ? c.corner.frame : "rug"
+            ],
+          ]}
+          rotation={[0, c.corner.frame === "chair" ? Math.PI / 2 : 0, 0]}
+          scale={0.8}
+        />
+      )}
+      {decorationUnlocked("flowers", c, a) && !c.village.placed.flowers && (
         <Toy
           name="Flowers"
           position={[...flowers[c.corner.flowers]]}

@@ -43,10 +43,10 @@ with sync_playwright() as p:
  assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).postcards[0].plush")== 'bunny'
  page.get_by_role('button',name='Close Nancy’s photo corner',exact=True).click();page.locator('#dance').click()
  page.wait_for_function("document.querySelector('#stage canvas').dataset.blenderAction==='dance'",timeout=30000)
- page.get_by_role('button',name='Play a mission').click();page.get_by_role('button',name='Moonflower Adventure',exact=False).click();ready();model('#world canvas','bunny');page.wait_for_function("Number(document.querySelector('#world canvas').dataset.modelTop)<.98",timeout=15000)
+ page.get_by_role('button',name='Little activities').click();page.locator('details.earlier-stories > summary').click();page.get_by_role('button',name='Moonflower Adventure',exact=False).click();ready();model('#world canvas','bunny');page.wait_for_function("Number(document.querySelector('#world canvas').dataset.modelTop)<.98",timeout=15000)
  x=page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x");page.keyboard.press('ArrowRight');page.wait_for_function("x=>JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).x===x+1",arg=x,timeout=15000)
  page.reload();ready();model('#world canvas','bunny');assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).outfit")== 'sailor'
- page.goto(BASE+'/');ready();page.get_by_role('button',name='Play a mission').click();page.get_by_role('button',name='Bake cookies with Kitty').click();model('.baking-preview canvas','bunny')
+ page.goto(BASE+'/');ready();page.get_by_role('button',name='Little activities').click();page.get_by_role('button',name='Bake cookies with Kitty').click();model('.baking-preview canvas','bunny')
  page.wait_for_function("Number(document.querySelector('.baking-preview canvas').dataset.modelTop)<.98",timeout=15000);page.get_by_role('button',name='Stir a little ↻',exact=True).click();page.wait_for_function("document.querySelector('.baking-preview canvas').dataset.blenderAction==='stir'",timeout=30000)
  page.locator('.baking-performance').screenshot(path='/tmp/nancy-plush-baking.png')
  print('PASS room dance, shared clothes, bunny postcard metadata, adventure walking/reload and tall-accessory baking all retain the selected plush',flush=True)

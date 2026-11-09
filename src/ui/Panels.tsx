@@ -32,29 +32,24 @@ export function MissionsPanel() {
     <Dialog title="Nancy’s little adventures" onClose={close}>
       <span className="eyebrow">A LITTLE WORLD MADE FOR YOU</span>
       <h2>Nancy’s little adventures</h2>
-      <p>Pick a cozy little game, or continue your Moonflower story.</p>
-      {adventure.accepted && (
-        <button
-          className="continue-adventure"
-          onClick={() => useGameStore.getState().continueAdventure()}
-          aria-label="Continue adventure"
-        >
-          <span>☾</span>
-          <div>
-            <strong>Continue adventure</strong>
-            <small>
-              {WORLD[adventure.map].title} ·{" "}
-              {QUEST_NAMES[adventure.trackedQuest]}
-            </small>
-            <p>{journeyObjective(adventure)}</p>
-          </div>
-          <span aria-hidden="true">↗</span>
-        </button>
-      )}
+      <p>
+        Visit your village, spend time with a friend, or choose a little
+        activity.
+      </p>
+      <button
+        className="village-entry"
+        onClick={() => useGameStore.getState().enterVillage()}
+      >
+        <span>✿</span>
+        <div>
+          <strong>Visit Nancy’s village</strong>
+          <small>
+            Home, friends, a little café and a garden. Take your time.
+          </small>
+        </div>
+        <span>↗</span>
+      </button>
       <div className="memory-actions">
-        <button onClick={() => useGameStore.getState().startDelivery()}>
-          A little cookie delivery ♡
-        </button>
         <button onClick={() => useGameStore.getState().openPanel("cozy")}>
           Your cozy corner ☂
         </button>
@@ -99,34 +94,58 @@ export function MissionsPanel() {
           </button>
         ))}
       </div>
-      <button
-        className="adventure-link"
-        onClick={() => useGameStore.getState().startMoonflower()}
-      >
-        ☾{" "}
-        <span>
-          <strong>Moonflower Adventure</strong>
-          <small>
-            A village, a gentle dungeon, and four quests for Nancy ↗
-          </small>
-        </span>
-      </button>
-      <button
-        className="adventure-link glade-link"
-        onClick={() => useGameStore.getState().startGlade()}
-      >
-        ✧{" "}
-        <span>
-          <strong>Butterfly Glade</strong>
-          <small>
-            Lantern trails, little puzzles, and a picnic under the moon ↗
-          </small>
-        </span>
-      </button>
-      <div className="memory-actions">
+      <details className="earlier-stories">
+        <summary>Earlier storybook adventures</summary>
+        {adventure.accepted && (
+          <button
+            className="continue-adventure"
+            onClick={() => useGameStore.getState().continueAdventure()}
+            aria-label="Continue adventure"
+          >
+            <span>☾</span>
+            <div>
+              <strong>Continue adventure</strong>
+              <small>
+                {WORLD[adventure.map].title} ·{" "}
+                {QUEST_NAMES[adventure.trackedQuest]}
+              </small>
+              <p>{journeyObjective(adventure)}</p>
+            </div>
+            <span aria-hidden="true">↗</span>
+          </button>
+        )}
+        <button
+          className="adventure-link"
+          onClick={() => useGameStore.getState().startMoonflower()}
+        >
+          ☾{" "}
+          <span>
+            <strong>Moonflower Adventure</strong>
+            <small>
+              A village, a gentle dungeon, and four quests for Nancy ↗
+            </small>
+          </span>
+        </button>
+        <button
+          className="adventure-link glade-link"
+          onClick={() => useGameStore.getState().startGlade()}
+        >
+          ✧{" "}
+          <span>
+            <strong>Butterfly Glade</strong>
+            <small>
+              Lantern trails, little puzzles, and a picnic under the moon ↗
+            </small>
+          </span>
+        </button>
+        <button onClick={() => useGameStore.getState().startDelivery()}>
+          A little cookie delivery ♡
+        </button>
         <button onClick={() => useGameStore.getState().startTea()}>
           Moonlight tea party ☾
         </button>
+      </details>
+      <div className="memory-actions">
         <button onClick={() => useGameStore.getState().openPanel("keepsakes")}>
           Your keepsake wall ♡
         </button>

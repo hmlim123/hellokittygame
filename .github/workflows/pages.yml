@@ -6,6 +6,10 @@ on:
     paths:
       - "dist/**"
       - "src/**"
+      - "shared/**"
+      - "server/**"
+      - "render.yaml"
+      - "stories.html"
       - "scripts/**"
       - "tests/**"
       - "package.json"
@@ -43,11 +47,14 @@ jobs:
       - name: Check game rules and save migration
         run: npm test
       - name: Build the React game
+        env:
+          VITE_VISITS_URL: ${{ vars.KITTY_VISITS_URL }}
         run: npm run build
       - name: Check playable assets
         run: |
           test -s build/index.html
           test -s build/adventure.html
+          test -s build/stories.html
           test -s build/assets/hello-kitty.glb
           test -s build/assets/cozy-friends.glb
           test -s build/assets/cozy-props.glb
@@ -65,11 +72,11 @@ jobs:
     name: Browser journeys ${{ matrix.shard }}
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2, 3, 4]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -104,7 +111,7 @@ jobs:
     name: Publish the tested game
     needs: [build, browsers]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 25
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -124,3 +131,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+        with:
+          timeout: 1200000

@@ -5,14 +5,14 @@ sessions. Deliver and verify one milestone at a time, with a focused release
 and a short explanation of what changed. The roadmap is not a claim that every
 stage has already shipped.
 
-## Future direction: Nancy’s cozy village
+## Current direction: Nancy’s cozy village
 
 Agreed direction on 2026-11-09: evolve the game toward a Hello Kitty life
 simulation inspired by Animal Crossing: New Horizons. The user finds the current
 adventure concept confusing and wants an inviting village with NPCs, comfortable
-phone controls and everyday activities. This is a future roadmap, not a claim
-that the village redesign or multiplayer has shipped. Completeness and polish
-take priority over adding a large feature catalogue.
+phone controls and everyday activities. The v3.0.0 delivery record below tracks
+the implementation and verification separately from hosting. Completeness and
+polish take priority over adding a large feature catalogue.
 
 The central loop is: leave home → meet a friend → choose a small activity →
 bring home a keepsake → decorate or enjoy it with Kitty. Progress should feel
@@ -36,7 +36,7 @@ and the existing Blender characters, outfits, baking, gardening and room items.
 - Preserve Nancy’s progress, letter, outfits, earned friends and souvenirs when
   introducing the village. Existing dungeon stories can remain optional trips.
 
-### Next milestone: one complete village visit
+### Milestone: one complete village visit
 
 Build one small, polished single-player village loop first: walk from home to
 the plaza, greet Momo, choose a café or garden activity, receive one keepsake,
@@ -50,7 +50,7 @@ movement, camera and entrances behave consistently; rewards are granted once;
 returning home and reloading retain progress. Review actual phone/Safari play
 before claiming physical-device acceptance. Keep the room’s three main buttons.
 
-### Later milestone: private visits together
+### Milestone: private visits together
 
 The user wants to join Nancy in the same village in the future. Plan private,
 invite-only sessions for two people, each with a distinct avatar. Start with
@@ -70,7 +70,7 @@ actions and grants rewards once. Test two independent clients, joining/leaving,
 reconnection, simultaneous interactions and restoration after a disconnect.
 Single-player play must continue to work when a friend is offline.
 
-Suggested delivery order: clear village navigation and mobile controls → NPC
+Agreed delivery order: clear village navigation and mobile controls → NPC
 life and one complete home/activity/reward loop → polished decorating and visits
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
@@ -1048,3 +1048,52 @@ and occupied-paw take. Local baking/contact, tray, replay and both NPC greeting
 checks passed again with no page errors. Source archive checksums match private
 Blender source `1595fd5`; the website archive contains candidate `7e08a5a`.
 Nancy’s progress and letter remain. Physical phone/Mac Safari review is pending.
+
+
+## Cozy village delivery · v3.0.0 · 2026-11-09
+
+Replaces the primary adventure with an open village: Nancy’s home, plaza,
+Momo’s café, Pip’s garden and a picnic table. The three room buttons are Wave,
+Happy dance and Visit the village. Earlier stories remain folded under Little
+activities and are directly accessible at `stories.html`; their progress is
+preserved. Tap-to-walk routes around scenery, the thumb control supports
+continuous diagonal touch steering, and camera following has a fixed direction.
+NPC taps walk into conversation range. Menu, focus loss and touch release stop
+movement. No maze, arch requirement or mandatory quest checklist.
+
+A complete village day supports greeting Momo, baking and wrapping a cookie,
+carrying the real Blender parcel, handing it to a friend once, watering three
+beds and placing earned keepsakes in the actual room. Recipes unlock from these
+new activities. The old room decorator and new placements share unlocks and
+move a single decoration rather than duplicating it. Backup/reload includes
+village progress without clearing earlier saves, outfits or Nancy’s letter.
+The six existing Blender editions and source-authored motions are reused;
+this milestone does not claim new Blender source authoring.
+
+Private two-player visits include real remote Blender avatars, appearance and
+movement, wave/dance, plain-text chat, shared garden watering and a three-part
+picnic. Separate private role tickets, host closure, explicit guest departure,
+reconnection, movement/proximity validation and atomic checkpoint restoration
+are implemented. Visitor actions cannot overwrite the host’s home or letter.
+The shared village exterior is online; room interiors remain personal.
+
+Render infrastructure and account-owner instructions are ready in
+[private visits setup](private-visits-setup.md). No Render service address or
+account connection has been supplied, so publicly hosted online visits remain
+unconfigured. Single-player village play is independent of that setup.
+
+Verification: 93 domain checks, 137 app checks and 10 server checks pass locally.
+The fresh browser journey passes greeting, café baking, wrapping/carrying, a
+one-time gift, all three flower beds, recipe unlocks, placement in the actual
+room, reload and preservation of earlier stories. Real touch events pass at
+320×568, 390×844 and 844×390, including diagonal steering, release/focus stops,
+menus and overflow checks. Review images: [phone](nancy-village-phone.png),
+[garden](nancy-village-garden.png), [home](nancy-village-room.png).
+Two independent browser contexts pass invitations, separate avatars and outfits,
+walking, plain-text chat, source-authored waving, shared garden watering, a shared
+picnic with separate places, refresh/reconnection and host closure without page
+errors. [Private picnic review](nancy-village-private-picnic.png). A corrected
+position now recalculates a tapped walking route rather than silently cancelling
+it; the release browser check forces a rejected packet to verify that recovery.
+Publication evidence follows the final release checks. Physical phone and Mac Safari acceptance remains pending; Chromium touch
+emulation does not establish physical-device performance or Safari compatibility.

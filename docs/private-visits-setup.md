@@ -2,21 +2,29 @@
 
 The browser game stays on GitHub Pages. A small Node 24/WebSocket service hosts
 private visits for two people. `render.yaml` prepares a free Render web service.
-The village interface is delivered with the village redesign; the backend can
-be deployed first.
+The village interface uses this service for optional online visits. The village
+and personal activities work without a service connection.
 
 ## Connect Render
 
 1. Open [Deploy on Render](https://render.com/deploy?repo=https://github.com/hmlim123/hellokittygame).
-2. Sign in to your Render account and connect this repository. Review the
-   `nancy-village-visits` service from the blueprint; it specifies the free plan.
-3. Deploy the service. Its health check is `/health`. Keep `ALLOWED_ORIGINS`
+2. Choose **Sign in with GitHub** (create a Render account if needed). If Render
+   asks which repositories it can access, select `hmlim123/hellokittygame`.
+   Continue to the blueprint preview: it should list **nancy-village-visits**
+   with the **Free** plan.
+3. Choose **Deploy Blueprint** or **Apply** and wait until the service says
+   **Live**. Open its service page and copy the web address near the top,
+   for example `https://nancy-village-visits-xxxx.onrender.com`. This is the
+   service address, not the Render dashboard address. Its health check is
+   `/health`. Keep `ALLOWED_ORIGINS`
    set to `https://hmlim123.github.io`, the origin of Nancy’s game.
-4. Copy the service’s `https://…onrender.com` address. Once the village update
-   is available, open **Private visits → Connect the village service**, paste
+4. Copy the service’s `https://…onrender.com` address. In the game, open **Private visits → Connect the village service**, paste
    that address and choose **Connect service**. A host only needs to do this once.
    The address can also be set as the game build’s `VITE_VISITS_URL` so it is
-   ready for Nancy automatically.
+   ready for Nancy automatically, using the repository variable
+   `KITTY_VISITS_URL` and a new Pages build. Alternatively, open
+   `adventure.html?visits=YOUR_HTTPS_SERVICE_ADDRESS` once on the host’s device;
+   it presets the same connection field.
 5. Choose **Open my village**, copy the private invitation, and send it to your
    friend. The invited player enters a name and chooses **Join the village**.
    They do not need to configure a server or have a GitHub/Render account.

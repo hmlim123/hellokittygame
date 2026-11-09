@@ -1,4 +1,5 @@
 import { normalizeTales, type TaleCollection } from "./friend-tales";
+import { normalizeVillage, type VillageProgress } from "./village";
 import { normalizePlush } from "../../dist/plush-state.js";
 import type { Adventure, OutfitId, PlushId } from "./types";
 export const COOKIE_SHAPES = ["heart", "star", "round"] as const;
@@ -48,6 +49,7 @@ export interface PostcardMemory {
   createdAt: string;
 }
 export interface CozyProgress {
+  village: VillageProgress;
   tales: TaleCollection;
   version: 1;
   weather: "sunny" | "rain";
@@ -181,6 +183,7 @@ export function normalizeCozy(value: unknown): CozyProgress {
   }
   return {
     version: 1,
+    village: normalizeVillage(raw.village),
     weather: raw.weather === "rain" ? "rain" : "sunny",
     rainSound: raw.rainSound === true,
     corner: Object.fromEntries(
@@ -284,28 +287,31 @@ export const RECIPES: {
   {
     id: "strawberry",
     name: "Strawberry biscuits",
-    hint: "Complete your cookie delivery and bring the recipe home.",
+    hint: "Give a village cookie to Momo, or complete the earlier delivery story.",
     action: "Mash the berries",
   },
   {
     id: "moon",
     name: "Moon-shaped cookies",
-    hint: "Discover all three moon charms in Moonflower Garden.",
+    hint: "Help all three village flower beds bloom, or find the earlier story’s three charms.",
     action: "Stamp a little moon",
   },
   {
     id: "cupcake",
     name: "Tiny cupcakes",
-    hint: "Finish the moonlight tea party with Momo.",
+    hint: "Bring three little cookie gifts to your village friends, or finish the moonlight tea story.",
     action: "Swirl the icing",
   },
 ];
 export function recipeUnlocked(id: RecipeId, c: CozyProgress, a: Adventure) {
   return (
     id === "butter" ||
-    (id === "strawberry" && c.delivery.step === "done") ||
-    (id === "moon" && a.charms.length === 3) ||
-    (id === "cupcake" && c.tea.complete)
+    (id === "strawberry" &&
+      (c.delivery.step === "done" || c.village.gifts.momo > 0)) ||
+    (id === "moon" &&
+      (a.charms.length === 3 || c.village.flowers.every(Boolean))) ||
+    (id === "cupcake" &&
+      (c.tea.complete || c.village.gifts.momo + c.village.gifts.pip >= 3))
   );
 }
 export function cookieName(c: Cookie) {
@@ -317,15 +323,16 @@ export function friendLine(
   name: "momo" | "pip",
   memory: FriendMemory,
   gatheredMint = false,
+  displayName = "Nancy",
 ) {
   if (memory.last)
-    return `I still remember the ${cookieName(memory.last)} you made for me, Nancy. ${["That was such a sweet little surprise.", "Shall we sit together for a moment?", "You always bring a little sunshine with you."][memory.visits % 3]}`;
+    return `I still remember the ${cookieName(memory.last)} you made for me, ${displayName}. ${["That was such a sweet little surprise.", "Shall we sit together for a moment?", "You always bring a little sunshine with you."][memory.visits % 3]}`;
   if (name === "pip" && gatheredMint)
-    return "I loved gathering mint with you, Nancy. Shall we make another quiet afternoon of it?";
+    return `I loved gathering mint with you, ${displayName}. Shall we make another quiet afternoon of it?`;
   return [
-    "It is lovely to spend a little time with you, Nancy.",
+    `It is lovely to spend a little time with you, ${displayName}.`,
     "I saved a quiet little spot for us.",
-    "Welcome back, Nancy. There is no hurry today.",
+    `Welcome back, ${displayName}. There is no hurry today.`,
   ][memory.visits % 3];
 }
 export function decorationUnlocked(
@@ -334,10 +341,10 @@ export function decorationUnlocked(
   a: Adventure,
 ) {
   return id === "cushion"
-    ? c.delivery.step === "done"
+    ? c.delivery.step === "done" || c.village.greeted.includes("momo")
     : id === "frame"
-      ? c.postcards.length > 0
-      : a.chapter.flowersRevived;
+      ? c.postcards.length > 0 || c.village.gifts.momo > 0
+      : a.chapter.flowersRevived || c.village.flowers.every(Boolean);
 }
 export function deliveryGoal(c: CozyProgress) {
   const step = c.delivery.step;

@@ -7,7 +7,7 @@ with sync_playwright() as p:
     for width,height in [(320,568),(390,844),(844,390)]:
         page=b.new_page(viewport={'width':width,'height':height},is_mobile=True,has_touch=True,device_scale_factor=2,reduced_motion='reduce');page.on('pageerror',lambda e:errors.append(str(e)))
         page.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-adventure-v1',JSON.stringify({map:'glade',trackedQuest:'glade',accepted:true,x:2,z:10}));")
-        page.goto(BASE+'/adventure.html');page.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
+        page.goto(BASE+'/stories.html');page.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         page.wait_for_function("(()=>{const d=document.querySelector('#world canvas').dataset;return Number(d.playerScreenX)>.03&&Number(d.playerScreenX)<.97&&Number(d.playerScreenY)>.03&&Number(d.playerScreenY)<.97})()")
         for button in page.locator('.dpad button').all():

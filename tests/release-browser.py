@@ -26,7 +26,7 @@ with sync_playwright() as p:
     print('PASS blocked writes remain playable; current progress exports, retry recovers, reload preserves reward and version is visible',flush=True)
     page.close()
     phone=b.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce');phone.on('pageerror',lambda e:errors.append(str(e)))
-    phone.goto(BASE+'/adventure.html');ready(phone);phone.get_by_role('button',name='Game settings',exact=True).tap();phone.get_by_text('Keep your progress ♡',exact=True).tap();phone.get_by_label('Choose Kitty save backup',exact=True).set_input_files(path);phone.get_by_role('button',name='Restore this backup',exact=True).tap();ready(phone);phone.keyboard.press('Escape')
+    phone.goto(BASE+'/stories.html');ready(phone);phone.get_by_role('button',name='Game settings',exact=True).tap();phone.get_by_text('Keep your progress ♡',exact=True).tap();phone.get_by_label('Choose Kitty save backup',exact=True).set_input_files(path);phone.get_by_role('button',name='Restore this backup',exact=True).tap();ready(phone);phone.keyboard.press('Escape')
     assert phone.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')).chapter.flowersRevived")
     assert phone.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).outfit")=='blossom'
     phone.reload();ready(phone);phone.wait_for_function("document.querySelector('#world canvas').dataset.tile==='5,6'")
@@ -34,7 +34,7 @@ with sync_playwright() as p:
     phone.close()
     context=b.new_context(viewport={'width':1000,'height':1000},reduced_motion='reduce')
     context.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-adventure-v1',JSON.stringify({map:'glade',accepted:true,x:2,z:10,trackedQuest:'glade',chapter:{butterflyStep:3,flowersRevived:true}}));")
-    first=context.new_page();first.on('pageerror',lambda e:errors.append(str(e)));first.goto(BASE+'/adventure.html');ready(first)
+    first=context.new_page();first.on('pageerror',lambda e:errors.append(str(e)));first.goto(BASE+'/stories.html');ready(first)
     first.wait_for_function("document.querySelector('#world canvas').dataset.tile==='2,10'&&Number(document.querySelector('#world canvas').dataset.bodyX)===2")
     second=context.new_page();second.on('pageerror',lambda e:errors.append(str(e)));second.goto(BASE+'/');ready(second)
     second.evaluate("""()=>{

@@ -166,7 +166,9 @@ export function ToyFriend({
   const gltf = useGLTF(assetUrl("assets/cozy-friends.glb")),
     reduced = useReducedMotion();
   const greeting = useGameStore((s) =>
-    s.dialogue?.source?.type === (name === "Momo" ? "M" : "N")
+    [name === "Momo" ? "M" : "N", name === "Momo" ? "VM" : "VP"].includes(
+      s.dialogue?.source?.type || "",
+    )
       ? s.dialogue
       : s.notice?.title.includes(name)
         ? s.notice

@@ -57,44 +57,53 @@ export function CozyLifePanel() {
     <Dialog title="Your cozy corner" onClose={close}>
       <span className="eyebrow">LITTLE THINGS THAT MAKE A HOME</span>
       <h2>Your cozy corner</h2>
-      <section className="delivery-card" data-delivery={c.delivery.step}>
-        <h3>
-          {c.delivery.step === "done" ? "A recipe carried home ♡" : goal.title}
-        </h3>
-        <p>
-          {c.delivery.step === "done"
-            ? "Momo loved your cookie. Pip shared her mint, and a strawberry recipe card and a soft cushion are yours to keep."
-            : goal.instruction}
-        </p>
-        {c.delivery.active && (
-          <button onClick={() => s().pauseDelivery()}>
-            Pause this delivery
-          </button>
-        )}
-        {c.delivery.step !== "done" && (
-          <button className="primary" onClick={() => s().startDelivery()}>
-            {c.delivery.active
-              ? "Continue cookie delivery"
-              : "Start a little cookie delivery"}
-          </button>
-        )}
-        {c.delivery.active && c.delivery.step === "home" && (
-          <button onClick={() => s().setMode("room")}>
-            Bring the recipe home ♡
-          </button>
-        )}
-        {c.delivery.step === "done" && (
-          <button
-            onClick={() => {
-              s().newCookie();
-              s().chooseRecipe("strawberry");
-              s().openPanel("baking");
-            }}
-          >
-            Try your strawberry recipe
-          </button>
-        )}
-      </section>
+      <details
+        className="earlier-cozy-delivery"
+        open={c.delivery.active || c.delivery.step === "done"}
+      >
+        <summary>Earlier cookie-delivery story</summary>
+        <section className="delivery-card" data-delivery={c.delivery.step}>
+          <h3>
+            {c.delivery.step === "done"
+              ? "A recipe carried home ♡"
+              : goal.title}
+          </h3>
+          <p>
+            {c.delivery.step === "done"
+              ? "Momo loved your cookie. Pip shared her mint, and a strawberry recipe card and a soft cushion are yours to keep."
+              : goal.instruction}
+          </p>
+          {c.delivery.active && (
+            <button onClick={() => s().pauseDelivery()}>
+              Pause this delivery
+            </button>
+          )}
+          {c.delivery.step !== "done" && (
+            <button className="primary" onClick={() => s().startDelivery()}>
+              {c.delivery.active
+                ? "Continue cookie delivery"
+                : "Start a little cookie delivery"}
+            </button>
+          )}
+          {c.delivery.active && c.delivery.step === "home" && (
+            <button onClick={() => s().setMode("room")}>
+              Bring the recipe home ♡
+            </button>
+          )}
+          {c.delivery.step === "done" && (
+            <button
+              onClick={() => {
+                s().newCookie();
+                s().chooseRecipe("strawberry");
+                s().openPanel("baking");
+              }}
+            >
+              Try your strawberry recipe
+            </button>
+          )}
+        </section>{" "}
+      </details>
+
       <details open className="corner-arranger">
         <summary>Arrange your little keepsakes</summary>
         {(["cushion", "frame", "flowers"] as const).map((item) => {

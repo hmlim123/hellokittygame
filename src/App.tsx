@@ -1,4 +1,9 @@
 import { FriendTalesPanel } from "./ui/FriendTales";
+import { VillageControls, VillageGuide, VillagePanel } from "./ui/Village";
+import { VisitsPanel, VisitPresence } from "./ui/Visits";
+import { useVisitLifecycle } from "./game/visits";
+import { useVillageMotion, giveVillageGift } from "./game/village-motion";
+import { VILLAGE_ACTIONS } from "./game/village";
 import { CozyLifePanel } from "./ui/CozyLife";
 import { nearbyItemAction } from "./game/context-action";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -33,16 +38,29 @@ function useNavigation() {
   const mode = useGameStore((s) => s.mode),
     base = useMemo(() => new URL(import.meta.env.BASE_URL, location.href), []);
   useEffect(() => {
-    const path = mode === "adventure" ? new URL("adventure.html", base) : base;
+    const path =
+      mode === "village"
+        ? new URL("adventure.html", base)
+        : mode === "adventure"
+          ? new URL("stories.html", base)
+          : base;
     if (path.pathname !== location.pathname)
-      history.pushState({}, "", path.pathname + location.search);
+      history.pushState(
+        {},
+        "",
+        path.pathname + location.search + location.hash,
+      );
   }, [mode, base]);
   useEffect(() => {
     const onPop = () =>
       useGameStore
         .getState()
         .setMode(
-          location.pathname.endsWith("adventure.html") ? "adventure" : "room",
+          location.pathname.endsWith("adventure.html")
+            ? "village"
+            : location.pathname.endsWith("stories.html")
+              ? "adventure"
+              : "room",
         );
     addEventListener("popstate", onPop);
     const onStorage = (e: StorageEvent) => {
@@ -228,6 +246,7 @@ function MissionHUD() {
   );
 }
 function Notification() {
+  const village = useGameStore((s) => s.mode === "village");
   const notice = useGameStore((s) => s.notice),
     clear = useGameStore((s) => s.clearNotice);
   useEffect(() => {
@@ -238,17 +257,19 @@ function Notification() {
   if (!notice) return null;
   return (
     <aside
-      className={`notification ${notice.art ? "illustrated" : ""} ${notice.rewardOutfit ? "reward-notification" : ""}`}
+      className={`notification ${village ? "village-notice" : ""} ${notice.art ? "illustrated" : ""} ${notice.rewardOutfit ? "reward-notification" : ""}`}
       role="status"
     >
       {notice.art && !notice.rewardOutfit && (
         <img alt="" src={assetUrl(`assets/quest/${notice.art}.svg`)} />
       )}
       <div>
-        {notice.rewardOutfit && (
+        {(notice.rewardOutfit || village) && (
           <button
             className="dismiss-notice"
-            aria-label="Keep exploring"
+            aria-label={
+              notice.rewardOutfit ? "Keep exploring" : "Dismiss message"
+            }
             onClick={() => clear(notice.id)}
           >
             ×
@@ -351,6 +372,7 @@ function AdventureControls() {
   );
 }
 export default function App() {
+  useVisitLifecycle();
   useNavigation();
   useGameLoop();
   useAdventureInput();
@@ -447,7 +469,7 @@ export default function App() {
     void sound.toggle().then(setSoundOn);
   };
   return (
-    <main data-text-size={textSize} data-view-only={viewOnly}>
+    <main data-text-size={textSize} data-view-only={viewOnly} data-mode={mode}>
       {viewOnly && (
         <button
           id="restoreInterface"
@@ -469,7 +491,7 @@ export default function App() {
           </span>
         </button>
         <div className="header-actions">
-          {mode === "adventure" && (
+          {mode !== "room" && (
             <button className="text-button" onClick={() => setMode("room")}>
               ← Her room
             </button>
@@ -490,12 +512,18 @@ export default function App() {
         <span className="eyebrow">
           {mode === "room"
             ? "SLOW DAYS. SMALL JOYS."
-            : "A LITTLE STORY, JUST FOR NANCY"}
+            : mode === "village"
+              ? "YOUR VILLAGE. YOUR PACE."
+              : "A LITTLE STORY, JUST FOR NANCY"}
         </span>
         <h1>
           {mode === "room" ? (
             <>
               Nancy’s little <em>happy place.</em>
+            </>
+          ) : mode === "village" ? (
+            <>
+              Nancy’s little <em>village.</em>
             </>
           ) : (
             <>
@@ -518,6 +546,8 @@ export default function App() {
           <p>
             Little adventures, sweet surprises, and a room made just for you.
           </p>
+        ) : mode === "village" ? (
+          <VillageGuide />
         ) : (
           <QuestGuide />
         )}
@@ -536,7 +566,11 @@ export default function App() {
             <Stage />
           </Suspense>
           <span className="scene-label">
-            {mode === "room" ? "KITTY’S LITTLE ROOM ♡" : MAPS[quest.map].title}
+            {mode === "room"
+              ? "KITTY’S LITTLE ROOM ♡"
+              : mode === "village"
+                ? "A LITTLE VILLAGE FOR NANCY ♡"
+                : MAPS[quest.map].title}
           </span>
           <div className="scene-tools">
             <button
@@ -566,6 +600,7 @@ export default function App() {
           </div>
           <MissionHUD />
           <Notification />
+          {mode === "village" && <VisitPresence />}
           {petMode && (
             <button
               className="pet-done"
@@ -578,7 +613,7 @@ export default function App() {
             <span className="scene-hint">
               Tap Kitty to play · Drag for a 360° view
             </span>
-          ) : (
+          ) : mode === "village" ? null : (
             !(teaActive && quest.map === "glade") &&
             directions(quest) && (
               <button
@@ -612,15 +647,18 @@ export default function App() {
               <small>Steps, hops &amp; happy paws</small>
             </button>
             <button
-              id="startHunt"
+              id="visitVillage"
+              aria-label="Visit the village"
               disabled={!ready || !!mission}
-              onClick={() => open("missions")}
+              onClick={() => useGameStore.getState().enterVillage()}
             >
-              <span>✧</span>
-              <strong>Play a mission</strong>
-              <small>Missions &amp; little adventures</small>
+              <span>✿</span>
+              <strong>Visit the village</strong>
+              <small>Friends, café &amp; garden</small>
             </button>
           </div>
+        ) : mode === "village" ? (
+          <VillageControls />
         ) : (
           <AdventureControls />
         )}
@@ -638,6 +676,20 @@ export default function App() {
               Play together ↗
             </button>
           </p>
+          <div className="village-room-links">
+            <button
+              disabled={!ready || !!mission}
+              onClick={() => open("missions")}
+            >
+              Little activities
+            </button>
+            <button
+              disabled={!ready || !!mission}
+              onClick={() => open("village")}
+            >
+              Your village keepsakes ♡
+            </button>
+          </div>
           <Shelf />
         </>
       ) : null}
@@ -645,6 +697,8 @@ export default function App() {
         Unofficial fan-made gift · Hello Kitty © Sanrio · v{RELEASE_VERSION}
       </footer>
       {panel === "friend-tales" && <FriendTalesPanel />}
+      {panel === "village" && <VillagePanel />}
+      {panel === "visits" && <VisitsPanel />}
       {panel === "storybook" && <Storybook />}
       {panel === "cozy" && <CozyLifePanel />}
       {panel === "baking" && <BakingPanel />}
@@ -680,6 +734,43 @@ export default function App() {
           <p>{dialogue.text}</p>
           {dialogue.memory && (
             <p className="friend-memory">“{dialogue.memory}”</p>
+          )}
+          {["VM", "VP"].includes(dialogue.source?.type || "") && (
+            <div className="village-conversation-actions">
+              {cozyLife.cookie.packed && (
+                <button
+                  className="primary wide"
+                  onClick={() =>
+                    giveVillageGift(
+                      dialogue.source?.type === "VM" ? "momo" : "pip",
+                    )
+                  }
+                >
+                  Give your wrapped cookie ♡
+                </button>
+              )}
+              <button
+                className="wide"
+                onClick={() => {
+                  const id =
+                    dialogue.source?.type === "VM"
+                      ? "cafe"
+                      : "flowers" +
+                        Math.max(
+                          0,
+                          cozyLife.village.flowers.findIndex((v) => !v),
+                        );
+                  const target = VILLAGE_ACTIONS.find((o) => o.id === id);
+                  useGameStore.getState().closeDialogue();
+                  if (target)
+                    useVillageMotion.getState().walkTo(target, target.id);
+                }}
+              >
+                {dialogue.source?.type === "VM"
+                  ? "Let’s visit the café ☕"
+                  : "Let’s tend the flowers ✿"}
+              </button>
+            </div>
           )}
           {dialogue.source?.type === "M" &&
             cozyLife.delivery.active &&

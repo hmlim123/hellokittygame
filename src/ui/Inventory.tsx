@@ -8,6 +8,7 @@ import { useGameStore } from "../game/store";
 import { ITEMS, OUTFITS, questJournal, questText } from "../game/domain";
 import { assetUrl } from "../game/assets";
 import { Dialog } from "./Dialog";
+import { villageKeepsakes } from "../game/village";
 const art = (kind: "outfit" | "item", id: string) =>
   assetUrl(
     kind === "item" && id === "teddy"
@@ -15,6 +16,8 @@ const art = (kind: "outfit" | "item", id: string) =>
       : `assets/inventory/${id}.svg`,
   );
 export function Inventory() {
+  const village = useGameStore((s) => s.mode === "village"),
+    villageProgress = useGameStore((s) => s.cozy.village);
   const [performance, setPerformance] = useState<{
     id: number;
     kind: Gesture;
@@ -70,7 +73,13 @@ export function Inventory() {
             tabIndex={tab === t ? 0 : -1}
             onClick={() => set({ inventoryTab: t })}
           >
-            {t === "clothes" ? "Clothes" : t === "items" ? "Items" : "Quest"}
+            {t === "clothes"
+              ? "Clothes"
+              : t === "items"
+                ? "Items"
+                : village
+                  ? "Village"
+                  : "Quest"}
           </button>
         ))}
       </div>
@@ -170,7 +179,35 @@ export function Inventory() {
             </div>
           </section>
         )}
-        {tab === "quest" && (
+        {tab === "quest" && village && (
+          <section
+            role="tabpanel"
+            id="inventory-panel-quest"
+            aria-labelledby="inventory-quest"
+          >
+            <h3>Little memories to bring home</h3>
+            <p>
+              Say hello to friends, bake a gift or help the garden bloom. Your
+              keepsakes become part of Nancy’s room.
+            </p>
+            {villageKeepsakes(villageProgress).map((k) => (
+              <article className="village-memory" key={k.id}>
+                <span>{k.icon}</span>
+                <div>
+                  <h3>{k.title}</h3>
+                  <p>{k.memory}</p>
+                </div>
+              </article>
+            ))}
+            <button
+              className="primary wide"
+              onClick={() => useGameStore.getState().openPanel("village")}
+            >
+              Place your village keepsakes ♡
+            </button>
+          </section>
+        )}
+        {tab === "quest" && !village && (
           <section
             role="tabpanel"
             id="inventory-panel-quest"

@@ -20,7 +20,7 @@ with sync_playwright() as p:
         page.on('pageerror', lambda e: errors.append(str(e)))
         seed = json.dumps(json.dumps({'map': 'village', 'accepted': True, 'x': x, 'z': z, **(extra or {})}))
         page.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-adventure-v1'," + seed + ");")
-        page.goto(BASE + '/adventure.html')
+        page.goto(BASE + '/stories.html')
         page.wait_for_function("!document.querySelector('#openWardrobe').disabled", timeout=60000)
         return page
 

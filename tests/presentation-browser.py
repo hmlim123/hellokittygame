@@ -13,7 +13,7 @@ with sync_playwright() as p:
   page=b.new_page(viewport={'width':390 if phone else 1100,'height':844 if phone else 1060},is_mobile=phone,has_touch=phone,reduced_motion='reduce');page.on('pageerror',lambda e:errors.append(str(e)))
   seed={'map':'glade','trackedQuest':'glade','x':5,'z':6,'chapter':{'butterflyStep':3,'flowersRevived':True}}
   page.add_init_script("localStorage.setItem('kitty-nancy-adventure-v1',"+json.dumps(json.dumps(seed))+");localStorage.setItem('kitty-nancy-equipment-v1',JSON.stringify({outfit:'blossom',item:'none'}));")
-  page.goto(BASE+'/adventure.html');page.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
+  page.goto(BASE+'/stories.html');page.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.wait_for_function("Number(document.querySelector('#world canvas').dataset.cutawayWalls)>0")
   for c in page.evaluate(CONTRAST,['.quest-guide h2','.quest-guide p','.quest-guide .eyebrow']):assert not c.get('missing') and c['ratio']>=4.5,c

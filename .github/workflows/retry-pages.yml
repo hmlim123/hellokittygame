@@ -34,7 +34,7 @@ jobs:
       SOURCE_RUN: ${{ inputs.source_run }}
       SOURCE_COMMIT: ${{ inputs.source_commit }}
     steps:
-      - name: Require the successful build and all four browser groups
+      - name: Require the successful build and all browser groups
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
@@ -55,7 +55,7 @@ jobs:
           assert source['head_repository']['full_name']==repo
           assert source['path'].split('@')[0]=='.github/workflows/pages.yml'
           jobs = get('actions/runs/'+run+'/jobs?filter=latest&per_page=100')['jobs']
-          required = ['Build and check game rules']+['Browser journeys '+str(i) for i in range(4)]
+          required = ['Build and check game rules']+['Browser journeys '+str(i) for i in range(5)]
           for name in required:
               matching = [job for job in jobs if job['name']==name]
               assert len(matching)==1 and matching[0]['conclusion']=='success', name+' has not passed'
@@ -63,7 +63,7 @@ jobs:
           artifacts = get('actions/runs/'+run+'/artifacts')['artifacts']
           matching = [a for a in artifacts if a['name']=='tested-site' and not a['expired']]
           assert len(matching)==1, 'Exact tested artifact is missing or expired'
-          print('Verified source', commit, 'and all five required build/browser jobs in run', run)
+          print('Verified source', commit, 'and all six required build/browser jobs in run', run)
           PY
       - name: Download the exact tested build
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
