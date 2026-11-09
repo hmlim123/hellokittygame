@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: nancy-village-visits
+    runtime: node
+    plan: free
+    buildCommand: npm --prefix server ci
+    startCommand: node server/index.mjs
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - server/**
+        - shared/**
+        - render.yaml
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: ALLOWED_ORIGINS
+        value: https://hmlim123.github.io
+      - key: VISIT_STORE_FILE
+        value: /tmp/nancy-village-visits.json
