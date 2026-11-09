@@ -5,7 +5,77 @@ sessions. Deliver and verify one milestone at a time, with a focused release
 and a short explanation of what changed. The roadmap is not a claim that every
 stage has already shipped.
 
-## Target journey
+## Future direction: Nancy’s cozy village
+
+Agreed direction on 2026-11-09: evolve the game toward a Hello Kitty life
+simulation inspired by Animal Crossing: New Horizons. The user finds the current
+adventure concept confusing and wants an inviting village with NPCs, comfortable
+phone controls and everyday activities. This is a future roadmap, not a claim
+that the village redesign or multiplayer has shipped. Completeness and polish
+take priority over adding a large feature catalogue.
+
+The central loop is: leave home → meet a friend → choose a small activity →
+bring home a keepsake → decorate or enjoy it with Kitty. Progress should feel
+like making a home and getting to know friends. Use an original village layout
+and the existing Blender characters, outfits, baking, gardening and room items.
+
+### Village design
+
+- An open, connected neighbourhood with visible landmarks: Nancy’s home, a
+  central plaza, a café and a garden. Replace maze-like navigation and hidden
+  arch/portal requirements with broad paths and clearly marked entrances.
+- Momo and Pip have understandable places to visit, greetings, short requests
+  and reactions to gifts. Introduce gentle wandering after stationary
+  conversations and interaction selection work reliably.
+- Offer one nearby contextual action and one optional current goal. Nancy can
+  explore or spend time with friends without advancing a quest checklist.
+- Design for phones first: responsive movement, forgiving tap targets, optional
+  touch steering, a stable follow camera, readable dialogue and few open panels.
+  Prototype tap-to-walk on navigable ground with obstacle avoidance and compare
+  it against the existing steering controls before making it the default.
+- Preserve Nancy’s progress, letter, outfits, earned friends and souvenirs when
+  introducing the village. Existing dungeon stories can remain optional trips.
+
+### Next milestone: one complete village visit
+
+Build one small, polished single-player village loop first: walk from home to
+the plaza, greet Momo, choose a café or garden activity, receive one keepsake,
+and return home to place it. Reuse existing activities and rewards. The village
+must be understandable from its landmarks and nearby prompts, without requiring
+the old dungeon route or an expanded menu system.
+
+Acceptance: a new player can complete that loop on a phone-sized screen without
+route instructions from the developer; touches select the intended NPC/action;
+movement, camera and entrances behave consistently; rewards are granted once;
+returning home and reloading retain progress. Review actual phone/Safari play
+before claiming physical-device acceptance. Keep the room’s three main buttons.
+
+### Later milestone: private visits together
+
+The user wants to join Nancy in the same village in the future. Plan private,
+invite-only sessions for two people, each with a distinct avatar. Start with
+seeing each other walk and wave, simple in-game chat, and one shared activity
+such as baking or a picnic. Shared decorating and additional visitors can follow
+after the two-person visit is dependable.
+
+This needs a realtime backend and durable shared session state alongside the
+React/Three.js client. GitHub Pages can continue serving the game, but cannot
+provide the multiplayer server by itself. Select a managed realtime service or
+a small WebSocket server when implementing this milestone; do not imply a
+provider, hosting or account flow has already been configured.
+
+Define ownership before sharing rewards: Nancy keeps her home and personal
+progress; a visitor cannot reset or overwrite them. The server validates shared
+actions and grants rewards once. Test two independent clients, joining/leaving,
+reconnection, simultaneous interactions and restoration after a disconnect.
+Single-player play must continue to work when a friend is offline.
+
+Suggested delivery order: clear village navigation and mobile controls → NPC
+life and one complete home/activity/reward loop → polished decorating and visits
+within the village → private two-person online visits. Validate each milestone
+before increasing the map, activity count or multiplayer scope.
+
+## Earlier adventure target journey
 
 Enter Butterfly Glade → follow the butterflies → revive the flowers → earn a
 cosmetic reward → return to Kitty's room → equip the reward → revisit the memory.
