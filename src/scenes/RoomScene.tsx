@@ -15,6 +15,7 @@ import {
 import { RainWindow } from "./RainWindow";
 import { Toy } from "./GameToys";
 import { CozyLights } from "./CozyLights";
+import { GroundShadow } from "./GroundShadow";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -330,6 +331,9 @@ export function RoomScene() {
       <VillageHome />
       <Toy name="Cup" position={[3.25, 1.24, 1.75]} scale={0.8} />
       <Arrival />
+      <group position={[-0.12, 0.163, 0.65]}>
+        <GroundShadow size={[1.65, 1.1]} />
+      </group>
       <Kitty
         id={id}
         equipment={equipment}
