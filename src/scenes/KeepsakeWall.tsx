@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { type Group, Texture, SRGBColorSpace } from "three";
 import { useGameStore } from "../game/store";
+import { studioAnchor, studioYaw } from "./studio-layout";
 import type { PostcardMemory } from "../game/cozy";
 function Picture({ image }: { image: string }) {
   const [texture, setTexture] = useState<Texture | null>(null);
@@ -45,11 +46,8 @@ function Picture({ image }: { image: string }) {
 function Frame({ memory, index }: { memory: PostcardMemory; index: number }) {
   return (
     <group
-      position={[
-        -3.95 + (index % 3) * 0.75,
-        1.9 - Math.floor(index / 3) * 0.9,
-        -3.59,
-      ]}
+      position={studioAnchor("postcard_" + index)}
+      rotation={[0, studioYaw("postcard_" + index), 0]}
       onClick={(e) => {
         e.stopPropagation();
         const s = useGameStore.getState();
@@ -69,7 +67,7 @@ export function KeepsakeWall() {
   const cards = useGameStore((s) => s.cozy.postcards),
     group = useRef<Group>(null);
   useFrame(({ camera, gl }) => {
-    if (group.current) group.current.visible = camera.position.z > 0.35;
+    if (group.current) group.current.visible = camera.position.x > -0.42;
     gl.domElement.dataset.keepsakeFrames = String(
       group.current?.children.length || 0,
     );

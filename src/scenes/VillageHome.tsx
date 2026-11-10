@@ -2,14 +2,15 @@ import { useGameStore } from "../game/store";
 import { villageKeepsakes } from "../game/village";
 import { Toy, type ToyName } from "./GameToys";
 import { useHomeFurniture } from "./HomeDetails";
+import { studioAnchor, studioYaw } from "./studio-layout";
 export function VillageHome() {
   const v = useGameStore((s) => s.cozy.village),
     interactive = useHomeFurniture();
   const positions = {
-    window: [-4.15, 1.86, -0.7],
-    nook: [-1.65, 0.115, -1],
-    table: [3.15, 1.24, 1.5],
-  } as const;
+    window: studioAnchor("window"),
+    nook: studioAnchor("nook"),
+    table: studioAnchor("table"),
+  };
   const models: Record<string, ToyName> = {
     welcome: "Cushion",
     flowers: "Flowers",
@@ -33,7 +34,7 @@ export function VillageHome() {
             <Toy
               name={models[k.id]}
               scale={k.id === "flowers" ? 0.65 : 0.6}
-              rotation={[0, v.placed[k.id] === "window" ? Math.PI / 2 : 0, 0]}
+              rotation={[0, studioYaw(v.placed[k.id]!), 0]}
             />
           </group>
         ))}

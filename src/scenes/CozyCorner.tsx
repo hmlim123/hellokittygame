@@ -1,24 +1,26 @@
 import { useGameStore } from "../game/store";
 import { decorationUnlocked } from "../game/cozy";
 import { Toy } from "./GameToys";
+import { studioAnchor, studioYaw } from "./studio-layout";
 export function CozyCorner() {
   const c = useGameStore((s) => s.cozy),
     a = useGameStore((s) => s.adventure);
   const cushion = {
-    rug: [1.9, 0.17, 1.1],
-    chair: [-2.95, 1.07, -1.3],
-    nook: [-1.6, 0.115, 2.2],
-  } as const;
+    rug: studioAnchor("rug"),
+    chair: studioAnchor("chair"),
+    nook: studioAnchor("floor_nook"),
+  };
   const frame = {
-    rug: [-3.9, 2.25, -3.6],
-    chair: [-4.2, 2.1, 0.7],
-    nook: [3.8, 2.1, -3.6],
-  } as const;
+    rug: studioAnchor("frame_back"),
+    chair: studioAnchor("frame_wall"),
+    nook: studioAnchor("frame_nook"),
+  };
   const flowers = {
-    rug: [-3.8, 0.115, 1.1],
-    chair: [-3.85, 0.115, -0.2],
-    nook: [2.6, 0.115, -1.2],
-  } as const;
+    rug: studioAnchor("floor_nook"),
+    chair: studioAnchor("window"),
+    nook: studioAnchor("tea"),
+  };
+  const frameSpot = decorationUnlocked("frame", c, a) ? c.corner.frame : "rug";
   return (
     <>
       {!c.village.placed.welcome && (
@@ -35,12 +37,18 @@ export function CozyCorner() {
       {!c.village.placed.cafe && (
         <Toy
           name="Frame"
-          position={[
-            ...frame[
-              decorationUnlocked("frame", c, a) ? c.corner.frame : "rug"
-            ],
+          position={frame[frameSpot]}
+          rotation={[
+            0,
+            studioYaw(
+              frameSpot === "chair"
+                ? "frame_wall"
+                : frameSpot === "nook"
+                  ? "frame_nook"
+                  : "frame_back",
+            ),
+            0,
           ]}
-          rotation={[0, c.corner.frame === "chair" ? Math.PI / 2 : 0, 0]}
           scale={0.8}
         />
       )}

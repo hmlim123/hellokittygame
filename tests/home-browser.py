@@ -48,6 +48,27 @@ with sync_playwright() as p:
         page.get_by_role('dialog',name='Bake cookies with Kitty',exact=True).wait_for(timeout=15000)
         page.get_by_role('button',name='Close Bake cookies with Kitty',exact=True).click()
         ready()
+        assert data()['studio']=='blender'
+        # Touch the real meshes, rather than calling store actions or adding test buttons.
+        def touch_station(name):
+            canvas.scroll_into_view_if_needed();r=canvas.bounding_box();point=json.loads(data()['studioAreas'])[name]
+            page.mouse.click(r['x']+point[0]*r['width'],r['y']+point[1]*r['height'])
+        for station,title in [('wardrobe','Kitty’s inventory'),('desk','A letter for Nancy'),('reading','Play together')]:
+            touch_station(station)
+            page.get_by_role('dialog',name=title,exact=True).wait_for(timeout=15000)
+            page.get_by_role('button',name='Close '+title,exact=True).click();ready()
+        touch_station('bed')
+        page.wait_for_function("document.querySelector('#stage canvas').dataset.studioNight==='true'",timeout=15000)
+        page.reload();ready();frame()
+        assert data()['studioNight']=='true'
+        assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).village.placed")==before
+        # The Settings control changes the same saved lighting choice.
+        page.get_by_role('button',name='Game settings',exact=True).click()
+        page.get_by_role('checkbox',name='Evening lamplight',exact=True).uncheck()
+        page.get_by_role('button',name='Close Game settings',exact=True).click();ready()
+        page.wait_for_function("document.querySelector('#stage canvas').dataset.studioNight==='false'",timeout=15000)
+        dismiss=page.get_by_role('button',name='Dismiss message',exact=True)
+        if dismiss.is_visible():dismiss.click()
         page.screenshot(path=f'/tmp/nancy-home-{width}.png',full_page=True)
         page.get_by_role('button',name='Go out to the village',exact=True).click()
         page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
@@ -66,7 +87,7 @@ with sync_playwright() as p:
             buttons.click()
             page.get_by_role('button',name='Finish early',exact=True).click()
             ready();frame()
-        print('PASS whole house framing, rotation/reset, closer look, oven, front doorstep and remembered decorations:',width,height,flush=True)
+        print('PASS Blender studio framing, orbit/pinch, oven/wardrobe/desk/sofa/bed taps, saved lamplight, village return and remembered decorations:',width,height,flush=True)
         page.close()
     assert not errors,errors
     browser.close()

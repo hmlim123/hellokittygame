@@ -393,6 +393,14 @@ export function SettingsPanel({
       <label className="check-setting">
         <input
           type="checkbox"
+          checked={room.night}
+          onChange={(e) => useGameStore.getState().setNight(e.target.checked)}
+        />
+        Evening lamplight
+      </label>
+      <label className="check-setting">
+        <input
+          type="checkbox"
           checked={sound}
           onChange={(e) => setSound(e.target.checked)}
         />

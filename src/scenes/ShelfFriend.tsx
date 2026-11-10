@@ -24,11 +24,15 @@ export function ShelfFriend({
   style,
   position,
   visible = true,
+  scale = 0.43,
+  rotation,
 }: {
   id: number;
   style: string;
   position: [number, number, number];
   visible?: boolean;
+  scale?: number;
+  rotation?: [number, number, number];
 }) {
   const [model, setModel] = useState<Group | null>(null);
   useEffect(() => {
@@ -47,7 +51,8 @@ export function ShelfFriend({
       object={model}
       visible={visible}
       position={position}
-      scale={0.43}
+      scale={scale}
+      rotation={rotation}
       dispose={null}
       onClick={(e: { delta: number; stopPropagation(): void }) => {
         if (e.delta > 7) return;

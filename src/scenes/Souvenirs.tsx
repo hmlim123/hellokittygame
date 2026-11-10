@@ -1,10 +1,11 @@
 import { useMemo } from "react";
+import { makeAdventureTool } from "./AdventureTools";
 import { SceneHtml as Html } from "./SceneHtml";
 import { useGameStore } from "../game/store";
-import { makeAdventureTool } from "./AdventureTools";
 import { makeGift } from "../../dist/gifts.js";
 import { makeBow } from "../../dist/models.js";
 import { TeaCup } from "./TeaParty";
+import { studioAnchor } from "./studio-layout";
 function FlowerKeepsake() {
   return (
     <group name="Flower patch keepsake" scale={0.55}>
@@ -57,35 +58,35 @@ export function Souvenirs() {
     {
       id: "ribbons",
       show: a.ribbonReturned,
-      position: [2.9, 1.27, 2.2] as [number, number, number],
+      position: studioAnchor("ribbon"),
       object: objects.ribbons,
       label: "Momo’s ribbon",
     },
     {
       id: "lanterns",
       show: a.lanternsBlessed,
-      position: [3.12, 1.3, 1.68] as [number, number, number],
+      position: studioAnchor("lantern"),
       object: null,
       label: "Garden lantern",
     },
     {
       id: "picnic",
       show: a.picnicDelivered,
-      position: [1.85, 0.55, 2] as [number, number, number],
+      position: studioAnchor("picnic"),
       object: null,
       label: "Picnic basket",
     },
     {
       id: "flowers",
       show: c.flowersRevived,
-      position: [-2.25, 0.12, 1.4] as [number, number, number],
+      position: studioAnchor("flowers"),
       object: null,
       label: "The flower patch",
     },
     {
       id: "letter",
       show: c.letterFound,
-      position: [2.6, 1.3, 1.45] as [number, number, number],
+      position: studioAnchor("letter"),
       object: objects.letter,
       label: "Nancy’s envelope",
     },
@@ -94,8 +95,8 @@ export function Souvenirs() {
     <group>
       {tea.complete && (
         <group
-          position={[-1.8, 0.1, 1.65]}
-          scale={1.35}
+          position={studioAnchor("tea")}
+          scale={0.75}
           onClick={(e) => {
             e.stopPropagation();
             if (e.delta < 7) useGameStore.getState().openMemory("tea");

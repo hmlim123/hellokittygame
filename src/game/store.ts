@@ -232,6 +232,7 @@ export interface GameState extends SaveState {
   endMission(): void;
   closeResult(): void;
   setTheme(theme: Theme): void;
+  setNight(night: boolean): void;
   setPreferences(patch: Partial<Preferences>): void;
   setFriend(id: number): void;
   markLetterOpened(): void;
@@ -1966,6 +1967,9 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
           },
           closeResult() {
             set({ result: null });
+          },
+          setNight(night) {
+            set({ room: { ...get().room, night: night === true } });
           },
           setTheme(theme) {
             set({ room: { ...get().room, theme } });

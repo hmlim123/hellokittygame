@@ -1,0 +1,405 @@
+{
+  "version": 1,
+  "title": "Nancy\u2019s cozy studio",
+  "source_file": "nancy_studio_home.blend",
+  "source_sha256": "91fd237c2c98e8b7ed76ee657f3f1b1f2235b4126661dca06e09133b26a5e5dc",
+  "authoring_script": "create_studio_home.py",
+  "script_sha256": "d80bab0397cf7d6c228063e872cd5327477fa89bf00909fb088ef1d34e658f28",
+  "export_script": "export_studio_home.py",
+  "export_sha256": "2f5436e3df3e3255af2bc005bbc182c118aef289c45f598ba063f37fc53d85ae",
+  "blender_version": "4.3.2",
+  "asset_bytes": 2091392,
+  "triangles": 41803,
+  "mesh_count": 21,
+  "anchors": {
+    "window": {
+      "position": [
+        -5.44,
+        1.43,
+        -2.0
+      ],
+      "yaw": 1.570796
+    },
+    "bed": {
+      "position": [
+        -3.95,
+        1.13,
+        -2.15
+      ],
+      "yaw": 0.0
+    },
+    "lamp_bed": {
+      "position": [
+        -2.35,
+        1.44,
+        -3.5
+      ],
+      "yaw": 0.0
+    },
+    "wardrobe": {
+      "position": [
+        5.02,
+        1.73,
+        3.05
+      ],
+      "yaw": 0.0
+    },
+    "oven": {
+      "position": [
+        3.57,
+        0.69,
+        -3.53
+      ],
+      "yaw": 0.0
+    },
+    "kitchen": {
+      "position": [
+        2.7,
+        1.73,
+        -3.5
+      ],
+      "yaw": 0.0
+    },
+    "reading": {
+      "position": [
+        -4.15,
+        1.02,
+        0.6
+      ],
+      "yaw": 1.570796
+    },
+    "nook": {
+      "position": [
+        -4.72,
+        0.93,
+        0.08
+      ],
+      "yaw": 1.570796
+    },
+    "chair": {
+      "position": [
+        -4.7,
+        0.93,
+        1.15
+      ],
+      "yaw": 1.570796
+    },
+    "shelf_0": {
+      "position": [
+        -4.83,
+        0.51,
+        4.46
+      ],
+      "yaw": 1.570796
+    },
+    "shelf_1": {
+      "position": [
+        -4.83,
+        0.51,
+        3.5
+      ],
+      "yaw": 1.570796
+    },
+    "shelf_2": {
+      "position": [
+        -4.83,
+        0.51,
+        2.54
+      ],
+      "yaw": 1.570796
+    },
+    "shelf_3": {
+      "position": [
+        -4.83,
+        1.46,
+        4.46
+      ],
+      "yaw": 1.570796
+    },
+    "shelf_4": {
+      "position": [
+        -4.83,
+        1.46,
+        3.5
+      ],
+      "yaw": 1.570796
+    },
+    "shelf_5": {
+      "position": [
+        -4.83,
+        1.46,
+        2.54
+      ],
+      "yaw": 1.570796
+    },
+    "lamp_desk": {
+      "position": [
+        2.09,
+        1.91,
+        2.6
+      ],
+      "yaw": 0.0
+    },
+    "desk": {
+      "position": [
+        2.6,
+        1.33,
+        2.95
+      ],
+      "yaw": 0.0
+    },
+    "table": {
+      "position": [
+        3.15,
+        1.23,
+        2.88
+      ],
+      "yaw": 0.0
+    },
+    "rug": {
+      "position": [
+        1.4,
+        0.2,
+        0.9
+      ],
+      "yaw": 0.0
+    },
+    "floor_nook": {
+      "position": [
+        -1.5,
+        0.145,
+        2.1
+      ],
+      "yaw": 0.0
+    },
+    "kitty": {
+      "position": [
+        -0.12,
+        0.2,
+        0.65
+      ],
+      "yaw": 0.0
+    },
+    "kitty_shadow": {
+      "position": [
+        -0.12,
+        0.194,
+        0.65
+      ],
+      "yaw": 0.0
+    },
+    "door": {
+      "position": [
+        1.65,
+        0.16,
+        4.53
+      ],
+      "yaw": 0.0
+    },
+    "door_label": {
+      "position": [
+        1.65,
+        0.42,
+        5.24
+      ],
+      "yaw": 0.0
+    },
+    "picnic": {
+      "position": [
+        -2.15,
+        0.78,
+        2.7
+      ],
+      "yaw": 0.0
+    },
+    "lantern": {
+      "position": [
+        -3.45,
+        0.83,
+        2.5
+      ],
+      "yaw": 0.0
+    },
+    "ribbon": {
+      "position": [
+        2.02,
+        1.24,
+        3.0
+      ],
+      "yaw": 0.0
+    },
+    "letter": {
+      "position": [
+        3.38,
+        1.25,
+        2.98
+      ],
+      "yaw": 0.0
+    },
+    "flowers": {
+      "position": [
+        -2.3,
+        0.145,
+        0.55
+      ],
+      "yaw": 0.0
+    },
+    "tea": {
+      "position": [
+        -2.7,
+        0.78,
+        1.15
+      ],
+      "yaw": 0.0
+    },
+    "frame_wall": {
+      "position": [
+        -5.68,
+        2.15,
+        1.65
+      ],
+      "yaw": 1.570796
+    },
+    "frame_back": {
+      "position": [
+        -3.95,
+        2.85,
+        -4.91
+      ],
+      "yaw": 0.0
+    },
+    "frame_nook": {
+      "position": [
+        2.9,
+        1.25,
+        2.55
+      ],
+      "yaw": 0.0
+    },
+    "postcard_0": {
+      "position": [
+        -5.68,
+        3.05,
+        -0.1
+      ],
+      "yaw": 1.570796
+    },
+    "postcard_1": {
+      "position": [
+        -5.68,
+        3.05,
+        0.66
+      ],
+      "yaw": 1.570796
+    },
+    "postcard_2": {
+      "position": [
+        -5.68,
+        3.05,
+        1.42
+      ],
+      "yaw": 1.570796
+    },
+    "postcard_3": {
+      "position": [
+        -5.68,
+        2.19,
+        -0.1
+      ],
+      "yaw": 1.570796
+    },
+    "postcard_4": {
+      "position": [
+        -5.68,
+        2.19,
+        0.66
+      ],
+      "yaw": 1.570796
+    },
+    "postcard_5": {
+      "position": [
+        -5.68,
+        2.19,
+        1.42
+      ],
+      "yaw": 1.570796
+    }
+  },
+  "floor": [
+    [
+      -5.8,
+      0.13,
+      -5
+    ],
+    [
+      5.8,
+      0.13,
+      -5
+    ],
+    [
+      5.8,
+      0.13,
+      5
+    ],
+    [
+      -5.8,
+      0.13,
+      5
+    ]
+  ],
+  "framing": [
+    [
+      -6.1,
+      -0.65,
+      -5.25
+    ],
+    [
+      6.1,
+      -0.65,
+      -5.25
+    ],
+    [
+      -6.1,
+      -0.65,
+      5.3
+    ],
+    [
+      6.1,
+      -0.65,
+      5.3
+    ],
+    [
+      -5.95,
+      4.2,
+      -5.1
+    ],
+    [
+      5.95,
+      4.2,
+      -5.1
+    ],
+    [
+      -5.95,
+      4.2,
+      5.1
+    ],
+    [
+      0,
+      4.3,
+      0.65
+    ],
+    [
+      0.4,
+      -0.4,
+      6
+    ],
+    [
+      2.9,
+      -0.4,
+      6
+    ]
+  ],
+  "shelf_scale": 0.28,
+  "source_commit": "dbf46a3cdd02ad89de9620a3b647fc69cd7104bb",
+  "source_repository": "https://github.com/hmlim123/hellokitty3D"
+}

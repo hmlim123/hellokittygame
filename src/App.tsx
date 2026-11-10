@@ -567,7 +567,7 @@ export default function App() {
           </Suspense>
           <span className="scene-label">
             {mode === "room"
-              ? "NANCY’S LITTLE HOME ♡"
+              ? "NANCY’S COZY STUDIO ♡"
               : mode === "village"
                 ? "A LITTLE VILLAGE FOR NANCY ♡"
                 : MAPS[quest.map].title}
@@ -611,7 +611,8 @@ export default function App() {
           )}
           {mode === "room" ? (
             <span className="scene-hint">
-              Tap Kitty to play · Drag to turn · Scroll or pinch to look closer
+              Tap furniture to interact · Drag to turn · Scroll or pinch to look
+              closer
             </span>
           ) : mode === "village" ? null : (
             !(teaActive && quest.map === "glade") &&

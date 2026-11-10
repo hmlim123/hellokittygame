@@ -205,3 +205,36 @@ The browser chooses the occupied-paw take for an inventory item or adventure
 tool, preserves phase when equipment changes, and interrupts for walking or
 another interaction. Reduced motion uses static happy eyes. Re-export full and
 shelf models after authoring; source checksums are retained in both assets.
+
+
+### Studio house (v3.2.0)
+
+The actual studio source is `nancy_studio_home.blend` in private repository
+`hmlim123/hellokitty3D`, source commit `dbf46a3`. The source includes camera,
+Eevee lighting, and individually editable rounded furniture. Preview render:
+`nancy_studio_home.png`. Download package: `/workspace/nancy-studio-home-blender.zip`.
+
+To export an edited source without recreating or overwriting it:
+
+```sh
+blender -b nancy_studio_home.blend --python-exit-code 1 --python export_studio_home.py
+```
+
+On a Mac use `/Applications/Blender.app/Contents/MacOS/Blender` in place of
+`blender`. The exporter combines and reduces station meshes only in memory;
+the saved detailed source remains intact. Copy **both** `studio-home.glb` and
+`studio-home.json` to the game’s `dist/assets/`. Record the exact source commit
+in the game manifest after committing source edits. The metadata records the
+Blender/source/export-script checksums, geometry counts and transformed anchors.
+
+Preserve station roots, their `studio_action` extras, and anchor empties. They
+connect the oven, wardrobe, desk, sofa, bed and exit to existing game actions.
+Saved window/nook/table decoration IDs are mapped to these anchors; never reset
+progress to move furniture. Shelf and postcard anchors support all six slots.
+The runtime hides obstructing cutaway walls when orbiting and attaches rain to
+the real window. Optional evening lights reuse the existing saved `room.night`.
+
+`create_studio_home.py` rebuilds the generated source from scratch and then
+exports it; use it only when you intend to replace your edited house. Character
+Blender projects and animations stay separate. The house export is static, with
+no baked light textures, external fonts, textures or Blender add-ons required.

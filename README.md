@@ -8,6 +8,28 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Nancy’s cozy studio · v3.2.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=studio-34>.
+
+The complete house is now authored in Blender: a kitchen with oven, stove, sink
+and fridge; dining table; bed and nightstand; bathroom with shower; sofa and
+coffee table; writing desk; wardrobe; and collection shelf. The open cutaway
+keeps the whole studio visible. Pinch or scroll to inspect, drag to rotate,
+and Reset view to return home.
+
+Tap the oven to bake, wardrobe for inventory, writing desk for Nancy’s letter,
+sofa to play together, or bed for warm evening lamplight. Settings also controls
+the saved lighting choice. The front doorstep leads to the village. Kitty’s
+existing character animations remain; this update adds the house, not indoor
+walking, seated animations, or plumbing simulation.
+
+Saved decorations use anchors exported from the actual furniture. Progress,
+outfits, friends, postcards and the permanent gift marker stay intact. The
+three main buttons stay the same. The optimized house adds about 2 MB and
+42,000 triangles; the editable Blender source keeps the detailed pieces.
+See [the Blender workflow](docs/blender-workflow.md#studio-house-v320).
+
 ## Nancy’s little home · v3.1.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-33>.

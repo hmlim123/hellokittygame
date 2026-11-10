@@ -4,7 +4,16 @@ import { ShelfFriend } from "./ShelfFriend";
 import { prepareKittyStyle } from "./kitty-assets";
 import { CozyCorner } from "./CozyCorner";
 import { VillageHome } from "./VillageHome";
-import { HomeDetails, useHomeFurniture } from "./HomeDetails";
+import { HomeDetails } from "./HomeDetails";
+import { StudioHouse } from "./StudioHouse";
+import {
+  STUDIO_SLOTS,
+  STUDIO_SHELF_SCALE,
+  STUDIO_KITTY,
+  STUDIO_SHADOW,
+  studioAnchor,
+  studioYaw,
+} from "./studio-layout";
 import {
   frameHome,
   frameHomePlay,
@@ -12,8 +21,6 @@ import {
   HOME_PLAY_TARGET,
   HOME_FLOOR,
 } from "./home-layout";
-import { RainWindow } from "./RainWindow";
-import { Toy } from "./GameToys";
 import { CozyLights } from "./CozyLights";
 import { GroundShadow } from "./GroundShadow";
 import { useEffect, useMemo, useRef } from "react";
@@ -25,71 +32,25 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { Souvenirs } from "./Souvenirs";
 import { KeepsakeWall } from "./KeepsakeWall";
-import { createRoomGeometry } from "../../dist/scene.js";
 import { FriendArrival } from "../../dist/friend-arrival.js";
 import { makeBow, heartMesh } from "../../dist/models.js";
 import { makeStrawberry } from "../../dist/gifts.js";
 import { useGameStore } from "../game/store";
 import { Kitty, useKittyTouch, useReducedMotion } from "./Kitty";
-import type { Adventure, Theme } from "../game/types";
-interface RoomGeometry {
-  group: THREE.Group;
-  backWall: THREE.Group;
-  leftWall: THREE.Group;
-  cabinet: THREE.Group;
-  petals: THREE.Mesh[];
-  setTheme(theme: Theme): void;
-  setRewards(s: Adventure): void;
-}
 const friendEquipment = (id: number) => ({
   version: 1,
   outfit: "classic" as const,
   item: "none" as const,
   ...(DOLLS[id]?.plush ? { plush: DOLLS[id].plush } : {}),
 });
-const slots: [number, number, number][] = [
-  [-0.44, 0.65, -2.65],
-  [1, 0.65, -2.65],
-  [2.44, 0.65, -2.65],
-  [-0.44, 2.01, -2.65],
-  [1, 2.01, -2.65],
-  [2.44, 2.01, -2.65],
-];
-function RoomEnvironment() {
-  const theme = useGameStore((s) => s.room.theme),
-    quest = useGameStore((s) => s.adventure),
-    model = useMemo(() => createRoomGeometry(theme) as RoomGeometry, []),
-    reduced = useReducedMotion();
-  useEffect(() => model.setTheme(theme), [model, theme]);
-  useEffect(() => model.setRewards(quest), [model, quest]);
-  useFrame(({ camera, clock }) => {
-    model.backWall.visible = model.cabinet.visible = camera.position.z > 0.35;
-    model.leftWall.visible = camera.position.x > -0.42;
-    if (!reduced)
-      model.petals.forEach((p, i) => {
-        const phase = (i / 5 + clock.elapsedTime * 0.035) % 1;
-        p.position.set(Math.sin(phase * 5 + i) * 0.65, 1 - phase * 2, 0.06);
-      });
-  });
-  return (
-    <>
-      <primitive object={model.group} />
-      {model.group.getObjectByName("Cozy_window") && (
-        <RainWindow window={model.group.getObjectByName("Cozy_window")!} />
-      )}
-      <RigidBody type="fixed" colliders={false}>
-        <CuboidCollider args={[4.6, 0.2, 3.9]} position={[0, -0.2, 0]} />
-      </RigidBody>
-    </>
-  );
-}
+const slots = STUDIO_SLOTS;
 function Shelf() {
   const arrival = useGameStore((s) => s.arrival),
     ids = useGameStore((s) => s.room.slots),
     group = useRef<THREE.Group>(null);
   useFrame(({ camera, gl }) => {
     if (group.current) {
-      group.current.visible = camera.position.z > 0.35;
+      group.current.visible = camera.position.x > -0.42;
       const styles: string[] = [];
       group.current.traverse((o) => {
         if (o.userData.shelf_style) styles.push(o.userData.shelf_style);
@@ -107,6 +68,8 @@ function Shelf() {
             visible={id !== arrival?.friend}
             style={DOLLS[id].plush || "classic"}
             position={slots[i]}
+            scale={STUDIO_SHELF_SCALE}
+            rotation={[0, studioYaw("shelf_0"), 0]}
           />
         ),
       )}
@@ -138,7 +101,7 @@ function Arrival() {
     ? slots[Math.max(0, slotsState.indexOf(arrival.friend))]
     : slots[0];
   const clock = useMemo(
-    () => new FriendArrival(destination, reduced, 0.43),
+    () => new FriendArrival(destination, reduced, STUDIO_SHELF_SCALE),
     [arrival, reduced, destination],
   );
   const performance = useMemo(
@@ -157,6 +120,13 @@ function Arrival() {
     const pose = clock.advance(Math.min(dt, 0.1));
     group.current.position.set(...(pose.position as [number, number, number]));
     group.current.scale.setScalar(pose.scale);
+    const turn =
+      pose.phase === "settle" || pose.phase === "done"
+        ? studioYaw("shelf_0")
+        : 0;
+    group.current.rotation.y +=
+      (turn - group.current.rotation.y) *
+      (reduced ? 1 : 1 - Math.exp(-dt * 10));
     if (pose.justFinished) useGameStore.getState().finishArrival();
   });
   return arrival && assetReady ? (
@@ -222,8 +192,8 @@ function HuntTargets() {
   );
 }
 export function RoomScene() {
-  const furnitureInteractive = useHomeFurniture();
-  const rainy = useGameStore((s) => s.cozy.weather === "rain");
+  const rainy = useGameStore((s) => s.cozy.weather === "rain"),
+    night = useGameStore((s) => s.room.night);
   const petMode = useGameStore((s) => s.petMode),
     viewOnly = useGameStore((s) => s.viewOnly);
   const equipment = useGameStore((s) => s.equipment),
@@ -283,13 +253,19 @@ export function RoomScene() {
     );
     gl.domElement.dataset.homeView =
       mission && mission !== "picnic" ? "play" : "dollhouse";
-    roomPoint.set(-0.12, 0.08, 0.65).project(camera);
+    roomPoint.set(...STUDIO_KITTY).project(camera);
     gl.domElement.dataset.homeKittyFoot = String((1 - roomPoint.y) / 2);
-    roomPoint.set(-3.2, 0.53, 0.73).project(camera);
+    roomPoint.set(...studioAnchor("oven")).project(camera);
     gl.domElement.dataset.homeOven = JSON.stringify([
       (roomPoint.x + 1) / 2,
       (1 - roomPoint.y) / 2,
     ]);
+    const areas: Record<string, number[]> = {};
+    for (const name of ["bed", "wardrobe", "desk", "reading"]) {
+      roomPoint.set(...studioAnchor(name)).project(camera);
+      areas[name] = [(roomPoint.x + 1) / 2, (1 - roomPoint.y) / 2];
+    }
+    gl.domElement.dataset.studioAreas = JSON.stringify(areas);
     gl.domElement.dataset.homeZoom = String(
       (camera as THREE.OrthographicCamera).zoom,
     );
@@ -309,29 +285,23 @@ export function RoomScene() {
   return (
     <>
       <color attach="background" args={["#f5ece5"]} />
-      <CozyLights rainy={rainy} />
-      <RoomEnvironment />
+      <CozyLights
+        rainy={rainy}
+        evening={night}
+        ambientScale={night ? 0.72 : 1}
+      />
+      <StudioHouse />
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={[5.8, 0.2, 5]} position={[0, -0.1, 0]} />
+      </RigidBody>
       <HomeDetails />
       <Shelf />
       <Souvenirs />
       <KeepsakeWall />
-      <group
-        position={[-3.2, 0.11, 0.25]}
-        rotation={[0, 0.35, 0]}
-        onClick={(e) => {
-          if (furnitureInteractive && e.delta < 7) {
-            e.stopPropagation();
-            useGameStore.getState().openPanel("baking");
-          }
-        }}
-      >
-        <Toy name="Oven" scale={1.1} />
-      </group>
       <CozyCorner />
       <VillageHome />
-      <Toy name="Cup" position={[3.25, 1.24, 1.75]} scale={0.8} />
       <Arrival />
-      <group position={[-0.12, 0.163, 0.65]}>
+      <group position={STUDIO_SHADOW}>
         <GroundShadow size={[1.65, 1.1]} />
       </group>
       <Kitty
@@ -340,7 +310,7 @@ export function RoomScene() {
         animate
         interactive={!viewOnly}
         onTouch={touch}
-        position={[-0.12, 0.08, 0.65]}
+        position={STUDIO_KITTY}
         rotation={[0, 0.3, 0]}
         scale={1.25}
       />

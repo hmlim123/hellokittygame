@@ -1162,3 +1162,44 @@ Release candidate `919db62` was published by [Pages run 42863340734](https://git
 The local home journey passes four viewport sizes, real touch pinching, scroll zoom, orbit/reset, actual oven/door actions, remembered decorations, tall editions and the closer little-game camera. Existing petting, teddy/high-five, baking/tea, postcards, backup/restore, 360 controls and complete earlier quest journeys pass without page errors. A light contact shadow anchors Kitty to the rug. [Current phone card](nancy-whole-home-card.png).
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-33>. Physical phone and Safari review remains pending. Blender source remains `1595fd5`; this is a home layout/camera update using the existing source exports. Private visits retain the previous Render setup requirements.
+
+## Blender-authored studio house · v3.2.0 · 2026-11-10
+
+The user requested a studio with a kitchen and the furnishings of a real house,
+using Blender as needed. This delivery authors a complete original editable
+studio in Blender 4.3.2: bed/nightstand, shower and bathroom fittings, kitchen
+with stove/oven/sink/fridge, dining table/chairs, sofa/coffee table, writing desk,
+wardrobe, collection shelf, window, entry steps and rounded floor/trim. Source
+commit `dbf46a3` in `hellokitty3D` contains the `.blend`, authoring/export scripts,
+clean Eevee preview and matching web export. No character animation source is
+replaced. The static house does not add indoor walking or lying/sitting poses.
+
+The runtime loads the actual exported house (2,091,392 bytes / 41,803 triangles).
+Individual high-detail furniture remains editable in the `.blend`; the exporter
+combines/reduces only its in-memory browser copy and never saves over the source.
+The manifest records exact source/script hashes and 39 transformed furniture
+anchors. Saved spot IDs still work: decorations, six shelf friends, six postcards
+and earned souvenirs attach to the actual surfaces. Kitty stands on the rug.
+Cutaway walls hide when orbiting, and rain attaches to the new window.
+
+Tapping the oven opens baking, wardrobe opens inventory, desk opens Nancy’s
+letter, sofa opens Play together, and bed toggles evening lamplight with Kitty’s
+existing sleepy expression. Settings exposes the same saved light choice using
+the existing `room.night` field. The village doorstep and the three main buttons
+remain. No gift reset, save schema replacement, or new activity panel is added.
+
+Local acceptance: all 244 rule/app/server checks pass, including new real-GLB
+geometry-budget, unobstructed interaction-ray and furniture-support checks.
+The expanded home browser journey passes at 1100×1060, 320×568, 390×844 and
+844×390: actual oven/wardrobe/desk/sofa/bed taps, saved lighting across reload,
+settings lighting toggle, floor framing, tall editions, orbit/reset, real touch
+pinch, village return, remembered decorations and legible bow game. The exact
+production artifact must pass all 22 browser suites across five groups before
+publication. Physical phone/Mac Safari testing remains pending.
+
+Reviewed studio images: [desktop](nancy-studio-home-desktop.png),
+[phone](nancy-studio-home-phone.png).
+
+Blender download: `/workspace/nancy-studio-home-blender.zip` includes matching
+source, scripts, preview and export. Share link after verified publication:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=studio-34>.

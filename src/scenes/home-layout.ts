@@ -1,31 +1,14 @@
 import { Vector3, type OrthographicCamera } from "three";
+import { STUDIO_LAYOUT, studioAnchor } from "./studio-layout";
 
 export const HOME_TARGET = new Vector3(0, 1.65, 0.15);
 export const HOME_PLAY_TARGET = new Vector3(-0.12, 1.65, 0.9);
 export const HOME_OFFSET = new Vector3(10, 11, 15)
   .normalize()
   .multiplyScalar(18);
-// Frame the actual cutaway: there are no tall walls along the open front/right.
-// A full box would reserve empty space above those sides and shrink the house.
-const HOME_FRAMING_POINTS = [
-  [-5.1, -0.65, -4.45],
-  [5.1, -0.65, -4.45],
-  [5.1, -0.65, 4.55],
-  [-5.1, -0.65, 4.55],
-  [-4.7, 4.85, -3.95],
-  [4.7, 4.85, -3.95],
-  [-4.7, 4.85, 3.95],
-  [0, 5.4, 0.65], // The tallest Blender hat/ears, in the centre of the room.
-  [0.6, -0.4, 4.9],
-  [2.7, -0.4, 4.9],
-] as const;
-export const HOME_FLOOR = [
-  [-4.6, 0.1, -3.9],
-  [4.6, 0.1, -3.9],
-  [4.6, 0.1, 3.9],
-  [-4.6, 0.1, 3.9],
-] as const;
-export const HOME_DOOR = [1.65, 0.16, 3.5] as const;
+const HOME_FRAMING_POINTS = STUDIO_LAYOUT.framing;
+export const HOME_FLOOR = STUDIO_LAYOUT.floor;
+export const HOME_DOOR = studioAnchor("door");
 
 /** Frame the house as a whole on portrait phones and wide screens. */
 export function frameHome(
