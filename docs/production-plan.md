@@ -1206,3 +1206,14 @@ Reviewed studio images: [desktop](nancy-studio-home-desktop.png),
 Blender download: `/workspace/nancy-studio-home-blender.zip` includes matching
 source, scripts, preview and export. Share link after verified publication:
 <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=studio-34>.
+
+
+### Verified studio publication
+
+Release candidate `c41c1fb` was published by [Pages run 42881417842](https://github.com/hmlim123/hellokittygame/actions/runs/42881417842). All 244 rule/app/server checks and all 22 browser suites across five groups pass. Pages publishes the exact tested artifact. The final gate retains the existing step/hop/paw/face dance checks.
+
+The local studio journey passes four viewport sizes, actual furniture taps, saved lamplight, real touch pinching, orbit/reset, tall editions, village return and existing decorations. Local baking/delivery, rain/layout persistence, petting, teddy/high-five, tea, postcards, reading preferences and backup/restore journeys pass without page errors. Fresh-player screenshots were reviewed after separating the frames. Real-geometry checks cover all six postcard positions and each saved wall-frame position.
+
+Blender house source is `61c6119` in `hellokitty3D`; character animation sources remain unchanged. The download contains the matching editable house, scripts, preview and browser export. Its source checksum and GLB bytes match the game package. The website archive records deployed source `c41c1fb`, rather than this documentation commit.
+
+Play/share: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=studio-34>. Nancy’s progress and permanent gift marker remain intact. Physical phone and Mac Safari review remains pending; browser emulation and a successful Pages deployment do not establish physical-device acceptance.
