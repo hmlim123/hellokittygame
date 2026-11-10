@@ -1109,3 +1109,16 @@ same distance budget. A regression uses the exact recorded positions, verifies
 that the real corner is accepted and charged, and still rejects a shortcut
 whose detour exceeds the budget. The client retains its tapped destination when
 settling a correction. Current rule/app/server total: 241 checks.
+
+
+### Verified village publication
+
+Release candidate `0b65aba` was published by [Pages run 42726364405](https://github.com/hmlim123/hellokittygame/actions/runs/42726364405). The build passes all 241 rule/app/server checks, all 21 browser suites across five independent groups, and the Pages deployment step. Publication uses the exact tested artifact. Dedicated backend checks pass at `df3b2d4`, the unchanged server code in this release.
+
+The local clean-install check passes the same 241 checks. A fresh village day and actual touch events at three viewport sizes pass; two independent browser sessions pass shared watering, picnic contributions, a deliberately rejected movement packet followed by route recovery, refresh/reconnection and host closure. Earlier NPC/reset, hands-on baking/delivery/decorating and full Moonflower room-to-story playthroughs pass without page errors. The main village button retains the readable accent style; desktop/phone contrast, narrow and landscape device layouts, and actual Blender baking/NPC performances pass.
+
+Play/share: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=village-32>. The website archive embeds the release candidate SHA, not this documentation commit. Blender source remains `1595fd5`; no source projects are changed by the village integration.
+
+Online visits still require the account owner to deploy Render and connect the service address; a local two-client test does not establish a live hosted service. Physical phone and Mac Safari verification remains pending.
+
+Current room phone review: [readable village action](nancy-village-readable-phone.png).
