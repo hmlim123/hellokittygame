@@ -1170,7 +1170,7 @@ using Blender as needed. This delivery authors a complete original editable
 studio in Blender 4.3.2: bed/nightstand, shower and bathroom fittings, kitchen
 with stove/oven/sink/fridge, dining table/chairs, sofa/coffee table, writing desk,
 wardrobe, collection shelf, window, entry steps and rounded floor/trim. Source
-commit `dbf46a3` in `hellokitty3D` contains the `.blend`, authoring/export scripts,
+commit `61c6119` in `hellokitty3D` contains the `.blend`, authoring/export scripts,
 clean Eevee preview and matching web export. No character animation source is
 replaced. The static house does not add indoor walking or lying/sitting poses.
 
@@ -1180,6 +1180,8 @@ combines/reduces only its in-memory browser copy and never saves over the source
 The manifest records exact source/script hashes and 39 transformed furniture
 anchors. Saved spot IDs still work: decorations, six shelf friends, six postcards
 and earned souvenirs attach to the actual surfaces. Kitty stands on the rug.
+Frame anchors keep the existing picture clear of the bedroom print and all six
+postcards; a real-geometry overlap check covers both saved wall positions.
 Cutaway walls hide when orbiting, and rain attaches to the new window. Friend
 arrivals enter through the clear aisle beside the desk before waving by Kitty.
 

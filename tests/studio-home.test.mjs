@@ -14,6 +14,19 @@ const { scene } = await new GLTFLoader().parseAsync(
   "",
 );
 scene.updateMatrixWorld(true);
+// Check the real earned frame against authored art and the complete postcard wall.
+// These assets can appear together in an existing save.
+const propBytes = await readFile(
+  new URL("../dist/assets/cozy-props.glb", import.meta.url),
+);
+const props = await new GLTFLoader().parseAsync(
+  propBytes.buffer.slice(
+    propBytes.byteOffset,
+    propBytes.byteOffset + propBytes.byteLength,
+  ),
+  "",
+);
+
 function station(o) {
   while (o) {
     if (o.userData.studio_action) return o.userData.studio_action;
@@ -103,17 +116,45 @@ test("saved decorations and Kitty are anchored to the actual exported furniture"
     );
   }
   let anchors = 0;
-  scene.traverse(o => {
+  scene.traverse((o) => {
     const name = o.userData.studio_anchor;
     if (!name) return;
     anchors++;
     const actual = o.getWorldPosition(new THREE.Vector3());
     const expected = new THREE.Vector3(...layout.anchors[name].position);
-    assert.ok(actual.distanceTo(expected) < .0001, name + ' manifest must follow the exported furniture');
+    assert.ok(
+      actual.distanceTo(expected) < 0.0001,
+      name + " manifest must follow the exported furniture",
+    );
   });
   assert.equal(anchors, Object.keys(layout.anchors).length);
   const slots = Array.from({ length: 6 }, (_, i) =>
     layout.anchors["shelf_" + i].position.join(","),
   );
   assert.equal(new Set(slots).size, 6);
+  for (const name of ["frame_back", "frame_wall"]) {
+    const frame = props.scene.getObjectByName("Toy_Frame").clone(true);
+    frame.position.set(...layout.anchors[name].position);
+    frame.rotation.y = layout.anchors[name].yaw;
+    frame.scale.setScalar(0.8);
+    frame.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(frame);
+    assert.ok(
+      !box.intersectsBox(
+        new THREE.Box3().setFromObject(scene.getObjectByName("Studio_WallArt")),
+      ),
+      name + " must not overlap the fixed bedroom print",
+    );
+    for (let i = 0; i < 6; i++) {
+      const card = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.79, 0.065));
+      card.position.set(...layout.anchors["postcard_" + i].position);
+      card.rotation.y = layout.anchors["postcard_" + i].yaw;
+      card.updateMatrixWorld(true);
+      assert.ok(
+        !box.intersectsBox(new THREE.Box3().setFromObject(card)),
+        name + " must not overlap postcard " + i,
+      );
+      card.geometry.dispose();
+    }
+  }
 });

@@ -2,9 +2,9 @@
   "version": 1,
   "title": "Nancy\u2019s cozy studio",
   "source_file": "nancy_studio_home.blend",
-  "source_sha256": "91fd237c2c98e8b7ed76ee657f3f1b1f2235b4126661dca06e09133b26a5e5dc",
+  "source_sha256": "ffe7ed279ae11511f1e1c874fea5925c981d086c22bd2255398da0ed3d71d1d4",
   "authoring_script": "create_studio_home.py",
-  "script_sha256": "d80bab0397cf7d6c228063e872cd5327477fa89bf00909fb088ef1d34e658f28",
+  "script_sha256": "225f3c482b765907bc7500d7f768670d20b172529e56ddbe4dde7374d7b64f3c",
   "export_script": "export_studio_home.py",
   "export_sha256": "2f5436e3df3e3255af2bc005bbc182c118aef289c45f598ba063f37fc53d85ae",
   "blender_version": "4.3.2",
@@ -256,13 +256,13 @@
       "position": [
         -5.68,
         2.15,
-        1.65
+        -4.1
       ],
       "yaw": 1.570796
     },
     "frame_back": {
       "position": [
-        -3.95,
+        -5.05,
         2.85,
         -4.91
       ],
@@ -400,6 +400,6 @@
     ]
   ],
   "shelf_scale": 0.28,
-  "source_commit": "dbf46a3cdd02ad89de9620a3b647fc69cd7104bb",
+  "source_commit": "61c6119be9a360370440956544aedbbf61e8c217",
   "source_repository": "https://github.com/hmlim123/hellokitty3D"
 }

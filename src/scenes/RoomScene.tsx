@@ -101,10 +101,15 @@ function Arrival() {
     ? slots[Math.max(0, slotsState.indexOf(arrival.friend))]
     : slots[0];
   const clock = useMemo(
-    () => new FriendArrival(destination, reduced, STUDIO_SHELF_SCALE, {
-      entry: [STUDIO_KITTY[0] + .25, .145, 3.8],
-      welcome: [STUDIO_KITTY[0] + 1.9, STUDIO_KITTY[1], STUDIO_KITTY[2] - .3],
-    }),
+    () =>
+      new FriendArrival(destination, reduced, STUDIO_SHELF_SCALE, {
+        entry: [STUDIO_KITTY[0] + 0.25, 0.145, 3.8],
+        welcome: [
+          STUDIO_KITTY[0] + 1.9,
+          STUDIO_KITTY[1],
+          STUDIO_KITTY[2] - 0.3,
+        ],
+      }),
     [arrival, reduced, destination],
   );
   const performance = useMemo(

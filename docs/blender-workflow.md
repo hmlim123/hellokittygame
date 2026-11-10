@@ -210,7 +210,7 @@ shelf models after authoring; source checksums are retained in both assets.
 ### Studio house (v3.2.0)
 
 The actual studio source is `nancy_studio_home.blend` in private repository
-`hmlim123/hellokitty3D`, source commit `dbf46a3`. The source includes camera,
+`hmlim123/hellokitty3D`, source commit `61c6119`. The source includes camera,
 Eevee lighting, and individually editable rounded furniture. Preview render:
 `nancy_studio_home.png`. Download package: `/workspace/nancy-studio-home-blender.zip`.
 
