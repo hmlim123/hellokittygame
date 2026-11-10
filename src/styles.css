@@ -2460,3 +2460,9 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 @media(max-width:640px){.village-notice{left:12px;right:12px;bottom:58px;padding:12px 36px 12px 14px}.village-notice h3{font-size:14px}.village-notice p{font-size:11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .visits-dialog{max-height:90vh;max-height:90dvh}
 .village-garden-label{min-height:44px;border-radius:18px;padding:8px 12px;background:#fffbf0ed;font-size:11px;white-space:nowrap}
+
+.home-door-label{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;min-width:82px;min-height:44px;padding:7px 13px;border-radius:20px;background:#fff9f1ec;color:var(--accent);font-size:11px;box-shadow:0 2px 8px #a47a7a12}
+
+.stage.room{height:clamp(300px,calc(100svh - 400px),540px)}
+
+.notification .dismiss-notice{pointer-events:auto;width:44px;height:44px;min-height:44px}.village-notice{padding-right:52px}

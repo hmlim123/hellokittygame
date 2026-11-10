@@ -8,6 +8,22 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Nancy’s little home · v3.1.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-33>.
+
+The room opens as an elevated cutaway home, with Kitty on the rug and the whole
+floor, reading chair, baking nook, window, tea table and shelves in view. Scroll
+or pinch to look closer, drag for a 360° view, and use Reset view to return to
+the complete home. Portrait, narrow and landscape screens frame the house again
+when resized. Existing little games use a closer view to keep targets readable.
+
+Tap the actual Blender oven to bake, or the front doormat’s Village button to
+step outside. Earned decorations sit on the real windowsill, beside the reading
+chair and on the tea table. Their saved placement choices and all other progress
+remain. The room’s three main buttons and the existing Blender models/motions
+stay in place. Ordinary home messages are compact and dismissible.
+
 ## Nancy’s cozy village · v3.0.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=village-32>.

@@ -1122,3 +1122,34 @@ Play/share: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=village
 Online visits still require the account owner to deploy Render and connect the service address; a local two-client test does not establish a live hosted service. Physical phone and Mac Safari verification remains pending.
 
 Current room phone review: [readable village action](nancy-village-readable-phone.png).
+
+
+## Whole-home redesign · v3.1.0 · 2026-11-10
+
+The user likes the current home’s art but finds the view too zoomed in and wants
+an Animal Crossing-inspired interior. Keep the original pastel furniture and
+Blender Kitty, and present a whole, original cutaway home with an elevated camera.
+The room now has a clear reading corner, baking station, tea/keepsake area, front
+mat and short steps back to the village. The camera fits the actual open walls,
+floor and tallest character accessories at each viewport size. Drag/orbit and
+scroll/pinch zoom stay available; Reset view returns to the whole home. Existing
+bow/heart/berry games receive a closer view for legible touch targets.
+
+The Blender oven and front mat open the existing baking and village flows.
+Saved decoration spot IDs remain the same; their meshes now rest on the real
+windowsill, floor beside the chair and tabletop. Default cushions/flowers are
+raised onto their supporting surfaces. Compact home greetings can be dismissed;
+close buttons receive pointer events and a 44px target. Furniture navigation is
+inactive during a mission, clean view, petting, arrival or another open panel.
+The existing three main room buttons, poses, letter and progress stay intact.
+
+Local acceptance: all 241 rule/app/server checks pass. The new home browser
+journey passes at 1100×1060, 320×568, 390×844 and 844×390: visible floor framing,
+Kitty scale, scroll/pinch, keyboard orbit/reset, actual oven interaction, the
+front threshold, return from the village, remembered placement choices, tall
+witch/bunny costumes and a legible bow game. Review images:
+[desktop](nancy-whole-home-1100.png), [phone](nancy-whole-home-390.png).
+The release gate now includes 22 browser suites across the existing five groups.
+Publication evidence follows those checks.
+This delivery changes framing/layout and integrates existing Blender exports;
+it does not claim new Blender source authoring or physical Safari verification.

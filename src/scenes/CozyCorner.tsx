@@ -5,9 +5,9 @@ export function CozyCorner() {
   const c = useGameStore((s) => s.cozy),
     a = useGameStore((s) => s.adventure);
   const cushion = {
-    rug: [1.9, 0.01, 1.1],
+    rug: [1.9, 0.17, 1.1],
     chair: [-2.95, 1.07, -1.3],
-    nook: [-1.6, 0.01, 2.2],
+    nook: [-1.6, 0.115, 2.2],
   } as const;
   const frame = {
     rug: [-3.9, 2.25, -3.6],
@@ -15,9 +15,9 @@ export function CozyCorner() {
     nook: [3.8, 2.1, -3.6],
   } as const;
   const flowers = {
-    rug: [-3.8, 0.02, 1.1],
-    chair: [-3.85, 0.02, -0.2],
-    nook: [2.6, 0.02, -1.2],
+    rug: [-3.8, 0.115, 1.1],
+    chair: [-3.85, 0.115, -0.2],
+    nook: [2.6, 0.115, -1.2],
   } as const;
   return (
     <>

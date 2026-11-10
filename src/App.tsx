@@ -246,7 +246,7 @@ function MissionHUD() {
   );
 }
 function Notification() {
-  const village = useGameStore((s) => s.mode === "village");
+  const compact = useGameStore((s) => s.mode !== "adventure");
   const notice = useGameStore((s) => s.notice),
     clear = useGameStore((s) => s.clearNotice);
   useEffect(() => {
@@ -257,14 +257,14 @@ function Notification() {
   if (!notice) return null;
   return (
     <aside
-      className={`notification ${village ? "village-notice" : ""} ${notice.art ? "illustrated" : ""} ${notice.rewardOutfit ? "reward-notification" : ""}`}
+      className={`notification ${compact && !notice.rewardOutfit ? "village-notice" : ""} ${notice.art ? "illustrated" : ""} ${notice.rewardOutfit ? "reward-notification" : ""}`}
       role="status"
     >
       {notice.art && !notice.rewardOutfit && (
         <img alt="" src={assetUrl(`assets/quest/${notice.art}.svg`)} />
       )}
       <div>
-        {(notice.rewardOutfit || village) && (
+        {(notice.rewardOutfit || compact) && (
           <button
             className="dismiss-notice"
             aria-label={
@@ -567,7 +567,7 @@ export default function App() {
           </Suspense>
           <span className="scene-label">
             {mode === "room"
-              ? "KITTY’S LITTLE ROOM ♡"
+              ? "NANCY’S LITTLE HOME ♡"
               : mode === "village"
                 ? "A LITTLE VILLAGE FOR NANCY ♡"
                 : MAPS[quest.map].title}
@@ -611,7 +611,7 @@ export default function App() {
           )}
           {mode === "room" ? (
             <span className="scene-hint">
-              Tap Kitty to play · Drag for a 360° view
+              Tap Kitty to play · Drag to turn · Scroll or pinch to look closer
             </span>
           ) : mode === "village" ? null : (
             !(teaActive && quest.map === "glade") &&

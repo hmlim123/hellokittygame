@@ -99,7 +99,7 @@ export function Stage() {
           shadows={false}
           frameloop={previewOpen ? "demand" : "always"}
           dpr={[1, 1.5]}
-          orthographic={mode !== "room"}
+          orthographic
           camera={camera}
           gl={{
             antialias: true,
@@ -112,7 +112,7 @@ export function Stage() {
             gl.domElement.setAttribute(
               "aria-label",
               mode === "room"
-                ? "Interactive 3D Kitty room. Drag to rotate 360 degrees; arrow keys rotate the focused view."
+                ? "Nancy’s cutaway home. Drag to turn, scroll or pinch to look closer; arrow keys rotate the focused view."
                 : mode === "village"
                   ? "Nancy’s village. Tap to walk or use the thumb control. Press E for a nearby action."
                   : "Moonflower Adventure. Arrow keys or WASD to walk.",

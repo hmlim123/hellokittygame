@@ -4,6 +4,14 @@ import { ShelfFriend } from "./ShelfFriend";
 import { prepareKittyStyle } from "./kitty-assets";
 import { CozyCorner } from "./CozyCorner";
 import { VillageHome } from "./VillageHome";
+import { HomeDetails, useHomeFurniture } from "./HomeDetails";
+import {
+  frameHome,
+  frameHomePlay,
+  HOME_TARGET,
+  HOME_PLAY_TARGET,
+  HOME_FLOOR,
+} from "./home-layout";
 import { RainWindow } from "./RainWindow";
 import { Toy } from "./GameToys";
 import { CozyLights } from "./CozyLights";
@@ -213,20 +221,38 @@ function HuntTargets() {
   );
 }
 export function RoomScene() {
+  const furnitureInteractive = useHomeFurniture();
   const rainy = useGameStore((s) => s.cozy.weather === "rain");
   const petMode = useGameStore((s) => s.petMode),
     viewOnly = useGameStore((s) => s.viewOnly);
   const equipment = useGameStore((s) => s.equipment),
     id = useGameStore((s) => s.room.selected),
     reset = useGameStore((s) => s.cameraReset),
+    mission = useGameStore((s) => s.mission?.id),
     touch = useKittyTouch(),
     controls = useRef<OrbitControlsImpl>(null),
-    { camera, gl } = useThree();
+    { camera, gl, size } = useThree(),
+    [homeZoom, setHomeZoom] = useState(40),
+    roomPoint = useMemo(() => new THREE.Vector3(), []),
+    floorPoints = useMemo(
+      () => HOME_FLOOR.map((p) => new THREE.Vector3(...p)),
+      [],
+    );
   useEffect(() => {
-    camera.position.set(2.1, 2.8, 6.5);
-    controls.current?.target.set(-0.12, 1.35, 0.65);
-    controls.current?.update();
-  }, [camera, reset]);
+    if (!(camera instanceof THREE.OrthographicCamera)) return;
+    const play =
+      mission && mission !== "picnic"
+        ? frameHomePlay(camera, size.width, size.height)
+        : null;
+    const zoom = play?.zoom ?? frameHome(camera, size.width, size.height);
+    setHomeZoom(zoom);
+    if (controls.current) {
+      controls.current.minZoom = zoom * 0.8;
+      controls.current.maxZoom = zoom * 3.2;
+      controls.current.target.copy(play?.target ?? HOME_TARGET);
+      controls.current.update();
+    }
+  }, [camera, reset, size.width, size.height, mission]);
   useEffect(() => {
     const canvas = gl.domElement;
     canvas.tabIndex = 0;
@@ -254,6 +280,26 @@ export function RoomScene() {
     gl.domElement.dataset.viewAngle = String(
       controls.current?.getAzimuthalAngle() || 0,
     );
+    gl.domElement.dataset.homeView =
+      mission && mission !== "picnic" ? "play" : "dollhouse";
+    roomPoint.set(-0.12, 0.08, 0.65).project(camera);
+    gl.domElement.dataset.homeKittyFoot = String((1 - roomPoint.y) / 2);
+    roomPoint.set(-3.2, 0.53, 0.73).project(camera);
+    gl.domElement.dataset.homeOven = JSON.stringify([
+      (roomPoint.x + 1) / 2,
+      (1 - roomPoint.y) / 2,
+    ]);
+    gl.domElement.dataset.homeZoom = String(
+      (camera as THREE.OrthographicCamera).zoom,
+    );
+    gl.domElement.dataset.homeFloor = JSON.stringify(
+      floorPoints.map((p, i) => {
+        p.set(HOME_FLOOR[i][0], HOME_FLOOR[i][1], HOME_FLOOR[i][2]).project(
+          camera,
+        );
+        return [(p.x + 1) / 2, (1 - p.y) / 2];
+      }),
+    );
     gl.domElement.dataset.outfit = equipment.outfit;
     gl.domElement.dataset.corner = JSON.stringify(
       useGameStore.getState().cozy.corner,
@@ -264,14 +310,15 @@ export function RoomScene() {
       <color attach="background" args={["#f5ece5"]} />
       <CozyLights rainy={rainy} />
       <RoomEnvironment />
+      <HomeDetails />
       <Shelf />
       <Souvenirs />
       <KeepsakeWall />
       <group
-        position={[-3.2, 0, 0.25]}
+        position={[-3.2, 0.11, 0.25]}
         rotation={[0, 0.35, 0]}
         onClick={(e) => {
-          if (e.delta < 7) {
+          if (furnitureInteractive && e.delta < 7) {
             e.stopPropagation();
             useGameStore.getState().openPanel("baking");
           }
@@ -297,9 +344,12 @@ export function RoomScene() {
       <OrbitControls
         ref={controls}
         makeDefault
-        target={[-0.12, 1.35, 0.65]}
-        minDistance={3.3}
-        maxDistance={10}
+        target={(mission && mission !== "picnic"
+          ? HOME_PLAY_TARGET
+          : HOME_TARGET
+        ).toArray()}
+        minZoom={homeZoom * 0.8}
+        maxZoom={homeZoom * 3.2}
         minPolarAngle={0.48}
         maxPolarAngle={1.3}
         enablePan={false}
