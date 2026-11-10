@@ -22,7 +22,7 @@ with sync_playwright() as p:
   page.screenshot(path='/tmp/nancy-inventory-'+('phone' if phone else 'desktop')+'.png',full_page=True)
   page.keyboard.press('Escape');page.get_by_role('button',name='← Her room',exact=True).click();page.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
   assert page.locator('.action-bar>button').count()==3
-  for c in page.evaluate(CONTRAST,['#startHunt','.intro p','.eyebrow']):assert not c.get('missing') and c['ratio']>=4.5,c
+  for c in page.evaluate(CONTRAST,['#visitVillage','.intro p','.eyebrow']):assert not c.get('missing') and c['ratio']>=4.5,c
   page.screenshot(path='/tmp/nancy-room-'+('phone' if phone else 'desktop')+'.png',full_page=True)
   page.get_by_role('button',name='Game settings',exact=True).click()
   for c in page.evaluate(CONTRAST,['.small-note','dialog h2']):assert not c.get('missing') and c['ratio']>=4.5,c

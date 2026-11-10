@@ -1813,7 +1813,7 @@ dialog > p,
   color: var(--muted);
 }
 .primary,
-#startHunt {
+#visitVillage {
   background: var(--accent);
   border-color: var(--accent);
   color: #fffaf5;
