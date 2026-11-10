@@ -1180,7 +1180,8 @@ combines/reduces only its in-memory browser copy and never saves over the source
 The manifest records exact source/script hashes and 39 transformed furniture
 anchors. Saved spot IDs still work: decorations, six shelf friends, six postcards
 and earned souvenirs attach to the actual surfaces. Kitty stands on the rug.
-Cutaway walls hide when orbiting, and rain attaches to the new window.
+Cutaway walls hide when orbiting, and rain attaches to the new window. Friend
+arrivals enter through the clear aisle beside the desk before waving by Kitty.
 
 Tapping the oven opens baking, wardrobe opens inventory, desk opens Nancy’s
 letter, sofa opens Play together, and bed toggles evening lamplight with Kitty’s

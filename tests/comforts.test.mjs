@@ -36,4 +36,13 @@ test('rapid sound toggles cannot create duplicate music timers while audio resum
 test('new Blender friends finish at the same scale as the static shelf miniature',()=>{
  const target=[1,2,-2.65],pose=new FriendArrival(target,false,.43).advance(5);
  assert.equal(pose.phase,'done');assert.deepEqual(pose.position,target);assert.ok(Math.abs(pose.scale-.43)<1e-8);
+ const route={entry:[.13,.145,3.8],welcome:[1.78,.2,.35]},arrival=new FriendArrival(target,false,.28,route);
+ assert.deepEqual(arrival.advance(0).position,route.entry);
+ for(let i=0;i<14;i++){
+  const p=arrival.advance(.1).position;
+  // At floor/body height, the new desk occupies x >= 1.4 and z 2.25–3.15.
+  if(p[2]>2.0&&p[2]<3.4)assert.ok(p[0]+.4<1.4,'arrival must use the clear aisle beside the desk');
+ }
+ assert.deepEqual(arrival.advance(.3).position,route.welcome);
+ assert.deepEqual(arrival.advance(4).position,target);assert.equal(arrival.advance(0).scale,.28);
 });
