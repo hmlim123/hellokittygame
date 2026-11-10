@@ -1153,3 +1153,12 @@ The release gate now includes 22 browser suites across the existing five groups.
 Publication evidence follows those checks.
 This delivery changes framing/layout and integrates existing Blender exports;
 it does not claim new Blender source authoring or physical Safari verification.
+
+
+### Verified whole-home publication
+
+Release candidate `919db62` was published by [Pages run 42863340734](https://github.com/hmlim123/hellokittygame/actions/runs/42863340734). All 241 rule/app/server checks and all 22 browser suites across five groups pass. Pages publishes the exact tested artifact. The website archive records that source candidate rather than the following documentation commit.
+
+The local home journey passes four viewport sizes, real touch pinching, scroll zoom, orbit/reset, actual oven/door actions, remembered decorations, tall editions and the closer little-game camera. Existing petting, teddy/high-five, baking/tea, postcards, backup/restore, 360 controls and complete earlier quest journeys pass without page errors. A light contact shadow anchors Kitty to the rug. [Current phone card](nancy-whole-home-card.png).
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-33>. Physical phone and Safari review remains pending. Blender source remains `1595fd5`; this is a home layout/camera update using the existing source exports. Private visits retain the previous Render setup requirements.
