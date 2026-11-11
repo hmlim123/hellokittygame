@@ -1266,3 +1266,67 @@ and final browser evidence are recorded after the exact artifact passes.
 Physical phone/Mac Safari review remains pending; emulation is not physical-device
 acceptance. Public share link after verified deployment:
 <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-life-35>.
+
+
+### Final local playable-home review
+
+Release candidate `3372550` passes the final 390×844 touch journey after the cup
+was consolidated into one continuous world-space prop. Its grip follows the
+exported paw socket during pickup, holding and sipping, then returns to the
+tray. The same journey checks petting after standing, village return and a
+saved position behind foreground furniture. Earlier full local runs cover
+320×568 and 844×390 too. Desktop empty/occupied-paw dance and narrow-phone
+reduced motion pass on this exact candidate.
+
+Reviewed screenshots: [follow camera](nancy-home-follow-phone.png),
+[seated tea](nancy-home-tea-phone.png), [foreground fading](nancy-home-foreground-phone.png),
+[connected village](nancy-home-village-phone.png).
+
+`nancy-playable-home-blenders.zip` contains the editable house and six separate
+home-motion projects, preview, export scripts, helper and exact matching GLBs.
+All seven source checksums and all exported bytes match the game manifests at
+private source revision `6f78ef56b8e8961e415acf454f503220965174d0`.
+
+
+The animation request guard retains the complete performance request and its
+motion preference. Baking can advance from decorating to presenting the tray
+even when those local performances share the same replay counter. The existing
+real-interface Blender performance journey passes: stir → decorate → present →
+give → bow → reduced-motion replay, followed by both NPC greeting checks.
+
+
+A separate 390×844 local review seats all six editions and checks cup/socket
+alignment, visible full-height framing and standing. All six pass without page
+errors. [Moonlight Witch](nancy-home-witch-phone.png) and
+[Silver Bunny](nancy-home-bunny-phone.png) screenshots were reviewed as well as
+the original edition. This uses Chromium touch emulation, not physical Safari.
+
+
+### Verified playable-home publication
+
+Release candidate `3372550b90b6441bfed87089ad0d10443057f55f` was published by
+[Pages run 43101411432](https://github.com/hmlim123/hellokittygame/actions/runs/43101411432).
+All 252 rule/app/server checks and all 23 browser suites across five groups pass.
+The Pages job publishes the exact production artifact used by those five groups.
+The baking presentation regression found by the first gate was reproduced and
+corrected; the existing full Blender performance journey passes unchanged.
+
+The default mobile follow view, actual captured touch input, pinch, overview,
+walking around furniture, chair/cup/stand sequence, safely queued petting,
+village return and restored progress pass. Local checks cover portrait 320×568
+and 390×844, landscape 844×390 and desktop 1100×1060. All six editions have a
+separate seated framing/cup review. Foreground furniture fades when it would
+obscure Kitty. The home, café/delivery/garden loop, earlier stories, inventory,
+decorations, keepsakes, backups and letter remain covered by the release gate.
+
+The Blender archive contains seven editable projects at private source
+`6f78ef56b8e8961e415acf454f503220965174d0`: the house plus six separate home-motion
+editions. Source checksums and exported GLB bytes match the game manifests.
+The downloadable website archive records deployed runtime `3372550`, rather
+than the subsequent documentation commit.
+
+Play/share:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-life-35>.
+Nancy’s progress and permanent gift marker remain intact. Physical phone and
+Mac Safari testing remains pending; Chromium emulation and a verified Pages
+deployment do not establish physical-device acceptance.
