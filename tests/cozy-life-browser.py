@@ -10,7 +10,11 @@ with sync_playwright() as p:
  def step(key,x,z):page.keyboard.press('Arrow'+key);page.wait_for_function("p=>{const a=JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'));return a.x===p[0]&&a.z===p[1]}",arg=[x,z],timeout=15000)
  page.goto(BASE+'/');ready();assert page.locator('.action-bar>button').count()==3
  page.get_by_role('button',name='Little activities').click();page.locator('details.earlier-stories > summary').click();page.get_by_role('button',name='A little cookie delivery ♡',exact=True).click();page.locator('.baking-preview canvas').wait_for();page.wait_for_function("document.querySelector('.baking-preview canvas').dataset.blenderAction==='stir'&&Number(document.querySelector('.baking-preview canvas').dataset.pawTurn)>.01",timeout=30000);pad=page.locator('.baking-preview');pad.scroll_into_view_if_needed();r=pad.bounding_box();cx=r['x']+r['width']*.5;cy=r['y']+r['height']*.6;radius=min(r['width'],r['height'])*.15
- page.mouse.move(cx+radius,cy);page.mouse.down();page.mouse.move(cx,cy+radius);page.evaluate("window.dispatchEvent(new Event('blur'))");page.mouse.up();assert c()['cookie']['prep']['stir']==0;assert page.get_by_role('progressbar',name='Cookie preparation').evaluate('p=>p.value')==0
+ page.mouse.move(cx+radius,cy);page.mouse.down()
+ for i in range(1,5):
+  angle=i*math.pi/8;page.mouse.move(cx+math.cos(angle)*radius,cy+math.sin(angle)*radius)
+ assert page.get_by_role('progressbar',name='Cookie preparation').evaluate('p=>p.value')>.1
+ page.evaluate("window.dispatchEvent(new Event('blur'))");page.mouse.up();assert c()['cookie']['prep']['stir']==0;assert page.get_by_role('progressbar',name='Cookie preparation').evaluate('p=>p.value')==0
  page.evaluate("window.inputPaws=[];window.observePaws=true;function sample(){const c=document.querySelector('.baking-preview canvas');if(c&&Number.isFinite(Number(c.dataset.pawTurn)))inputPaws.push(Number(c.dataset.pawTurn));if(observePaws)requestAnimationFrame(sample)}requestAnimationFrame(sample)")
  page.mouse.move(cx+radius,cy);page.mouse.down()
  for i in range(1,65):
