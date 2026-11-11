@@ -165,6 +165,7 @@ export interface GameState extends SaveState {
   shapeCookie(shape: CookieShape): void;
   iceCookie(icing: Icing): void;
   stampCookie(kind: Decoration, x?: number, y?: number): void;
+  undoCookieStamp(): void;
   cookieStage(stage: "shape" | "decorate" | "give"): void;
   giveCookie(friend: CookieFriend): void;
   startTea(): void;
@@ -976,7 +977,20 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               !["heart", "star", "round"].includes(shape)
             )
               return;
-            set({ cozy: { ...s.cozy, cookie: { ...s.cozy.cookie, shape } } });
+            const c = s.cozy.cookie;
+            if (c.shape === shape) return;
+            set({
+              cozy: {
+                ...s.cozy,
+                cookie: {
+                  ...c,
+                  shape,
+                  ...(c.prep?.pressed
+                    ? { prep: { ...c.prep, pressed: false, oven: 0 } }
+                    : {}),
+                },
+              },
+            });
           },
           iceCookie(icing) {
             const s = get();
@@ -1014,6 +1028,17 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               },
             });
             set({ cozy: next });
+          },
+          undoCookieStamp() {
+            const s = get(),
+              c = s.cozy.cookie;
+            if (c.stage !== "decorate" || !c.stamps.length) return;
+            set({
+              cozy: {
+                ...s.cozy,
+                cookie: { ...c, stamps: c.stamps.slice(0, -1) },
+              },
+            });
           },
           cookieStage(stage) {
             const s = get(),

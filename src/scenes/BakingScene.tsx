@@ -7,7 +7,13 @@ import {
   type RefObject,
 } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ACESFilmicToneMapping, MathUtils, type Group } from "three";
+import {
+  ACESFilmicToneMapping,
+  MathUtils,
+  type Group,
+  type PointLight,
+  type MeshStandardMaterial,
+} from "three";
 import { Kitty, useReducedMotion, type ActivityPose } from "./Kitty";
 import { Toy, ToyFriend, type Holding } from "./GameToys";
 import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
@@ -31,26 +37,34 @@ function readyPose(cookie: Cookie): ActivityPose {
     active: cookie.stage === "shape" || cookie.stage === "decorate",
   };
 }
+interface BakingRun {
+  active: boolean;
+  done?: () => void;
+  wait?: number;
+  onWarm?: () => void;
+}
 function ActivityClock({
   pose,
   run,
 }: {
   pose: RefObject<ActivityPose>;
-  run: RefObject<{ active: boolean; done?: () => void; wait?: number }>;
+  run: RefObject<BakingRun>;
 }) {
   useFrame((_, dt) => {
-    if (!run.current.active) return;
+    if (!run.current.active || document.hidden) return;
     pose.current.progress = Math.min(
       1,
       pose.current.progress + Math.min(0.25, dt) / 0.9,
     );
-    if (run.current.wait) {
-      run.current.wait = Math.max(0, run.current.wait - Math.min(0.25, dt));
-      if (run.current.wait > 0) return;
-    }
     if (pose.current.progress >= 1) {
-      // Finish the visible contact motion before changing the activity's props.
+      // Keep the tray in Kitty's paws until the contact pose has reached the oven.
       if ((pose.current.renderedProgress ?? 1) < 0.98) return;
+      if (run.current.wait && run.current.wait > 0) {
+        run.current.onWarm?.();
+        run.current.onWarm = undefined;
+        run.current.wait = Math.max(0, run.current.wait - Math.min(0.25, dt));
+        if (run.current.wait > 0) return;
+      }
       run.current.active = false;
       pose.current.active = false;
       run.current.done?.();
@@ -62,16 +76,22 @@ function ActivityClock({
 function OvenMotion({
   pose,
   stage,
+  warming,
 }: {
   pose: RefObject<ActivityPose>;
   stage: string;
+  warming: boolean;
 }) {
   const opening = useRef(0);
-  const tray = useRef<Group>(null);
+  const tray = useRef<Group>(null),
+    light = useRef<PointLight>(null),
+    glass = useRef<MeshStandardMaterial>(null);
   const cookie = useGameStore((s) => s.cozy.cookie);
   const reduced = useReducedMotion();
   useFrame(() => {
     const phase = pose.current.renderedProgress ?? 0;
+    if (light.current) light.current.intensity = warming ? 1.8 : 0;
+    if (glass.current) glass.current.opacity = warming ? 0.65 : 0;
     opening.current =
       stage === "oven" && !reduced
         ? MathUtils.smoothstep(phase, 0, 0.2) *
@@ -89,6 +109,25 @@ function OvenMotion({
         scale={0.8}
         opening={opening}
       />
+      <pointLight
+        ref={light}
+        color="#ffc483"
+        position={[0.72, 0.48, 0.35]}
+        intensity={0}
+        distance={1.8}
+      />
+      <mesh position={[0.74, 0.46, 0.35]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[0.32, 0.18]} />
+        <meshStandardMaterial
+          ref={glass}
+          color="#eeb271"
+          emissive="#ffb55b"
+          emissiveIntensity={0.8}
+          transparent
+          opacity={0}
+          depthWrite={false}
+        />
+      </mesh>
       <group
         ref={tray}
         visible={false}
@@ -110,7 +149,9 @@ export default function BakingPreview() {
   const cookie = useGameStore((s) => s.cozy.cookie),
     equipment = useGameStore((s) => s.equipment),
     [replay, setReplay] = useState(0),
-    [oven, setOven] = useState(cookie.prep?.oven || 0);
+    [oven, setOven] = useState(cookie.prep?.oven || 0),
+    [warming, setWarming] = useState(false),
+    [busy, setBusy] = useState(false);
   const prep = {
     stir: 0,
     pressed: false,
@@ -139,7 +180,7 @@ export default function BakingPreview() {
           ? "present"
           : "bow";
   const activity = useRef<ActivityPose>(readyPose(cookie)),
-    run = useRef<{ active: boolean; done?: () => void; wait?: number }>({
+    run = useRef<BakingRun>({
       active: false,
     }),
     drag = useRef({ down: false, angle: 0, amount: 0 });
@@ -157,6 +198,8 @@ export default function BakingPreview() {
     activity.current = readyPose(cookie);
     run.current.active = false;
     setOven(cookie.prep?.oven || 0);
+    setWarming(false);
+    setBusy(false);
   }, [cookie.stage, stage]);
   useEffect(() => {
     const cancel = () => {
@@ -165,6 +208,8 @@ export default function BakingPreview() {
       activity.current = readyPose(useGameStore.getState().cozy.cookie);
       run.current.active = false;
       run.current.done = undefined;
+      setWarming(false);
+      setBusy(false);
       setOven(useGameStore.getState().cozy.cookie.prep?.oven || 0);
     };
     const hidden = () => {
@@ -208,7 +253,14 @@ export default function BakingPreview() {
       done?.();
       return;
     }
-    run.current = { active: true, done };
+    setBusy(true);
+    run.current = {
+      active: true,
+      done: () => {
+        setBusy(false);
+        done?.();
+      },
+    };
   };
   const finishDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!drag.current.down) return;
@@ -227,14 +279,22 @@ export default function BakingPreview() {
         progress: activity.current.renderedProgress ?? 0,
         active: true,
       };
+      setBusy(true);
       run.current = {
         active: true,
-        done: () => useGameStore.getState().prepareCookie("oven", 1),
+        wait: reduced ? 0 : 2.4,
+        onWarm: () => setWarming(true),
+        done: () => {
+          setWarming(false);
+          setBusy(false);
+          useGameStore.getState().prepareCookie("oven", 1);
+        },
       };
     } else useGameStore.getState().prepareCookie("oven", oven);
   };
-  const caption =
-    stage === "stir"
+  const caption = warming
+    ? "A little warmth, a lovely smell… Kitty is baking your cookie. ♡"
+    : stage === "stir"
       ? "Drag a circle over Kitty’s spoon to stir together."
       : stage === "press"
         ? "Press the cutter to make a tiny cookie together."
@@ -248,10 +308,41 @@ export default function BakingPreview() {
                 ? "A safely wrapped cookie, ready to carry to Momo."
                 : "A happy little bow. Thank you for baking together, Nancy!";
   return (
-    <figure className="baking-performance">
+    <figure
+      className="baking-performance"
+      data-baking-step={warming ? "warming" : stage}
+    >
+      <div className="baking-cue">
+        <strong>
+          {warming
+            ? "A little oven magic ♡"
+            : {
+                stir: "Mix the dough",
+                press: "Make your little shape",
+                oven: "Time for the oven",
+                decorate: "Freshly baked. Make it yours ♡",
+                give: "Made with love, ready to share",
+                served: cookie.packed
+                  ? "A little gift to carry"
+                  : "You made a friend smile ♡",
+              }[stage]}
+        </strong>
+        <span>
+          {stage === "stir"
+            ? "Draw a circle, or tap to stir."
+            : stage === "press"
+              ? "Press once. Kitty will help."
+              : stage === "oven"
+                ? warming
+                  ? "No need to do anything. Enjoy a cozy moment."
+                  : "Slide gently to the right."
+                : ""}
+        </span>
+      </div>
       <div
         className="baking-preview"
         data-performance={kind}
+        data-warming={warming}
         style={{ touchAction: stage === "stir" ? "none" : "auto" }}
         onPointerDown={(e) => {
           if (stage !== "stir") return;
@@ -308,8 +399,8 @@ export default function BakingPreview() {
           camera={{
             position:
               equipment.plush === "witch" || equipment.plush === "bunny"
-                ? [2, 2, 5.3]
-                : [2, 1.7, 4.3],
+                ? [-1.8, 3.6, 5.3]
+                : [-1.8, 3.1, 4.3],
             fov: 38,
           }}
           dpr={[1, 1.5]}
@@ -339,14 +430,14 @@ export default function BakingPreview() {
               position={[-0.2, 0, -0.15]}
             />
             <group name="Baking_worktop" position={[0, 0, 0.6]}>
-              {[-0.55, 0.55].map((x) => (
+              {[-0.38, 0.38].map((x) => (
                 <mesh key={x} position={[x, 0.3, 0]}>
                   <boxGeometry args={[0.1, 0.6, 0.5]} />
                   <meshStandardMaterial color="#d5af99" />
                 </mesh>
               ))}
               <mesh position={[0, 0.62, 0]}>
-                <boxGeometry args={[1.4, 0.12, 0.7]} />
+                <boxGeometry args={[1, 0.12, 0.7]} />
                 <meshStandardMaterial color="#fff0da" />
               </mesh>
               {stage === "stir" ? (
@@ -361,7 +452,7 @@ export default function BakingPreview() {
               <boxGeometry args={[0.58, 0.16, 0.76]} />
               <meshStandardMaterial color="#fff0da" />
             </mesh>
-            <OvenMotion pose={activity} stage={stage} />
+            <OvenMotion pose={activity} stage={stage} warming={warming} />
             {cookie.stage === "served" &&
               !cookie.packed &&
               cookie.friend !== "kitty" && (
@@ -379,7 +470,9 @@ export default function BakingPreview() {
           </mesh>
         </Canvas>
       </div>
-      <figcaption>{caption}</figcaption>
+      <figcaption role="status" aria-live="polite">
+        {caption}
+      </figcaption>
       {cookie.stage === "shape" && (
         <div
           className="workshop-controls"
@@ -407,6 +500,7 @@ export default function BakingPreview() {
           )}
           {stage === "press" && (
             <button
+              disabled={busy}
               onClick={() =>
                 perform("cut", () => {
                   useGameStore.getState().prepareCookie("press");
@@ -425,6 +519,7 @@ export default function BakingPreview() {
               Slide tray into the oven{" "}
               <input
                 type="range"
+                disabled={busy}
                 min="0"
                 max="100"
                 value={Math.round(oven * 100)}
@@ -483,27 +578,19 @@ export default function BakingPreview() {
             Swirl the icing ✧
           </button>
         )}
-      <button
-        className="small"
-        onClick={() => {
-          if (run.current.active) return;
-          if (cookie.stage === "shape" || cookie.stage === "decorate") {
-            const ready = {
-              kind: activity.current.kind,
-              progress: stage === "oven" ? oven : 0,
-              active: true,
-            };
-            perform(ready.kind, () => {
-              activity.current = ready;
-            });
-            return;
-          }
-          activity.current.active = false;
-          setReplay((n) => n + 1);
-        }}
-      >
-        Watch Kitty again ♡
-      </button>
+      {cookie.stage !== "shape" && (
+        <button
+          disabled={busy}
+          className="small"
+          onClick={() => {
+            if (run.current.active) return;
+            activity.current.active = false;
+            setReplay((n) => n + 1);
+          }}
+        >
+          Watch Kitty again ♡
+        </button>
+      )}
     </figure>
   );
 }

@@ -1,0 +1,145 @@
+.baking-dialog {
+  width: min(720px, calc(100% - 20px));
+}
+.baking-dialog > h2 {
+  margin: 6px 0;
+}
+.baking-dialog > p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+.baking-dialog .recipe-book {
+  margin: 10px 0;
+  padding: 8px 14px;
+}
+.baking-dialog .cozy-steps {
+  gap: 5px;
+  margin: 12px 0;
+}
+.baking-dialog .cozy-steps li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 8px 0;
+  white-space: nowrap;
+}
+.baking-dialog fieldset {
+  margin: 12px 0;
+}
+.baking-workspace {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+}
+.baking-workspace:not([data-stage="shape"]) {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+.baking-dialog .baking-performance {
+  min-width: 0;
+  margin: 0;
+}
+.baking-cue {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 16px 16px 0 0;
+  background: #fff4e5;
+}
+.baking-cue span {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+.baking-dialog .baking-preview {
+  height: clamp(210px, 31vh, 290px);
+  border-radius: 0 0 18px 18px;
+}
+.baking-preview[data-warming="true"] {
+  box-shadow: inset 0 0 28px #f4c38b66;
+}
+.baking-dialog .cookie-worktop {
+  padding: 10px;
+}
+.baking-dialog .cookie-art {
+  width: min(100%, 220px);
+}
+.baking-dialog .cookie-worktop p {
+  font-size: 13px;
+  min-height: 0;
+  line-height: 1.45;
+}
+.baking-dialog .baking-assist {
+  margin-top: 12px;
+  background: #fff9f4;
+  color: var(--muted);
+  min-height: 44px;
+}
+.baking-edits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.baking-edits button {
+  min-height: 44px;
+}
+.baking-dialog .workshop-controls {
+  background: #fff7ee;
+  border-radius: 16px;
+  padding: 10px;
+}
+.baking-dialog .workshop-controls progress {
+  height: 10px;
+}
+.baking-dialog .photo-options {
+  gap: 6px;
+}
+.baking-dialog .photo-options button[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px #a25078;
+}
+@media (max-width: 520px) {
+  .baking-dialog {
+    padding: 18px 14px;
+  }
+  .baking-dialog > h2 {
+    font-size: 1.3em;
+  }
+  .baking-dialog .cozy-steps li {
+    font-size: 12px;
+  }
+  .baking-workspace:not([data-stage="shape"]) {
+    grid-template-columns: 1fr;
+  }
+  .baking-workspace:not([data-stage="shape"]) .baking-preview {
+    height: 170px;
+  }
+  .baking-dialog .cookie-art {
+    width: min(100%, 180px);
+  }
+  .baking-dialog .photo-options button {
+    padding: 9px 10px;
+  }
+}
+
+.baking-dialog .cozy-steps li > span {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: #f1e1e6;
+  font-size: 12px;
+}
+.baking-dialog .cozy-steps li[aria-current] > span {
+  background: #985177;
+  color: #fff;
+}
+
+.baking-dialog .baking-cutters .photo-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.baking-dialog .baking-cutters button {
+  padding: 9px 6px;
+  min-width: 0;
+}

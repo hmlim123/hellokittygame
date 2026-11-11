@@ -1330,3 +1330,32 @@ Play/share:
 Nancy’s progress and permanent gift marker remain intact. Physical phone and
 Mac Safari testing remains pending; Chromium emulation and a verified Pages
 deployment do not establish physical-device acceptance.
+
+
+## Baking together · v3.4.0 · 2026-11-11
+
+The user requested a better baking feature. This update polishes the existing
+activity: one five-step guide, cutter choices beside the work, a smaller mobile
+workspace and one clear current instruction. The assisted path remains available
+as a secondary button. The original Blender stirring, cutter, tray, sprinkle,
+presenting and bow animations remain the performances; no new Blender source
+project is claimed by this release.
+
+After the tray reaches the oven, a short 2.4-second warm moment lights its window.
+Reduced motion skips the pause. Backgrounding/blur or closing stops the transient
+sequence; reopening resumes saved preparation instead of granting completion.
+Cutter changes after pressing retain mixed dough but require another cut. Undo
+removes only the latest decoration, preserves icing and saves the resulting design.
+It cannot edit an already given gift. Procedural 3D cookie toppings now match the
+chosen heart/star/berry type, cupcake toppings follow the frosting surface, and
+unbaked dough has no icing. Shared Blender character/prop assets are unchanged.
+
+All 254 local rule/app/server checks pass, including saved undo/gift immutability
+and re-cut ordering. A new browser journey checks five-step guidance, interruption
+recovery, changing the pressed shape, saved decoration/undo, one gift and replay
+at 390×844 with animation and 320×568 with reduced motion. The existing hands-on
+stir/press/oven and delivery/gift-memory journey passes too. Final camera review,
+production-artifact regression and publication are recorded after verification.
+The full gate has 24 browser suites across five groups. Preserve the permanent
+gift marker and all existing progress; this is not a reset release. Physical
+phone/Mac Safari review remains pending.

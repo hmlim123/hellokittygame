@@ -79,7 +79,16 @@ export function BakingPanel() {
   const [stamp, setStamp] = useState<Decoration>("heart"),
     [friend, setFriend] = useState(c.friend);
   const s = useGameStore.getState;
-  const step = { shape: 1, decorate: 2, give: 3, served: 3 }[c.stage];
+  const step =
+    c.stage === "shape"
+      ? (c.prep?.stir ?? 0) < 1
+        ? 1
+        : !c.prep?.pressed
+          ? 2
+          : 3
+      : c.stage === "decorate"
+        ? 4
+        : 5;
   return (
     <Dialog
       title="Bake cookies with Kitty"
@@ -89,79 +98,85 @@ export function BakingPanel() {
       <span className="eyebrow">A LITTLE LOVE, FRESHLY BAKED</span>
       <h2>Bake cookies with Kitty</h2>
       <p>
-        No timer, no mistakes. Choose a shape, decorate it, and make a friend
-        smile.
+        Mix, cut, and bake together. Add your little touches, then make a friend
+        smile. No hurry, no mistakes.
       </p>
       <RecipeBook />
       <ol className="cozy-steps" aria-label="Cookie steps">
-        {["Choose", "Decorate", "Give"].map((label, i) => (
+        {["Mix", "Cut", "Bake", "Decorate", "Share"].map((label, i) => (
           <li key={label} aria-current={step === i + 1 ? "step" : undefined}>
-            {i + 1}. {label}
+            <span aria-hidden="true">{i + 1}</span> {label}
           </li>
         ))}
       </ol>
-      <Suspense
-        fallback={<p role="status">Kitty is getting her little apron ready…</p>}
-      >
-        <BakingPreview />
-      </Suspense>
-      <div className="cookie-worktop">
-        {c.stage === "decorate" ? (
-          <button
-            className="cookie-art"
-            aria-label="Add selected decoration to cookie"
-            disabled={c.stamps.length >= 12}
-            onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const pointer = e.detail !== 0;
-              s().stampCookie(
-                stamp,
-                pointer
-                  ? ((e.clientX - rect.left) / rect.width) * 100
-                  : undefined,
-                pointer
-                  ? ((e.clientY - rect.top) / rect.height) * 100
-                  : undefined,
-              );
-            }}
-          >
-            <CookieArt cookie={c} />
-          </button>
-        ) : (
-          <div className="cookie-art">
-            <CookieArt cookie={c} />
+      {c.stage === "shape" && c.recipe !== "moon" && c.recipe !== "cupcake" && (
+        <fieldset>
+          <legend>Choose a cookie cutter</legend>
+          <div className="photo-options">
+            {COOKIE_SHAPES.map((shape) => (
+              <button
+                key={shape}
+                aria-pressed={c.shape === shape}
+                onClick={() => s().shapeCookie(shape)}
+              >
+                {shape[0].toUpperCase() + shape.slice(1)}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      <div className="baking-workspace" data-stage={c.stage}>
+        <Suspense
+          fallback={
+            <p role="status">Kitty is getting her little apron ready…</p>
+          }
+        >
+          <BakingPreview />
+        </Suspense>
+        {c.stage !== "shape" && (
+          <div className="cookie-worktop">
+            {c.stage === "decorate" ? (
+              <button
+                className="cookie-art"
+                aria-label="Add selected decoration to cookie"
+                disabled={c.stamps.length >= 12}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const pointer = e.detail !== 0;
+                  s().stampCookie(
+                    stamp,
+                    pointer
+                      ? ((e.clientX - rect.left) / rect.width) * 100
+                      : undefined,
+                    pointer
+                      ? ((e.clientY - rect.top) / rect.height) * 100
+                      : undefined,
+                  );
+                }}
+              >
+                <CookieArt cookie={c} />
+              </button>
+            ) : (
+              <div className="cookie-art">
+                <CookieArt cookie={c} />
+              </div>
+            )}
+            <p role="status">
+              {c.stage === "decorate"
+                ? `${c.stamps.length} of 12 decorations. Tap the cookie or add a sprinkle below.`
+                : c.stage === "give"
+                  ? "A little gift tastes sweeter when shared."
+                  : c.packed
+                    ? "Your cookie is wrapped safely in Kitty’s paws. Momo is waiting in the village."
+                    : `${names[c.friend]} holds your cookie close. “You made this for me? Thank you, Nancy!” ♡`}
+            </p>
           </div>
         )}
-        <p role="status">
-          {c.stage === "shape"
-            ? "What little shape shall we bake?"
-            : c.stage === "decorate"
-              ? `${c.stamps.length} of 12 decorations. Tap the cookie or add a sprinkle below.`
-              : c.stage === "give"
-                ? "A little gift tastes sweeter when shared."
-                : c.packed
-                  ? "Your cookie is wrapped safely in Kitty’s paws. Momo is waiting in the village."
-                  : `${names[c.friend]} holds your cookie close. “You made this for me? Thank you, Nancy!” ♡`}
-        </p>
       </div>
       {c.stage === "shape" && (
         <>
-          <fieldset>
-            <legend>Choose a cookie cutter</legend>
-            <div className="photo-options">
-              {COOKIE_SHAPES.map((shape) => (
-                <button
-                  key={shape}
-                  aria-pressed={c.shape === shape}
-                  onClick={() => s().shapeCookie(shape)}
-                >
-                  {shape[0].toUpperCase() + shape.slice(1)}
-                </button>
-              ))}
-            </div>
-          </fieldset>
           <button
-            className="primary wide"
+            className="baking-assist wide"
             onClick={() => s().cookieStage("decorate")}
           >
             Bake & decorate →
@@ -202,6 +217,17 @@ export function BakingPanel() {
               ))}
             </div>
           </fieldset>
+          <div className="baking-edits">
+            <button
+              disabled={!c.stamps.length}
+              onClick={() => s().undoCookieStamp()}
+            >
+              Undo last sprinkle ↶
+            </button>
+            <span className="small-note">
+              Every little touch can be changed.
+            </span>
+          </div>
           <div className="memory-actions">
             <button onClick={() => s().cookieStage("shape")}>
               Change shape

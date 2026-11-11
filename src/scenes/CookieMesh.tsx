@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Shape } from "three";
-import type { Cookie, CookieShape } from "../game/cozy";
+import type { Cookie, CookieShape, CookieStamp } from "../game/cozy";
 function shapeFor(kind: CookieShape, recipe?: string) {
   const s = new Shape();
   if (recipe === "moon") {
@@ -29,11 +29,86 @@ function shapeFor(kind: CookieShape, recipe?: string) {
   s.closePath();
   return s;
 }
+function CookieTopping({
+  stamp,
+  y,
+  spread = 0.0045,
+}: {
+  stamp: CookieStamp;
+  y: number;
+  spread?: number;
+}) {
+  const shape = useMemo(
+    () => shapeFor(stamp.kind === "star" ? "star" : "heart"),
+    [stamp.kind],
+  );
+  return (
+    <group
+      name={stamp.kind + " sprinkle"}
+      position={[(stamp.x - 50) * spread, y, (stamp.y - 50) * spread]}
+    >
+      {stamp.kind === "berry" ? (
+        <>
+          <mesh position={[0, 0.012, 0]} scale={[0.016, 0.012, 0.02]}>
+            <sphereGeometry args={[1, 12, 8]} />
+            <meshStandardMaterial color="#cf6280" roughness={0.65} />
+          </mesh>
+          <mesh
+            position={[0, 0.024, -0.008]}
+            rotation={[0, 0.6, 0]}
+            scale={[0.012, 0.003, 0.006]}
+          >
+            <sphereGeometry args={[1, 8, 6]} />
+            <meshStandardMaterial color="#6b9271" />
+          </mesh>
+        </>
+      ) : (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} scale={0.11}>
+          <extrudeGeometry
+            args={[
+              shape,
+              {
+                depth: 0.035,
+                bevelEnabled: true,
+                bevelSize: 0.006,
+                bevelThickness: 0.006,
+                bevelSegments: 1,
+                steps: 1,
+                curveSegments: 8,
+              },
+            ]}
+          />
+          <meshStandardMaterial
+            color={stamp.kind === "star" ? "#fff2c2" : "#bb638a"}
+            roughness={0.7}
+          />
+        </mesh>
+      )}
+    </group>
+  );
+}
+function cupcakeSurface(stamp: CookieStamp) {
+  const r2 = ((stamp.x - 50) * 0.004) ** 2 + ((stamp.y - 50) * 0.004) ** 2;
+  return (
+    Math.max(
+      0.14,
+      ...[0, 1, 2].map((i) => {
+        const radius = 0.15 - i * 0.035;
+        return r2 <= radius * radius
+          ? 0.15 + i * 0.055 + 0.055 * Math.sqrt(1 - r2 / (radius * radius))
+          : 0.14;
+      }),
+    ) + 0.001
+  );
+}
 export function CookieMesh({ cookie }: { cookie: Cookie }) {
   const shape = useMemo(
     () => shapeFor(cookie.shape, cookie.recipe),
     [cookie.shape, cookie.recipe],
   );
+  const color = { rose: "#efb6cb", honey: "#f5df9f", lavender: "#cec0e8" }[
+    cookie.icing
+  ];
   if (cookie.recipe === "cupcake")
     return (
       <group name="Nancy’s tiny cupcake">
@@ -49,25 +124,16 @@ export function CookieMesh({ cookie }: { cookie: Cookie }) {
               scale={[0.15 - i * 0.035, 0.055, 0.15 - i * 0.035]}
             >
               <sphereGeometry args={[1, 18, 12]} />
-              <meshStandardMaterial
-                color={
-                  { rose: "#efb6cb", honey: "#f5df9f", lavender: "#cec0e8" }[
-                    cookie.icing
-                  ]
-                }
-              />
+              <meshStandardMaterial color={color} />
             </mesh>
           ))}
-        {cookie.stamps.map((s, i) => (
-          <mesh
+        {cookie.stamps.map((stamp, i) => (
+          <CookieTopping
             key={i}
-            position={[(s.x - 50) * 0.004, 0.22, (s.y - 50) * 0.004]}
-          >
-            <sphereGeometry args={[0.014, 8, 6]} />
-            <meshStandardMaterial
-              color={s.kind === "star" ? "#fff1b9" : "#c76c91"}
-            />
-          </mesh>
+            stamp={stamp}
+            y={cupcakeSurface(stamp)}
+            spread={0.004}
+          />
         ))}
       </group>
     );
@@ -89,40 +155,27 @@ export function CookieMesh({ cookie }: { cookie: Cookie }) {
           ]}
         />
         <meshStandardMaterial
-          color={cookie.recipe === "strawberry" ? "#d89883" : "#d7af78"}
-        />
-      </mesh>
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.045, 0]}
-        scale={[0.88, 0.88, 1]}
-      >
-        <shapeGeometry args={[shape]} />
-        <meshStandardMaterial
           color={
-            { rose: "#efb6cb", honey: "#f5df9f", lavender: "#cec0e8" }[
-              cookie.icing
-            ]
+            cookie.recipe === "strawberry"
+              ? "#d89883"
+              : cookie.stage === "shape"
+                ? "#e8cda8"
+                : "#d7af78"
           }
         />
       </mesh>
-      {cookie.stamps.map((s, i) => (
+      {cookie.stage !== "shape" && (
         <mesh
-          key={i}
-          position={[(s.x - 50) * 0.0045, 0.057, (s.y - 50) * 0.0045]}
-          scale={[1, 0.55, 1]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0.045, 0]}
+          scale={[0.88, 0.88, 1]}
         >
-          <sphereGeometry args={[s.kind === "berry" ? 0.018 : 0.012, 8, 6]} />
-          <meshStandardMaterial
-            color={
-              s.kind === "star"
-                ? "#fff2c2"
-                : s.kind === "berry"
-                  ? "#cf6280"
-                  : "#af6c91"
-            }
-          />
+          <shapeGeometry args={[shape]} />
+          <meshStandardMaterial color={color} />
         </mesh>
+      )}
+      {cookie.stamps.map((stamp, i) => (
+        <CookieTopping key={i} stamp={stamp} y={0.046} />
       ))}
     </group>
   );

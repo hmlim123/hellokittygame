@@ -85,6 +85,47 @@ describe("Nancy’s cozy activities", () => {
       y: 70,
     });
   });
+  it("undoes only the last decoration, persists it, and leaves given cookies unchanged", () => {
+    const m = memory(),
+      st = createGameStore(m.storage),
+      s = st.getState();
+    s.openPanel("baking");
+    s.cookieStage("decorate");
+    s.iceCookie("lavender");
+    s.stampCookie("heart", 40, 45);
+    s.stampCookie("berry", 60, 55);
+    s.undoCookieStamp();
+    const next = createGameStore(m.storage);
+    expect(next.getState().cozy.cookie).toMatchObject({
+      icing: "lavender",
+      stamps: [{ kind: "heart", x: 40, y: 45 }],
+    });
+    next.getState().openPanel("baking");
+    next.getState().cookieStage("give");
+    next.getState().giveCookie("momo");
+    next.getState().undoCookieStamp();
+    expect(next.getState().cozy.cookie.stamps).toHaveLength(1);
+    expect(next.getState().cozy.cookiesGiven).toBe(1);
+    expect(next.getState().cozy.friends.momo.last?.stamps).toHaveLength(1);
+  });
+  it("keeps mixed dough but requires a fresh cut when changing a pressed shape", () => {
+    const st = createGameStore(emptyStorage),
+      s = st.getState();
+    s.openPanel("baking");
+    s.prepareCookie("stir", 1);
+    s.prepareCookie("press");
+    s.prepareCookie("oven", 0.5);
+    s.shapeCookie("star");
+    s.prepareCookie("oven", 1);
+    expect(st.getState().cozy.cookie).toMatchObject({
+      shape: "star",
+      stage: "shape",
+      prep: { stir: 1, pressed: false, oven: 0 },
+    });
+    s.prepareCookie("press");
+    s.prepareCookie("oven", 1);
+    expect(st.getState().cozy.cookie.stage).toBe("decorate");
+  });
   it("connects an automatic leaf discovery, Momo’s cookie, table setting and one permanent souvenir", () => {
     const store = createGameStore(emptyStorage),
       s = store.getState();

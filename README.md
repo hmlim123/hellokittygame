@@ -8,6 +8,25 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Baking together · v3.4.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=baking-36>.
+
+A clear five-step guide follows mixing, cutting, baking, decorating and sharing.
+Cutter choices sit beside the current task. Stir with a circular gesture or a
+button, press the cutter and slide the tray into the oven. The actual Blender
+Kitty and oven perform the contact motions, followed by a short warm-oven moment.
+There are no scores or deadlines, and the assisted bake button remains available.
+Reduced motion skips the warm pause. Interrupted preparation returns to the last
+saved step without granting a cookie or gift.
+
+The working space is more compact on phones. Undo removes just the last sprinkle;
+icing and the remaining design survive reopening. The 3D cookie now has shaped
+hearts, stars and berries, and cupcake toppings sit on the frosting. Dough stays
+uniced until it is baked. Choosing a different cutter after pressing preserves
+the mixed dough and asks for a new cut. Gifts, delivery, recipes and Nancy’s
+existing progress are preserved. Physical phone/Safari testing remains pending.
+
 ## A playable home for Nancy · v3.3.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-life-35>.

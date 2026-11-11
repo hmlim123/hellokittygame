@@ -6,7 +6,7 @@ from urllib.request import urlopen
 from playwright.sync_api import sync_playwright
 
 SUITES = [
-    'home-life-browser.py', 'home-browser.py', 'village-browser.py', 'visits-browser.py', 'happy-dance-browser.py', 'expressions-browser.py', 'controls-browser.py', 'movement-browser.py', 'npc-gift-browser.py', 'journey-browser.py',
+    'baking-browser.py', 'home-life-browser.py', 'home-browser.py', 'village-browser.py', 'visits-browser.py', 'happy-dance-browser.py', 'expressions-browser.py', 'controls-browser.py', 'movement-browser.py', 'npc-gift-browser.py', 'journey-browser.py',
     'presentation-browser.py', 'device-browser.py', 'release-browser.py',
     'chapter-browser.py', 'play-polish-browser.py', 'navigation-browser.py',
     'react-browser.py', 'cozy-browser.py', 'blender-performances-browser.py', 'cozy-life-browser.py', 'plush-browser.py', 'plush-loading-browser.py', 'friend-stories-browser.py',
@@ -14,7 +14,7 @@ SUITES = [
 # Isolated CI runners split the full suite; local execution still runs all.
 SHARDS = [
  ['controls-browser.py','movement-browser.py','npc-gift-browser.py','journey-browser.py','plush-browser.py','plush-loading-browser.py'],
- ['happy-dance-browser.py','chapter-browser.py','play-polish-browser.py','navigation-browser.py','release-browser.py'],
+ ['baking-browser.py','happy-dance-browser.py','chapter-browser.py','play-polish-browser.py','navigation-browser.py','release-browser.py'],
  ['expressions-browser.py','react-browser.py','presentation-browser.py','device-browser.py','blender-performances-browser.py'],
  ['cozy-browser.py','cozy-life-browser.py','friend-stories-browser.py','home-life-browser.py'],
  ['home-browser.py','village-browser.py','visits-browser.py'],
