@@ -164,19 +164,28 @@ export function Kitty({
     if (equipment) applyHeroEquipment(hero, equipment);
     invalidate();
   }, [hero, equipment]);
-  const seenGesture = useRef<{ hero: THREE.Group; id: number } | null>(null);
+  const seenGesture = useRef<{
+    hero: THREE.Group;
+    gesture: { id: number; kind: Gesture };
+    animate: boolean;
+    reduced: boolean;
+  } | null>(null);
   const hadHome = useRef(false);
   useEffect(() => {
     if (homeClip) {
-      seenGesture.current = { hero, id: gesture.id };
+      seenGesture.current = { hero, gesture, animate, reduced };
       return;
     }
     if (
       seenGesture.current?.hero === hero &&
-      seenGesture.current.id === gesture.id
+      seenGesture.current.gesture === gesture &&
+      seenGesture.current.animate === animate &&
+      seenGesture.current.reduced === reduced
     )
       return;
-    seenGesture.current = { hero, id: gesture.id };
+    // Local performances can change kind without incrementing their replay ID.
+    // Retain the complete request while suppressing stale gestures after sitting.
+    seenGesture.current = { hero, gesture, animate, reduced };
     if (!animate || homeClip || (activity?.current.active && !reduced)) return;
     if (
       gesture.kind === "offer" &&
