@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../game/store";
-import { useHomeMotion } from "../game/home-motion";
-import { useVillageMotion } from "../game/village-motion";
+import { thumbStepTarget } from "../game/thumb-input";
+import { homeRender, useHomeMotion } from "../game/home-motion";
+import { villageRender, useVillageMotion } from "../game/village-motion";
 /** A captured thumb gesture has one owner and always releases on interruption. */
 export function ThumbControl({ mode }: { mode: "room" | "village" }) {
   const root = useRef<HTMLDivElement>(null),
@@ -11,6 +12,7 @@ export function ThumbControl({ mode }: { mode: "room" | "village" }) {
     [thumb, setThumb] = useState({ x: 0, z: 0 }),
     ready = useGameStore((s) => s.sceneReady);
   const store = mode === "room" ? useHomeMotion : useVillageMotion;
+  const rendered = mode === "room" ? homeRender : villageRender;
   const available = () => {
     const s = useGameStore.getState();
     return (
@@ -90,7 +92,7 @@ export function ThumbControl({ mode }: { mode: "room" | "village" }) {
         if (!available() || e.button !== 0 || active.current !== null) return;
         e.preventDefault();
         e.stopPropagation();
-        const p = store.getState().position;
+        const p = rendered;
         gesture.current = { ...p, at: performance.now() };
         active.current = e.pointerId;
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -102,23 +104,18 @@ export function ThumbControl({ mode }: { mode: "room" | "village" }) {
       onPointerUp={(e) => {
         if (active.current !== e.pointerId) return;
         const motion = store.getState(),
-          v = lastVector.current,
-          short =
-            available() &&
-            performance.now() - gesture.current.at < 180 &&
-            Math.hypot(
-              motion.position.x - gesture.current.x,
-              motion.position.z - gesture.current.z,
-            ) < 0.015 &&
-            Math.hypot(v.x, v.z) > 0.13;
+          target = available()
+            ? thumbStepTarget(
+                gesture.current,
+                rendered,
+                lastVector.current,
+                performance.now() - gesture.current.at,
+              )
+            : null;
         cancel();
         // A short flick must survive even if it fits between two render frames.
         // Cancellation/blur never queues a step.
-        if (short)
-          motion.walkTo({
-            x: motion.position.x + v.x * 0.18,
-            z: motion.position.z + v.z * 0.18,
-          });
+        if (target) motion.walkTo(target);
       }}
       onPointerCancel={cancel}
       onLostPointerCapture={() => {

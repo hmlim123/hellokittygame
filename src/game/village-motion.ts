@@ -27,6 +27,7 @@ interface VillageMotion {
   stop(): void;
   walkTo(p: VillagePoint, action?: string): boolean;
 }
+export const villageRender = { x: VILLAGE_SPAWN.x, z: VILLAGE_SPAWN.z };
 export const useVillageMotion = create<VillageMotion>((set, get) => ({
   position: { ...VILLAGE_SPAWN },
   yaw: 0,

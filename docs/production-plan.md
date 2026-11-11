@@ -1350,7 +1350,7 @@ It cannot edit an already given gift. Procedural 3D cookie toppings now match th
 chosen heart/star/berry type, cupcake toppings follow the frosting surface, and
 unbaked dough has no icing. Shared Blender character/prop assets are unchanged.
 
-All 254 local rule/app/server checks pass, including saved undo/gift immutability
+All 257 local rule/app/server checks pass, including saved undo/gift immutability
 and re-cut ordering. A new browser journey checks five-step guidance, interruption
 recovery, changing the pressed shape, saved decoration/undo, one gift and replay
 at 390×844 with animation and 320×568 with reduced motion. The existing hands-on
@@ -1359,3 +1359,14 @@ production-artifact regression and publication are recorded after verification.
 The full gate has 24 browser suites across five groups. Preserve the permanent
 gift marker and all existing progress; this is not a reset release. Physical
 phone/Mac Safari review remains pending.
+
+
+The full baking gate also exposed an intermittent short-tap home movement failure
+in landscape. The previous fallback ignored a tap once even one physics tick had
+moved Kitty, leaving a much shorter step at some frame timings. A pure input rule
+now completes the same small target from the gesture origin for zero through
+four ticks, uses the live rendered position rather than the slower UI snapshot,
+and never queues a reverse step after sufficient movement. The same shared thumb
+control uses live village positions. Cancellation and blur still never queue a
+step. Three deterministic timing tests pass; the existing real touch journey's
+movement and stopping assertions remain unchanged.

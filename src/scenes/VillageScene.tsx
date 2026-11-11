@@ -21,7 +21,11 @@ import {
   VILLAGE_OBSTACLES,
   moveVillage,
 } from "../game/village";
-import { actInVillage, useVillageMotion } from "../game/village-motion";
+import {
+  actInVillage,
+  useVillageMotion,
+  villageRender,
+} from "../game/village-motion";
 import { VisitAvatars } from "./VisitAvatars";
 import { useVisitsStore } from "../game/visits";
 import { GroundShadow } from "./GroundShadow";
@@ -614,6 +618,8 @@ function Player() {
     if (game.panel || game.dialogue || useVillageMotion.getState().picnic)
       locomotion.current.speed = 0;
     const p = latest.current;
+    villageRender.x = p.x;
+    villageRender.z = p.z;
     saveTime.current += dt;
     publishTime.current += dt;
     if (publishTime.current > 0.08) {
