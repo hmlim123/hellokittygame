@@ -8,6 +8,37 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## A playable home for Nancy · v3.3.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-life-35>.
+
+The studio now opens around a walking Kitty. Tap a clear floor spot or hold the
+thumb control; the closer camera follows her, and foreground furnishings fade
+when they block her. Pinch for a closer look. **Whole house** keeps the elevated
+360° view; Reset view returns to following Kitty. Phone layouts devote most of
+the viewport to playing, with steering and one contextual action inside the
+scene. Portrait and landscape controls have at least 44-pixel targets.
+
+Tap furniture and Kitty approaches it before opening the activity. At the dining
+chair she turns, settles onto the cushion, reaches for her cup, takes a sip,
+replaces it and stands. Seven new Blender clips are supplied for each of the six
+characters, using small controller-only libraries. Walking steps follow actual
+distance, with planted feet held in world space. Existing waves, dances, outfits,
+items, quests and character models remain. Petting or a gesture requested while
+seated waits for Kitty to stand first.
+
+Leave through the doorstep, visit a friend, and return inside at the entrance.
+Momo and Pip look toward Nancy and greet her when she approaches, with gentle
+café/garden glances between visits. Their existing gift conversations retain the
+actual cookie and visit memories. Saved indoor positions and tea moments survive
+reload and backup/restore. The gift-opening marker and earlier progress are kept.
+
+The house's collision footprints, approach anchors and floor heights are
+exported from Blender. Furniture leaves usable aisles and the bathroom door is
+open. Bathroom fittings remain scenery; this update does not add bathing or an
+NPC scheduling/calendar system. Physical phone and Mac Safari review remains
+pending. See [the source workflow](docs/blender-workflow.md#playable-home-performances-v330).
+
 ## Nancy’s cozy studio · v3.2.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=studio-34>.

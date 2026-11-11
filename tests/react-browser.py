@@ -43,7 +43,7 @@ with sync_playwright() as p:
  page.goto(BASE+'/');ready();assert page.locator('.action-bar>button').count()==3
  # Same-mode home navigation must not disable a loaded scene.
  page.get_by_role('button',name='Hello Kitty home',exact=True).click();assert page.get_by_role('button',name='Wave hello').is_enabled()
- canvas=page.locator('#stage canvas');canvas.focus();angle=float(canvas.get_attribute('data-view-angle'));page.keyboard.press('ArrowRight');page.wait_for_function("a=>Math.abs(Number(document.querySelector('#stage canvas').dataset.viewAngle)-a)>.1",arg=angle)
+ page.get_by_role('button',name='Whole house ⌂',exact=True).click();page.wait_for_function("document.querySelector('#stage canvas').dataset.homeView==='dollhouse'");canvas=page.locator('#stage canvas');canvas.focus();angle=float(canvas.get_attribute('data-view-angle'));page.keyboard.press('ArrowRight');page.wait_for_function("a=>Math.abs(Number(document.querySelector('#stage canvas').dataset.viewAngle)-a)>.1",arg=angle)
  page.get_by_role('button',name='Reset view ↺').click();page.wait_for_timeout(150)
  page.get_by_role('button',name='Game settings',exact=True).click();page.get_by_role('button',name='Mint tea',exact=True).click();page.get_by_label('Relaxed hunts, without a timer').check();page.keyboard.press('Escape');assert saved('kitty-room-3d-v1')['theme']=='mint'
  inventory();page.get_by_role('button',name='Sky sailor',exact=True).click();page.wait_for_selector('.outfit-preview canvas');page.wait_for_function("document.querySelector('.outfit-preview canvas').getAttribute('aria-label')?.startsWith('Sky sailor')")

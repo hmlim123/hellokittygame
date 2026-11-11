@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "library": "cozy-home-v1",
+  "style": "kitten",
+  "source_file": "home_motions/kitty_home_kitten.blend",
+  "source_sha256": "4935eaed7b5535416262eb49b60b9dad3537de303d5a4a738b8172400bc92607",
+  "original_source": "hello_kitty_plush_kitten.blend",
+  "original_source_sha256": "17017c01fcdd90363e91ba5a59dd78ce090070e475136c676a26cfd1474088d7",
+  "script": "author_home_motions.py",
+  "script_sha256": "17ae7e00e38b06499641402f090465a393695c8f29e0467a1b2fb65a3c03bb1c",
+  "export_script": "export_home_motions.py",
+  "export_sha256": "33043d45dd1b97c67163fdfa4b3e926574f1403cf847fed404a257407e35795b",
+  "fps": 24,
+  "clips": {
+    "sitDown": [
+      1,
+      37
+    ],
+    "sitIdle": [
+      37,
+      133
+    ],
+    "takeCup": [
+      133,
+      157
+    ],
+    "sipSit": [
+      157,
+      205
+    ],
+    "putCup": [
+      205,
+      229
+    ],
+    "standUp": [
+      229,
+      265
+    ],
+    "cupIdle": [
+      277,
+      373
+    ]
+  },
+  "cup_rest": [
+    0.21575573844257556,
+    1.0832831217412744,
+    0.46400758125066305
+  ],
+  "root_rise": 0.34100327548326265,
+  "web_scale": 0.9,
+  "normalize_scale": 0.4969264986602686,
+  "bytes": 65652,
+  "source_commit": "6f78ef56b8e8961e415acf454f503220965174d0",
+  "source_repository": "https://github.com/hmlim123/hellokitty3D"
+}

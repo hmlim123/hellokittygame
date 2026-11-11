@@ -1,3 +1,4 @@
+import { useHomeMotion } from "../game/home-motion";
 import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { type Group, Texture, SRGBColorSpace } from "three";
@@ -67,7 +68,13 @@ export function KeepsakeWall() {
   const cards = useGameStore((s) => s.cozy.postcards),
     group = useRef<Group>(null);
   useFrame(({ camera, gl }) => {
-    if (group.current) group.current.visible = camera.position.x > -0.42;
+    const game = useGameStore.getState(),
+      following =
+        useHomeMotion.getState().camera === "follow" &&
+        !game.mission &&
+        !game.arrival;
+    if (group.current)
+      group.current.visible = camera.position.x > (following ? -5.6 : -0.42);
     gl.domElement.dataset.keepsakeFrames = String(
       group.current?.children.length || 0,
     );

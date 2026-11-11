@@ -1,3 +1,7 @@
+import { HomePlayer } from "./HomePlayer";
+import { HomeCamera } from "./HomeCamera";
+import { useHomeMotion } from "../game/home-motion";
+import { HOME_OBSTACLES, homeFloorHeight } from "../game/home-world";
 import { Suspense, useState } from "react";
 import { DOLLS } from "../game/domain";
 import { ShelfFriend } from "./ShelfFriend";
@@ -23,7 +27,7 @@ import {
 } from "./home-layout";
 import { CozyLights } from "./CozyLights";
 import { GroundShadow } from "./GroundShadow";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { SceneHtml as Html } from "./SceneHtml";
@@ -50,7 +54,12 @@ function Shelf() {
     group = useRef<THREE.Group>(null);
   useFrame(({ camera, gl }) => {
     if (group.current) {
-      group.current.visible = camera.position.x > -0.42;
+      const game = useGameStore.getState(),
+        following =
+          useHomeMotion.getState().camera === "follow" &&
+          !game.mission &&
+          !game.arrival;
+      group.current.visible = camera.position.x > (following ? -5.6 : -0.42);
       const styles: string[] = [];
       group.current.traverse((o) => {
         if (o.userData.shelf_style) styles.push(o.userData.shelf_style);
@@ -199,7 +208,27 @@ function HuntTargets() {
     </group>
   );
 }
+function HomeDestination() {
+  const path = useHomeMotion((s) => s.path),
+    end = path.at(-1);
+  return end ? (
+    <mesh
+      position={[end.x, homeFloorHeight(end) + 0.012, end.z]}
+      rotation={[-Math.PI / 2, 0, 0]}
+    >
+      <ringGeometry args={[0.13, 0.18, 24]} />
+      <meshBasicMaterial
+        color="#bc7e9d"
+        transparent
+        opacity={0.65}
+        depthWrite={false}
+      />
+    </mesh>
+  ) : null;
+}
 export function RoomScene() {
+  const homeCamera = useHomeMotion((s) => s.camera),
+    arrival = useGameStore((s) => s.arrival);
   const rainy = useGameStore((s) => s.cozy.weather === "rain"),
     night = useGameStore((s) => s.room.night);
   const petMode = useGameStore((s) => s.petMode),
@@ -212,13 +241,15 @@ export function RoomScene() {
     controls = useRef<OrbitControlsImpl>(null),
     { camera, gl, size } = useThree(),
     [homeZoom, setHomeZoom] = useState(40),
+    pendingOrbit = useRef(0),
     roomPoint = useMemo(() => new THREE.Vector3(), []),
     floorPoints = useMemo(
       () => HOME_FLOOR.map((p) => new THREE.Vector3(...p)),
       [],
     );
-  useEffect(() => {
-    if (!(camera instanceof THREE.OrthographicCamera)) return;
+  const follow = homeCamera === "follow" && !mission && !arrival;
+  useLayoutEffect(() => {
+    if (follow || !(camera instanceof THREE.OrthographicCamera)) return;
     const play =
       mission && mission !== "picnic"
         ? frameHomePlay(camera, size.width, size.height)
@@ -231,37 +262,52 @@ export function RoomScene() {
       controls.current.target.copy(play?.target ?? HOME_TARGET);
       controls.current.update();
     }
-  }, [camera, reset, size.width, size.height, mission]);
+  }, [camera, reset, size.width, size.height, mission, follow]);
   useEffect(() => {
     const canvas = gl.domElement;
     canvas.tabIndex = 0;
     const onKey = (e: KeyboardEvent) => {
       if (
         !["ArrowLeft", "ArrowRight"].includes(e.key) ||
+        useHomeMotion.getState().camera !== "overview" ||
         useGameStore.getState().viewOnly ||
         useGameStore.getState().petMode ||
         useGameStore.getState().mission
       )
         return;
       e.preventDefault();
-      const target = controls.current?.target || new THREE.Vector3(0, 1.35, 0),
-        s = new THREE.Spherical().setFromVector3(
-          camera.position.clone().sub(target),
-        );
-      s.theta += e.key === "ArrowRight" ? 0.25 : -0.25;
-      camera.position.copy(new THREE.Vector3().setFromSpherical(s).add(target));
-      controls.current?.update();
+      pendingOrbit.current += e.key === "ArrowRight" ? 0.25 : -0.25;
     };
     canvas.addEventListener("keydown", onKey);
     return () => canvas.removeEventListener("keydown", onKey);
   }, [camera, gl]);
   useFrame(() => {
-    gl.domElement.dataset.viewAngle = String(
-      controls.current?.getAzimuthalAngle() || 0,
-    );
+    if (useHomeMotion.getState().camera === "follow") pendingOrbit.current = 0;
+    if (!follow && controls.current?.enabled && pendingOrbit.current) {
+      const target = controls.current.target,
+        spherical = new THREE.Spherical().setFromVector3(
+          camera.position.clone().sub(target),
+        );
+      spherical.theta += pendingOrbit.current;
+      pendingOrbit.current = 0;
+      camera.position.copy(
+        new THREE.Vector3().setFromSpherical(spherical).add(target),
+      );
+      controls.current.update();
+    }
+    if (!follow)
+      gl.domElement.dataset.viewAngle = String(
+        controls.current?.getAzimuthalAngle() || 0,
+      );
     gl.domElement.dataset.homeView =
-      mission && mission !== "picnic" ? "play" : "dollhouse";
-    roomPoint.set(...STUDIO_KITTY).project(camera);
+      mission && mission !== "picnic"
+        ? "play"
+        : follow
+          ? "follow"
+          : "dollhouse";
+    if (!follow) gl.domElement.dataset.homeCamera = "overview";
+    const home = useHomeMotion.getState();
+    roomPoint.set(home.visual.x, 0.195, home.visual.z).project(camera);
     gl.domElement.dataset.homeKittyFoot = String((1 - roomPoint.y) / 2);
     roomPoint.set(...studioAnchor("oven")).project(camera);
     gl.domElement.dataset.homeOven = JSON.stringify([
@@ -300,7 +346,14 @@ export function RoomScene() {
       />
       <StudioHouse />
       <RigidBody type="fixed" colliders={false}>
-        <CuboidCollider args={[5.8, 0.2, 5]} position={[0, -0.1, 0]} />
+        <CuboidCollider args={[5.8, 0.2, 5]} position={[0, -0.07, 0]} />
+        {HOME_OBSTACLES.map((o) => (
+          <CuboidCollider
+            key={o.name}
+            args={[o.w / 2, 0.65, o.d / 2]}
+            position={[o.x, 0.78, o.z]}
+          />
+        ))}
       </RigidBody>
       <HomeDetails />
       <Shelf />
@@ -309,19 +362,27 @@ export function RoomScene() {
       <CozyCorner />
       <VillageHome />
       <Arrival />
-      <group position={STUDIO_SHADOW}>
-        <GroundShadow size={[1.65, 1.1]} />
-      </group>
-      <Kitty
-        id={id}
-        equipment={equipment}
-        animate
-        interactive={!viewOnly}
-        onTouch={touch}
-        position={STUDIO_KITTY}
-        rotation={[0, 0.3, 0]}
-        scale={1.25}
-      />
+      {mission ? (
+        <>
+          <group position={STUDIO_SHADOW}>
+            <GroundShadow size={[1.65, 1.1]} />
+          </group>
+          <Kitty
+            id={id}
+            equipment={equipment}
+            animate
+            interactive={!viewOnly}
+            onTouch={touch}
+            position={STUDIO_KITTY}
+            rotation={[0, 0.3, 0]}
+            scale={1.25}
+          />
+        </>
+      ) : (
+        <HomePlayer />
+      )}
+      <HomeCamera active={follow} />
+      {!mission && <HomeDestination />}
       <HuntTargets />
       <OrbitControls
         ref={controls}
@@ -335,6 +396,7 @@ export function RoomScene() {
         minPolarAngle={0.48}
         maxPolarAngle={1.3}
         enablePan={false}
+        enabled={!follow}
         enableRotate={!petMode}
         enableDamping
         rotateSpeed={0.65}

@@ -1,3 +1,5 @@
+import { HomeControls, HomeCameraSwitch } from "./ui/HomeControls";
+import { useHomeMotion, homeGesture } from "./game/home-motion";
 import { FriendTalesPanel } from "./ui/FriendTales";
 import { VillageControls, VillageGuide, VillagePanel } from "./ui/Village";
 import { VisitsPanel, VisitPresence } from "./ui/Visits";
@@ -372,6 +374,7 @@ function AdventureControls() {
   );
 }
 export default function App() {
+  const homeCameraMode = useHomeMotion((s) => s.camera);
   useVisitLifecycle();
   useNavigation();
   useGameLoop();
@@ -469,7 +472,12 @@ export default function App() {
     void sound.toggle().then(setSoundOn);
   };
   return (
-    <main data-text-size={textSize} data-view-only={viewOnly} data-mode={mode}>
+    <main
+      data-text-size={textSize}
+      data-view-only={viewOnly}
+      data-mode={mode}
+      data-home-camera={homeCameraMode}
+    >
       {viewOnly && (
         <button
           id="restoreInterface"
@@ -591,16 +599,27 @@ export default function App() {
             {mode === "room" && (
               <button
                 id="resetCamera"
-                onClick={() => useGameStore.getState().resetCamera()}
+                onClick={() => {
+                  useHomeMotion.setState({ cameraScale: 1 });
+                  useHomeMotion.getState().setCamera("follow");
+                  useGameStore.getState().resetCamera();
+                }}
                 disabled={!!mission}
               >
                 Reset view ↺
               </button>
             )}
+            {mode === "room" && !mission && <HomeCameraSwitch />}
           </div>
           <MissionHUD />
           <Notification />
-          {mode === "village" && <VisitPresence />}
+          {mode === "village" && (
+            <>
+              <VisitPresence />
+              <VillageControls />
+            </>
+          )}
+          {mode === "room" && <HomeControls />}
           {petMode && (
             <button
               className="pet-done"
@@ -610,8 +629,8 @@ export default function App() {
             </button>
           )}
           {mode === "room" ? (
-            <span className="scene-hint">
-              Tap furniture to interact · Drag to turn · Scroll or pinch to look
+            <span className="scene-hint home-input-note">
+              Tap the floor to walk · Tap furniture to visit · Pinch to look
               closer
             </span>
           ) : mode === "village" ? null : (
@@ -632,7 +651,7 @@ export default function App() {
             <button
               id="wave"
               disabled={!ready || !!mission}
-              onClick={() => react("wave")}
+              onClick={() => homeGesture("wave")}
             >
               <span>♡</span>
               <strong>Wave hello</strong>
@@ -641,7 +660,7 @@ export default function App() {
             <button
               id="dance"
               disabled={!ready || !!mission}
-              onClick={() => react("dance")}
+              onClick={() => homeGesture("dance")}
             >
               <span>♫</span>
               <strong>Happy dance</strong>
@@ -651,16 +670,14 @@ export default function App() {
               id="visitVillage"
               aria-label="Visit the village"
               disabled={!ready || !!mission}
-              onClick={() => useGameStore.getState().enterVillage()}
+              onClick={() => useHomeMotion.getState().visit("exit")}
             >
               <span>✿</span>
               <strong>Visit the village</strong>
               <small>Friends, café &amp; garden</small>
             </button>
           </div>
-        ) : mode === "village" ? (
-          <VillageControls />
-        ) : (
+        ) : mode === "village" ? null : (
           <AdventureControls />
         )}
       </section>

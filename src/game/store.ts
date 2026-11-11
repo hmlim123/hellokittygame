@@ -1,3 +1,4 @@
+import { homeWalkable, HOME_ACTIONS } from "./home-world";
 import { startEmptyPaws } from "../../dist/empty-paws.js";
 import {
   normalizeVillage,
@@ -121,6 +122,8 @@ const initialMode = (): Mode =>
       : "room";
 export interface GameState extends SaveState {
   enterVillage(): void;
+  saveHomePosition(x: number, z: number, yaw: number): void;
+  recordHomeTea(): void;
   saveVillagePosition(x: number, z: number, yaw: number): void;
   villageHello(friend: VillageFriend, visitorName?: string): void;
   packVillageCookie(): void;
@@ -513,6 +516,29 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             if (get().mission?.active) return;
             get().setMode("village");
             set({ panel: null });
+          },
+          saveHomePosition(x, z, yaw) {
+            if (!homeWalkable(x, z) || !Number.isFinite(yaw)) return;
+            const s = get(),
+              home = s.cozy.home;
+            if (
+              Math.hypot(home.x - x, home.z - z) < 0.015 &&
+              Math.abs(home.yaw - yaw) < 0.02
+            )
+              return;
+            set({ cozy: { ...s.cozy, home: { ...home, x, z, yaw } } });
+          },
+          recordHomeTea() {
+            const s = get();
+            set({
+              cozy: {
+                ...s.cozy,
+                home: {
+                  ...s.cozy.home,
+                  teaMoments: Math.min(999999, s.cozy.home.teaMoments + 1),
+                },
+              },
+            });
           },
           saveVillagePosition(x, z, yaw) {
             if (
@@ -1476,6 +1502,12 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
               set({
                 cozy: {
                   ...s.cozy,
+                  home: {
+                    ...s.cozy.home,
+                    x: HOME_ACTIONS.find((a) => a.id === "exit")!.x,
+                    z: HOME_ACTIONS.find((a) => a.id === "exit")!.z,
+                    yaw: Math.PI,
+                  },
                   village: {
                     ...s.cozy.village,
                     returned:

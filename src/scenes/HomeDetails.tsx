@@ -1,3 +1,4 @@
+import { useHomeMotion } from "../game/home-motion";
 import { SceneHtml as Html } from "./SceneHtml";
 import { studioAnchor } from "./studio-layout";
 import { useGameStore } from "../game/store";
@@ -16,13 +17,18 @@ export function useHomeFurniture() {
 }
 /** Keep the visible exit available beside the actual Blender-authored threshold. */
 export function HomeDetails() {
-  const interactive = useHomeFurniture();
-  return interactive ? (
+  const interactive = useHomeFurniture(),
+    camera = useHomeMotion((s) => s.camera),
+    p = useHomeMotion((s) => s.position),
+    door = studioAnchor("door");
+  const near =
+    camera === "overview" || Math.hypot(p.x - door[0], p.z - door[2]) < 1.5;
+  return interactive && near ? (
     <Html center position={studioAnchor("door_label")} zIndexRange={[3, 0]}>
       <button
         className="home-door-label"
         aria-label="Go out to the village"
-        onClick={() => useGameStore.getState().enterVillage()}
+        onClick={() => useHomeMotion.getState().visit("exit")}
       >
         Village{" "}
         <svg

@@ -1217,3 +1217,52 @@ The local studio journey passes four viewport sizes, actual furniture taps, save
 Blender house source is `61c6119` in `hellokitty3D`; character animation sources remain unchanged. The download contains the matching editable house, scripts, preview and browser export. Its source checksum and GLB bytes match the game package. The website archive records deployed source `c41c1fb`, rather than this documentation commit.
 
 Play/share: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=studio-34>. Nancy’s progress and permanent gift marker remain intact. Physical phone and Mac Safari review remains pending; browser emulation and a successful Pages deployment do not establish physical-device acceptance.
+
+
+## Playable home and mobile follow camera · v3.3.0 · 2026-11-11
+
+The user confirmed that the studio still felt like a display rather than an
+Animal Crossing-inspired playable place, and prioritized Nancy’s mobile use.
+This milestone adds one complete indoor loop: walk around furniture → approach
+the dining chair → turn/sit → pick up/sip/replace a cup → stand → walk to the
+kitchen or doorstep → visit friends → return inside at the entrance.
+
+The default camera now follows Kitty at a closer, stable angle. Pinch changes
+the closer view, and a Whole house option retains orbit/overview. Occluding tall
+furniture fades locally. Phone portrait and landscape layouts allocate most of
+the viewport to the scene, place the thumb and contextual action inside it, and
+keep the three main room buttons. All touch controls have at least 44px targets.
+Notifications stay clear of the controls. The village uses a closer camera and
+follows to its edges without pushing Kitty offscreen.
+
+Navigation, approach helpers, actual furniture footprints and raised supporting
+surfaces come from the Blender export. The coffee table, dining chair and desk
+stool leave usable paths. Individual bathroom fittings permit the open doorway;
+bathing is not simulated. A Rapier character controller and bounded fixed-step
+input drive indoor walking. Distance controls walking phase, and planted feet
+retain their world position. Movement stops on interruption or a released thumb.
+
+Source `6f78ef5` in hellokitty3D adds six separate editable home-motion projects,
+leaving all original character projects and earlier clips unchanged. Each small
+controller-only GLB has seven authored clips. Body/seat height, cup/tray contact,
+lift/sip and return-to-floor checks cover all six editions. Source/author/export
+checksums and the precise source revision are retained. Sitting locks walking;
+petting and gestures requested while seated wait for a safe stand-up sequence.
+Momo and Pip acknowledge a nearby player and glance toward their café/garden,
+while the existing saved gift/visit conversations remain. This is a small daily
+idle routine, not a calendar or free-roaming NPC schedule.
+
+Indoor position and tea moments extend existing cozy progress. Old saves gain a
+safe spawn, malformed/blocked positions recover safely, and backup/restore keeps
+the new fields. Letter, outfits, items, collections, quests and the permanent
+first-gift marker remain intact. No additional reset marker is introduced.
+
+Local rule/app/server checks: 252 pass. Meaningful checks cover real exported
+route connectivity, blocked movement, safe saves/backups, planted feet and all
+six Blender chair/cup performances. New phone journeys cover real touch steering,
+cancellation, follow/pinch camera, the tea interaction and progress restoration.
+The full release gate now has 23 browser suites across five groups. Publication
+and final browser evidence are recorded after the exact artifact passes.
+Physical phone/Mac Safari review remains pending; emulation is not physical-device
+acceptance. Public share link after verified deployment:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=home-life-35>.

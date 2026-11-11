@@ -238,3 +238,39 @@ the real window. Optional evening lights reuse the existing saved `room.night`.
 exports it; use it only when you intend to replace your edited house. Character
 Blender projects and animations stay separate. The house export is static, with
 no baked light textures, external fonts, textures or Blender add-ons required.
+
+
+### Playable home performances (v3.3.0)
+
+Source commit `6f78ef5` contains the playable house and six derivative projects
+under `home_motions/kitty_home_{classic,cloud,witch,baby,kitten,bunny}.blend`.
+Original character projects and their 20 earlier clips are unchanged. Home
+projects carry sitDown (1–37), sitIdle (37–133), takeCup (133–157), sipSit
+(157–205), putCup (205–229), standUp (229–265), and cupIdle (277–373), at 24 fps.
+They open at frame 61 on an editable preview chair. The runtime blends the clips,
+locks locomotion during seating, and transfers the live cup at the paw socket.
+
+To re-export an **edited home performance** without rebuilding or saving it:
+
+```sh
+blender -b home_motions/kitty_home_classic.blend --python-exit-code 1 --python export_home_motions.py
+```
+
+On Mac replace `blender` with `/Applications/Blender.app/Contents/MacOS/Blender`.
+Keep `game_export_helpers/glb_clips.py` beside the exporter. Copy the resulting
+GLB and JSON to `dist/assets/home-motion/`; record the committed source revision
+in the game copy. The library includes controller tracks, rather than duplicating
+the full character geometry, at about 65 KB per edition. Original/source/exporter
+checksums, clip ranges and the measured cup grip are recorded in each manifest.
+
+The house now exports 48 helpers, actual furniture footprints and supporting
+floor areas. `home-world.ts` consumes them for paths, collision clearance and
+floor support; `HomePlayer` runs the Rapier character controller, action phases
+and world-space prop transfers. `HomeCamera` follows the mutable render position,
+so camera motion does not wait for saved-position updates. The ordinary React
+and Zustand state publishes UI/progress updates at a lower frequency.
+
+`author_home_motions.py` recreates derivatives from original character sources.
+Use the standalone exporter to keep hand edits. Preview chair meshes remain in
+Blender and do not ship in the motion GLBs. Source archive:
+`/workspace/nancy-playable-home-blenders.zip`.

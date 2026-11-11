@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrthographicCamera, RoundedBox } from "@react-three/drei";
 import {
@@ -276,11 +276,56 @@ function Fountain() {
   );
 }
 function Neighbour({ id }: { id: "momo" | "pip" }) {
+  const group = useRef<THREE.Group>(null),
+    attention = useRef({ yaw: 0, nod: 0 }),
+    [greetSignal, setGreetSignal] = useState(0),
+    lastGreeting = useRef(-30),
+    wasNear = useRef(false),
+    reduced = useReducedMotion();
   const o = VILLAGE_ACTIONS.find((o) => o.id === id)!,
     p = useVillageMotion((s) => s.position),
     near = Math.hypot(p.x - o.x, p.z - o.z) < 5;
+  useFrame(({ clock, gl }, dt) => {
+    const player = useVillageMotion.getState().position,
+      distance = Math.hypot(player.x - o.x, player.z - o.z),
+      close = distance < 3.4,
+      t = clock.elapsedTime,
+      checking =
+        id === "momo" ? t % 24 > 13 && t % 24 < 18 : t % 21 > 9 && t % 21 < 15;
+    const desired = close
+      ? Math.atan2(player.x - o.x, player.z - o.z)
+      : checking
+        ? id === "momo"
+          ? 2.3
+          : 1.0
+        : 0;
+    if (group.current)
+      group.current.rotation.y = turnToward(
+        group.current.rotation.y,
+        desired,
+        Math.min(dt, 0.1) * 0.5,
+        reduced,
+      );
+    attention.current.nod = close ? -0.025 : checking ? 0.1 : 0;
+    attention.current.yaw = close
+      ? Math.sin(t * 0.7) * 0.035
+      : Math.sin(t * 0.4) * 0.045;
+    if (close && !wasNear.current && t - lastGreeting.current > 18) {
+      lastGreeting.current = t;
+      setGreetSignal((n) => n + 1);
+    }
+    wasNear.current = close;
+    gl.domElement.dataset[id + "Routine"] = close
+      ? "greeting"
+      : checking
+        ? id === "momo"
+          ? "cafe"
+          : "garden"
+        : "rest";
+  });
   return (
     <group
+      ref={group}
       position={[o.x, 0, o.z]}
       onClick={(e) => {
         if (e.delta < 8) {
@@ -293,7 +338,8 @@ function Neighbour({ id }: { id: "momo" | "pip" }) {
         name={id === "momo" ? "Momo" : "Pip"}
         scale={id === "momo" ? 1.25 : 1.15}
         awake
-        greetOnMount
+        attention={attention}
+        greetSignal={greetSignal}
       />
       <GroundShadow size={[1.2, 0.8]} />
       {near && (
@@ -594,21 +640,16 @@ function Player() {
         dt,
         reduced,
       );
-    const target = new THREE.Vector3(
-        THREE.MathUtils.clamp(p.x, -7, 7),
-        0.7,
-        THREE.MathUtils.clamp(p.z, -5, 5),
-      ),
-      desired = target.clone().add(new THREE.Vector3(0, 13, 12));
+    const target = new THREE.Vector3(p.x, 0.9, p.z),
+      desired = target.clone().add(new THREE.Vector3(0, 7.2, 10.2));
     follow.current.lerp(
       target,
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 8),
     );
-    camera.position.copy(follow.current).add(new THREE.Vector3(0, 13, 12));
+    camera.position.copy(follow.current).add(new THREE.Vector3(0, 7.2, 10.2));
     camera.lookAt(follow.current);
     const cam = camera as THREE.OrthographicCamera,
-      zoom =
-        size.width < 640 ? size.width / 7.5 : Math.min(75, size.height / 7.5);
+      zoom = Math.min(size.width / 5, (size.height - 110) / 5.4);
     if (Math.abs(cam.zoom - zoom) > 0.01) {
       cam.zoom = zoom;
       cam.updateProjectionMatrix();

@@ -2,15 +2,15 @@
   "version": 1,
   "title": "Nancy\u2019s cozy studio",
   "source_file": "nancy_studio_home.blend",
-  "source_sha256": "ffe7ed279ae11511f1e1c874fea5925c981d086c22bd2255398da0ed3d71d1d4",
+  "source_sha256": "70427a3e2b88aec3cdb262fe60dc236f7c55e0088d1915a809404c2e6af254eb",
   "authoring_script": "create_studio_home.py",
-  "script_sha256": "225f3c482b765907bc7500d7f768670d20b172529e56ddbe4dde7374d7b64f3c",
+  "script_sha256": "b78804b2f59f510bd6711882d25f093e39e5ff744fef528eb0a32e678758b16b",
   "export_script": "export_studio_home.py",
-  "export_sha256": "2f5436e3df3e3255af2bc005bbc182c118aef289c45f598ba063f37fc53d85ae",
+  "export_sha256": "dd513008eee92d932edbfc41037f0d4f19014fe93e4147c85e0750176a71f1cb",
   "blender_version": "4.3.2",
-  "asset_bytes": 2091392,
-  "triangles": 41803,
-  "mesh_count": 21,
+  "asset_bytes": 2119564,
+  "triangles": 42463,
+  "mesh_count": 22,
   "anchors": {
     "window": {
       "position": [
@@ -248,7 +248,7 @@
       "position": [
         -2.7,
         0.78,
-        1.15
+        1.85
       ],
       "yaw": 0.0
     },
@@ -323,6 +323,78 @@
         1.42
       ],
       "yaw": 1.570796
+    },
+    "approach_kitchen": {
+      "position": [
+        3.57,
+        0.145,
+        -2.7
+      ],
+      "yaw": -3.141593
+    },
+    "approach_wardrobe": {
+      "position": [
+        4.9,
+        0.145,
+        3.85
+      ],
+      "yaw": -3.141593
+    },
+    "approach_desk": {
+      "position": [
+        1.65,
+        0.145,
+        3.75
+      ],
+      "yaw": -3.141593
+    },
+    "approach_sofa": {
+      "position": [
+        -3.65,
+        0.145,
+        -0.05
+      ],
+      "yaw": -1.570796
+    },
+    "approach_bed": {
+      "position": [
+        -2.05,
+        0.145,
+        -1.3
+      ],
+      "yaw": -3.141593
+    },
+    "approach_seat": {
+      "position": [
+        2.05,
+        0.145,
+        1.15
+      ],
+      "yaw": 0.785398
+    },
+    "approach_exit": {
+      "position": [
+        1.65,
+        0.145,
+        4.3
+      ],
+      "yaw": 0.0
+    },
+    "tea_seat": {
+      "position": [
+        2.4,
+        0.145,
+        -0.35
+      ],
+      "yaw": 0.785398
+    },
+    "tea_cup": {
+      "position": [
+        2.879,
+        1.084,
+        -0.176
+      ],
+      "yaw": 0.0
     }
   },
   "floor": [
@@ -400,6 +472,157 @@
     ]
   ],
   "shelf_scale": 0.28,
-  "source_commit": "61c6119be9a360370440956544aedbbf61e8c217",
+  "navigation": {
+    "radius": 0.38,
+    "obstacles": [
+      {
+        "name": "Studio_Bed",
+        "x": -3.95,
+        "z": -2.4425,
+        "w": 2.55,
+        "d": 3.335
+      },
+      {
+        "name": "Studio_Bedside",
+        "x": -2.35,
+        "z": -3.4725,
+        "w": 0.73,
+        "d": 0.785
+      },
+      {
+        "name": "Studio_Kitchen",
+        "x": 3.4275,
+        "z": -4.0725,
+        "w": 4.235,
+        "d": 1.265
+      },
+      {
+        "name": "Studio_Sofa",
+        "x": -4.85,
+        "z": 0.6,
+        "w": 1.1,
+        "d": 2.7
+      },
+      {
+        "name": "Studio_CoffeeTable",
+        "x": -2.9,
+        "z": 1.8,
+        "w": 1.4,
+        "d": 0.86
+      },
+      {
+        "name": "Studio_Wardrobe",
+        "x": 5.02,
+        "z": 2.5845,
+        "w": 1.28,
+        "d": 0.939
+      },
+      {
+        "name": "Studio_Desk",
+        "x": 2.6,
+        "z": 2.7,
+        "w": 2.05,
+        "d": 0.88
+      },
+      {
+        "name": "Studio_Shelf",
+        "x": -5.05,
+        "z": 3.5,
+        "w": 0.78,
+        "d": 3.02
+      },
+      {
+        "name": "Studio_Dining",
+        "x": 4.0,
+        "z": -0.8,
+        "w": 1.64,
+        "d": 1.64
+      },
+      {
+        "name": "Studio_TeaTray",
+        "x": 2.879,
+        "z": -0.176,
+        "w": 0.42,
+        "d": 0.42
+      },
+      {
+        "name": "Desk stool",
+        "x": 2.6,
+        "z": 3.32,
+        "w": 0.7,
+        "d": 0.65
+      },
+      {
+        "name": "Dining chair -1",
+        "x": 2.3788,
+        "z": -0.3712,
+        "w": 1.5132,
+        "d": 1.5132
+      },
+      {
+        "name": "Dining chair 1",
+        "x": 5.22,
+        "z": -0.8,
+        "w": 1.04,
+        "d": 1.12
+      },
+      {
+        "name": "Bath screen",
+        "x": -0.74,
+        "z": -2.39,
+        "w": 1.65,
+        "d": 0.18
+      },
+      {
+        "name": "Bath partition",
+        "x": -1.47,
+        "z": -3.67,
+        "w": 0.12,
+        "d": 2.6
+      },
+      {
+        "name": "Bath wash cabinet",
+        "x": -0.9,
+        "z": -3.0018,
+        "w": 0.72,
+        "d": 0.5865
+      },
+      {
+        "name": "Bath shower",
+        "x": -0.86,
+        "z": -4.26,
+        "w": 0.995,
+        "d": 1.175
+      },
+      {
+        "name": "Bath toilet",
+        "x": 0.35,
+        "z": -4.2275,
+        "w": 0.68,
+        "d": 1.075
+      }
+    ],
+    "floor_areas": [
+      {
+        "name": "rug",
+        "shape": "ellipse",
+        "x": 0.0,
+        "z": 0.65,
+        "rx": 1.98,
+        "rz": 1.4256,
+        "height": 0.2
+      },
+      {
+        "name": "bathroom",
+        "shape": "rectangle",
+        "x": -0.3,
+        "z": -3.67,
+        "rx": 1.125,
+        "rz": 1.25,
+        "height": 0.1865
+      }
+    ]
+  },
+  "source_commit": "6f78ef56b8e8961e415acf454f503220965174d0",
   "source_repository": "https://github.com/hmlim123/hellokitty3D"
 }

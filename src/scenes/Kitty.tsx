@@ -34,6 +34,10 @@ export interface ActivityPose {
   renderedProgress?: number;
 }
 interface KittyProps {
+  additionalClips?: Record<string, THREE.AnimationClip>;
+  homeClip?: import("../game/home-motion").HomeClip | null;
+  homeGrip?: boolean;
+  heroRef?: RefObject<THREE.Group | null>;
   activity?: RefObject<ActivityPose>;
   holding?: Holding;
   id?: number;
@@ -62,10 +66,30 @@ export function Kitty({
   locomotion,
   holding,
   activity,
+  additionalClips,
+  homeClip,
+  homeGrip,
+  heroRef,
 }: KittyProps) {
   const asset = useKittyAsset(equipment?.plush),
-    hero = useMemo(() => makeBlenderKitty(asset, id), [asset, id]),
+    hero = useMemo(
+      () =>
+        makeBlenderKitty(
+          additionalClips
+            ? { ...asset, clips: { ...asset.clips, ...additionalClips } }
+            : asset,
+          id,
+        ),
+      [asset, id, additionalClips],
+    ),
     reduced = useReducedMotion();
+  const homePaused = useGameStore((s) => !!s.panel || !!s.dialogue);
+  useEffect(() => {
+    if (heroRef) heroRef.current = hero;
+    return () => {
+      if (heroRef) heroRef.current = null;
+    };
+  }, [hero, heroRef]);
   const effect = useGameStore((s) => s.effect);
   const petMode = useGameStore((s) => s.petMode);
   const quality = useGameStore((s) => s.preferences.quality);
@@ -133,13 +157,27 @@ export function Kitty({
     },
     [hero],
   );
-  useEffect(() => { hero.userData.blender.heldAttachment = holding || null; }, [hero, holding]);
+  useEffect(() => {
+    hero.userData.blender.heldAttachment = holding || (homeGrip ? "cup" : null);
+  }, [hero, holding, homeGrip]);
   useEffect(() => {
     if (equipment) applyHeroEquipment(hero, equipment);
     invalidate();
   }, [hero, equipment]);
+  const seenGesture = useRef<{ hero: THREE.Group; id: number } | null>(null);
+  const hadHome = useRef(false);
   useEffect(() => {
-    if (!animate || (activity?.current.active && !reduced)) return;
+    if (homeClip) {
+      seenGesture.current = { hero, id: gesture.id };
+      return;
+    }
+    if (
+      seenGesture.current?.hero === hero &&
+      seenGesture.current.id === gesture.id
+    )
+      return;
+    seenGesture.current = { hero, id: gesture.id };
+    if (!animate || homeClip || (activity?.current.active && !reduced)) return;
     if (
       gesture.kind === "offer" &&
       equipment &&
@@ -149,7 +187,50 @@ export function Kitty({
       if (played.accepted)
         reactBlender(hero, equipment.item === "teddy" ? "hug" : "pet", reduced);
     } else reactBlender(hero, gesture.kind, reduced);
-  }, [hero, gesture, animate, reduced]);
+  }, [hero, gesture, animate, reduced, homeClip]);
+  useEffect(() => {
+    if (!homeClip) {
+      const b = hero.userData.blender;
+      if (
+        hadHome.current &&
+        [
+          "sitDown",
+          "sitIdle",
+          "cupIdle",
+          "takeCup",
+          "sipSit",
+          "putCup",
+          "standUp",
+        ].includes(b.current?.getClip().name)
+      ) {
+        b.current.stop();
+        b.current = null;
+      }
+      hadHome.current = false;
+      return;
+    }
+    hadHome.current = true;
+    reactBlender(hero, homeClip, false);
+    const b = hero.userData.blender,
+      a = b.current;
+    if (!a) return;
+    a.setLoop(
+      homeClip === "sitIdle" || homeClip === "cupIdle" || reduced
+        ? THREE.LoopRepeat
+        : THREE.LoopOnce,
+      homeClip === "sitIdle" || homeClip === "cupIdle" || reduced
+        ? Infinity
+        : 1,
+    );
+    if (reduced) {
+      a.time =
+        homeClip === "sitDown" || homeClip === "standUp"
+          ? a.getClip().duration - 0.0001
+          : 0;
+      a.paused = true;
+      b.mixer.update(0);
+    } else a.paused = false;
+  }, [hero, homeClip, reduced]);
   useEffect(() => {
     if (!photoPose) return;
     const b = hero.userData.blender;
@@ -174,17 +255,25 @@ export function Kitty({
     if (photoPose === "wink") b.resetEyes(true);
     if (photoPose in FACE_SHAPES) {
       reactBlender(hero, photoPose, false);
-      updateBlender(hero, b.actions[photoPose].getClip().duration / 2, { idle: false, reduced: false });
+      updateBlender(hero, b.actions[photoPose].getClip().duration / 2, {
+        idle: false,
+        reduced: false,
+      });
     }
-    if (photoPose === "still" || photoPose === "wink") updateBlender(hero, 1, { idle: false, reduced: false });
+    if (photoPose === "still" || photoPose === "wink")
+      updateBlender(hero, 1, { idle: false, reduced: false });
   }, [hero, photoPose]);
   useFrame((state, dt) => {
     const rig = hero.userData.blender;
     state.gl.domElement.dataset.plush = rig.plush || "classic";
+    state.gl.domElement.dataset.characterScale = String(
+      hero.getWorldScale(dancePoint).x,
+    );
     state.gl.domElement.dataset.emptyPawWeight = String(rig.restWeight);
     state.gl.domElement.dataset.emptyPawLeft = String(rig.restWeights[0]);
     state.gl.domElement.dataset.emptyPawRight = String(rig.restWeights[1]);
-    state.gl.domElement.dataset.heldItem = hero.userData.equipment?.item || "none";
+    state.gl.domElement.dataset.heldItem =
+      hero.userData.equipment?.item || "none";
     hero.updateWorldMatrix(true, false);
     topPoint
       .set(0, rig.modelHeight, 0)
@@ -216,21 +305,32 @@ export function Kitty({
     if (animate) {
       setBlenderAttention(
         hero,
-        locomotion?.current.speed
+        homeClip || locomotion?.current.speed
           ? 0
           : stroke.current.down
             ? stroke.current.x
             : state.pointer.x,
-        locomotion?.current.speed
+        homeClip || locomotion?.current.speed
           ? 0
           : stroke.current.down
             ? stroke.current.y
             : state.pointer.y,
       );
     }
-    if (locomotion && locomotion.current.speed > 0.05 && ["dance", "danceHeld"].includes(rig.current?.getClip().name))
+    if (
+      locomotion &&
+      locomotion.current.speed > 0.05 &&
+      ["dance", "danceHeld"].includes(rig.current?.getClip().name)
+    )
       reactBlender(hero, null, reduced);
-    updateBlender(hero, Math.min(dt, 0.25), { reduced, idle: true });
+    updateBlender(
+      hero,
+      homeClip ? (homePaused ? 0 : Math.min(dt, 0.1)) : Math.min(dt, 0.25),
+      {
+        reduced,
+        idle: !homeClip || homeClip === "sitIdle" || homeClip === "cupIdle",
+      },
+    );
     if (activity) {
       followBlenderActivity(hero, activity.current, dt, reduced);
       activity.current.renderedProgress = reduced
@@ -242,15 +342,19 @@ export function Kitty({
     if (animate) {
       state.gl.domElement.dataset.motionTime = String(rig.age);
       const danceTake = rig.current?.getClip().name;
-      state.gl.domElement.dataset.danceTake = danceTake === "danceHeld" ? "holding" : "empty";
+      state.gl.domElement.dataset.danceTake =
+        danceTake === "danceHeld" ? "holding" : "empty";
       if (danceTake === "dance" || danceTake === "danceHeld") {
         rig.model.getObjectByName("CTRL_Root").getWorldPosition(dancePoint);
         state.gl.domElement.dataset.danceX = String(dancePoint.x);
         state.gl.domElement.dataset.danceY = String(dancePoint.y);
-        state.gl.domElement.dataset.danceDuration = String(rig.current.getClip().duration);
+        state.gl.domElement.dataset.danceDuration = String(
+          rig.current.getClip().duration,
+        );
       }
-      state.gl.domElement.dataset.blenderAction =
-        (hero.userData.blender.current?.getClip().name || "idle").replace(/^danceHeld$/, "dance");
+      state.gl.domElement.dataset.blenderAction = (
+        hero.userData.blender.current?.getClip().name || "idle"
+      ).replace(/^danceHeld$/, "dance");
       const arm = hero.userData.blender.model.getObjectByName("CTRL_Arm_R");
       state.gl.domElement.dataset.pawTurn = String(
         Math.abs(arm.quaternion.x) +
@@ -274,7 +378,9 @@ export function Kitty({
       state.gl.domElement.dataset.headY = String((1 - headPoint.y) / 2);
     }
     if (locomotion) {
-      if (updateWalking(hero, dt, locomotion.current.speed, reduced))
+      if (
+        updateWalking(hero, dt, locomotion.current.speed, reduced, !!homeClip)
+      )
         useGameStore.getState().footstep();
       const rig = walkingRig(hero);
       state.gl.domElement.dataset.walkWeight = String(rig.amount);

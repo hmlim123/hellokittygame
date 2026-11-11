@@ -27,13 +27,17 @@ describe("walking on the Blender rig", () => {
         .getWorldPosition(new THREE.Vector3());
     let steps = 0;
     for (let i = 0; i < 20; i++) {
+      hero.position.z += 2.8 / 60;
       updateBlender(hero, 1 / 60);
       if (updateWalking(hero, 1 / 60, 2.8)) steps++;
     }
     const rig = walkingRig(hero);
+    expect(rig.feet.some((f) => f.pivot.position.y > f.base.y + 0.02)).toBe(
+      true,
+    );
     expect(
-      rig.feet[0].pivot.rotation.x * rig.feet[1].pivot.rotation.x,
-    ).toBeLessThan(0);
+      rig.feet.some((f) => Math.abs(f.pivot.position.y - f.base.y) < 0.001),
+    ).toBe(true);
     hero.updateMatrixWorld(true);
     expect(
       hero.userData.blender.model
@@ -45,6 +49,35 @@ describe("walking on the Blender rig", () => {
     for (let i = 0; i < 120; i++) updateWalking(hero, 1 / 60, 0);
     expect(rig.amount).toBe(0);
     expect(rig.feet[0].pivot.position.equals(rig.feet[0].base)).toBe(true);
+  });
+  it("keeps each planted foot still in world space as the body advances", () => {
+    const hero = makeBlenderKitty(asset);
+    hero.scale.setScalar(0.9);
+    let last: [number, THREE.Vector3][] = [];
+    let contacts = 0;
+    for (let frame = 0; frame < 180; frame++) {
+      hero.position.z += 2.35 / 60;
+      updateBlender(hero, 1 / 60);
+      updateWalking(hero, 1 / 60, 2.35);
+      hero.updateMatrixWorld(true);
+      const rig = walkingRig(hero),
+        current: [number, THREE.Vector3][] = [];
+      rig.feet.forEach((f, i) => {
+        if (f.stance && f.plant) {
+          const p = f.pivot.getWorldPosition(new THREE.Vector3());
+          const prev = last.find(([j]) => j === i);
+          if (prev) {
+            contacts++;
+            expect(Math.hypot(p.x - prev[1].x, p.z - prev[1].z)).toBeLessThan(
+              0.003,
+            );
+          }
+          current.push([i, p]);
+        }
+      });
+      last = current;
+    }
+    expect(contacts).toBeGreaterThan(80);
   });
   it("keeps reduced motion still and the original Blender wave usable after walking", () => {
     const hero = makeBlenderKitty(asset);

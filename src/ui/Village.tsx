@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { ThumbControl } from "./ThumbControl";
 import { useGameStore } from "../game/store";
 import {
   actInVillage,
@@ -19,10 +19,15 @@ import { SharedPicnic } from "./Visits";
 
 export function VillageGuide() {
   const progress = useGameStore((s) => s.cozy.village),
-    goal = villageGoal(progress);
+    goal = villageGoal(progress),
+    packed = useGameStore((s) => !!s.cozy.cookie.packed);
   return (
     <div className="village-guide">
-      <p>{goal.text}</p>
+      <p>
+        {packed
+          ? "Your cookie is ready. Bring it to Momo or Pip. ♡"
+          : goal.text}
+      </p>
       <details>
         <summary>A gentle hint</summary>
         <p>
@@ -44,97 +49,6 @@ export function VillageGuide() {
     </div>
   );
 }
-function ThumbControl() {
-  const root = useRef<HTMLDivElement>(null),
-    active = useRef<number | null>(null),
-    [thumb, setThumb] = useState({ x: 0, z: 0 });
-  const ready = useGameStore((s) => s.sceneReady);
-  const cancel = () => {
-    const id = active.current;
-    active.current = null;
-    if (id !== null && root.current?.hasPointerCapture(id))
-      root.current.releasePointerCapture(id);
-    setThumb({ x: 0, z: 0 });
-    useVillageMotion.getState().setInput(0, 0);
-  };
-  useEffect(() => {
-    const hide = () => {
-      if (document.hidden) cancel();
-    };
-    const unsubscribe = useGameStore.subscribe((s) => {
-      if (
-        s.mode !== "village" ||
-        s.panel ||
-        s.dialogue ||
-        s.viewOnly ||
-        !s.sceneReady
-      )
-        cancel();
-    });
-    const offMotion = useVillageMotion.subscribe((s, previous) => {
-      if (s.picnic && !previous.picnic) cancel();
-    });
-    addEventListener("blur", cancel);
-    document.addEventListener("visibilitychange", hide);
-    return () => {
-      unsubscribe();
-      offMotion();
-      cancel();
-      removeEventListener("blur", cancel);
-      document.removeEventListener("visibilitychange", hide);
-    };
-  }, []);
-  const update = (x: number, y: number) => {
-    if (!root.current) return;
-    const r = root.current.getBoundingClientRect(),
-      dx = (x - r.left - r.width / 2) / (r.width * 0.32),
-      dz = (y - r.top - r.height / 2) / (r.height * 0.32),
-      length = Math.hypot(dx, dz),
-      v =
-        length < 0.13
-          ? { x: 0, z: 0 }
-          : { x: dx / Math.max(1, length), z: dz / Math.max(1, length) };
-    setThumb(v);
-    useVillageMotion.getState().setInput(v.x, v.z);
-  };
-  return (
-    <div
-      className="village-thumb"
-      ref={root}
-      role="group"
-      aria-label="Thumb control for walking"
-      aria-disabled={!ready}
-      onPointerDown={(e) => {
-        if (!ready || e.button !== 0 || active.current !== null) return;
-        e.preventDefault();
-        active.current = e.pointerId;
-        e.currentTarget.setPointerCapture(e.pointerId);
-        update(e.clientX, e.clientY);
-      }}
-      onPointerMove={(e) => {
-        if (active.current === e.pointerId) update(e.clientX, e.clientY);
-      }}
-      onPointerUp={(e) => {
-        if (active.current === e.pointerId) cancel();
-      }}
-      onPointerCancel={cancel}
-      onLostPointerCapture={() => {
-        if (active.current !== null) cancel();
-      }}
-    >
-      <span className="thumb-directions" aria-hidden="true">
-        ✧
-      </span>
-      <span
-        className="thumb-handle"
-        style={{ transform: `translate(${thumb.x * 30}px,${thumb.z * 30}px)` }}
-        aria-hidden="true"
-      >
-        ♡
-      </span>
-    </div>
-  );
-}
 export function VillageControls() {
   useVillageInput();
   const closePicnic = () => {
@@ -146,14 +60,16 @@ export function VillageControls() {
     ready = useGameStore((s) => s.sceneReady),
     open = useGameStore((s) => s.openPanel),
     picnic = useVillageMotion((s) => s.picnic),
+    packed = useGameStore((s) => !!s.cozy.cookie.packed),
     v = useGameStore((s) => s.cozy.village),
     goal = villageGoal(v),
-    next = VILLAGE_ACTIONS.find((o) => o.id === (goal.action || "cafe"));
+    next = VILLAGE_ACTIONS.find((o) => o.id === (goal.action || "cafe")),
+    deliver = packed && near?.id !== "momo" && near?.id !== "pip";
   return (
     <>
       <div className="village-controls">
         <div className="village-steer">
-          <ThumbControl />
+          <ThumbControl mode="village" />
           <span>Hold to walk</span>
         </div>
         <div className="village-actions">
@@ -161,20 +77,25 @@ export function VillageControls() {
             className="primary village-context"
             disabled={!ready || picnic}
             onClick={() => {
-              if (near) actInVillage();
+              if (deliver) {
+                const friend = VILLAGE_ACTIONS.find((o) => o.id === "momo")!;
+                useVillageMotion.getState().walkTo(friend, "momo");
+              } else if (near) actInVillage();
               else if (next) useVillageMotion.getState().walkTo(next, next.id);
             }}
             aria-keyshortcuts="E"
           >
-            {near
-              ? near.label
-              : next?.id === "momo"
-                ? "Walk to Momo"
-                : next?.id === "pip"
-                  ? "Walk to Pip"
-                  : next?.id === "home"
-                    ? "Walk home"
-                    : "Walk to the café"}{" "}
+            {deliver
+              ? "Bring your cookie to Momo"
+              : near
+                ? near.label
+                : next?.id === "momo"
+                  ? "Walk to Momo"
+                  : next?.id === "pip"
+                    ? "Walk to Pip"
+                    : next?.id === "home"
+                      ? "Walk home"
+                      : "Walk to the café"}{" "}
             <span aria-hidden="true">♡</span>
           </button>
           <div className="village-small-actions">

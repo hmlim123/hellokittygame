@@ -112,7 +112,7 @@ export function Stage() {
             gl.domElement.setAttribute(
               "aria-label",
               mode === "room"
-                ? "Nancy’s cutaway home. Drag to turn, scroll or pinch to look closer; arrow keys rotate the focused view."
+                ? "Nancy’s home. Tap the floor or use the thumb control to walk. Pinch to look closer. Choose Whole house to rotate."
                 : mode === "village"
                   ? "Nancy’s village. Tap to walk or use the thumb control. Press E for a nearby action."
                   : "Moonflower Adventure. Arrow keys or WASD to walk.",

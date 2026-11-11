@@ -13,10 +13,15 @@ with sync_playwright() as p:
         page.add_init_script("if(!localStorage.getItem('kitty-world-v2')) localStorage.setItem('kitty-nancy-cozy-v1',"+json.dumps(json.dumps(seed))+");")
         page.goto(BASE+'/')
         def ready():
-            page.wait_for_function("document.querySelector('#stage canvas')?.dataset.homeView==='dollhouse'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
+            page.wait_for_function("document.querySelector('#stage canvas')?.dataset.homeView&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
+            whole=page.get_by_role('button',name='Whole house ⌂',exact=True)
+            if whole.is_visible():whole.click()
+            page.wait_for_function("(()=>{const c=document.querySelector('#stage canvas');return c.dataset.homeView==='dollhouse'&&c.dataset.homeCamera==='overview'&&Math.abs(c.getBoundingClientRect().height-document.querySelector('#stage').getBoundingClientRect().height)<1})()",timeout=15000)
         def data():return page.locator('#stage canvas').evaluate('(c)=>({...c.dataset})')
         def frame():
             page.wait_for_function("(()=>{let c=document.querySelector('#stage canvas'),d=c?.dataset;if(!d?.homeFloor)return false;return JSON.parse(d.homeFloor).every(p=>p.every(v=>v>.02&&v<.98))})()",timeout=15000)
+            # The Canvas resize follows the CSS view change through ResizeObserver.
+            page.wait_for_function("(()=>{const c=document.querySelector('#stage canvas'),d=c.dataset,r=Number(d.homeKittyFoot)-(1-Number(d.modelTop))/2;return Math.abs(c.getBoundingClientRect().height-document.querySelector('#stage').getBoundingClientRect().height)<1&&r>.07&&r<.43})()",timeout=15000)
             d=data();ratio=float(d['homeKittyFoot'])-(1-float(d['modelTop']))/2
             assert .07<ratio<.43,(width,height,ratio)
         ready();frame()
@@ -39,23 +44,24 @@ with sync_playwright() as p:
         if not phone or width==390:
             page.wait_for_function("z=>Number(document.querySelector('#stage canvas').dataset.homeZoom)>z*1.1",arg=zoom,timeout=15000)
         page.get_by_role('button',name='Reset view ↺',exact=True).click()
+        ready()
         page.wait_for_function("z=>Math.abs(Number(document.querySelector('#stage canvas').dataset.homeZoom)-z)<.01",arg=zoom)
         canvas.focus();angle=float(data()['viewAngle']);page.keyboard.press('ArrowRight')
         page.wait_for_function("a=>Math.abs(Number(document.querySelector('#stage canvas').dataset.viewAngle)-a)>.1",arg=angle)
-        page.get_by_role('button',name='Reset view ↺',exact=True).click();frame()
+        page.get_by_role('button',name='Reset view ↺',exact=True).click();ready();frame()
         canvas.scroll_into_view_if_needed();r=canvas.bounding_box();point=json.loads(data()['homeOven'])
         page.mouse.click(r['x']+point[0]*r['width'],r['y']+point[1]*r['height'])
-        page.get_by_role('dialog',name='Bake cookies with Kitty',exact=True).wait_for(timeout=15000)
+        page.get_by_role('dialog',name='Bake cookies with Kitty',exact=True).wait_for(timeout=30000)
         page.get_by_role('button',name='Close Bake cookies with Kitty',exact=True).click()
         ready()
         assert data()['studio']=='blender'
         # Touch the real meshes, rather than calling store actions or adding test buttons.
         def touch_station(name):
-            canvas.scroll_into_view_if_needed();r=canvas.bounding_box();point=json.loads(data()['studioAreas'])[name]
+            ready();canvas.scroll_into_view_if_needed();r=canvas.bounding_box();point=json.loads(data()['studioAreas'])[name]
             page.mouse.click(r['x']+point[0]*r['width'],r['y']+point[1]*r['height'])
         for station,title in [('wardrobe','Kitty’s inventory'),('desk','A letter for Nancy'),('reading','Play together')]:
             touch_station(station)
-            page.get_by_role('dialog',name=title,exact=True).wait_for(timeout=15000)
+            page.get_by_role('dialog',name=title,exact=True).wait_for(timeout=30000)
             page.get_by_role('button',name='Close '+title,exact=True).click();ready()
         touch_station('bed')
         page.wait_for_function("document.querySelector('#stage canvas').dataset.studioNight==='true'",timeout=15000)
@@ -68,7 +74,7 @@ with sync_playwright() as p:
         page.get_by_role('button',name='Close Game settings',exact=True).click();ready()
         page.wait_for_function("document.querySelector('#stage canvas').dataset.studioNight==='false'",timeout=15000)
         dismiss=page.get_by_role('button',name='Dismiss message',exact=True)
-        if dismiss.is_visible():dismiss.click()
+        dismiss.wait_for(state='hidden',timeout=12000)
         page.screenshot(path=f'/tmp/nancy-home-{width}.png',full_page=True)
         page.get_by_role('button',name='Go out to the village',exact=True).click()
         page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)

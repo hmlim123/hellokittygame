@@ -7,13 +7,16 @@ with sync_playwright()as p:
  page=b.new_page(viewport={'width':1100,'height':1060},reduced_motion='no-preference');page.on('pageerror',lambda e:errors.append(e.stack or str(e)))
  def ready(pg=page):pg.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
  def play(take):
-  page.evaluate("window.danceSamples=[];window.recordDance=true;function sampleDance(){const d=document.querySelector('#stage canvas')?.dataset;if(d) danceSamples.push({x:Number(d.danceX),y:Number(d.danceY),paw:Number(d.pawTurn),face:d.expression,action:d.blenderAction,take:d.danceTake,time:Number(d.motionTime)});if(recordDance)requestAnimationFrame(sampleDance)}requestAnimationFrame(sampleDance)")
+  page.evaluate("window.danceSamples=[];window.recordDance=true;function sampleDance(){const d=document.querySelector('#stage canvas')?.dataset;if(d) danceSamples.push({x:Number(d.danceX),y:Number(d.danceY),paw:Number(d.pawTurn),face:d.expression,action:d.blenderAction,take:d.danceTake,time:Number(d.motionTime),scale:Number(d.characterScale||1)});if(recordDance)requestAnimationFrame(sampleDance)}requestAnimationFrame(sampleDance)")
   page.locator('#dance').click();page.wait_for_function("p=>{const d=document.querySelector('#stage canvas').dataset;return d.blenderAction==='dance'&&d.danceTake===p&&Number(d.danceDuration)>5.9}",arg=take,timeout=15000)
   page.wait_for_function("document.querySelector('#stage canvas').dataset.blenderAction==='idle'",timeout=35000);page.evaluate('recordDance=false')
   samples=page.evaluate('danceSamples.filter(s=>s.action===\"dance\"&&Number.isFinite(s.x)&&Number.isFinite(s.y))');assert len(samples)>8
-  assert max(s['x']for s in samples)-min(s['x']for s in samples)>.20
-  span_y=max(s['y']for s in samples)-min(s['y']for s in samples)
-  assert span_y>.08,{'take':take,'hop_span':span_y,'samples':len(samples),'times':[round(s['time'],2)for s in samples]}
+  # Keep the same body-relative criteria as the earlier 1.25-scale display model.
+  # The playable model is 0.9-scale so it fits the actual Blender furniture.
+  scale=samples[0]['scale']
+  assert (max(s['x']for s in samples)-min(s['x']for s in samples))/scale>.20/1.25
+  span_y=(max(s['y']for s in samples)-min(s['y']for s in samples))/scale
+  assert span_y>.08/1.25,{'take':take,'hop_span':span_y,'samples':len(samples),'times':[round(s['time'],2)for s in samples]}
   assert any(s['face']=='softHappy'for s in samples),'dance must show happy eyes'
   if take=='empty':assert max(s['paw']for s in samples)>.45,'paws should swing broadly'
   else:assert max(s['paw']for s in samples)<.02,'held item must retain its grip'

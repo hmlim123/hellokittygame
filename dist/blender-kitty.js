@@ -142,7 +142,7 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   }
   b.age+=dt;b.time+=dt;b.mixer.update(dt);
   for(let i=b.fading.length-1;i>=0;i--){const f=b.fading[i];f.left-=dt;if(f.left<=0){if(f.action!==b.current)f.action.stop();b.fading.splice(i,1);}}
-  if(b.current){
+  if(b.current&&b.current.loop!==THREE.LoopRepeat){
     const end=b.current.getClip().duration;
     if(b.age>=end&&b.age-dt<end)b.current.fadeOut(.2);
     if(b.age>end+.22){b.current.stop();b.current=null;b.resetEyes(false);b.resetFace();}
@@ -153,7 +153,7 @@ export function updateBlender(hero,dt,{reduced=hero.userData.blender.reduced,idl
   const empty=(!hero.userData.equipment?.item||hero.userData.equipment.item==='none')&&!b.heldAttachment;
   // Head pats, looking, bowing and dancing do not need a bouquet grip. The
   // unoccupied paw also stays at her side while the other paw waves.
-  const relaxed=!clip||FACE_SHAPES[clip]||['dance','danceHeld','celebrate','surprise','bow','relax'].includes(clip);
+  const relaxed=!clip||FACE_SHAPES[clip]||['dance','danceHeld','celebrate','surprise','bow','relax','sitIdle','sitDown','standUp'].includes(clip);
   const touching=['hug','tickle'].includes(b.gesture);
   const available=empty&&!b.inputAction&&!touching;
   const targets=available?(clip==='wave'?[0,1]:relaxed?[1,1]:[0,0]):[0,0];

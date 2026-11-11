@@ -1,3 +1,4 @@
+import { normalizeHome } from "./home-world";
 import { normalizeTales, type TaleCollection } from "./friend-tales";
 import { normalizeVillage, type VillageProgress } from "./village";
 import { normalizePlush } from "../../dist/plush-state.js";
@@ -49,6 +50,7 @@ export interface PostcardMemory {
   createdAt: string;
 }
 export interface CozyProgress {
+  home: ReturnType<typeof normalizeHome>;
   village: VillageProgress;
   tales: TaleCollection;
   version: 1;
@@ -183,6 +185,7 @@ export function normalizeCozy(value: unknown): CozyProgress {
   }
   return {
     version: 1,
+    home: normalizeHome(raw.home),
     village: normalizeVillage(raw.village),
     weather: raw.weather === "rain" ? "rain" : "sunny",
     rainSound: raw.rainSound === true,

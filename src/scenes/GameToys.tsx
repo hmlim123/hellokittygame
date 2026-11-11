@@ -154,6 +154,8 @@ export function ToyFriend({
   rotation,
   greetOnMount = false,
   eyeAmount,
+  attention,
+  greetSignal = 0,
 }: {
   name: "Momo" | "Pip";
   awake?: boolean;
@@ -162,6 +164,8 @@ export function ToyFriend({
   rotation?: [number, number, number];
   greetOnMount?: boolean;
   eyeAmount?: RefObject<number>;
+  attention?: RefObject<{ yaw: number; nod: number }>;
+  greetSignal?: number;
 }) {
   const gltf = useGLTF(assetUrl("assets/cozy-friends.glb")),
     reduced = useReducedMotion();
@@ -182,18 +186,28 @@ export function ToyFriend({
     const action = mixer.clipAction(clip);
     action.setLoop(THREE.LoopOnce, 1);
     action.clampWhenFinished = true;
-    return { model, mixer, action, time: 10 };
+    model.updateMatrixWorld(true);
+    const head = new THREE.Group();
+    head.name = name + "_DailyAttention";
+    head.position.set(0, 0.78, 0);
+    model.add(head);
+    head.updateMatrixWorld(true);
+    for (const child of [...model.children])
+      if (child !== head && /Head|Eye|Nose|Ear/.test(child.name))
+        head.attach(child);
+    return { model, mixer, action, head, time: 10 };
   }, [gltf, name]);
   const hadGreeting = useRef(false);
   useEffect(() => {
     // The reading dialog can cover the friend. Repeat the short greeting on
     // dismissal, so Nancy sees it after returning her attention to the world.
-    const respond = !!greeting || hadGreeting.current || greetOnMount;
+    const respond =
+      !!greeting || hadGreeting.current || greetOnMount || greetSignal > 0;
     hadGreeting.current = !!greeting;
     if (!awake || reduced || !respond) return;
     instance.time = 0;
     instance.action.reset().fadeIn(0.12).play();
-  }, [instance, greeting, greetOnMount, reduced, awake]);
+  }, [instance, greeting, greetOnMount, greetSignal, reduced, awake]);
   useEffect(
     () => () => {
       instance.mixer.stopAllAction();
@@ -202,6 +216,16 @@ export function ToyFriend({
     [instance],
   );
   useFrame(({ gl }, dt) => {
+    instance.head.rotation.y = THREE.MathUtils.lerp(
+      instance.head.rotation.y,
+      attention?.current.yaw ?? 0,
+      reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 7),
+    );
+    instance.head.rotation.x = THREE.MathUtils.lerp(
+      instance.head.rotation.x,
+      attention?.current.nod ?? 0,
+      reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 7),
+    );
     if (reduced || !awake) {
       instance.mixer.stopAllAction();
       instance.time = 10;

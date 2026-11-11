@@ -1,0 +1,382 @@
+/* Mobile play: the scene, thumb and one context action share the viewport. */
+.home-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+.home-hud button,
+.home-hud .village-thumb {
+  pointer-events: auto;
+}
+.home-steer {
+  position: absolute;
+  left: 16px;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.home-steer > span {
+  font-size: 10px;
+  background: #fff9f0e8;
+  border-radius: 10px;
+  padding: 3px 7px;
+  color: var(--muted);
+}
+.home-context {
+  position: absolute;
+  right: 16px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: grid;
+  gap: 7px;
+  width: min(220px, calc(100% - 140px));
+}
+.home-context button {
+  min-height: 48px;
+  font-size: 13px;
+  padding: 10px 12px;
+  box-shadow: 0 3px 12px #79556918;
+}
+.home-feedback {
+  position: absolute;
+  left: 50%;
+  top: 68px;
+  transform: translateX(-50%);
+  max-width: 80%;
+  width: max-content;
+  text-align: center;
+  margin: 0;
+  padding: 7px 12px;
+  border-radius: 14px;
+  font-size: 11px;
+  line-height: 1.4;
+  background: #fff9f0de;
+  pointer-events: none;
+  color: var(--muted);
+}
+.home-input-note {
+  bottom: 7px;
+  max-width: calc(100% - 310px);
+  font-size: 9px;
+}
+.stage.room {
+  height: 600px;
+}
+.home-hud .village-thumb {
+  width: 96px;
+  height: 96px;
+}
+.home-hud .thumb-handle {
+  left: 23px;
+  top: 23px;
+}
+.scene-container > .village-controls {
+  position: absolute;
+  z-index: 12;
+  bottom: 10px;
+  left: 14px;
+  right: 14px;
+  padding: 0;
+  background: transparent;
+  pointer-events: none;
+  gap: 18px;
+}
+.scene-container > .village-controls button,
+.scene-container > .village-controls .village-thumb {
+  pointer-events: auto;
+}
+.scene-container > .village-input-note {
+  display: none;
+}
+.village-steer > span {
+  background: #fff9f0dd;
+  border-radius: 10px;
+  padding: 3px 7px;
+}
+.village-small-actions button {
+  background: #fff9f1ed;
+}
+.stage.village {
+  height: 640px;
+}
+@media (max-width: 640px) {
+  main[data-mode="room"],
+  main[data-mode="village"] {
+    padding: 8px;
+    max-width: 100%;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) header {
+    padding-bottom: 8px;
+    gap: 6px;
+    min-height: 48px;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) .brand-bow {
+    display: none;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) .brand > span:last-child {
+    font-size: 18px;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) .brand small {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) .header-actions {
+    gap: 4px;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) .header-actions button {
+    min-height: 44px;
+    font-size: 11px;
+    padding: 7px 9px;
+  }
+  [data-mode="room"] > .intro {
+    display: none;
+  }
+  [data-mode="room"] .room-card {
+    margin-top: 8px;
+    border-radius: 18px;
+  }
+  [data-mode="room"] .stage.room {
+    height: clamp(350px, calc(100svh - 154px), 760px);
+  }
+  [data-mode="room"] .scene-label {
+    top: 10px;
+    left: 12px;
+    font-size: 8px;
+  }
+  [data-mode="room"] .scene-tools {
+    top: 31px;
+    right: 8px;
+    left: 8px;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  [data-mode="room"] .scene-tools button {
+    min-height: 36px;
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+  [data-mode="room"] .action-bar {
+    padding: 8px;
+    gap: 6px;
+  }
+  [data-mode="room"] .action-bar button {
+    min-height: 60px;
+    padding: 9px 5px;
+    gap: 4px;
+  }
+  [data-mode="room"] .action-bar button > span {
+    font-size: 20px;
+  }
+  [data-mode="room"] .action-bar strong {
+    font-size: 11px;
+  }
+  [data-mode="room"] .action-bar small {
+    display: none;
+  }
+  .home-feedback {
+    top: 81px;
+    font-size: 10px;
+    max-width: 86%;
+  }
+  .home-input-note {
+    display: none;
+  }
+  .home-steer {
+    left: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .home-context {
+    right: 10px;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    width: min(210px, calc(100% - 124px));
+  }
+  .home-context button {
+    font-size: 12px;
+    min-height: 48px;
+  }
+  .home-hud .village-thumb {
+    width: 92px;
+    height: 92px;
+  }
+  .home-hud .thumb-handle {
+    left: 21px;
+    top: 21px;
+  }
+  [data-mode="village"] > .intro {
+    padding: 5px 3px;
+  }
+  [data-mode="village"] .intro h1 {
+    display: none;
+  }
+  [data-mode="village"] .village-guide > p {
+    font-size: 11px;
+    margin: 3px 0;
+    line-height: 1.35;
+  }
+  [data-mode="village"] .village-guide details {
+    display: none;
+  }
+  [data-mode="village"] .stage.village {
+    height: clamp(350px, calc(100svh - 128px), 760px);
+  }
+  [data-mode="village"] .scene-tools {
+    top: 33px;
+    bottom: auto;
+    right: 9px;
+  }
+  .scene-container > .village-controls {
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    gap: 12px;
+  }
+  .scene-container > .village-controls .village-small-actions button {
+    font-size: 10px;
+    min-height: 44px;
+  }
+  .visit-presence {
+    top: 78px;
+  }
+}
+@media (max-height: 500px) and (min-width: 641px) and (max-width: 1000px) {
+  main:is([data-mode="room"], [data-mode="village"]) {
+    padding: 5px 8px;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) header {
+    min-height: 40px;
+    padding-bottom: 4px;
+  }
+  main:is([data-mode="room"], [data-mode="village"]) > .intro {
+    display: none;
+  }
+  [data-mode="room"] .room-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 86px;
+    margin-top: 4px;
+  }
+  [data-mode="room"] .stage.room,
+  [data-mode="village"] .stage.village {
+    height: calc(100svh - 66px);
+  }
+  [data-mode="room"] .action-bar {
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    gap: 5px;
+    border: 0;
+    border-left: 1px solid var(--line);
+  }
+  [data-mode="room"] .action-bar button {
+    padding: 8px 3px;
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  [data-mode="room"] .action-bar button > span {
+    font-size: 20px;
+  }
+  [data-mode="room"] .action-bar strong {
+    font-size: 10px;
+  }
+  [data-mode="room"] .action-bar small {
+    display: none;
+  }
+  .home-feedback {
+    top: 49px;
+    max-width: 55%;
+  }
+  .home-input-note {
+    display: none;
+  }
+  .home-steer {
+    left: 10px;
+    bottom: 8px;
+  }
+  .home-context {
+    right: 10px;
+    bottom: 12px;
+  }
+  [data-mode="room"] .scene-tools,
+  [data-mode="village"] .scene-tools {
+    top: 8px;
+    bottom: auto;
+    right: 10px;
+    gap: 4px;
+  }
+  [data-mode="room"] .scene-tools button {
+    font-size: 10px;
+    min-height: 36px;
+    padding: 7px 10px;
+  }
+  .scene-container > .village-controls {
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+  }
+  .village-controls {
+    position: absolute;
+    border: 0;
+  }
+  .visit-presence {
+    top: 46px;
+  }
+}
+
+.home-hud:not([data-home-phase="idle"]) .home-context {
+  right: 50%;
+  transform: translateX(50%);
+  width: min(300px, calc(100% - 24px));
+}
+@media (max-width: 640px) {
+  main:is([data-mode="room"], [data-mode="village"]) .scene-tools button {
+    min-height: 44px;
+  }
+  [data-mode="room"] .action-bar strong {
+    font-size: 12px;
+  }
+}
+@media (max-height: 500px) and (min-width: 641px) and (max-width: 1000px) {
+  main:is([data-mode="room"], [data-mode="village"]) .scene-tools button {
+    min-height: 44px;
+  }
+}
+
+/* Activity messages stay clear of steering and the contextual action. */
+main:is([data-mode="room"], [data-mode="village"]) .notification {
+  top: 125px;
+  bottom: auto;
+  right: 50%;
+  left: auto;
+  transform: translateX(50%);
+  max-width: calc(100% - 24px);
+}
+.scene-container:has(.notification) .home-feedback {
+  display: none;
+}
+@media (max-height: 500px) and (min-width: 641px) and (max-width: 1000px) {
+  main:is([data-mode="room"], [data-mode="village"]) .notification {
+    top: 57px;
+    left: 10px;
+    right: auto;
+    transform: none;
+    width: 220px;
+    max-width: 43%;
+  }
+}
+
+@media (max-width: 640px) {
+  main[data-mode="room"][data-view-only="false"][data-home-camera="overview"]
+    .stage.room {
+    height: clamp(320px, min(120vw, calc(100svh - 220px)), 480px);
+  }
+}
+main[data-view-only="true"][data-mode] :is(.scene-container, .stage) {
+  height: 100vh;
+  height: 100dvh;
+}
+main[data-view-only="true"][data-mode] .room-card {
+  display: block;
+}
