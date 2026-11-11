@@ -110,7 +110,7 @@ export function BakingPanel() {
         ))}
       </ol>
       {c.stage === "shape" && c.recipe !== "moon" && c.recipe !== "cupcake" && (
-        <fieldset>
+        <fieldset className="baking-cutters">
           <legend>Choose a cookie cutter</legend>
           <div className="photo-options">
             {COOKIE_SHAPES.map((shape) => (
