@@ -194,6 +194,12 @@ export default function BakingPreview() {
           ? undefined
           : "tray";
   const performance = useMemo(() => ({ id: replay, kind }), [kind, replay]);
+  const resetGauge = () => {
+    const p = useGameStore.getState().cozy.cookie.prep;
+    if (prepGauge.current)
+      prepGauge.current.value =
+        (p?.stir ?? 0) + (p?.pressed ? 1 : 0) + (p?.oven ?? 0);
+  };
   useEffect(() => {
     activity.current = readyPose(cookie);
     run.current.active = false;
@@ -205,6 +211,7 @@ export default function BakingPreview() {
     const cancel = () => {
       drag.current.down = false;
       drag.current.amount = 0;
+      resetGauge();
       activity.current = readyPose(useGameStore.getState().cozy.cookie);
       run.current.active = false;
       run.current.done = undefined;
@@ -383,6 +390,7 @@ export default function BakingPreview() {
             drag.current.down = false;
             drag.current.amount = 0;
             activity.current.active = false;
+            resetGauge();
           }
         }}
         onPointerUp={finishDrag}
@@ -390,6 +398,7 @@ export default function BakingPreview() {
           drag.current.down = false;
           drag.current.amount = 0;
           activity.current.active = false;
+          resetGauge();
           try {
             e.currentTarget.releasePointerCapture(e.pointerId);
           } catch {}
