@@ -1370,3 +1370,32 @@ and never queues a reverse step after sufficient movement. The same shared thumb
 control uses live village positions. Cancellation and blur still never queue a
 step. Three deterministic timing tests pass; the existing real touch journey's
 movement and stopping assertions remain unchanged.
+
+
+### Verified baking publication
+
+Release candidate `26969b9ff6a245a8f32ba975468aa8e470f91fab` was published by
+[Pages run 43121227859](https://github.com/hmlim123/hellokittygame/actions/runs/43121227859).
+All 257 rule/app/server checks and all 24 browser suites across five groups pass.
+The Pages job publishes the exact artifact used by the five browser groups.
+
+The new baking journey verifies ordered steps, re-cutting, normal warm-oven
+recovery, reduced-motion preparation, persisted decoration undo, one gift and
+starting again. The existing real circular-stir test now cancels after visible
+progress has moved, checks that both the gauge and saved preparation return to
+the prior step, then completes preparation and a remembered delivery. The full
+Blender performance, cozy/backup/reading, home and village journeys remain in
+the gate. All home touch viewports also pass locally with the corrected short
+step, including landscape; movement and stopping assertions were retained.
+
+Reviewed images: [phone guide](nancy-baking-guide-phone.png),
+[warm oven](nancy-baking-warm-phone.png), [cookie design](nancy-baking-design-phone.png).
+The worktop is narrower and the camera raised to show the Blender oven window;
+worktop height and authored hand-contact positions are preserved. The website
+archive records runtime `26969b9`, rather than the subsequent documentation
+commit. Character/prop Blender source projects remain unchanged by this release.
+
+Play/share: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=baking-36>.
+The permanent gift marker and Nancy’s progress are preserved. Physical phone and
+Mac Safari review remains pending; Chromium touch emulation and a successful
+Pages publication do not establish physical-device acceptance.
