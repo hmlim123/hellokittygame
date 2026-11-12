@@ -77,6 +77,7 @@ export function createVisitService({
   origins = ["http://127.0.0.1:8081"],
   storeFile = null,
   maxRooms = 40,
+  accounts = null,
   now = () => Date.now(),
 } = {}) {
   const allowed = new Set(origins),
@@ -88,6 +89,7 @@ export function createVisitService({
       ? {
           id: a.id,
           name: a.name,
+          ...(a.profile ? { profile: a.profile, character: a.character } : {}),
           appearance: a.appearance,
           x: a.x,
           z: a.z,
@@ -153,6 +155,7 @@ export function createVisitService({
         if (
           !/^[0-9a-f]{16}$/.test(r.id) ||
           !r.host ||
+          (accounts && r.host.profile !== "nancy") ||
           now() - r.createdAt > expires
         )
           continue;
@@ -160,6 +163,13 @@ export function createVisitService({
           a
             ? {
                 ...actor(role, a.name, a.appearance, a),
+                ...(accounts
+                  ? {
+                      profile: role === "host" ? "nancy" : "melody",
+                      character: role === "host" ? "kitty" : "melody",
+                      name: role === "host" ? "Nancy" : "My Melody",
+                    }
+                  : {}),
                 gesture: { id: 0, kind: "wave" },
                 disconnectedAt: 0,
               }
@@ -227,7 +237,11 @@ export function createVisitService({
       response(
         res,
         200,
-        { ok: true, protocol: 1 },
+        {
+          ok: true,
+          protocol: 1,
+          ...(accounts ? { privateAccounts: true } : {}),
+        },
         allowed.has(origin) ? origin : null,
       );
       return;
@@ -241,12 +255,67 @@ export function createVisitService({
     if (req.method === "OPTIONS") {
       res.writeHead(204, {
         "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Max-Age": "600",
         Vary: "Origin",
       });
       res.end();
+      return;
+    }
+    const accountToken = req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.slice(7)
+      : "";
+    if (
+      accounts &&
+      req.url?.startsWith("/account") &&
+      (req.method === "POST" ||
+        (req.method === "GET" && req.url === "/account"))
+    ) {
+      try {
+        let body = "",
+          bytes = 0;
+        for await (const part of req) {
+          bytes += part.length;
+          if (bytes > 4096)
+            throw Object.assign(Error("That request is too large."), {
+              status: 413,
+            });
+          body += part.toString();
+        }
+        const result = await accounts.handle(
+          req.url,
+          accountToken,
+          JSON.parse(body || "{}"),
+          req.socket.remoteAddress,
+        );
+        response(res, 200, result, origin);
+        if (req.url === "/account/logout" || req.url === "/account/login")
+          for (const ws of wss.clients)
+            if (ws.accountSession && !accounts.authenticate(ws.accountSession))
+              ws.close(1008, "Sign-in ended");
+      } catch (error) {
+        response(
+          res,
+          error.status || 400,
+          {
+            error: error.status
+              ? error.message
+              : "The account request could not be completed.",
+          },
+          origin,
+        );
+      }
+      return;
+    }
+    const identity = accounts?.authenticate(accountToken);
+    if (accounts && req.url === "/rooms" && identity?.id !== "nancy") {
+      response(
+        res,
+        401,
+        { error: "Sign in as Nancy to open her village." },
+        origin,
+      );
       return;
     }
     if (req.url !== "/rooms" || req.method !== "POST") {
@@ -285,13 +354,32 @@ export function createVisitService({
         hostHash: hash(secret),
         guestHash: null,
         invite,
-        host: actor("host", input.name, input.appearance, input.position),
+        host: {
+          ...actor(
+            "host",
+            identity?.name || input.name,
+            input.appearance,
+            input.position,
+          ),
+          ...(identity
+            ? { profile: identity.id, character: identity.character }
+            : {}),
+        },
         guest: null,
         revision: 0,
         chat: [],
         picnic: [false, false, false],
         garden: [0, 1, 2].map((i) => input.garden?.[i] === true),
       };
+      if (accounts)
+        for (const previous of rooms.values()) {
+          if (previous.host.profile !== identity.id) continue;
+          rooms.delete(previous.id);
+          for (const a of [previous.host, previous.guest]) {
+            send(a?.socket, { type: "ended" });
+            a?.socket?.close(1000, "Nancy opened a new invitation.");
+          }
+        }
       rooms.set(id, room);
       recent.push(now());
       dirty();
@@ -320,6 +408,8 @@ export function createVisitService({
     maxPayload: 4096,
     perMessageDeflate: false,
   });
+  server.requestTimeout = 15000;
+  server.headersTimeout = 15000;
   server.on("upgrade", (req, socket, head) => {
     if (req.url !== "/visit" || !allowed.has(req.headers.origin)) {
       socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
@@ -336,7 +426,8 @@ export function createVisitService({
       player = null,
       bucket = 25,
       lastBucket = now(),
-      chats = [];
+      chats = [],
+      accountSession = null;
     const helloTimer = setTimeout(() => {
       if (!player) ws.close(1008, "Please join with an invitation.");
     }, 8000);
@@ -368,6 +459,17 @@ export function createVisitService({
         ws.close(1008, "Invalid message.");
         return;
       }
+      if (accounts) {
+        const identity = accounts.authenticate(
+          player ? accountSession : m.accountToken,
+        );
+        if (!identity || (player && player.profile !== identity.id)) {
+          fail("Please sign in again to continue your private visit.");
+          ws.close(1008, "Sign-in required");
+          return;
+        }
+        if (!player) accountSession = m.accountToken;
+      }
       if (!player) {
         if (
           !["hello", "join"].includes(m.type) ||
@@ -383,8 +485,16 @@ export function createVisitService({
           ws.close(1008, "Visit ended");
           return;
         }
+        const identity = accounts?.authenticate(accountSession);
         let secret = m.token;
         if (m.type === "join") {
+          if (accounts && identity.id !== "melody") {
+            ws.close(
+              1008,
+              "My Melody’s account is required for this invitation.",
+            );
+            return;
+          }
           if (!equal(m.invite, hash(room.invite))) {
             ws.close(1008, "This invitation is not valid.");
             return;
@@ -404,8 +514,8 @@ export function createVisitService({
           secret = token();
           room.guestHash = hash(secret);
           const offsets = [
-            [1.5, 0],
             [-1.5, 0],
+            [1.5, 0],
             [0, 1.5],
             [0, -1.5],
             [0, 0],
@@ -413,22 +523,29 @@ export function createVisitService({
           const offset = offsets.find(([x, z]) =>
             villageWalkable(room.host.x + x, room.host.z + z),
           ) || [0, 0];
-          room.guest = actor("guest", m.name, m.appearance, {
+          room.guest = actor("guest", identity?.name || m.name, m.appearance, {
             x: room.host.x + offset[0],
             z: room.host.z + offset[1],
           });
+          if (identity)
+            Object.assign(room.guest, {
+              profile: identity.id,
+              character: identity.character,
+            });
         }
         player = equal(secret, room.hostHash)
           ? room.host
           : equal(secret, room.guestHash)
             ? room.guest
             : null;
-        if (!player) {
+        if (!player || (accounts && player.profile !== identity.id)) {
+          player = null;
           ws.close(1008, "This visit ticket is not valid.");
           return;
         }
         if (player.socket && player.socket !== ws)
           player.socket.close(1000, "Your visit moved to another window.");
+        ws.accountSession = accountSession;
         player.socket = ws;
         player.disconnectedAt = 0;
         player.budget = 1.5;
@@ -620,6 +737,14 @@ export function createVisitService({
   const heartbeat = setInterval(() => {
     prune();
     for (const ws of wss.clients) {
+      if (
+        accounts &&
+        ws.accountSession &&
+        !accounts.authenticate(ws.accountSession)
+      ) {
+        ws.close(1008, "Sign-in expired");
+        continue;
+      }
       if (!ws.alive) {
         ws.terminate();
         continue;

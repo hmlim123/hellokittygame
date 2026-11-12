@@ -8,6 +8,24 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## A little place for two · v3.5.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=together-37>.
+
+Private visits now support two password accounts: **Nancy as Hello Kitty** and
+**you as My Melody**. Nancy invites the second account once, then opens her
+village for private walk/wave/dance/chat/picnic visits. My Melody uses the real
+Blender model with the refined smile, facial morphs and authored gestures.
+Walking follows actual movement and blends gently out of a dance.
+
+The server enforces identities and session ownership; visitor activities do not
+write into personal progress. Nancy’s letter, room, outfits and gift marker stay
+intact. Single-player remains available independently. **Live online meetings
+still require the hosting owner to deploy/connect the prepared Render service.**
+Durable accounts require a persistent disk; the revised blueprint uses a paid
+plan that must be reviewed in Render before deployment. No service was purchased
+or connected automatically. See [the setup steps and configuration](docs/private-visits-setup.md).
+
 ## Baking together · v3.4.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=baking-36>.

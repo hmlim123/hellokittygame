@@ -398,3 +398,184 @@ test("a movement packet can span a corner without rejecting a real walk or permi
     "a wall shortcut exceeds the route budget",
   );
 });
+
+test("authenticated visits bind Nancy and My Melody to their own accounts, tickets and Blender identities", async (t) => {
+  const { createAccounts } = await import("./accounts.mjs");
+  const dir = await mkdtemp(join(tmpdir(), "private-pair-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const setupKey = "private-pair-owner-key-with-32-characters";
+  const accounts = createAccounts({
+    storeFile: join(dir, "accounts.json"),
+    setupKey,
+  });
+  const s = await setup({ accounts });
+  t.after(() => s.service.close());
+  const post = async (path, body = {}, token = "") => {
+    const response = await fetch(s.base + path, {
+      method: "POST",
+      headers: {
+        Origin: origin,
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: "Bearer " + token } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    return { status: response.status, body: await response.json() };
+  };
+  assert.equal((await post("/rooms")).status, 401);
+  const nancy = (
+    await post("/account/setup", {
+      setupKey,
+      password: "Nancy secret password",
+    })
+  ).body;
+  const invite = (await post("/account/invite", {}, nancy.token)).body.invite;
+  const melody = (
+    await post("/account/register", {
+      invite,
+      password: "Melody secret password",
+    })
+  ).body;
+  assert.equal((await post("/rooms", {}, melody.token)).status, 401);
+  const room = (
+    await post(
+      "/rooms",
+      { name: "Forged name", appearance: { character: "melody" } },
+      nancy.token,
+    )
+  ).body;
+  const anonymous = await client(s.base, { type: "hello", ...room });
+  await anonymous.until((m) => m.type === "error");
+  assert.equal(
+    anonymous.messages.some((m) => m.type === "welcome"),
+    false,
+  );
+  const stolen = await client(s.base, {
+    type: "hello",
+    ...room,
+    accountToken: melody.token,
+  });
+  await new Promise((resolve) => stolen.ws.once("close", resolve));
+  assert.equal(
+    stolen.messages.some((m) => m.type === "welcome"),
+    false,
+  );
+  const host = await client(s.base, {
+    type: "hello",
+    ...room,
+    accountToken: nancy.token,
+  });
+  const welcome = await host.until((m) => m.type === "welcome");
+  assert.equal(welcome.you.name, "Nancy");
+  assert.equal(welcome.you.character, "kitty");
+  const guest = await client(s.base, {
+    type: "join",
+    roomId: room.roomId,
+    invite: room.invite,
+    name: "Nancy",
+    character: "kitty",
+    accountToken: melody.token,
+  });
+  const joined = await guest.until((m) => m.type === "welcome");
+  assert.equal(joined.you.name, "My Melody");
+  assert.equal(joined.you.character, "melody");
+  assert.equal(joined.you.profile, "melody");
+  guest.send({
+    type: "appearance",
+    appearance: { outfit: "berry", character: "kitty", profile: "nancy" },
+  });
+  const snapshot = await host.until(
+    (m) =>
+      m.type === "state" &&
+      m.players.some(
+        (p) => p.id === "guest" && p.appearance.outfit === "berry",
+      ),
+  );
+  assert.equal(
+    snapshot.players.find((p) => p.id === "guest").character,
+    "melody",
+  );
+  await post("/account/logout", {}, melody.token);
+  const end = Date.now() + 2000;
+  while (guest.closed() === null && Date.now() < end)
+    await new Promise((r) => setTimeout(r, 5));
+  assert.equal(guest.closed(), 1008);
+  assert.equal(host.closed(), null);
+  const fresh = await post("/rooms", {}, nancy.token);
+  assert.equal(fresh.status, 201);
+  await host.until((m) => m.type === "ended");
+  assert.equal(
+    s.service.rooms.size,
+    1,
+    "Nancy has one clear village invitation at a time",
+  );
+});
+
+test("authenticated room checkpoints keep both identities on restart and require the matching account to resume", async (t) => {
+  const { createAccounts } = await import("./accounts.mjs");
+  const dir = await mkdtemp(join(tmpdir(), "private-resume-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const accountOptions = {
+    storeFile: join(dir, "accounts.json"),
+    setupKey: "private-owner-resume-key-with-32-characters",
+  };
+  const accounts = createAccounts(accountOptions);
+  const n = await accounts.handle("/account/setup", "", {
+    setupKey: accountOptions.setupKey,
+    password: "Nancy private password",
+  });
+  const invite = await accounts.handle("/account/invite", n.token);
+  const m = await accounts.handle("/account/register", "", {
+    invite: invite.invite,
+    password: "Melody private password",
+  });
+  const storeFile = join(dir, "rooms.json"),
+    first = await setup({ accounts, storeFile });
+  const r = await fetch(first.base + "/rooms", {
+    method: "POST",
+    headers: {
+      Origin: origin,
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + n.token,
+    },
+    body: "{}",
+  });
+  const room = await r.json();
+  const h = await client(first.base, {
+    type: "hello",
+    ...room,
+    accountToken: n.token,
+  });
+  await h.until((v) => v.type === "welcome");
+  const g = await client(first.base, {
+    type: "join",
+    roomId: room.roomId,
+    invite: room.invite,
+    accountToken: m.token,
+  });
+  const guest = await g.until((v) => v.type === "welcome");
+  await first.service.close();
+  const second = await setup({
+    accounts: createAccounts(accountOptions),
+    storeFile,
+  });
+  t.after(() => second.service.close());
+  const resumed = await client(second.base, {
+    type: "hello",
+    roomId: room.roomId,
+    token: guest.token,
+    accountToken: m.token,
+  });
+  const ready = await resumed.until((v) => v.type === "welcome");
+  assert.equal(ready.you.character, "melody");
+  assert.equal(ready.you.profile, "melody");
+  const host = await client(second.base, {
+    type: "hello",
+    ...room,
+    accountToken: n.token,
+  });
+  assert.equal(
+    (await host.until((v) => v.type === "welcome")).you.character,
+    "kitty",
+  );
+});

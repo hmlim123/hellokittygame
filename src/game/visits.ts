@@ -1,3 +1,5 @@
+import { beginGuestSession, endGuestSession } from "./guest-session";
+import { accountSession, useAccounts } from "./accounts";
 import { create } from "zustand";
 import { useEffect, useRef } from "react";
 import { useGameStore } from "./store";
@@ -7,6 +9,8 @@ import type { OutfitId, PlushId, Gesture, ItemId } from "./types";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
+  profile?: "nancy" | "melody";
+  character?: "kitty" | "melody";
   x: number;
   z: number;
   yaw: number;
@@ -135,6 +139,9 @@ function rememberTicket(value: Ticket | null) {
 const transmit = (value: object) => {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(value));
 };
+function restorePersonalSave() {
+  endGuestSession((original) => useGameStore.setState(original));
+}
 function stopTransport() {
   generation++;
   clearTimeout(timer);
@@ -175,7 +182,15 @@ function connect(server: string, hello: object) {
       ws.close();
   }, 25000);
   ws.onopen = () => {
-    if (epoch === generation) ws.send(JSON.stringify(hello));
+    if (epoch === generation)
+      ws.send(
+        JSON.stringify({
+          ...hello,
+          ...(accountSession(server)
+            ? { accountToken: accountSession(server)!.token }
+            : {}),
+        }),
+      );
   };
   ws.onmessage = (event) => {
     if (
@@ -219,8 +234,11 @@ function connect(server: string, hello: object) {
             : "",
       });
       const game = useGameStore.getState();
+      if (m.role === "guest") beginGuestSession(game);
+      else restorePersonalSave();
       game.enterVillage();
-      game.saveVillagePosition(m.you.x, m.you.z, m.you.yaw);
+      if (m.role === "host")
+        game.saveVillagePosition(m.you.x, m.you.z, m.you.yaw);
       useVillageMotion.setState({
         position: { x: m.you.x, z: m.you.z },
         yaw: m.you.yaw,
@@ -355,6 +373,7 @@ function connect(server: string, hello: object) {
     else if (m.type === "ended") {
       stopTransport();
       rememberTicket(null);
+      restorePersonalSave();
       useVillageMotion.setState({ guestVisit: false });
       useVisitsStore.setState({
         status: "ended",
@@ -375,6 +394,17 @@ function connect(server: string, hello: object) {
   };
   ws.onerror = () => {};
   ws.onclose = (event) => {
+    if (
+      epoch === generation &&
+      ["Sign-in ended", "Sign-in required", "Sign-in expired"].includes(
+        event.reason,
+      )
+    ) {
+      useAccounts.getState().expire();
+      useVisitsStore.setState({
+        error: "Your sign-in ended. Sign in again to meet together.",
+      });
+    }
     clearTimeout(handshake);
     if (epoch !== generation) return;
     clearInterval(movement);
@@ -394,6 +424,7 @@ function connect(server: string, hello: object) {
       );
     } else {
       rememberTicket(null);
+      restorePersonalSave();
       useVillageMotion.setState({ guestVisit: false });
       useVisitsStore.setState({
         status: "ended",
@@ -461,7 +492,12 @@ export const useVisitsStore = create<Visits>((set, get) => ({
     try {
       const response = await fetch(server + "/rooms", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(accountSession(server)
+            ? { Authorization: "Bearer " + accountSession(server)!.token }
+            : {}),
+        },
         body: JSON.stringify({
           name: name.trim().slice(0, 24) || "Nancy",
           appearance: state.equipment,
@@ -527,6 +563,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
     });
   },
   leave() {
+    restorePersonalSave();
     useVillageMotion.setState({ guestVisit: false });
     transmit({ type: get().role === "host" ? "end" : "leave" });
     stopTransport();
@@ -562,6 +599,22 @@ export function useVisitLifecycle() {
       const preset = new URL(location.href).searchParams.get("visits");
       if (preset && visitServerUrl(preset))
         useVisitsStore.getState().configure(preset);
+      if (location.hash.startsWith("#account=")) {
+        const accountInvite = parseAccountLink(location.href);
+        if (accountInvite) {
+          useVisitsStore.getState().configure(accountInvite.server);
+          useAccounts.setState({ pendingInvite: accountInvite.invite });
+          if (accountInvite.visit)
+            useVisitsStore.setState({
+              invitation: {
+                server: accountInvite.server,
+                ...accountInvite.visit,
+              },
+            });
+          useGameStore.getState().enterVillage();
+          useGameStore.getState().openPanel("visits");
+        }
+      }
       const invite = location.hash.startsWith("#visit=")
         ? parseVisitLink(location.href)
         : null;
@@ -569,7 +622,7 @@ export function useVisitLifecycle() {
         useVisitsStore.setState({ invitation: invite });
         useGameStore.getState().enterVillage();
         useGameStore.getState().openPanel("visits");
-      } else {
+      } else if (!location.hash.startsWith("#account=")) {
         try {
           const saved = JSON.parse(
             sessionStorage.getItem("kitty-private-visit-v1") || "null",
@@ -624,4 +677,62 @@ export function useVisitLifecycle() {
     });
     return off;
   }, []);
+}
+
+export function accountInvitationLink(
+  server: string,
+  invite: string,
+  visit?: Invitation | null,
+  base = location.href,
+) {
+  const url = new URL(import.meta.env.BASE_URL + "adventure.html", base);
+  url.search = "";
+  url.hash =
+    "account=" +
+    btoa(
+      JSON.stringify({
+        server,
+        invite,
+        ...(visit
+          ? { visit: { roomId: visit.roomId, invite: visit.invite } }
+          : {}),
+      }),
+    )
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+  return url.href;
+}
+export function parseAccountLink(
+  input: string,
+  origin = location.origin,
+): {
+  server: string;
+  invite: string;
+  visit?: Omit<Invitation, "server">;
+} | null {
+  try {
+    const part = new URL(input, origin).hash;
+    if (!part.startsWith("#account=") || part.length > 2200) return null;
+    const value = JSON.parse(
+      atob(part.slice(9).replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    const server = visitServerUrl(value.server, origin);
+    if (!server || !/^[A-Za-z0-9_-]{43}$/.test(value.invite)) return null;
+    if (
+      value.visit &&
+      (!/^[0-9a-f]{16}$/.test(value.visit.roomId) ||
+        !/^[A-Za-z0-9_-]{43}$/.test(value.visit.invite))
+    )
+      return null;
+    return {
+      server,
+      invite: value.invite,
+      ...(value.visit
+        ? { visit: { roomId: value.visit.roomId, invite: value.visit.invite } }
+        : {}),
+    };
+  } catch {
+    return null;
+  }
 }

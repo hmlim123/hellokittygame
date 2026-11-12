@@ -3,7 +3,8 @@ import { useHomeMotion, homeGesture } from "./game/home-motion";
 import { FriendTalesPanel } from "./ui/FriendTales";
 import { VillageControls, VillageGuide, VillagePanel } from "./ui/Village";
 import { VisitsPanel, VisitPresence } from "./ui/Visits";
-import { useVisitLifecycle } from "./game/visits";
+import { useVisitLifecycle, useVisitsStore } from "./game/visits";
+import { isGuestSession } from "./game/guest-session";
 import { useVillageMotion, giveVillageGift } from "./game/village-motion";
 import { VILLAGE_ACTIONS } from "./game/village";
 import { CozyLifePanel } from "./ui/CozyLife";
@@ -66,9 +67,11 @@ function useNavigation() {
         );
     addEventListener("popstate", onPop);
     const onStorage = (e: StorageEvent) => {
+      if (isGuestSession()) return;
       if (e.key === "kitty-world-v2") void useGameStore.persist.rehydrate();
     };
     const resume = () => {
+      if (isGuestSession()) return;
       if (!document.hidden) void useGameStore.persist.rehydrate();
     };
     addEventListener("storage", onStorage);
@@ -374,6 +377,11 @@ function AdventureControls() {
   );
 }
 export default function App() {
+  const visitingAsMelody = useVisitsStore(
+    (s) =>
+      s.role === "guest" &&
+      s.players.some((p) => p.id === "guest" && p.character === "melody"),
+  );
   const homeCameraMode = useHomeMotion((s) => s.camera);
   useVisitLifecycle();
   useNavigation();
@@ -490,8 +498,10 @@ export default function App() {
       <header>
         <button
           className="brand"
-          onClick={() => setMode("room")}
-          aria-label="Hello Kitty home"
+          onClick={() => (visitingAsMelody ? open("visits") : setMode("room"))}
+          aria-label={
+            visitingAsMelody ? "Our private visit" : "Hello Kitty home"
+          }
         >
           <span className="brand-bow">🎀</span>
           <span>
@@ -499,7 +509,7 @@ export default function App() {
           </span>
         </button>
         <div className="header-actions">
-          {mode !== "room" && (
+          {mode !== "room" && !visitingAsMelody && (
             <button className="text-button" onClick={() => setMode("room")}>
               ← Her room
             </button>
@@ -510,9 +520,9 @@ export default function App() {
           <button
             id="openWardrobe"
             disabled={!ready || !!mission}
-            onClick={() => open("inventory")}
+            onClick={() => open(visitingAsMelody ? "visits" : "inventory")}
           >
-            Inventory ♡
+            {visitingAsMelody ? "Our visit ♡" : "Inventory ♡"}
           </button>
         </div>
       </header>

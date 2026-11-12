@@ -274,3 +274,21 @@ and Zustand state publishes UI/progress updates at a lower frequency.
 Use the standalone exporter to keep hand edits. Preview chair meshes remain in
 Blender and do not ship in the motion GLBs. Source archive:
 `/workspace/nancy-playable-home-blenders.zip`.
+
+## My Melody for private visits · v3.5.0
+
+`dist/assets/friends/melody.glb` and `melody.json` come from private source
+`hmlim123/hellokitty3D`, commit `9ee95aa2cf92f0d6a720f5f3fe2f9cc4e4cff55e`,
+`friends/melody.blend`. The 1,250,500-byte export has 29,468 triangles and thirteen
+clips: idle, wave, dance, bow, celebrate, cuddle, walk, happy, wink, sleepy,
+surprised, shy and curious. The exported manifest preserves source SHA-256,
+frame ranges, controller names and facial shape keys. No held prop is added.
+
+The visit renderer clones the actual model and materials for independent facial
+morphs. It normalizes total height to Kitty’s gameplay height and adjusts authored
+arm/foot translation tracks to additive rest pivots, preventing doubled offsets.
+The distance-based planted-foot gait is shared with Kitty. Authored idle and
+expressive gestures crossfade, and walking interrupts gestures cleanly.
+Reduced-motion preference suppresses the larger movements. This integration
+reuses the refined Blender project; it does not claim new Blender authoring.
+The other two friends remain available in their existing source projects.

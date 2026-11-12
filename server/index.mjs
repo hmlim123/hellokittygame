@@ -1,4 +1,9 @@
+import { createAccounts } from "./accounts.mjs";
 import { createVisitService } from "./visits.mjs";
+if (process.env.RENDER && process.env.PRIVATE_ACCOUNTS !== "true")
+  throw Error(
+    "Render visits require PRIVATE_ACCOUNTS=true and persistent account storage.",
+  );
 const port = Number(process.env.PORT || 8787);
 const origins = (
   process.env.ALLOWED_ORIGINS ||
@@ -8,6 +13,13 @@ const origins = (
   .map((s) => s.trim())
   .filter(Boolean);
 const service = createVisitService({
+  accounts:
+    process.env.PRIVATE_ACCOUNTS === "true"
+      ? createAccounts({
+          storeFile: process.env.ACCOUNT_STORE_FILE,
+          setupKey: process.env.ACCOUNT_SETUP_KEY,
+        })
+      : null,
   origins,
   storeFile: process.env.VISIT_STORE_FILE || null,
 });

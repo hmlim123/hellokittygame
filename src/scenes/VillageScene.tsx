@@ -1,3 +1,4 @@
+import { Melody } from "./Melody";
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrthographicCamera, RoundedBox } from "@react-three/drei";
@@ -523,6 +524,9 @@ function Player() {
     pending = useRef<string | null>(null),
     follow = useRef(new THREE.Vector3(spawn.x, 0.7, spawn.z)),
     reduced = useReducedMotion();
+  const playerCharacter = useVisitsStore(
+    (s) => s.players.find((p) => p.id === s.role)?.character,
+  );
   const equipment = useGameStore((s) => s.equipment),
     packed = useGameStore((s) => !!s.cozy.cookie.packed),
     effect = useGameStore((s) => s.effect),
@@ -660,6 +664,8 @@ function Player() {
       cam.zoom = zoom;
       cam.updateProjectionMatrix();
     }
+    if (playerCharacter !== "melody")
+      gl.domElement.dataset.playerCharacter = "kitty";
     gl.domElement.dataset.village = "true";
     gl.domElement.dataset.villageX = String(p.x);
     gl.domElement.dataset.villageZ = String(p.z);
@@ -679,19 +685,25 @@ function Player() {
       <CapsuleCollider args={[0.35, 0.28]} position={[0, 0.65, 0]} />
       <GroundShadow />
       <group ref={anchor} rotation={[0, spawn.yaw, 0]}>
-        <Kitty
-          equipment={
-            effect?.kind === "water"
-              ? { ...equipment, item: "watering" }
-              : packed || giving
-                ? { ...equipment, item: "none" }
-                : equipment
-          }
-          holding={packed || giving ? "parcel" : picnic ? "cup" : undefined}
-          animate
-          scale={0.78}
-          locomotion={locomotion}
-        />
+        <Suspense fallback={null}>
+          {playerCharacter === "melody" ? (
+            <Melody locomotion={locomotion} />
+          ) : (
+            <Kitty
+              equipment={
+                effect?.kind === "water"
+                  ? { ...equipment, item: "watering" }
+                  : packed || giving
+                    ? { ...equipment, item: "none" }
+                    : equipment
+              }
+              holding={packed || giving ? "parcel" : picnic ? "cup" : undefined}
+              animate
+              scale={0.78}
+              locomotion={locomotion}
+            />
+          )}
+        </Suspense>
       </group>
     </RigidBody>
   );

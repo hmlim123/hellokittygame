@@ -1,7 +1,9 @@
+import { useVillageMotion } from "../game/village-motion";
 import { useGameStore } from "../game/store";
 import { downloadText, serializeBackup } from "../game/backup";
 import { BUILD_REVISION, RELEASE_VERSION } from "../game/release";
 export function SaveStatus() {
+  const visiting = useVillageMotion((s) => s.guestVisit);
   const failed = useGameStore((s) => s.saveFailed),
     saved = useGameStore((s) => s.lastSavedAt !== null),
     retry = useGameStore((s) => s.retrySave);
@@ -9,16 +11,20 @@ export function SaveStatus() {
     <aside
       className={`save-health ${failed ? "save-error" : ""}`}
       role={failed ? "alert" : "status"}
-      data-save-state={failed ? "failed" : saved ? "saved" : "ready"}
+      data-save-state={
+        visiting ? "visiting" : failed ? "failed" : saved ? "saved" : "ready"
+      }
     >
       <p>
-        {failed
-          ? "Your progress is not fully saved yet. Keep this tab open; you can download a backup."
-          : saved
-            ? "Progress saved in this browser. ♡"
-            : "Your steps and discoveries save in this browser."}
+        {visiting
+          ? "Visiting Nancy. Your own memories are kept safe. ♡"
+          : failed
+            ? "Your progress is not fully saved yet. Keep this tab open; you can download a backup."
+            : saved
+              ? "Progress saved in this browser. ♡"
+              : "Your steps and discoveries save in this browser."}
       </p>
-      {failed && (
+      {failed && !visiting && (
         <div className="memory-actions">
           <button onClick={retry}>Retry saving</button>
           <button

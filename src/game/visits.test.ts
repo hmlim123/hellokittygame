@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { visitServerUrl, parseVisitLink, invitationLink } from "./visits";
+import {
+  visitServerUrl,
+  parseVisitLink,
+  invitationLink,
+  accountInvitationLink,
+  parseAccountLink,
+} from "./visits";
 const origin = "https://hmlim123.github.io";
 const invite = {
   server: "https://nancy-village.onrender.com",
@@ -51,5 +57,37 @@ describe("private visit invitations", () => {
       "https://hmlim123.github.io/hellokittygame/",
     );
     expect(parseVisitLink(bad, origin)).toBeNull();
+  });
+});
+
+describe("private account links", () => {
+  it("uses a one-time account invitation and optional visit, with no login credentials or gift reset", () => {
+    const link = accountInvitationLink(
+      invite.server,
+      "b".repeat(43),
+      invite,
+      "https://hmlim123.github.io/hellokittygame/?v=gift-20",
+    );
+    expect(new URL(link).search).toBe("");
+    expect(parseAccountLink(link, origin)).toEqual({
+      server: invite.server,
+      invite: "b".repeat(43),
+      visit: { roomId: invite.roomId, invite: invite.invite },
+    });
+    expect(parseVisitLink(link, origin)).toBeNull();
+    expect(
+      parseAccountLink(link.replace(/#.+$/, "#account=broken"), origin),
+    ).toBeNull();
+    expect(
+      parseAccountLink(
+        accountInvitationLink(
+          "https://untrusted.example",
+          "b".repeat(43),
+          null,
+          origin,
+        ),
+        origin,
+      ),
+    ).toBeNull();
   });
 });

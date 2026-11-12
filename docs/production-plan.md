@@ -82,6 +82,41 @@ life and one complete home/activity/reward loop → polished decorating and visi
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
 
+## Private accounts and My Melody · v3.5.0
+
+Implemented on 2026-11-12: Nancy’s fixed Hello Kitty account and her partner’s
+fixed My Melody account, separate password sign-ins, creator-key initialization,
+one-use partner registration invitations and authenticated private village
+invitations. The server enforces each account’s host/visitor role and character;
+a visit ticket or cosmetic packet cannot impersonate the other player. A new
+Nancy invitation replaces her earlier village session. Sign-out, replacement
+sign-in, session expiry and restart recovery are handled on the server.
+
+The game uses the actual refined `friends/melody.blend` export from private
+source commit `9ee95aa2cf92f0d6a720f5f3fe2f9cc4e4cff55e`. My Melody has distance-based
+walking, gentle idle/blinks, thirteen authored gesture/expression clips and smooth
+interruptions back to walking. Material/morph state is independent per avatar.
+The visitor’s original local save is retained while visiting, restored on exit,
+and never written over by temporary activities. Nancy’s local ownership,
+letter, progress, outfits, decorations and permanent gift marker are preserved.
+
+Local checks: **268 passing checks** (99 Node game/source rules, 152 Vitest,
+17 server checks). Two independent phone-sized browser contexts cover account
+setup, invited registration, Kitty/Melody rendering, chat, dance, movement,
+refresh reconnect, sign-out, bad-password feedback and a subsequent visit.
+Existing visit browser checks cover the shared garden, picnic, correction
+recovery and host closure. The new account browser suite is part of release
+shard 4; the complete release gate now contains **25 suites across five shards**.
+Full GitHub workflow publication evidence is recorded after it completes.
+
+**Hosting remains pending.** No Render account or service address has been
+provided. The revised, reviewable blueprint prepares one Starter service and a
+persistent disk for durable credentials; it has not purchased or deployed a
+paid service. The owner must review the plan in Render, deploy it, connect the
+service URL, and initialize the two accounts. GitHub Pages alone cannot host
+live visits. Physical phone and Safari acceptance also remains outstanding.
+See [the complete owner setup](private-visits-setup.md).
+
 ## Earlier adventure target journey
 
 Enter Butterfly Glade → follow the butterflies → revive the flowers → earn a

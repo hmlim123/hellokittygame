@@ -1,3 +1,5 @@
+import { AccountAccess } from "./AccountAccess";
+import { useAccounts } from "../game/accounts";
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { useGameStore } from "../game/store";
@@ -104,6 +106,15 @@ export function VisitsPanel() {
   const active = state.status === "online" || state.status === "reconnecting",
     busy = state.status === "connecting",
     other = state.players.find((p) => p.id !== state.role);
+  const accounts = useAccounts();
+  const connectedServer = state.invitation?.server || state.server;
+  useEffect(() => {
+    if (connectedServer) void useAccounts.getState().inspect(connectedServer);
+  }, [connectedServer]);
+  useEffect(() => {
+    if (state.players.some((p) => p.profile === "melody"))
+      useAccounts.setState({ melodyRegistered: true });
+  }, [state.players]);
   const lastMessage = state.chat.at(-1)?.id;
   useEffect(() => setCopied(false), [state.link]);
   useEffect(() => {
@@ -138,6 +149,52 @@ export function VisitsPanel() {
           {state.error}
         </p>
       )}
+      {connectedServer && accounts.privateAccounts === true && (
+        <AccountAccess server={connectedServer} active={active} />
+      )}
+      {connectedServer && accounts.privateAccounts === null && !active && (
+        <p role="status">
+          {accounts.error || "Connecting to your private village service…"}{" "}
+          {accounts.error && (
+            <button onClick={() => void accounts.inspect(connectedServer)}>
+              Try again
+            </button>
+          )}
+        </p>
+      )}
+      {connectedServer && accounts.privateAccounts !== false && !active && (
+        <details className="visit-service-setup">
+          <summary>Connection settings</summary>
+          <label className="visit-field">
+            Render service address
+            <input
+              type="url"
+              value={server}
+              onChange={(e) => setServer(e.target.value)}
+              placeholder="https://your-village.onrender.com"
+            />
+          </label>
+          <button
+            onClick={() => {
+              if (state.configure(server)) {
+                if (state.invitation?.server !== server) {
+                  useVisitsStore.setState({ invitation: null });
+                  useAccounts.setState({ pendingInvite: "" });
+                  if (location.hash.startsWith("#account="))
+                    history.replaceState(
+                      {},
+                      "",
+                      location.pathname + location.search,
+                    );
+                }
+                void accounts.inspect(server);
+              }
+            }}
+          >
+            Connect service
+          </button>
+        </details>
+      )}
       {active ? (
         <>
           <p className="visit-connection" role="status">
@@ -147,39 +204,41 @@ export function VisitsPanel() {
                 ? `${other.name} is visiting with you. ♡`
                 : "Your village is open. Send your invitation to your friend."}
           </p>
-          {state.role === "host" && state.link && (
-            <div className="visit-invitation">
-              <label htmlFor="village-invitation">
-                Your private invitation
-              </label>
-              <input
-                id="village-invitation"
-                value={state.link}
-                readOnly
-                onFocus={(e) => e.currentTarget.select()}
-              />
-              <div>
-                <button onClick={copy}>
-                  {copied ? "Copied ♡" : "Copy invitation"}
-                </button>
-                {typeof navigator.share === "function" && (
-                  <button
-                    onClick={() =>
-                      void navigator
-                        .share({
-                          title: "A little Hello Kitty village",
-                          text: "Come spend a little time with me ♡",
-                          url: state.link,
-                        })
-                        .catch(() => {})
-                    }
-                  >
-                    Share…
+          {state.role === "host" &&
+            state.link &&
+            (!accounts.privateAccounts || accounts.melodyRegistered) && (
+              <div className="visit-invitation">
+                <label htmlFor="village-invitation">
+                  Your private invitation
+                </label>
+                <input
+                  id="village-invitation"
+                  value={state.link}
+                  readOnly
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <div>
+                  <button onClick={copy}>
+                    {copied ? "Copied ♡" : "Copy invitation"}
                   </button>
-                )}
+                  {typeof navigator.share === "function" && (
+                    <button
+                      onClick={() =>
+                        void navigator
+                          .share({
+                            title: "A little Hello Kitty village",
+                            text: "Come spend a little time with me ♡",
+                            url: state.link,
+                          })
+                          .catch(() => {})
+                      }
+                    >
+                      Share…
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           <div className="visit-friends">
             {state.players.map((p) => (
               <span key={p.id} className={p.connected ? "connected" : ""}>
@@ -275,7 +334,7 @@ export function VisitsPanel() {
               : "Leave this visit"}
           </button>
         </>
-      ) : (
+      ) : !connectedServer || accounts.privateAccounts === false ? (
         <>
           <div
             className="visit-tabs"
@@ -352,9 +411,8 @@ export function VisitsPanel() {
                   Connect service
                 </button>
                 <p className="small-note">
-                  The free service can take a moment to wake up. If it restarts,
-                  a fresh invitation may be needed. Personal progress remains in
-                  each browser.
+                  Private accounts need persistent storage on the service. Your
+                  personal game progress stays in each browser.
                 </p>
               </details>
             </>
@@ -397,7 +455,7 @@ export function VisitsPanel() {
             </>
           )}
         </>
-      )}
+      ) : null}
     </Dialog>
   );
 }

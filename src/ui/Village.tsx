@@ -18,15 +18,18 @@ import { Dialog } from "./Dialog";
 import { SharedPicnic } from "./Visits";
 
 export function VillageGuide() {
+  const guest = useVillageMotion((s) => s.guestVisit);
   const progress = useGameStore((s) => s.cozy.village),
     goal = villageGoal(progress),
     packed = useGameStore((s) => !!s.cozy.cookie.packed);
   return (
     <div className="village-guide">
       <p>
-        {packed
-          ? "Your cookie is ready. Bring it to Momo or Pip. ♡"
-          : goal.text}
+        {guest
+          ? "You’re visiting Nancy. Say hello, help her flowers, or share a little picnic. ♡"
+          : packed
+            ? "Your cookie is ready. Bring it to Momo or Pip. ♡"
+            : goal.text}
       </p>
       <details>
         <summary>A gentle hint</summary>
@@ -35,7 +38,7 @@ export function VillageGuide() {
           control below. Your home has a pink roof on the left; the café has a
           striped awning on the right.
         </p>
-        {goal.action && (
+        {goal.action && !guest && (
           <button
             onClick={() => {
               const o = VILLAGE_ACTIONS.find((o) => o.id === goal.action);

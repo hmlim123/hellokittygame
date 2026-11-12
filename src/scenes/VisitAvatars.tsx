@@ -1,3 +1,4 @@
+import { Melody } from "./Melody";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -14,7 +15,7 @@ import { applyHeroEquipment } from "./AdventureTools";
 import { updateWalking, turnToward } from "./walk-animation";
 import { KittyHeld } from "./GameToys";
 import { GroundShadow } from "./GroundShadow";
-function Visitor({ actor }: { actor: VisitPlayer }) {
+function KittyVisitor({ actor }: { actor: VisitPlayer }) {
   const asset = useKittyAsset(actor.appearance.plush || undefined),
     hero = useMemo(() => makeBlenderKitty(asset, 0), [asset]),
     group = useRef<THREE.Group>(null),
@@ -124,6 +125,54 @@ function Visitor({ actor }: { actor: VisitPlayer }) {
         <span className={"visitor-name " + actor.id}>{actor.name} ♡</span>
       </Html>
     </group>
+  );
+}
+function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
+  const initial = useRef({
+    position: [actor.x, 0, actor.z] as [number, number, number],
+    rotation: [0, actor.yaw, 0] as [number, number, number],
+  });
+  const group = useRef<THREE.Group>(null),
+    locomotion = useRef({ speed: 0 }),
+    reduced = useReducedMotion();
+  useFrame((state, dt) => {
+    if (!group.current) return;
+    group.current.position.lerp(
+      new THREE.Vector3(actor.x, 0, actor.z),
+      reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 12),
+    );
+    group.current.rotation.y = turnToward(
+      group.current.rotation.y,
+      actor.yaw,
+      dt,
+      reduced,
+    );
+    locomotion.current.speed = actor.speed;
+    Object.assign(state.gl.domElement.dataset, {
+      remoteX: String(group.current.position.x),
+      remoteZ: String(group.current.position.z),
+      remoteOutfit: "melody",
+    });
+  });
+  return (
+    <group
+      ref={group}
+      position={initial.current.position}
+      rotation={initial.current.rotation}
+    >
+      <GroundShadow />
+      <Melody remote locomotion={locomotion} performance={actor.gesture} />
+      <Html center position={[0, 2.27 * 0.78 + 0.25, 0]} zIndexRange={[4, 0]}>
+        <span className="visitor-name guest">{actor.name} ♡</span>
+      </Html>
+    </group>
+  );
+}
+function Visitor({ actor }: { actor: VisitPlayer }) {
+  return actor.character === "melody" ? (
+    <MelodyVisitor actor={actor} />
+  ) : (
+    <KittyVisitor actor={actor} />
   );
 }
 export function VisitAvatars() {

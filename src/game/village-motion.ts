@@ -106,6 +106,37 @@ export function actInVillage(id?: string) {
   const action = id || near.id;
   motion.stop();
   s.saveVillagePosition(motion.position.x, motion.position.z, motion.yaw);
+  if (motion.guestVisit && (action === "momo" || action === "pip")) {
+    const friend = VILLAGE_ACTIONS.find((o) => o.id === action)!;
+    s.react("wave");
+    useGameStore.setState({
+      dialogue: {
+        speaker: action === "momo" ? "Momo" : "Pip",
+        source: {
+          type: action === "momo" ? "VM" : "VP",
+          x: friend.x,
+          z: friend.z,
+        },
+        text: `Hello, ${motion.guestName}! It’s lovely to see you with Nancy. ${action === "momo" ? "There’s room for two at the picnic table." : "You can help Nancy’s garden bloom. A little drink makes the flowers happy."}`,
+      },
+    });
+    return;
+  }
+  if (motion.guestVisit && action.startsWith("flowers")) {
+    const bed = VILLAGE_ACTIONS.find((o) => o.id === action)!;
+    s.react("bow", "A little drink for Nancy’s flowers. ♡");
+    useGameStore.setState({
+      effect: {
+        id: Date.now(),
+        kind: "water",
+        map: s.adventure.map,
+        at: [bed.x, bed.z],
+        startedAt: performance.now(),
+        duration: 2.4,
+      },
+    });
+    return;
+  }
   if (action === "home") {
     if (motion.guestVisit) {
       s.react(

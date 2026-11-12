@@ -10,3 +10,6 @@ public/classic/
 .venv-browser/
 
 __pycache__/
+
+# Local private-visit account hashes and checkpoints
+server/.private-data/

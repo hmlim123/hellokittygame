@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "character": "melody",
+  "title": "My Melody",
+  "source_file": "melody.blend",
+  "source_sha256": "e50266b65eef2516de859da92d60f34886126e19ac18b86dc517b169d6a9fa5b",
+  "fps": 24,
+  "clips": {
+    "idle": [
+      1,
+      97
+    ],
+    "wave": [
+      121,
+      193
+    ],
+    "dance": [
+      217,
+      361
+    ],
+    "bow": [
+      385,
+      457
+    ],
+    "celebrate": [
+      481,
+      577
+    ],
+    "cuddle": [
+      601,
+      697
+    ],
+    "walk": [
+      721,
+      817
+    ],
+    "happy": [
+      841,
+      913
+    ],
+    "wink": [
+      937,
+      985
+    ],
+    "sleepy": [
+      1009,
+      1105
+    ],
+    "surprised": [
+      1129,
+      1201
+    ],
+    "shy": [
+      1225,
+      1321
+    ],
+    "curious": [
+      1345,
+      1441
+    ]
+  },
+  "morphs": {
+    "Eye left": [
+      "Blink",
+      "SoftSmile",
+      "Sleepy",
+      "Surprise",
+      "Shy",
+      "Curious"
+    ],
+    "Eye right": [
+      "Blink",
+      "SoftSmile",
+      "Sleepy",
+      "Surprise",
+      "Shy",
+      "Curious"
+    ],
+    "Embroidered smile": [
+      "SoftSmile",
+      "Sleepy",
+      "Surprise",
+      "Shy",
+      "Curious"
+    ],
+    "Pink cheek -1": [
+      "Warmth"
+    ],
+    "Pink cheek 1": [
+      "Warmth"
+    ]
+  },
+  "bounds_y_up": {
+    "min": [
+      -0.8784516453742981,
+      0.0,
+      -0.5299997329711914
+    ],
+    "max": [
+      0.8890054821968079,
+      3.1542203426361084,
+      0.5688299536705017
+    ]
+  },
+  "source_triangles": 29468,
+  "bytes": 1250500,
+  "held_item": null,
+  "author_script_sha256": "0c23c158868c18509a96e4fba0e41ddb0c911e736a2e4d339a806f438677e87b",
+  "export_script_sha256": "309fcd08dd6e3bf00dfde6c006297753d27794df1eeebd258eeca44af38318c1"
+}

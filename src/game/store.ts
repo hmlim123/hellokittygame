@@ -1,3 +1,4 @@
+import { isGuestSession } from "./guest-session";
 import { homeWalkable, HOME_ACTIONS } from "./home-world";
 import { startEmptyPaws } from "../../dist/empty-paws.js";
 import {
@@ -263,6 +264,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
       }
     },
     setItem: (k, v) => {
+      if (isGuestSession()) return;
       if (cache.get(k) === v) return;
       try {
         storage.setItem(k, v);
@@ -542,6 +544,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             });
           },
           saveVillagePosition(x, z, yaw) {
+            if (isGuestSession()) return;
             if (
               get().mode !== "village" ||
               !villageWalkable(x, z) ||
@@ -1217,6 +1220,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             }
           },
           retrySave() {
+            if (isGuestSession()) return false;
             const save = selectSave(get());
             lastMirror = JSON.stringify(save);
             legacySaved = mirrorLegacy(storage, save);
@@ -1234,6 +1238,12 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
             );
           },
           restoreBackup(text, resetLegacy = false) {
+            if (isGuestSession())
+              return {
+                ok: false,
+                error:
+                  "Leave the private visit before restoring your personal progress.",
+              };
             try {
               const restored = parseBackup(text),
                 save = selectSave(restored),
@@ -2163,6 +2173,7 @@ export function createGameStore(storage: StorageLike = browserStorage()) {
     ),
   );
   useStore.subscribe((s) => {
+    if (isGuestSession()) return;
     const save = selectSave(s),
       json = JSON.stringify(save);
     if (json === lastMirror) return;
