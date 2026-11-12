@@ -77,6 +77,8 @@ export function visitServerUrl(
     const configured = import.meta.env.VITE_VISITS_URL || "";
     const render =
       u.protocol === "https:" && u.hostname.endsWith(".onrender.com");
+    const cloudflare =
+      u.protocol === "https:" && u.hostname.endsWith(".workers.dev");
     const local =
       ["localhost", "127.0.0.1"].includes(game.hostname) &&
       ["localhost", "127.0.0.1"].includes(u.hostname) &&
@@ -85,7 +87,7 @@ export function visitServerUrl(
       configured &&
       u.origin === new URL(configured).origin &&
       u.protocol === "https:";
-    return render || local || custom ? u.origin : "";
+    return render || cloudflare || local || custom ? u.origin : "";
   } catch {
     return "";
   }
@@ -255,11 +257,13 @@ function connect(server: string, hello: object) {
       game.openPanel("visits");
       if (location.hash.startsWith("#visit="))
         history.replaceState({}, "", location.pathname + location.search);
+      let lastMovementKey = "",
+        lastMovementAt = 0;
       movement = setInterval(() => {
         if (epoch !== generation) return;
         const motion = useVillageMotion.getState(),
           g = useGameStore.getState();
-        transmit({
+        const packet = {
           type: "move",
           x: motion.position.x,
           z: motion.position.z,
@@ -277,7 +281,15 @@ function connect(server: string, hello: object) {
                 ? "cup"
                 : null,
           tool: g.effect?.kind === "water" ? "watering" : null,
-        });
+        };
+        // A final stop is sent immediately, even when the final position did not
+        // change. Idle players need only a quiet keepalive, allowing hibernation.
+        const key = JSON.stringify([packet, motion.speed > 0.05]);
+        if (key === lastMovementKey && Date.now() - lastMovementAt < 15000)
+          return;
+        lastMovementKey = key;
+        lastMovementAt = Date.now();
+        transmit(packet);
       }, 100);
     } else if (m.type === "state") {
       if (
@@ -457,7 +469,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
     if (!server) {
       set({
         error:
-          "Use your HTTPS Render service address, for example https://your-village.onrender.com.",
+          "Use your HTTPS village service address, for example https://nancy-village-free.your-name.workers.dev.",
       });
       return false;
     }

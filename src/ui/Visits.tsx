@@ -166,12 +166,12 @@ export function VisitsPanel() {
         <details className="visit-service-setup">
           <summary>Connection settings</summary>
           <label className="visit-field">
-            Render service address
+            Village service address
             <input
               type="url"
               value={server}
               onChange={(e) => setServer(e.target.value)}
-              placeholder="https://your-village.onrender.com"
+              placeholder="https://nancy-village-free.your-name.workers.dev"
             />
           </label>
           <button
@@ -392,27 +392,27 @@ export function VisitsPanel() {
                   the connection for your friend.
                 </p>
                 <a
-                  href="https://render.com/deploy?repo=https://github.com/hmlim123/hellokittygame"
+                  href="https://github.com/hmlim123/hellokittygame/blob/master/docs/private-visits-setup.md"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Set up on Render ↗
+                  Set up free hosting ↗
                 </a>
                 <label className="visit-field">
-                  Render service address
+                  Village service address
                   <input
                     type="url"
                     value={server}
                     onChange={(e) => setServer(e.target.value)}
-                    placeholder="https://your-village.onrender.com"
+                    placeholder="https://nancy-village-free.your-name.workers.dev"
                   />
                 </label>
                 <button onClick={() => state.configure(server)}>
                   Connect service
                 </button>
                 <p className="small-note">
-                  Private accounts need persistent storage on the service. Your
-                  personal game progress stays in each browser.
+                  Cloudflare’s free plan keeps your two logins in persistent
+                  storage. Your personal game progress stays in each browser.
                 </p>
               </details>
             </>

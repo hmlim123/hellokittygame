@@ -82,6 +82,48 @@ life and one complete home/activity/reward loop → polished decorating and visi
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
 
+## Free private visits · v3.6.0
+
+The user asked on 2026-11-12 to meet without paying. The default hosting is now
+Cloudflare Workers Free with one SQLite-backed Durable Object. The paid root
+Render blueprint is removed and retained only as `deploy/render-paid.example.yaml`.
+No paid service is provisioned. A free account owner must still deploy the Worker,
+set the owner setup secret, and provide its public Workers URL before hosted
+meetings can be enabled. No Cloudflare credentials or deployment URL is present.
+
+The free Worker and optional Node server share account/session rules and the
+same authoritative movement/chat/garden/picnic actions. Worker passwords use the
+memory-bounded scrypt `N=32768, r=8, p=3` preset. Session hashes and socket
+attachments preserve account identity through hibernation; SQLite retains logins
+and private room tickets through a full runtime restart. Only one village and
+two invited identities are supported. Nancy’s progress remains on her own device.
+
+The client accepts HTTPS `workers.dev` service URLs. Movement and final stops
+publish promptly, while idle traffic drops to a 15-second keepalive. Movement
+updates do not write a SQLite row every animation frame. The automated account
+browser journey now uses Cloudflare’s actual local runtime and real Blender
+Kitty/My Melody models, including quiet-traffic and visitor-save checks.
+
+Free plans have shared request, compute and SQL quotas; exhausted operations
+fail until the quota resets. Do not claim unlimited service or buy/enable a paid
+plan. The official Cloudflare docs confirm Free SQLite, hibernating WebSockets,
+Free quota behavior and automatic deployment/secret prompts. See the updated
+[owner setup](private-visits-setup.md).
+
+Local verification: **277 passing checks** (99 Node game/source checks, 152
+Vitest, 17 optional Node server checks and 9 actual Cloudflare runtime checks).
+The Cloudflare checks force a real hibernation/eviction and verify that both
+live sockets, authenticated characters and unsaved movement positions resume;
+SQL room data stays unchanged for movement packets. Full runtime restart keeps
+account passwords and private visit tickets. Login rate limits survive restart.
+The phone-sized two-client browser journey passes against the actual free runtime,
+including quiet idle traffic, movement, chat, dance, reconnect and save isolation.
+The existing Node visit journey also passes garden help, shared picnic,
+correction recovery, independent wardrobe and host closure. The full release gate
+retains **25 suites across five groups** and includes the free runtime browser
+journey. Publication evidence is recorded once complete. Physical phone/Safari
+acceptance and live hosted meetings remain pending.
+
 ## Private accounts and My Melody · v3.5.0
 
 Implemented on 2026-11-12: Nancy’s fixed Hello Kitty account and her partner’s
@@ -121,7 +163,8 @@ workflow also passed. Play:
 This verifies client publication and tested two-client behavior; it does not
 mark the separate visits service or real-device acceptance complete.
 
-**Hosting remains pending.** No Render account or service address has been
+**Historical v3.5.0 setup, superseded by free hosting in v3.6.0 above.**
+No Render account or service address had been
 provided. The revised, reviewable blueprint prepares one Starter service and a
 persistent disk for durable credentials; it has not purchased or deployed a
 paid service. The owner must review the plan in Render, deploy it, connect the

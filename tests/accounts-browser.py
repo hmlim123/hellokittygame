@@ -14,9 +14,9 @@ results=ROOT/'test-results';results.mkdir(exist_ok=True)
 # Local fixture credentials never leave this temporary test service.
 setup_key='local-only-browser-account-fixture-32-characters'
 with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'accounts-service.log').open('w') as log:
-    server=subprocess.Popen(['node','server/index.mjs'],cwd=ROOT,env={**os.environ,'PORT':str(port),'ALLOWED_ORIGINS':origin,'PRIVATE_ACCOUNTS':'true','ACCOUNT_SETUP_KEY':setup_key,'ACCOUNT_STORE_FILE':data+'/accounts.json','VISIT_STORE_FILE':data+'/rooms.json'},stdout=log,stderr=subprocess.STDOUT)
+    server=subprocess.Popen(['node','multiplayer/local-test-server.mjs'],cwd=ROOT,env={**os.environ,'PORT':str(port),'ALLOWED_ORIGINS':origin,'PRIVATE_ACCOUNTS':'true','ACCOUNT_SETUP_KEY':setup_key,'ACCOUNT_STORE_FILE':data+'/accounts.json','VISIT_STORE_FILE':data+'/rooms.json','FREE_VISITS_DATA':data+'/sqlite'},stdout=log,stderr=subprocess.STDOUT)
     try:
-        for _ in range(100):
+        for _ in range(200):
             try:
                 with urlopen(SERVICE+'/health',timeout=1) as r:
                     if r.status==200:break
@@ -28,7 +28,17 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host_context=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1)
             guest_context=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1)
             host=host_context.new_page();guest=guest_context.new_page();errors=[]
-            for page in [host,guest]:page.on('pageerror',lambda e:errors.append(str(e)))
+            sent=[]
+            def on_socket(ws):
+                def record(payload):
+                    try:
+                        message=json.loads(payload)
+                        if message.get('type')=='move':sent.append((time.monotonic(),message))
+                    except (TypeError,ValueError):pass
+                ws.on('framesent',record)
+            for page in [host,guest]:
+                page.on('pageerror',lambda e:errors.append(str(e)))
+                page.on('websocket',on_socket)
             def ready(page):page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
             def visits(page):page.get_by_role('button',name='Private visits ♡',exact=True).click()
             def back(page):page.get_by_role('button',name='Back to the village ♡',exact=True).click()
@@ -63,7 +73,11 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             assert guest.get_by_role('button',name='Our visit ♡',exact=True).count()==1
             assert guest.evaluate('document.documentElement.scrollWidth<=innerWidth')
             guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteModel!=='melody'&&document.querySelector('.visitor-name.host')?.textContent.includes('Nancy')",timeout=30000)
-            print('PASS two private accounts join as the actual Blender Hello Kitty and My Melody on phone-sized screens',flush=True)
+            assert host_context.request.get(SERVICE+'/health').json()['provider']=='cloudflare'
+            print('PASS the free Cloudflare runtime hosts two real Blender avatars with separate logins on phone-sized screens',flush=True)
+            idle_start=time.monotonic();host.wait_for_timeout(2100)
+            assert len([row for row in sent if row[0]>=idle_start])<=2,'Idle avatars must not send ten packets per second'
+            print('PASS idle connection traffic stays quiet while movement and final stops remain immediate',flush=True)
             visits(guest)
             guest.get_by_label('Message to your visitor',exact=True).fill('I’m here with you ♡')
             guest.get_by_role('button',name='Send ♡',exact=True).click()

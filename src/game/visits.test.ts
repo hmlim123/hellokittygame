@@ -16,8 +16,13 @@ afterEach(() => vi.unstubAllEnvs());
 describe("private visit invitations", () => {
   it("accepts an HTTPS Render service and limits plain HTTP to local development", () => {
     expect(visitServerUrl(invite.server, origin)).toBe(invite.server);
+    expect(
+      visitServerUrl("https://nancy-village-free.owner.workers.dev", origin),
+    ).toBe("https://nancy-village-free.owner.workers.dev");
     for (const url of [
       "http://nancy-village.onrender.com",
+      "http://nancy-village-free.owner.workers.dev",
+      "https://nancy.workers.dev.evil.example",
       "https://unknown.example",
       "https://name:secret@nancy-village.onrender.com",
       "https://nancy-village.onrender.com/other",

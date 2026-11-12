@@ -8,6 +8,24 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Meet together on free hosting · v3.6.0
+
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=free-visits-38>.
+
+The recommended two-player backend now runs on **Cloudflare Workers Free** with
+persistent SQLite storage and hibernating WebSockets. Nancy is Hello Kitty; you
+are My Melody. Separate logins, one-use partner invitations, walking, waves,
+dancing, chat and the shared picnic remain. The actual Blender models are reused.
+Idle players send a quiet keepalive, reducing phone battery use and free-tier
+traffic. Personal saves, the letter, outfits and the gift marker are preserved.
+
+[Deploy the free village service](https://deploy.workers.cloudflare.com/?url=https://github.com/hmlim123/hellokittygame)
+using the [step-by-step guide](docs/private-visits-setup.md). A free Cloudflare
+account owner must deploy/connect it once and create the two game logins. Hosted
+meetings are not marked live until that step is complete. Keep Workers on Free;
+free quotas can temporarily stop service, rather than charging Free overages.
+The former paid Render blueprint is now an optional example under `deploy/`.
+
 ## A little place for two · v3.5.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=together-37>.
@@ -20,11 +38,10 @@ Walking follows actual movement and blends gently out of a dance.
 
 The server enforces identities and session ownership; visitor activities do not
 write into personal progress. Nancy’s letter, room, outfits and gift marker stay
-intact. Single-player remains available independently. **Live online meetings
-still require the hosting owner to deploy/connect the prepared Render service.**
-Durable accounts require a persistent disk; the revised blueprint uses a paid
-plan that must be reviewed in Render before deployment. No service was purchased
-or connected automatically. See [the setup steps and configuration](docs/private-visits-setup.md).
+intact. Single-player remains available independently. The original delivery
+prepared a paid Render option. **The v3.6.0 free Cloudflare setup above replaces
+that recommendation.** No service was purchased or connected automatically.
+See [the setup steps and configuration](docs/private-visits-setup.md).
 
 ## Baking together · v3.4.0
 

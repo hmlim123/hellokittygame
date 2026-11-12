@@ -9,9 +9,13 @@
     "typecheck": "tsc --noEmit",
     "test:domain": "node --test tests/*.test.mjs tests/game.test.cjs",
     "test:app": "vitest run",
-    "test": "npm run test:domain && npm run test:app && npm run test:server",
+    "test": "npm run test:domain && npm run test:app && npm run test:server && npm run test:free-visits",
     "test:browser": "python3 tests/run-browser-checks.py",
-    "test:server": "npm --prefix server test"
+    "test:server": "npm --prefix server test",
+    "test:free-visits": "node --test multiplayer/*.test.mjs",
+    "visits:dev": "wrangler dev",
+    "visits:deploy": "wrangler deploy",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@react-three/drei": "10.7.9",
@@ -28,10 +32,23 @@
     "@types/react-dom": "19.3.0",
     "@types/three": "0.180.0",
     "@vitejs/plugin-react": "6.1.2",
+    "esbuild": "0.28.2",
+    "miniflare": "5.20261110.2-beta",
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vitest": "5.0.5",
+    "wrangler": "4.161.0",
     "ws": "8.22.2"
   },
-  "version": "3.5.0"
+  "version": "3.6.0",
+  "cloudflare": {
+    "bindings": {
+      "ACCOUNT_SETUP_KEY": {
+        "description": "Create a private random setup key of at least 32 characters. On a Mac, run `openssl rand -hex 32` in Terminal. Keep it private; use it once in the game to create Nancy’s first account."
+      },
+      "VILLAGE": {
+        "description": "One SQLite-backed private village for Nancy and My Melody, supported by Workers Free. Keep the Cloudflare account on the Free plan."
+      }
+    }
+  }
 }

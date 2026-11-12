@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nancy-village-free",
+  "main": "multiplayer/worker.mjs",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "durable_objects": {
+    "bindings": [{ "name": "VILLAGE", "class_name": "PrivateVillage" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PrivateVillage"] }],
+  "vars": { "ALLOWED_ORIGINS": "https://hmlim123.github.io" },
+  "observability": { "enabled": false },
+}

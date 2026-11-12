@@ -52,7 +52,7 @@ with (results/'visits-service.log').open('w') as log:
             ready(host);before=snapshot(host)
             visits(host)
             host.get_by_text('Connect the village service',exact=True).click()
-            assert host.get_by_label('Render service address',exact=True).input_value()==SERVICE
+            assert host.get_by_label('Village service address',exact=True).input_value()==SERVICE
             host.get_by_role('button',name='Connect service',exact=True).click()
             host.get_by_role('button',name='Open my village ♡',exact=True).click()
             host.locator('#village-invitation').wait_for(timeout=25000)
