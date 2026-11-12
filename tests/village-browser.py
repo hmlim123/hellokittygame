@@ -105,7 +105,9 @@ with sync_playwright() as p:
         touch('touchEnd')
         phone.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)<.02", timeout=10000)
         phone.get_by_role('button', name='Places & memories', exact=True).tap()
-        assert phone.get_by_role('dialog', name='Your village', exact=True).is_visible()
+        # React mounts the panel before its effect opens the native dialog.
+        # Wait for the visible state so a slow CI frame cannot race showModal().
+        phone.get_by_role('dialog', name='Your village', exact=True).wait_for(state='visible', timeout=10000)
         phone.get_by_role('button', name='Close Your village', exact=True).tap()
         phone.screenshot(path=f'/tmp/kitty-village-touch-{width}.png', full_page=True)
         phone.close()

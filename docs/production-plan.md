@@ -107,7 +107,9 @@ refresh reconnect, sign-out, bad-password feedback and a subsequent visit.
 Existing visit browser checks cover the shared garden, picnic, correction
 recovery and host closure. The new account browser suite is part of release
 shard 4; the complete release gate now contains **25 suites across five shards**.
-Full GitHub workflow publication evidence is recorded after it completes.
+The mobile village-menu check waits for the native dialog to become visible
+after a tap; local 320px, 390px and landscape journeys pass. Full GitHub
+workflow publication evidence is recorded after it completes.
 
 **Hosting remains pending.** No Render account or service address has been
 provided. The revised, reviewable blueprint prepares one Starter service and a
