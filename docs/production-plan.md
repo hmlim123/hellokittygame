@@ -89,7 +89,7 @@ Cloudflare Workers Free with one SQLite-backed Durable Object. The paid root
 Render blueprint is removed and retained only as `deploy/render-paid.example.yaml`.
 No paid service is provisioned. A free account owner must still deploy the Worker,
 set the owner setup secret, and provide its public Workers URL before hosted
-meetings can be enabled. No Cloudflare credentials or deployment URL is present.
+meetings can be enabled. The owner has since provided a production URL; see the connection record below.
 
 The free Worker and optional Node server share account/session rules and the
 same authoritative movement/chat/garden/picnic actions. Worker passwords use the
@@ -137,6 +137,21 @@ The Cloudflare deployment dry-run also succeeds using only one SQLite Durable
 Object and the existing game origin. **No external Worker has been deployed by
 this session:** a free Cloudflare account owner must deploy/connect it once.
 Physical phone and Safari verification remains separate.
+
+### Production connection · 2026-11-12
+
+The owner reports the Worker deployed at
+`https://hellokittygame.hmbest77.workers.dev`. The production game link is
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=free-visits-38&visits=https%3A%2F%2Fhellokittygame.hmbest77.workers.dev>. The existing, tested `visits` query-parameter setup presets this
+address and remembers it locally. This connection does not require a runtime
+change, another Pages build, a save reset, or any secret in the link.
+
+Independent health verification was blocked by the managed workspace network:
+the proxy refused the HTTPS tunnel with a policy 403. This is a local access
+restriction, not a Worker health response. Hosted account initialization,
+real two-device joining and physical phone/Safari acceptance remain unverified.
+The owner should enter the setup key only in the game or Cloudflare’s secret
+settings. No passwords or setup keys were requested or received.
 
 ## Private accounts and My Melody · v3.5.0
 

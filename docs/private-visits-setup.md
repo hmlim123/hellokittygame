@@ -9,8 +9,31 @@ Durable Object**. It keeps the two accounts and private visit data without a
 paid disk. The game itself continues to run on GitHub Pages.
 
 This repository prepares the deployment; a Cloudflare account owner must deploy
-it once. No Cloudflare account, credentials or deployed address has been provided
-to this workspace, so hosted meetings are not marked live yet.
+it once. The owner has now provided a production address, recorded below. Account setup
+and a real hosted visit still need confirmation; no credentials were shared.
+
+## Your production service
+
+The owner provided `https://hellokittygame.hmbest77.workers.dev` on 2026-11-12.
+Use the production hostname. The wildcard preview address is for preview builds.
+
+[Open Nancy’s game with the production service preset](https://hmlim123.github.io/hellokittygame/?v=gift-20&update=free-visits-38&visits=https%3A%2F%2Fhellokittygame.hmbest77.workers.dev).
+The existing `visits` query parameter configures and remembers this public service
+address without changing Nancy’s save or requiring another game build. Choose
+**Visit the village → Private visits**. If the service is initialized, sign in.
+For first setup, enter the owner setup key privately in the game and choose
+Nancy’s password. Nancy can then invite My Melody to create the second account.
+
+The owner reports deployment complete. This workspace could not independently
+probe the service: the managed network rejected the HTTPS tunnel with a policy
+403. This is not a response from the Worker and does not establish that the
+service is unhealthy. The account-initialization and real hosted two-device
+checks remain unverified until the game connects. The owner can check
+[`/health`](https://hellokittygame.hmbest77.workers.dev/health); a ready service
+returns `ok: true`, `privateAccounts: true` and `provider: "cloudflare"`. If the
+response asks for `ACCOUNT_SETUP_KEY`, add the private secret in Cloudflare
+**Settings → Variables and Secrets**, then deploy the change. Never put the key
+or game passwords in a URL or chat.
 
 ## The easiest setup
 
