@@ -58,6 +58,13 @@ seeing each other walk and wave, simple in-game chat, and one shared activity
 such as baking or a picnic. Shared decorating and additional visitors can follow
 after the two-person visit is dependable.
 
+Avatar choice confirmed on 2026-11-12: the user wants to play as **My Melody**
+and Nancy as **Hello Kitty**, with separate identities that can log in and meet
+in the same private space. Keep character identity separate from outfits and
+cosmetics. Preserve Nancy’s ownership/progress and use authenticated, invited
+two-person visits when building this milestone. This records the intended roles;
+it does not mark shared login, hosting or live visits as deployed.
+
 This needs a realtime backend and durable shared session state alongside the
 React/Three.js client. GitHub Pages can continue serving the game, but cannot
 provide the multiplayer server by itself. Select a managed realtime service or
