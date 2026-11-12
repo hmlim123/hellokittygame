@@ -124,6 +124,20 @@ retains **25 suites across five groups** and includes the free runtime browser
 journey. Publication evidence is recorded once complete. Physical phone/Safari
 acceptance and live hosted meetings remain pending.
 
+Published v3.6.0 from runtime/test commit
+`e545b2d5c04c7951ca4100b48ad5125fb59246e8` after
+[workflow 43314545144](https://github.com/hmlim123/hellokittygame/actions/runs/43314545144)
+passed all **277 rule and runtime checks**, all **25 browser suites across five
+groups**, and the GitHub Pages deployment using the exact tested build. This
+includes the two-phone-sized browser journey against the real Cloudflare local
+runtime with Kitty/My Melody, quiet idle traffic and saved-progress protection.
+Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=free-visits-38>.
+
+The Cloudflare deployment dry-run also succeeds using only one SQLite Durable
+Object and the existing game origin. **No external Worker has been deployed by
+this session:** a free Cloudflare account owner must deploy/connect it once.
+Physical phone and Safari verification remains separate.
+
 ## Private accounts and My Melody · v3.5.0
 
 Implemented on 2026-11-12: Nancy’s fixed Hello Kitty account and her partner’s
