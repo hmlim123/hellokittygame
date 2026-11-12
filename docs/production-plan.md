@@ -111,6 +111,16 @@ The mobile village-menu check waits for the native dialog to become visible
 after a tap; local 320px, 390px and landscape journeys pass. Full GitHub
 workflow publication evidence is recorded after it completes.
 
+Published v3.5.0 from runtime/test commit
+`48cc9f26a2b97caf38edb2b506bea4372adc62b2` after
+[workflow 43282556156](https://github.com/hmlim123/hellokittygame/actions/runs/43282556156)
+passed all 268 rule checks, all **25 browser suites in five groups**, and the
+GitHub Pages deployment using the exact tested build. The independent server
+workflow also passed. Play:
+<https://hmlim123.github.io/hellokittygame/?v=gift-20&update=together-37>.
+This verifies client publication and tested two-client behavior; it does not
+mark the separate visits service or real-device acceptance complete.
+
 **Hosting remains pending.** No Render account or service address has been
 provided. The revised, reviewable blueprint prepares one Starter service and a
 persistent disk for durable credentials; it has not purchased or deployed a
