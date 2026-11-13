@@ -67,6 +67,19 @@ export function AccountAccess({
             ♡
           </p>
           {!active &&
+            accounts.melodyRegistered &&
+            accounts.togetherAvailable && (
+              <button
+                className="primary wide"
+                disabled={visits.status === "connecting"}
+                onClick={() => void visits.meet()}
+              >
+                {visits.status === "connecting"
+                  ? "Meeting together…"
+                  : "Meet together ♡"}
+              </button>
+            )}
+          {!active &&
             (session.profile.id === "nancy" ? (
               <button
                 className="primary wide"

@@ -1525,3 +1525,51 @@ Play/share: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=baking-
 The permanent gift marker and Nancy’s progress are preserved. Physical phone and
 Mac Safari review remains pending; Chromium touch emulation and a successful
 Pages publication do not establish physical-device acceptance.
+
+## Together activity integration · v3.7.0 · 2026-11-13
+
+The previous handoff had pushed seven editable together-motion projects to
+`hellokitty3D`, but the game at `6aba05a` did not contain their runtime integration.
+The last confirmed published client was v3.6.0 (`e545b2d`). The existing production
+Worker answers health checks but has the earlier protocol. Source and publication
+are tracked separately below.
+
+This milestone integrates the unchanged seven GLB/JSON pairs from Blender source
+`e38cb3686e11a7fd1dd37f6ad9e3773e84a2fc92`. The private-visit panel has a partner
+close-up, a two-character activity view and a landscape layout beside chat.
+The activity view uses the real character meshes and authored controller clips,
+not substitute character geometry. Imported controller translations subtract
+loader pivot offsets; relaxed-paw morphs follow the source occupied-paw envelope.
+The high-five approaches to the source's 0.84-unit contact spacing. Paired waves,
+high-fives and celebrations share a server timestamp; interruption fades actions.
+
+Baking is an authoritative cooperative sequence: Nancy mixes, Melody decorates,
+Nancy presents the cookies and contributes them to the shared picnic. Role,
+step, active-duration and revision checks reject out-of-order or stale packets.
+These activities take place in the visit panel; they do not move the village
+avatars to a bench or introduce seated tea performances. The broader arrival
+choreography and bench-tea ideas remain later work.
+
+Shared photo requests use a three-second countdown, front-facing poses and a
+framed downloadable PNG. Nancy can explicitly keep its thumbnail on her existing
+wall. Shared sunshine, sunset and rain affect the activity view; rain uses the
+existing per-browser opt-in sound setting and global Sound switch. These choices
+do not reset Nancy's home, inventory, letter or progress.
+
+The new authenticated `/meeting` route lets the fixed Melody account find Nancy's
+open village without another copied invitation. Existing invitation links remain
+available. Capability negotiation hides the reunion control on an older service.
+A transient disconnect retains the remote avatar, chat, unsent message and shared
+activity. Reconnection replans a pending walking destination from the accepted
+position without reopening a dismissed visit panel or forcing another mode change.
+
+Local validation: production build and strict TypeScript pass; all 281 checks
+pass (102 Node rules, 152 Vitest, 17 Node service, 10 Cloudflare runtime). New
+checks cover cooperative roles/order, stale revisions, cancellation, authenticated
+reunion discovery and shared activity restoration after a real socket reconnect.
+Phone browser journeys and final publication are recorded after completion.
+This is Chromium emulation; physical phone/Mac Safari acceptance remains pending.
+
+The existing production Worker must also receive the new server source. Redeploy
+that same Worker to preserve its two accounts and SQLite storage; do not create a
+replacement service, change its bindings or rotate its setup key as an upgrade.

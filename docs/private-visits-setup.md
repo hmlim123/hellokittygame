@@ -170,3 +170,22 @@ The optional Node service shares the same account and action rules and retains
 its existing tests. `deploy/render-paid.example.yaml` is an explicit optional
 paid hosting example; it is not the recommended setup. The root paid Render
 blueprint was removed so the free setup is the default deployment path.
+
+## Updating an existing village for v3.7
+
+Update the existing Worker rather than pressing the new-service Deploy button.
+The connected production service is `hellokittygame.hmbest77.workers.dev`.
+Keep its existing `VILLAGE` SQLite binding, migration history, setup secret and
+accounts. In Cloudflare's connected Git build, deploy the updated game repository
+commit to that same Worker. If deploying from an authenticated local checkout:
+
+```sh
+npm ci
+npx wrangler deploy --name hellokittygame
+```
+
+No new secret or account initialization is required. On the updated service,
+an authenticated `GET /account` reports `togetherAvailable: true`. The game uses
+this flag to enable **Meet together**; room snapshots enable shared reactions,
+baking, weather and photos. Older services keep chat and invitations available.
+A successful GitHub Pages deployment publishes only the client, not this Worker.

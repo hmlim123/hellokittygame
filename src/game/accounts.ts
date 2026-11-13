@@ -33,6 +33,7 @@ function remember(value: Session | null) {
   } catch {}
 }
 interface Accounts {
+  togetherAvailable: boolean;
   session: Session | null;
   server: string;
   privateAccounts: boolean | null;
@@ -57,6 +58,7 @@ export function accountSession(server: string): Session | null {
   return s && s.server === server && s.expires > Date.now() ? s : null;
 }
 interface AccountResponse {
+  togetherAvailable?: boolean;
   error?: string;
   privateAccounts?: boolean;
   initialized?: boolean;
@@ -98,6 +100,7 @@ export const useAccounts = create<Accounts>((set, get) => ({
   session: saved(),
   server: "",
   privateAccounts: null,
+  togetherAvailable: false,
   initialized: false,
   melodyRegistered: false,
   pendingInvite: "",
@@ -116,6 +119,7 @@ export const useAccounts = create<Accounts>((set, get) => ({
       }
       set({
         privateAccounts: data.privateAccounts === true,
+        togetherAvailable: data.togetherAvailable === true,
         initialized: data.initialized === true,
         melodyRegistered: data.melodyRegistered === true,
       });

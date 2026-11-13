@@ -20,7 +20,86 @@ export function applyVisitAction({
   ws,
   endRoom,
 }) {
-  if (m.type === "move") {
+  if (m.type === "together") {
+    const both =
+      room.host?.socket?.readyState === 1 &&
+      room.guest?.socket?.readyState === 1;
+    if (!both) {
+      fail("Wait until you are both here before starting together.");
+      return;
+    }
+    const actions = [
+      "wave",
+      "highfive",
+      "celebrate",
+      "stir",
+      "decorate",
+      "present",
+      "photo",
+      "cancel",
+      "sunshine",
+      "sunset",
+      "rain",
+    ];
+    if (!actions.includes(m.action)) return;
+    const previous = room.together || {
+      id: 0,
+      action: "wave",
+      at: 0,
+      weather: "sunshine",
+      baking: "mix",
+      pose: "wave",
+    };
+    if (m.revision !== previous.id) {
+      fail("Your shared activity changed. Try again.");
+      return;
+    }
+    if (["stir", "decorate", "present"].includes(m.action)) {
+      const expected = {
+        stir: ["host", "mix"],
+        decorate: ["guest", "decorate"],
+        present: ["host", "ready"],
+      }[m.action];
+      if (player.id !== expected[0] || previous.baking !== expected[1]) {
+        fail("Follow your partner’s baking step first.");
+        return;
+      }
+    }
+    if (
+      now() <
+        previous.at +
+          (previous.action === "stir" || previous.action === "decorate"
+            ? 4000
+            : 3000) &&
+      !["cancel", "sunshine", "sunset", "rain"].includes(m.action)
+    ) {
+      fail("Let this little moment finish first.");
+      return;
+    }
+    const weather = ["sunshine", "sunset", "rain"].includes(m.action);
+    room.together = {
+      ...previous,
+      id: previous.id + 1,
+      action: weather ? previous.action : m.action,
+      at: weather ? previous.at : now() + 400,
+      weather: weather ? m.action : previous.weather,
+      baking:
+        m.action === "stir"
+          ? "decorate"
+          : m.action === "decorate"
+            ? "ready"
+            : m.action === "present"
+              ? "mix"
+              : previous.baking,
+      pose:
+        m.action === "photo" && ["wave", "lean", "still"].includes(m.pose)
+          ? m.pose
+          : previous.pose,
+    };
+    if (m.action === "present") room.picnic[1] = true;
+    broadcast(room);
+    dirty();
+  } else if (m.type === "move") {
     if (
       ![m.x, m.z, m.yaw].every(
         (v) => typeof v === "number" && Number.isFinite(v),

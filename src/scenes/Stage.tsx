@@ -71,7 +71,7 @@ export function Stage() {
   const revision = useGameStore((s) => s.worldRevision);
   const plush = useGameStore((s) => s.equipment.plush);
   const previewOpen = useGameStore((s) =>
-    ["inventory", "baking", "photo", "ending", "friend-tales"].includes(
+    ["inventory", "baking", "photo", "ending", "friend-tales", "visits"].includes(
       s.panel || "",
     ),
   );

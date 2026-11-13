@@ -179,7 +179,7 @@ export function VisitAvatars() {
   const players = useVisitsStore((s) => s.players),
     role = useVisitsStore((s) => s.role),
     status = useVisitsStore((s) => s.status);
-  return status === "online" ? (
+  return ["online", "reconnecting"].includes(status) ? (
     <>
       {players
         .filter(

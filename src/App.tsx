@@ -442,6 +442,7 @@ export default function App() {
     };
   }, [viewOnly]);
   const cozyLife = useGameStore((s) => s.cozy);
+  const visitRain = useVisitsStore(s => ["online", "reconnecting"].includes(s.status) && s.together?.weather === "rain");
   const [soundOn, setSoundOn] = useState(false),
     sound = useMemo(() => new RoomSound(), []),
     notice = useGameStore((s) => s.notice);
@@ -461,9 +462,9 @@ export default function App() {
   useEffect(
     () =>
       sound.setRain(
-        cozyLife.weather === "rain" && cozyLife.rainSound && mode === "room",
+        cozyLife.rainSound && (visitRain || cozyLife.weather === "rain" && mode === "room"),
       ),
-    [cozyLife.weather, cozyLife.rainSound, mode, soundOn, sound],
+    [cozyLife.weather, cozyLife.rainSound, visitRain, mode, soundOn, sound],
   );
   useEffect(() => () => sound.stop(), [sound]);
   useEffect(() => {

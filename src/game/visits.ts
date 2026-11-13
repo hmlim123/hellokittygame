@@ -39,7 +39,20 @@ interface ChatLine {
   name: string;
   text: string;
 }
+export interface TogetherMoment {
+  id: number;
+  action: string;
+  at: number;
+  weather: "sunshine" | "sunset" | "rain";
+  baking: "mix" | "decorate" | "ready";
+  pose: "wave" | "lean" | "still";
+}
 interface Visits {
+  together: TogetherMoment | null;
+  togetherAvailable: boolean;
+  clockOffset: number;
+  meet(): Promise<void>;
+  togetherAction(action: string, pose?: string): void;
   status: "idle" | "connecting" | "online" | "reconnecting" | "ended" | "error";
   server: string;
   role: "host" | "guest" | null;
@@ -224,6 +237,7 @@ function connect(server: string, hello: object) {
         token: m.token,
         role: m.role,
       });
+      const rejoining = useVisitsStore.getState().roomId === m.roomId;
       useVisitsStore.setState({
         status: "online",
         server,
@@ -235,10 +249,11 @@ function connect(server: string, hello: object) {
             ? invitationLink({ server, roomId: m.roomId, invite: m.invite })
             : "",
       });
+      const previousMotion = useVillageMotion.getState();
       const game = useGameStore.getState();
       if (m.role === "guest") beginGuestSession(game);
       else restorePersonalSave();
-      game.enterVillage();
+      if (!rejoining) game.enterVillage();
       if (m.role === "host")
         game.saveVillagePosition(m.you.x, m.you.z, m.you.yaw);
       useVillageMotion.setState({
@@ -251,10 +266,13 @@ function connect(server: string, hello: object) {
             ? m.you.name.slice(0, 24)
             : "Your friend",
         input: { x: 0, z: 0 },
-        path: [],
-        pending: null,
+        path:
+          rejoining && previousMotion.path.length
+            ? villagePath(m.you, previousMotion.path.at(-1)!)
+            : [],
+        pending: rejoining ? previousMotion.pending : null,
       });
-      game.openPanel("visits");
+      if (!rejoining) game.openPanel("visits");
       if (location.hash.startsWith("#visit="))
         history.replaceState({}, "", location.pathname + location.search);
       let lastMovementKey = "",
@@ -331,6 +349,16 @@ function connect(server: string, hello: object) {
         picnic = [0, 1, 2].map((i) => m.picnic?.[i] === true),
         garden = [0, 1, 2].map((i) => m.garden?.[i] === true);
       useVisitsStore.setState({
+        together:
+          m.together &&
+          Number.isSafeInteger(m.together.id) &&
+          Number.isFinite(m.together.at)
+            ? m.together
+            : null,
+        togetherAvailable: m.togetherAvailable === true,
+        clockOffset: Number.isFinite(m.serverNow)
+          ? m.serverNow - Date.now()
+          : 0,
         players: m.players,
         chat: Array.isArray(m.chat)
           ? m.chat
@@ -454,6 +482,9 @@ function connect(server: string, hello: object) {
 }
 export const useVisitsStore = create<Visits>((set, get) => ({
   status: "idle",
+  together: null,
+  togetherAvailable: false,
+  clockOffset: 0,
   server: savedServer(),
   role: null,
   roomId: null,
@@ -479,6 +510,54 @@ export const useVisitsStore = create<Visits>((set, get) => ({
     set({ server, error: "" });
     return true;
   },
+  togetherAction(action, pose) {
+    const s = get();
+    if (s.status === "online" && s.togetherAvailable)
+      transmit({
+        type: "together",
+        action,
+        pose,
+        revision: s.together?.id || 0,
+      });
+  },
+  async meet() {
+    const s = get(),
+      session = accountSession(s.server);
+    if (!session || s.status === "connecting") return;
+    if (session.profile.id === "nancy") return s.host("Nancy");
+    stopTransport();
+    const epoch = generation;
+    set({ status: "connecting", error: "" });
+    try {
+      const response = await fetch(s.server + "/meeting", {
+        headers: { Authorization: "Bearer " + session.token },
+        signal: AbortSignal.timeout(25000),
+      });
+      const data = await response.json();
+      if (epoch !== generation) return;
+      if (!response.ok)
+        throw Error(
+          response.status === 404
+            ? "The village service needs the latest update. You can still use Nancy’s invitation below."
+            : data.error || "Please try again.",
+        );
+      const invitation = {
+        server: s.server,
+        roomId: data.roomId,
+        invite: data.invite,
+      };
+      if (!parseVisitLink("#visit=" + btoa(JSON.stringify(invitation))))
+        throw Error("The invitation could not be verified.");
+      set({ invitation });
+      get().join("My Melody");
+    } catch (error) {
+      if (epoch === generation)
+        set({
+          status: "error",
+          error: error instanceof Error ? error.message : "Please try again.",
+        });
+    }
+  },
   async host(name) {
     const server = get().server;
     if (!server) {
@@ -494,6 +573,9 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       link: "",
       players: [],
       chat: [],
+      together: null,
+      togetherAvailable: false,
+      roomId: null,
       invitation: null,
     });
     const epoch = generation;

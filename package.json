@@ -7,7 +7,7 @@
     "build": "node scripts/prepare-assets.mjs && tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "test:domain": "node --test tests/*.test.mjs tests/game.test.cjs",
+    "test:domain": "node --test tests/*.test.mjs tests/game.test.cjs shared/*.test.mjs",
     "test:app": "vitest run",
     "test": "npm run test:domain && npm run test:app && npm run test:server && npm run test:free-visits",
     "test:browser": "python3 tests/run-browser-checks.py",
@@ -40,7 +40,7 @@
     "wrangler": "4.161.0",
     "ws": "8.22.2"
   },
-  "version": "3.6.0",
+  "version": "3.7.0",
   "cloudflare": {
     "bindings": {
       "ACCOUNT_SETUP_KEY": {

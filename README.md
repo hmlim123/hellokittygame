@@ -8,6 +8,20 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Together activities · v3.7.0
+
+The visit panel integrates the seven existing Blender together-motion libraries:
+partner close-ups, synchronized waves/high-fives/celebrations, role-ordered baking,
+countdown photos with framed PNG downloads, Nancy's wall saves and shared lighting.
+Paired accounts can use **Meet together** when the updated service is connected.
+Reconnection retains chat and activities and resumes an interrupted walking route.
+
+The client and the existing Cloudflare Worker must both be updated. See
+[upgrading an existing village](docs/private-visits-setup.md#updating-an-existing-village-for-v37).
+These shared performances use the visit panel; village entrance choreography and
+seated bench tea remain separate work. Publication evidence is tracked in the
+[production plan](docs/production-plan.md#together-activity-integration--v370--2026-11-13).
+
 ## Meet together on free hosting · v3.6.0
 
 Play: <https://hmlim123.github.io/hellokittygame/?v=gift-20&update=free-visits-38>.

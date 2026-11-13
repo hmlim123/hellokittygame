@@ -240,6 +240,9 @@ export class PrivateVillage extends DurableObject {
       chat: room.chat,
       picnic: room.picnic,
       garden: room.garden,
+      together: room.together || null,
+      serverNow: Date.now(),
+      togetherAvailable: true,
     };
     for (const p of [room.host, room.guest]) {
       if (!p?.socket) continue;
@@ -345,7 +348,23 @@ export class PrivateVillage extends DurableObject {
         const result = await this.accounts.handle(path, secret, input, ip);
         if (path === "/account/logout" || path === "/account/login")
           this.revokeSockets();
-        return json(200, result, origin);
+        return json(200, { ...result, togetherAvailable: true }, origin);
+      }
+      if (path === "/meeting" && request.method === "GET") {
+        const identity = this.accounts.authenticate(secret);
+        if (identity?.id !== "melody")
+          return json(401, { error: "Sign in as My Melody first." }, origin);
+        const room = this.room;
+        return room && open(room.host.socket)
+          ? json(200, { roomId: room.id, invite: room.invite }, origin)
+          : json(
+              409,
+              {
+                error:
+                  "Nancy hasn’t opened her village yet. Ask her to choose Meet together.",
+              },
+              origin,
+            );
       }
       if (path === "/rooms" && request.method === "POST") {
         const input = await body(request),

@@ -1,0 +1,353 @@
+{
+  "version": 1,
+  "library": "together-v1",
+  "style": "baby",
+  "source_file": "together_motions/together_baby.blend",
+  "source_sha256": "0ff72a8b40b520e21e6c9d2b4726097eebd1330d05605a3fd3412b0bc097dbb2",
+  "original_source": "hello_kitty_plush_baby.blend",
+  "original_source_sha256": "0dc77159d747bf738b248754558038d2ccb9e292ae2eb0e2432c8715318b7f51",
+  "author_script": "author_together_motions.py",
+  "author_sha256": "260e11d5a29ffcc3c8c4d2f62e4badc9c2815d47f5a51ea3a406c2f8b6a5544d",
+  "export_script": "export_together_motions.py",
+  "export_sha256": "7d15dbb4d35cf47a1d3259d083878bc84598008bf5959acdace853287c4fc66a",
+  "fps": 24,
+  "clips": {
+    "togetherWave": [
+      1501,
+      1573
+    ],
+    "togetherHighfiveL": [
+      1609,
+      1681
+    ],
+    "togetherHighfiveR": [
+      1717,
+      1789
+    ],
+    "togetherCelebrate": [
+      1825,
+      1897
+    ],
+    "togetherStir": [
+      1933,
+      2029
+    ],
+    "togetherDecorate": [
+      2041,
+      2137
+    ],
+    "togetherPresent": [
+      2149,
+      2221
+    ]
+  },
+  "durations": {
+    "togetherWave": 3.0,
+    "togetherHighfiveL": 3.0,
+    "togetherHighfiveR": 3.0,
+    "togetherCelebrate": 3.0,
+    "togetherStir": 4.0,
+    "togetherDecorate": 4.0,
+    "togetherPresent": 3.0
+  },
+  "actor_scale": 0.78,
+  "normalize_scale": 0.4969264986602686,
+  "floor_source_z": 0.4100000262260437,
+  "contact_time": 1.0,
+  "contact_hold_until": 1.25,
+  "highfive": {
+    "L": {
+      "control": "CTRL_Arm_L",
+      "socket": "Together_Palm_L",
+      "socket_local_y_up": [
+        -0.19610416889190674,
+        -0.6084980964660645,
+        -0.059874773025512695
+      ],
+      "contact_actor_local": [
+        -0.24999999451302404,
+        0.7200000109968957,
+        0.4600000102345333
+      ],
+      "shoulder_actor_local": [
+        -0.2984540477024232,
+        0.6628005093901765,
+        0.15116503534775308
+      ],
+      "surface_radius_actor": 0.28037492317597035
+    },
+    "R": {
+      "control": "CTRL_Arm_R",
+      "socket": "Together_Palm_R",
+      "socket_local_y_up": [
+        0.19650697708129883,
+        -0.6077775955200195,
+        -0.06031811237335205
+      ],
+      "contact_actor_local": [
+        0.24999999451302404,
+        0.7200000109968957,
+        0.4600000102345333
+      ],
+      "shoulder_actor_local": [
+        0.2984540477024232,
+        0.6628005093901765,
+        0.15116503534775308
+      ],
+      "surface_radius_actor": 0.28012631942536204
+    }
+  },
+  "rest_translations_y_up": {
+    "CTRL_Root": [
+      0.0,
+      0.4300000071525574,
+      -0.0
+    ],
+    "CTRL_Body": [
+      0.0,
+      0.9699999690055847,
+      -0.0
+    ],
+    "CTRL_Head": [
+      0.0,
+      1.100000023841858,
+      -0.0
+    ],
+    "CTRL_Bouquet": [
+      0.0,
+      0.5,
+      1.100000023841858
+    ],
+    "CTRL_Arm_L": [
+      -0.7699999809265137,
+      0.7199999094009399,
+      0.38999998569488525
+    ],
+    "CTRL_Arm_R": [
+      0.7699999809265137,
+      0.7199999094009399,
+      0.38999998569488525
+    ],
+    "CTRL_Foot_L": [
+      -0.4399999976158142,
+      0.2900000214576721,
+      -0.0
+    ],
+    "CTRL_Foot_R": [
+      0.4399999976158142,
+      0.2900000214576721,
+      -0.0
+    ],
+    "Socket_Paw_L": [
+      0.18000000715255737,
+      -0.27999985218048096,
+      0.6000000238418579
+    ],
+    "Socket_Paw_R": [
+      -0.1675773411989212,
+      -0.2620772123336792,
+      0.6032849550247192
+    ],
+    "Grip_Midpoint": [
+      0.0,
+      0.0,
+      -0.0
+    ],
+    "Socket_Tray": [
+      0.0,
+      -0.23000000417232513,
+      -0.0
+    ],
+    "Socket_Teacup": [
+      -0.11999999731779099,
+      -0.10000000149011612,
+      0.03999999910593033
+    ],
+    "Socket_Spoon": [
+      0.0,
+      0.0,
+      -0.0
+    ],
+    "Together_Palm_L": [
+      -0.19610416889190674,
+      -0.6084980964660645,
+      -0.059874773025512695
+    ],
+    "Together_Grip_L": [
+      0.18000000715255737,
+      -0.27999985218048096,
+      0.6000000238418579
+    ],
+    "Together_Palm_R": [
+      0.19650697708129883,
+      -0.6077775955200195,
+      -0.06031811237335205
+    ],
+    "Together_Grip_R": [
+      -0.16757732629776,
+      -0.2620772123336792,
+      0.6032849550247192
+    ]
+  },
+  "grips": {
+    "L": {
+      "control": "CTRL_Arm_L",
+      "socket": "Together_Grip_L",
+      "local_y_up": [
+        0.18000000715255737,
+        -0.27999985218048096,
+        0.6000000238418579
+      ]
+    },
+    "R": {
+      "control": "CTRL_Arm_R",
+      "socket": "Together_Grip_R",
+      "local_y_up": [
+        -0.16757732629776,
+        -0.2620772123336792,
+        0.6032849550247192
+      ]
+    }
+  },
+  "occupied_clips": [
+    "togetherStir",
+    "togetherDecorate",
+    "togetherPresent"
+  ],
+  "bytes": 155872,
+  "notes": "Controller-only library. Subtract loader bind translations for all controls inside additive pivots. All clips retain static rest channels. Kitty occupied clips need EmptyRest=0 at full reach; interpolate it with the authored envelope. Palm coordinates are actual relaxed mesh surfaces, before normalization; contact_actor_local includes normalization and actor scale.",
+  "baking": {
+    "togetherStir": {
+      "reach_time": 1.3333333333333333,
+      "return_time": 3.5,
+      "hands": {
+        "L": {
+          "actor_local": [
+            -0.23411431162101087,
+            0.5997450645980467,
+            0.395418571410389
+          ],
+          "bounds_actor_local": {
+            "min": [
+              -0.23411431162101087,
+              0.5883122614935417,
+              0.39047778106813447
+            ],
+            "max": [
+              -0.2330481811995949,
+              0.6016434776907416,
+              0.395418571410389
+            ]
+          }
+        },
+        "R": {
+          "actor_local": [
+            0.2434240719475234,
+            0.6151055488234065,
+            0.3981759048404277
+          ],
+          "bounds_actor_local": {
+            "min": [
+              0.23089228607021978,
+              0.5786701194656636,
+              0.38538913204173875
+            ],
+            "max": [
+              0.24937499123457546,
+              0.6151055488234065,
+              0.3981759048404277
+            ]
+          }
+        }
+      }
+    },
+    "togetherDecorate": {
+      "reach_time": 1.3333333333333333,
+      "return_time": 3.5,
+      "hands": {
+        "L": {
+          "actor_local": [
+            -0.23411431162101087,
+            0.5997450645980467,
+            0.395418571410389
+          ],
+          "bounds_actor_local": {
+            "min": [
+              -0.23411431162101087,
+              0.5883122614935417,
+              0.39047778106813447
+            ],
+            "max": [
+              -0.2330481811995949,
+              0.6016434776907416,
+              0.395418571410389
+            ]
+          }
+        },
+        "R": {
+          "actor_local": [
+            0.2383495850107181,
+            0.6071687256879029,
+            0.3952883171508284
+          ],
+          "bounds_actor_local": {
+            "min": [
+              0.22031161104475575,
+              0.583106896518352,
+              0.38343490229578053
+            ],
+            "max": [
+              0.2383495850107181,
+              0.6180685444419178,
+              0.3952883171508284
+            ]
+          }
+        }
+      }
+    },
+    "togetherPresent": {
+      "reach_time": 1.0,
+      "return_time": 2.625,
+      "hands": {
+        "L": {
+          "actor_local": [
+            -0.2308873420454688,
+            0.6401242547085447,
+            0.40186996924033946
+          ],
+          "bounds_actor_local": {
+            "min": [
+              -0.2316352759580291,
+              0.6139559937600478,
+              0.3968528468523971
+            ],
+            "max": [
+              -0.2308873420454688,
+              0.64196019750719,
+              0.40186996924033946
+            ]
+          }
+        },
+        "R": {
+          "actor_local": [
+            0.2351297080314309,
+            0.6474382693429426,
+            0.40061626621633883
+          ],
+          "bounds_actor_local": {
+            "min": [
+              0.2351297080314309,
+              0.6212468592692098,
+              0.3963903726119068
+            ],
+            "max": [
+              0.23607316195084851,
+              0.6492684826175773,
+              0.40061626621633883
+            ]
+          }
+        }
+      }
+    }
+  }
+}

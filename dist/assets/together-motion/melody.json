@@ -1,0 +1,328 @@
+{
+  "version": 1,
+  "library": "together-v1",
+  "style": "melody",
+  "source_file": "together_motions/together_melody.blend",
+  "source_sha256": "5e47dc0e35c325d5a6ec3313a82b47e64db51ba40563c6876b89fa1ee129cfa4",
+  "original_source": "friends/melody.blend",
+  "original_source_sha256": "e50266b65eef2516de859da92d60f34886126e19ac18b86dc517b169d6a9fa5b",
+  "author_script": "author_together_motions.py",
+  "author_sha256": "260e11d5a29ffcc3c8c4d2f62e4badc9c2815d47f5a51ea3a406c2f8b6a5544d",
+  "export_script": "export_together_motions.py",
+  "export_sha256": "7d15dbb4d35cf47a1d3259d083878bc84598008bf5959acdace853287c4fc66a",
+  "fps": 24,
+  "clips": {
+    "togetherWave": [
+      1501,
+      1573
+    ],
+    "togetherHighfiveL": [
+      1609,
+      1681
+    ],
+    "togetherHighfiveR": [
+      1717,
+      1789
+    ],
+    "togetherCelebrate": [
+      1825,
+      1897
+    ],
+    "togetherStir": [
+      1933,
+      2029
+    ],
+    "togetherDecorate": [
+      2041,
+      2137
+    ],
+    "togetherPresent": [
+      2149,
+      2221
+    ]
+  },
+  "durations": {
+    "togetherWave": 3.0,
+    "togetherHighfiveL": 3.0,
+    "togetherHighfiveR": 3.0,
+    "togetherCelebrate": 3.0,
+    "togetherStir": 4.0,
+    "togetherDecorate": 4.0,
+    "togetherPresent": 3.0
+  },
+  "actor_scale": 0.78,
+  "normalize_scale": 0.7196707902429127,
+  "floor_source_z": 0.0,
+  "contact_time": 1.0,
+  "contact_hold_until": 1.25,
+  "highfive": {
+    "L": {
+      "control": "CTRL_Arm_L",
+      "socket": "Together_Palm_L",
+      "socket_local_y_up": [
+        -0.07999986410140991,
+        -0.5509529709815979,
+        0.017999999225139618
+      ],
+      "contact_actor_local": [
+        -0.25000000162550223,
+        0.7199999805912091,
+        0.38000000648580295
+      ],
+      "shoulder_actor_local": [
+        -0.22453728990165508,
+        0.6174775514118843,
+        -0.0
+      ],
+      "surface_radius_actor": 0.3555640655672098
+    },
+    "R": {
+      "control": "CTRL_Arm_R",
+      "socket": "Together_Palm_R",
+      "socket_local_y_up": [
+        0.07999995350837708,
+        -0.5509529709815979,
+        0.017999999225139618
+      ],
+      "contact_actor_local": [
+        0.25000000162550223,
+        0.7199999805912091,
+        0.38000000648580295
+      ],
+      "shoulder_actor_local": [
+        0.22453728990165508,
+        0.6174775514118843,
+        -0.0
+      ],
+      "surface_radius_actor": 0.35556407175735
+    }
+  },
+  "rest_translations_y_up": {
+    "CTRL_Root": [
+      0.0,
+      0.0,
+      -0.0
+    ],
+    "CTRL_Body": [
+      0.0,
+      0.6600000262260437,
+      -0.0
+    ],
+    "CTRL_Head": [
+      0.0,
+      1.1399998664855957,
+      -0.0
+    ],
+    "CTRL_Arm_L": [
+      -0.4000000059604645,
+      0.4399999976158142,
+      -0.0
+    ],
+    "CTRL_Foot_L": [
+      -0.25999999046325684,
+      0.23000000417232513,
+      0.18000000715255737
+    ],
+    "CTRL_Arm_R": [
+      0.4000000059604645,
+      0.4399999976158142,
+      -0.0
+    ],
+    "CTRL_Foot_R": [
+      0.25999999046325684,
+      0.23000000417232513,
+      0.18000000715255737
+    ],
+    "CTRL_Ear_L": [
+      -0.550000011920929,
+      0.4200000762939453,
+      -0.02500000037252903
+    ],
+    "CTRL_Ear_R": [
+      0.550000011920929,
+      0.4200000762939453,
+      -0.02500000037252903
+    ],
+    "Together_Palm_L": [
+      -0.07999986410140991,
+      -0.5509529709815979,
+      0.017999999225139618
+    ],
+    "Together_Grip_L": [
+      -0.07999999821186066,
+      -0.3799999952316284,
+      0.11999999731779099
+    ],
+    "Together_Palm_R": [
+      0.07999995350837708,
+      -0.5509529709815979,
+      0.017999999225139618
+    ],
+    "Together_Grip_R": [
+      0.07999999821186066,
+      -0.3799999952316284,
+      0.11999999731779099
+    ]
+  },
+  "grips": {
+    "L": {
+      "control": "CTRL_Arm_L",
+      "socket": "Together_Grip_L",
+      "local_y_up": [
+        -0.07999999821186066,
+        -0.3799999952316284,
+        0.11999999731779099
+      ]
+    },
+    "R": {
+      "control": "CTRL_Arm_R",
+      "socket": "Together_Grip_R",
+      "local_y_up": [
+        0.07999999821186066,
+        -0.3799999952316284,
+        0.11999999731779099
+      ]
+    }
+  },
+  "occupied_clips": [
+    "togetherStir",
+    "togetherDecorate",
+    "togetherPresent"
+  ],
+  "bytes": 127472,
+  "notes": "Controller-only library. Subtract loader bind translations for all controls inside additive pivots. All clips retain static rest channels. Kitty occupied clips need EmptyRest=0 at full reach; interpolate it with the authored envelope. Palm coordinates are actual relaxed mesh surfaces, before normalization; contact_actor_local includes normalization and actor scale.",
+  "baking": {
+    "togetherStir": {
+      "reach_time": 1.3333333333333333,
+      "return_time": 3.5,
+      "hands": {
+        "L": {
+          "actor_local": [
+            -0.27751264198531267,
+            0.5751180810333505,
+            0.21321891010797403
+          ],
+          "bounds_actor_local": {
+            "min": [
+              -0.28233754848466536,
+              0.5038598615331605,
+              0.1836088298107261
+            ],
+            "max": [
+              -0.27751264198531267,
+              0.5760915273749625,
+              0.21321891010797403
+            ]
+          }
+        },
+        "R": {
+          "actor_local": [
+            0.27909590591894445,
+            0.5945118597084712,
+            0.2157177034375476
+          ],
+          "bounds_actor_local": {
+            "min": [
+              0.2720751742835735,
+              0.493568344836587,
+              0.1799753361131639
+            ],
+            "max": [
+              0.28671036152942736,
+              0.5945118597084712,
+              0.2157177034375476
+            ]
+          }
+        }
+      }
+    },
+    "togetherDecorate": {
+      "reach_time": 1.3333333333333333,
+      "return_time": 3.5,
+      "hands": {
+        "L": {
+          "actor_local": [
+            -0.27751264198531267,
+            0.5751180810333505,
+            0.21321891010797403
+          ],
+          "bounds_actor_local": {
+            "min": [
+              -0.28233754848466536,
+              0.5038598615331605,
+              0.1836088298107261
+            ],
+            "max": [
+              -0.27751264198531267,
+              0.5760915273749625,
+              0.21321891010797403
+            ]
+          }
+        },
+        "R": {
+          "actor_local": [
+            0.27751264198531267,
+            0.5751180810333505,
+            0.21321891010797403
+          ],
+          "bounds_actor_local": {
+            "min": [
+              0.26399380303078646,
+              0.5171163845696887,
+              0.1931383087279161
+            ],
+            "max": [
+              0.27751264198531267,
+              0.5751180810333505,
+              0.21321891010797403
+            ]
+          }
+        }
+      }
+    },
+    "togetherPresent": {
+      "reach_time": 1.0,
+      "return_time": 2.625,
+      "hands": {
+        "L": {
+          "actor_local": [
+            -0.27189386178872244,
+            0.610039289120812,
+            0.21843468070860916
+          ],
+          "bounds_actor_local": {
+            "min": [
+              -0.2802384858020719,
+              0.5219407222717701,
+              0.19397823827478686
+            ],
+            "max": [
+              -0.27189386178872244,
+              0.611036223443857,
+              0.21843468070860916
+            ]
+          }
+        },
+        "R": {
+          "actor_local": [
+            0.27189386178872244,
+            0.610039289120812,
+            0.21843468070860916
+          ],
+          "bounds_actor_local": {
+            "min": [
+              0.27189386178872244,
+              0.5219407222717701,
+              0.19397823827478686
+            ],
+            "max": [
+              0.2802384858020719,
+              0.611036223443857,
+              0.21843468070860916
+            ]
+          }
+        }
+      }
+    }
+  }
+}

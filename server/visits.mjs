@@ -60,6 +60,9 @@ export function createVisitService({
     chat: room.chat,
     picnic: room.picnic,
     garden: room.garden,
+    together: room.together || null,
+    serverNow: now(),
+    togetherAvailable: true,
   });
   const send = (ws, message) => {
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
@@ -239,7 +242,7 @@ export function createVisitService({
           JSON.parse(body || "{}"),
           req.socket.remoteAddress,
         );
-        response(res, 200, result, origin);
+        response(res, 200, { ...result, togetherAvailable: true }, origin);
         if (req.url === "/account/logout" || req.url === "/account/login")
           for (const ws of wss.clients)
             if (ws.accountSession && !accounts.authenticate(ws.accountSession))
@@ -264,6 +267,30 @@ export function createVisitService({
         res,
         401,
         { error: "Sign in as Nancy to open her village." },
+        origin,
+      );
+      return;
+    }
+    if (req.url === "/meeting" && req.method === "GET") {
+      if (!identity || identity.id !== "melody") {
+        response(res, 401, { error: "Sign in as My Melody first." }, origin);
+        return;
+      }
+      prune();
+      const room = [...rooms.values()].find(
+        (r) =>
+          r.host.profile === "nancy" &&
+          r.host.socket?.readyState === WebSocket.OPEN,
+      );
+      response(
+        res,
+        room ? 200 : 409,
+        room
+          ? { roomId: room.id, invite: room.invite }
+          : {
+              error:
+                "Nancy hasn’t opened her village yet. Ask her to choose Meet together.",
+            },
         origin,
       );
       return;

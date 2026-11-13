@@ -1,3 +1,4 @@
+import { TogetherActivities } from "./TogetherActivities";
 import { AccountAccess } from "./AccountAccess";
 import { useAccounts } from "../game/accounts";
 import { useEffect, useRef, useState } from "react";
@@ -67,7 +68,7 @@ export function VisitPresence() {
     chat = useVisitsStore((s) => s.chat),
     other = players.find((p) => p.id !== role),
     last = chat.at(-1);
-  if (!["online", "reconnecting"].includes(status)) return null;
+  if (!["connecting", "online", "reconnecting"].includes(status)) return null;
   return (
     <button
       className="visit-presence"
@@ -77,11 +78,13 @@ export function VisitPresence() {
         className={status === "online" ? "visit-dot online" : "visit-dot"}
       />
       <span>
-        {status === "reconnecting"
-          ? "Reconnecting your visit…"
-          : other?.connected
-            ? `${other.name}${other.area === "home" ? " is at home" : other.area === "story" ? " is reading a story" : " is here"} ♡`
-            : "Your invitation is open ♡"}
+        {status === "connecting"
+          ? "Joining your village…"
+          : status === "reconnecting"
+            ? "Reconnecting your visit…"
+            : other?.connected
+              ? `${other.name}${other.area === "home" ? " is at home" : other.area === "story" ? " is reading a story" : " is here"} ♡`
+              : "Your invitation is open ♡"}
         {last && last.role !== role && (
           <small>
             {last.name}: {last.text.slice(0, 65)}
@@ -251,6 +254,7 @@ export function VisitsPanel() {
               </span>
             ))}
           </div>
+          <TogetherActivities />
           <div
             className="visit-chat"
             role="log"

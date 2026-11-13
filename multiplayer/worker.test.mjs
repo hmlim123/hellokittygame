@@ -334,3 +334,31 @@ test(
     );
   },
 );
+
+test("paired reunion discovery is authenticated and shared moments survive reconnect", async (t) => {
+  const s = await pair(t);
+  assert.equal((await s.request("/meeting")).status, 401);
+  assert.equal((await s.request("/meeting", undefined, s.n.token)).status, 401);
+  const meeting = await s.request("/meeting", undefined, s.m.token);
+  assert.equal(meeting.status, 200);
+  assert.equal(meeting.body.roomId, s.room.roomId);
+  s.host.clear();
+  s.guest.clear();
+  s.host.send({ type: "together", action: "highfive", revision: 0 });
+  const h = await s.host.until((m) => m.together?.action === "highfive");
+  const g = await s.guest.until((m) => m.together?.action === "highfive");
+  assert.deepEqual(h.together, g.together);
+  assert.equal(h.togetherAvailable, true);
+  s.guest.ws.close();
+  await new Promise((r) => setTimeout(r, 100));
+  const resumed = await client(s.mf, {
+    type: "hello",
+    roomId: s.room.roomId,
+    token: s.guestTicket.token,
+    accountToken: s.m.token,
+  });
+  const restored = await resumed.until(
+    (m) => m.type === "state" && m.together?.action === "highfive",
+  );
+  assert.deepEqual(restored.together, h.together);
+});
