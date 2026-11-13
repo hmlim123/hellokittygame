@@ -48,6 +48,7 @@ describe("private visit invitations", () => {
     );
     expect(decoded).not.toContain("PRIVATE-HOST-TICKET");
     expect(parseVisitLink(link, origin)).toEqual(invite);
+    expect(parseVisitLink(new URL(link).hash, origin)).toEqual(invite);
   });
   it("rejects malformed, oversized and incomplete invitations", () => {
     for (const value of [

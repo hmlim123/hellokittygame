@@ -139,7 +139,7 @@ export function VisitsPanel() {
     <Dialog
       title="Private village visits"
       onClose={close}
-      className="visits-dialog"
+      className={"visits-dialog" + (active ? " visit-active" : "")}
     >
       <span className="eyebrow">A LITTLE PLACE FOR TWO</span>
       <h2>A little time together.</h2>
@@ -210,7 +210,8 @@ export function VisitsPanel() {
           {state.role === "host" &&
             state.link &&
             (!accounts.privateAccounts || accounts.melodyRegistered) && (
-              <div className="visit-invitation">
+              <details className="visit-invitation" open={!other?.connected}>
+                <summary>Invitation options</summary>
                 <label htmlFor="village-invitation">
                   Your private invitation
                 </label>
@@ -240,7 +241,7 @@ export function VisitsPanel() {
                     </button>
                   )}
                 </div>
-              </div>
+              </details>
             )}
           <div className="visit-friends">
             {state.players.map((p) => (

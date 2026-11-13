@@ -99,6 +99,16 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.get_by_label('Our atmosphere',exact=True).select_option('rain')
             guest.wait_for_function("document.querySelector('select') && [...document.querySelectorAll('select')].some(s=>s.value==='rain')")
             print('PASS paired Blender reactions, role-ordered baking, synchronized photo countdown, Nancy’s wall and shared weather',flush=True)
+            host.get_by_text('Do something together ♡',exact=True).click()
+            host.set_viewport_size({'width':844,'height':390})
+            host.locator('.visit-chat').scroll_into_view_if_needed()
+            preview=host.locator('.together-preview').bounding_box();chat=host.locator('.visit-chat').bounding_box()
+            assert preview['x']+preview['width'] <= chat['x']+2, 'Landscape chat must sit beside the partner view'
+            assert host.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            host.screenshot(path=str(results/'accounts-conversation-landscape.png'))
+            host.set_viewport_size({'width':390,'height':844})
+            print('PASS landscape conversation keeps chat beside the actual character view',flush=True)
+
 
             back(host);back(guest)
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteModel==='melody'",timeout=60000)
