@@ -64,8 +64,9 @@ export function TogetherActivities() {
     both = s.players.filter((p) => p.connected).length === 2,
     disabled = s.status !== "online" || !both;
   useEffect(() => {
-    if (moment?.action !== "photo") return;
+    if (moment?.action !== "photo" || elapsed >= 6000) return;
     setCloseup(false);
+    setPose(moment.pose);
     if (
       elapsed >= 3000 &&
       elapsed < 6000 &&

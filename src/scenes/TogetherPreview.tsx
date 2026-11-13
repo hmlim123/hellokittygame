@@ -341,6 +341,15 @@ function GentleRain() {
     </instancedMesh>
   );
 }
+function Framing({ closeup }: { closeup: boolean }) {
+  const { camera, invalidate } = useThree();
+  useEffect(() => {
+    camera.position.set(0, closeup ? 1.6 : 2, closeup ? 3.6 : 6.5);
+    camera.lookAt(0, closeup ? 1.3 : .9, 0);
+    camera.updateProjectionMatrix(); invalidate();
+  }, [camera, closeup, invalidate]);
+  return null;
+}
 function Preview({
   capture,
   closeup,
@@ -362,7 +371,6 @@ function Preview({
     >
       <Canvas
         frameloop="demand"
-        key={String(closeup)}
         dpr={[1, 1.5]}
         camera={{
           position: [0, closeup ? 1.6 : 2, closeup ? 3.6 : 6.5],

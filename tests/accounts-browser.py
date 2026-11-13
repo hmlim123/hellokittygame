@@ -37,11 +37,14 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                     except (TypeError,ValueError):pass
                 ws.on('framesent',record)
             for page in [host,guest]:
-                page.on('pageerror',lambda e:errors.append(str(e)))
+                page.on('pageerror',lambda e:(errors.append(str(e)),print('PAGE ERROR',str(e),flush=True)))
                 page.on('websocket',on_socket)
             def ready(page):page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
             def visits(page):page.get_by_role('button',name='Private visits ♡',exact=True).click()
-            def back(page):page.get_by_role('button',name='Back to the village ♡',exact=True).click()
+            def back(page):
+                print('Returning to village', 'Nancy' if page==host else 'Melody',flush=True)
+                page.get_by_role('button',name='Back to the village ♡',exact=True).click()
+                print('Village controls returned',flush=True)
             def personal(page):return page.evaluate("Object.fromEntries(Object.keys(localStorage).filter(k=>k.startsWith('kitty-')&&!k.includes('visits')).sort().map(k=>[k,localStorage.getItem(k)]))")
             host.goto(BASE+'/adventure.html?visits='+quote(SERVICE,safe=''));ready(host);visits(host)
             host.get_by_label('Service setup key',exact=True).fill(setup_key)
