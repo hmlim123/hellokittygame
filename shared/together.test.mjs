@@ -60,3 +60,12 @@ test("weather preserves baking and reaction time; cancelling retains cooperative
   assert.equal(f.room.together.action, "cancel");
   assert.equal(f.room.together.baking, "decorate");
 });
+
+test("cancelling frees the shared moment for an immediate new reaction", () => {
+  const f = fixture();
+  f.action(f.host, "highfive");
+  f.action(f.guest, "cancel");
+  f.action(f.host, "wave");
+  assert.equal(f.room.together.action, "wave");
+  assert.deepEqual(f.errors, []);
+});

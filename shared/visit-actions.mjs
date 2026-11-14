@@ -66,6 +66,7 @@ export function applyVisitAction({
       }
     }
     if (
+      previous.action !== "cancel" &&
       now() <
         previous.at +
           (previous.action === "stir" || previous.action === "decorate"
