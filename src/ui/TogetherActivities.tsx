@@ -64,6 +64,14 @@ export function TogetherActivities() {
     both = s.players.filter((p) => p.connected).length === 2,
     disabled = s.status !== "online" || !both;
   useEffect(() => {
+    if (
+      moment &&
+      Date.now() + s.clockOffset - moment.at < 4500 &&
+      moment.action !== "cancel"
+    )
+      setCloseup(false);
+  }, [moment?.id]);
+  useEffect(() => {
     if (moment?.action !== "photo" || elapsed >= 6000) return;
     setCloseup(false);
     setPose(moment.pose);
@@ -143,6 +151,15 @@ export function TogetherActivities() {
       <button onClick={() => setCloseup(!closeup)}>
         {closeup ? "See both of us" : "Look at my partner"}
       </button>
+      {moment && ["wave", "highfive", "celebrate"].includes(moment.action) && (
+        <p role="status">
+          {moment.action === "highfive"
+            ? "A high-five together ♡"
+            : moment.action === "celebrate"
+              ? "A celebration together ♡"
+              : "A wave together ♡"}
+        </p>
+      )}
       <details className="together-options">
         <summary>Do something together ♡</summary>
         {!s.togetherAvailable ? (

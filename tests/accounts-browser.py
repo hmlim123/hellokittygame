@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.get_by_text('Do something together ♡',exact=True).click()
             guest.get_by_text('Do something together ♡',exact=True).click()
             host.get_by_role('button',name='High-five ♡',exact=True).click()
-            guest.get_by_role('button',name='Cancel reaction',exact=True).wait_for(timeout=15000)
+            guest.get_by_text('A high-five together ♡',exact=True).wait_for(timeout=15000)
             host.wait_for_timeout(4200)
             host.screenshot(path=str(results/'accounts-highfive-phone.png'))
             host.get_by_text('Bake together',exact=True).click()

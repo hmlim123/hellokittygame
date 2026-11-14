@@ -191,7 +191,7 @@ function Performance({
       const x = THREE.MathUtils.clamp(v, 0, 1);
       return x * x * (3 - 2 * x);
     };
-    const normalized = t / 4,
+    const normalized = t / (action?.getClip().duration || 4),
       envelope =
         occupied && active
           ? smooth((normalized - 0.125) / (0.333333 - 0.125)) *
@@ -229,7 +229,7 @@ function Performance({
         18,
         Math.min(dt, 0.1),
       );
-      if (approaching && !reduced) updateWalking(hero, dt, 1.2, false);
+      updateWalking(hero, dt, approaching ? 1.2 : 0, reduced);
     }
   });
   return (
@@ -342,12 +342,13 @@ function GentleRain() {
   );
 }
 function Framing({ closeup }: { closeup: boolean }) {
-  const { camera, invalidate } = useThree();
+  const { camera, invalidate, size } = useThree();
   useEffect(() => {
     camera.position.set(0, closeup ? 1.6 : 2, closeup ? 3.6 : 6.5);
-    camera.lookAt(0, closeup ? 1.3 : .9, 0);
-    camera.updateProjectionMatrix(); invalidate();
-  }, [camera, closeup, invalidate]);
+    camera.lookAt(0, closeup ? 1.3 : 0.9, 0);
+    camera.updateProjectionMatrix();
+    invalidate();
+  }, [camera, closeup, invalidate, size.width, size.height]);
   return null;
 }
 function Preview({
@@ -372,13 +373,10 @@ function Preview({
       <Canvas
         frameloop="demand"
         dpr={[1, 1.5]}
-        camera={{
-          position: [0, closeup ? 1.6 : 2, closeup ? 3.6 : 6.5],
-          fov: 36,
-        }}
+        camera={{ fov: 36 }}
         gl={{ preserveDrawingBuffer: true }}
-        onCreated={({ camera }) => camera.lookAt(0, closeup ? 1.3 : 0.9, 0)}
       >
+        <Framing closeup={closeup} />
         <color
           attach="background"
           args={[

@@ -110,7 +110,11 @@ export function parseVisitLink(
   gameOrigin?: string,
 ): Invitation | null {
   try {
-    const hash = value.startsWith("#") ? value : value.includes("#") ? new URL(value).hash : value;
+    const hash = value.startsWith("#")
+      ? value
+      : value.includes("#")
+        ? new URL(value).hash
+        : value;
     const encoded = hash.replace(/^#?visit=/, "");
     if (encoded.length > 2000) return null;
     const data = JSON.parse(
@@ -237,7 +241,9 @@ function connect(server: string, hello: object) {
         token: m.token,
         role: m.role,
       });
-      const rejoining = useVisitsStore.getState().status === "reconnecting" && useVisitsStore.getState().roomId === m.roomId;
+      const rejoining =
+        useVisitsStore.getState().status === "reconnecting" &&
+        useVisitsStore.getState().roomId === m.roomId;
       useVisitsStore.setState({
         status: "online",
         server,
