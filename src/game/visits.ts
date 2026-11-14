@@ -1,3 +1,4 @@
+import { VisitMovementCadence } from "./visit-movement-cadence";
 import { beginGuestSession, endGuestSession } from "./guest-session";
 import { accountSession, useAccounts } from "./accounts";
 import { create } from "zustand";
@@ -281,8 +282,7 @@ function connect(server: string, hello: object) {
       if (!rejoining) game.openPanel("visits");
       if (location.hash.startsWith("#visit="))
         history.replaceState({}, "", location.pathname + location.search);
-      let lastMovementKey = "",
-        lastMovementAt = 0;
+      const traffic = new VisitMovementCadence(m.you);
       movement = setInterval(() => {
         if (epoch !== generation) return;
         const motion = useVillageMotion.getState(),
@@ -309,10 +309,7 @@ function connect(server: string, hello: object) {
         // A final stop is sent immediately, even when the final position did not
         // change. Idle players need only a quiet keepalive, allowing hibernation.
         const key = JSON.stringify([packet, motion.speed > 0.05]);
-        if (key === lastMovementKey && Date.now() - lastMovementAt < 15000)
-          return;
-        lastMovementKey = key;
-        lastMovementAt = Date.now();
+        if (!traffic.shouldSend(key, packet, performance.now())) return;
         transmit(packet);
       }, 100);
     } else if (m.type === "state") {

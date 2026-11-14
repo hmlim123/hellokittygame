@@ -69,3 +69,11 @@ test("cancelling frees the shared moment for an immediate new reaction", () => {
   assert.equal(f.room.together.action, "wave");
   assert.deepEqual(f.errors, []);
 });
+
+test("a new gesture supersedes stale walking speed without moving the player", () => {
+  const player = { id: "guest", x: 1, z: -3, speed: 2.8, gesture: { id: 0, kind: "wave" } };
+  applyVisitAction({ room: {}, player, m: { type: "gesture", kind: "dance" }, broadcast: () => {} });
+  assert.equal(player.speed, 0);
+  assert.deepEqual(player.gesture, { id: 1, kind: "dance" });
+  assert.deepEqual([player.x, player.z], [1, -3]);
+});

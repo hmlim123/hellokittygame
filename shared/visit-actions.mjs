@@ -197,6 +197,9 @@ export function applyVisitAction({
       ].includes(m.kind)
     )
       return;
+    // A new performance supersedes a stale inferred speed. Fresh movement
+    // packets still interrupt it when the player actually walks away.
+    player.speed = 0;
     player.gesture = { id: player.gesture.id + 1, kind: m.kind };
     broadcast(room);
   } else if (m.type === "water") {
