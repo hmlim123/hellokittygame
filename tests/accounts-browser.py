@@ -40,8 +40,11 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 page.on('pageerror',lambda e:(errors.append(str(e)),print('PAGE ERROR',str(e),flush=True)))
                 page.on('websocket',on_socket)
             def ready(page):page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
-            def visits(page):page.get_by_role('button',name='Private visits ♡',exact=True).click()
+            def visits(page):
+                page.bring_to_front()
+                page.get_by_role('button',name='Private visits ♡',exact=True).click()
             def back(page):
+                page.bring_to_front()
                 print('Returning to village', 'Nancy' if page==host else 'Melody',flush=True)
                 page.get_by_role('button',name='Back to the village ♡',exact=True).click()
                 print('Village controls returned',flush=True)
@@ -129,8 +132,10 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             visits(host)
             host.get_by_text('I’m here with you ♡',exact=True).wait_for(timeout=15000)
             guest.get_by_role('button',name='Happy dance ♫',exact=True).click()
-            back(host);back(guest)
+            # The peer performs while chat is open; slow software rendering may
+            # take longer to close two panels than the authored dance lasts.
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression==='dance'",timeout=15000)
+            back(host);back(guest)
             host.screenshot(path=str(results/'accounts-together-mobile.png'))
             guest.keyboard.down('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)>.5",timeout=20000)

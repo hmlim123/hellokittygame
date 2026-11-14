@@ -48,7 +48,9 @@ with (results/'visits-service.log').open('w') as log:
             def visits(page):
                 page.bring_to_front()
                 page.get_by_role('button',name='Private visits ♡',exact=True).click()
-            def back(page):page.get_by_role('button',name='Back to the village ♡',exact=True).click()
+            def back(page):
+                page.bring_to_front()
+                page.get_by_role('button',name='Back to the village ♡',exact=True).click()
 
             host.goto(BASE+'/adventure.html?visits='+quote(SERVICE,safe=''))
             ready(host);before=snapshot(host)
@@ -129,6 +131,7 @@ with (results/'visits-service.log').open('w') as log:
             # hit target, then send an actual touch instead of waiting for
             # Playwright's RAF stability probe on an idle, demand-rendered tab.
             target=guest.get_by_role('button',name='Walk to the picnic table ↗',exact=True)
+            target.wait_for(state='visible',timeout=15000)
             assert target.is_visible()
             rect=target.bounding_box()
             assert rect and rect['height']>=44 and rect['y']>=0 and rect['y']+rect['height']<=844

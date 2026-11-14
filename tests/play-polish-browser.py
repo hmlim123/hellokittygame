@@ -11,6 +11,14 @@ with sync_playwright() as p:
  page=b.new_page(viewport={'width':1100,'height':1060},reduced_motion='no-preference',accept_downloads=True);errors=[];page.on('pageerror',lambda e:errors.append(e.stack or str(e)));page.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-adventure-v1',"+json.dumps(json.dumps(START))+");")
  def ready():page.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
  def saved():return page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'))")
+ def observe_motion(field):
+  # Observe rendered frames before the input: a slow browser can finish a
+  # short transition before the automation's click command returns.
+  page.evaluate("""field=>{const epoch=window.presentationEpoch=(window.presentationEpoch||0)+1;window.presentationSamples=[];function sample(){if(window.presentationEpoch!==epoch)return;const d=document.querySelector('#world canvas')?.dataset;if(d)window.presentationSamples.push(Number(d[field]));requestAnimationFrame(sample)}requestAnimationFrame(sample)}""",field)
+ def saw_motion(low,high):
+  page.wait_for_function("range=>presentationSamples.some(x=>x>range[0]&&x<range[1])",arg=[low,high],timeout=5000)
+  page.evaluate('presentationEpoch++')
+
  def step(key,x,z):
   page.keyboard.press(key);page.wait_for_function("p=>{const s=JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'));return s.x===p[0]&&s.z===p[1]}",arg=[x,z],timeout=15000)
  def settings():page.get_by_role('button',name='Game settings',exact=True).click();page.get_by_text('Keep your progress ♡',exact=True).click()
@@ -18,12 +26,12 @@ with sync_playwright() as p:
   page.get_by_label('Choose Kitty save backup',exact=True).set_input_files({'name':'Nancy-backup.json','mimeType':'application/json','buffer':text.encode()});page.get_by_role('button',name='Restore this backup',exact=True).click();ready()
  page.goto(BASE+'/stories.html');ready();page.wait_for_function("Number(document.querySelector('#world canvas').dataset.petalSpread)===.06")
  assert page.get_by_role('button',name='Use watering can',exact=True).is_visible()
- page.get_by_role('button',name='Use watering can',exact=True).click();page.wait_for_function("document.querySelector('#world canvas').dataset.discoveryEffect==='water'");assert saved()['chapter']['flowersRevived'];assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).item")=='watering'
- page.wait_for_function("(()=>{const x=Number(document.querySelector('#world canvas').dataset.petalSpread);return x>.065&&x<.119})()",timeout=5000);page.screenshot(path='/tmp/kitty-pouring-water.png',full_page=True);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.petalSpread)===.12",timeout=6000)
+ observe_motion('petalSpread');page.get_by_role('button',name='Use watering can',exact=True).click();page.wait_for_function("document.querySelector('#world canvas').dataset.discoveryEffect==='water'");assert saved()['chapter']['flowersRevived'];assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).item")=='watering'
+ saw_motion(.065,.119);page.screenshot(path='/tmp/kitty-pouring-water.png',full_page=True);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.petalSpread)===.12",timeout=6000)
  # Observe before input and hold through a walk, so a slow software renderer
  # cannot finish a 250ms tap before Playwright attaches its pose assertion.
  page.evaluate("""()=>{window.walkPoseSamples=[];window.recordWalkPose=true;function sample(){const d=document.querySelector('#world canvas').dataset;walkPoseSamples.push({weight:Number(d.walkWeight),lift:Number(d.footLift),yaw:Number(d.playerYaw)});if(recordWalkPose)requestAnimationFrame(sample)}requestAnimationFrame(sample)}""")
- page.keyboard.down('ArrowLeft');page.wait_for_function("walkPoseSamples.some(s=>s.weight>.1&&s.lift>.001)",timeout=5000);page.keyboard.up('ArrowLeft');page.wait_for_function("document.querySelector('#world canvas').dataset.moving==='false'",timeout=15000)
+ page.keyboard.down('ArrowLeft');page.wait_for_function("walkPoseSamples.some(s=>s.weight>.1&&s.lift>.001)",timeout=15000);page.keyboard.up('ArrowLeft');page.wait_for_function("document.querySelector('#world canvas').dataset.moving==='false'",timeout=15000)
  page.evaluate('recordWalkPose=false');poses=page.evaluate('walkPoseSamples');assert any(-1.58<s['yaw']<-.01 for s in poses),poses
  for x in range(saved()['x']+1,5):step('ArrowRight',x,6)
  page.wait_for_function("Number(document.querySelector('#world canvas').dataset.walkWeight)<.01",timeout=5000)
@@ -33,8 +41,8 @@ with sync_playwright() as p:
  path=Path(tempfile.gettempdir())/'Nancy-polish-save.json';download.value.save_as(path);backup=json.loads(path.read_text());assert set(backup['data'])=={'room','adventure','equipment','preferences','journal','cozy'};assert 'messages' not in backup['data']
  before=saved();page.get_by_label('Choose Kitty save backup',exact=True).set_input_files({'name':'bad.json','mimeType':'application/json','buffer':b'{broken'});page.get_by_text('This file is not valid JSON. Choose a Kitty save downloaded from Settings.',exact=True).wait_for();assert saved()==before;assert page.get_by_role('button',name='Restore this backup',exact=True).count()==0
  bridge=json.loads(json.dumps(backup));bridge['data']['adventure'].update(x=6,z=8,facing='right');import_text(json.dumps(bridge));assert saved()['x']==6;page.keyboard.press('Escape');page.keyboard.press('ArrowRight');page.wait_for_function("Number(document.querySelector('#world canvas').dataset.physicsContacts)>0",timeout=15000);assert saved()['x']==6
- page.get_by_role('button',name='Tie friendship ribbon',exact=True).click();page.wait_for_function("(()=>{const x=Number(document.querySelector('#world canvas').dataset.bridgeWidth);return x>.5&&x<1.19})()",timeout=5000);page.screenshot(path='/tmp/kitty-tying-ribbon.png',full_page=True);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.bridgeWidth)>1.19",timeout=6000);step('ArrowRight',7,8);step('ArrowRight',8,8)
- settings();wake=json.loads(json.dumps(backup));wake['data']['adventure'].update(x=10,z=7,chapter={'butterflyStep':3,'flowersRevived':True,'bridgeFixed':True,'stars':['moon','flower','heart']});import_text(json.dumps(wake));assert page.get_by_role('button',name='Download previous save',exact=True).is_visible();page.keyboard.press('Escape');page.get_by_role('button',name='Offer cuddle teddy',exact=True).click();page.wait_for_function("(()=>{const x=Number(document.querySelector('#world canvas').dataset.pipEyeOpen);return x>.012&&x<.037})()",timeout=5000);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.pipEyeOpen)===.038",timeout=6000);assert saved()['chapter']['friendAwake'];assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).item")=='teddy'
+ observe_motion('bridgeWidth');page.get_by_role('button',name='Tie friendship ribbon',exact=True).click();saw_motion(.5,1.19);page.screenshot(path='/tmp/kitty-tying-ribbon.png',full_page=True);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.bridgeWidth)>1.19",timeout=6000);step('ArrowRight',7,8);step('ArrowRight',8,8)
+ settings();wake=json.loads(json.dumps(backup));wake['data']['adventure'].update(x=10,z=7,chapter={'butterflyStep':3,'flowersRevived':True,'bridgeFixed':True,'stars':['moon','flower','heart']});import_text(json.dumps(wake));assert page.get_by_role('button',name='Download previous save',exact=True).is_visible();page.keyboard.press('Escape');observe_motion('pipEyeOpen');page.get_by_role('button',name='Offer cuddle teddy',exact=True).click();saw_motion(.012,.037);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.pipEyeOpen)===.038",timeout=6000);assert saved()['chapter']['friendAwake'];assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).item")=='teddy'
  settings()
  with page.expect_download() as previous:page.get_by_role('button',name='Download previous save',exact=True).click()
  previous.value.save_as('/tmp/Nancy-Kitty-Previous-Save.json');assert json.loads(Path('/tmp/Nancy-Kitty-Previous-Save.json').read_text())['data']['adventure']['x']==8
