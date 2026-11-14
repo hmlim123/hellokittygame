@@ -29,6 +29,7 @@ export function AccountAccess({
   const [register, setRegister] = useState(!!accounts.pendingInvite),
     [copied, setCopied] = useState(false);
   const setup = !accounts.initialized && !register;
+  const quickMeet = !active && accounts.melodyRegistered && accounts.togetherAvailable && !visits.invitation;
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setFormError("");
@@ -66,9 +67,7 @@ export function AccountAccess({
               : "Hello Kitty"}{" "}
             ♡
           </p>
-          {!active &&
-            accounts.melodyRegistered &&
-            accounts.togetherAvailable && (
+          {quickMeet && (
               <button
                 className="primary wide"
                 disabled={visits.status === "connecting"}
@@ -79,7 +78,7 @@ export function AccountAccess({
                   : "Meet together ♡"}
               </button>
             )}
-          {!active &&
+          {!active && !quickMeet &&
             (session.profile.id === "nancy" ? (
               <button
                 className="primary wide"

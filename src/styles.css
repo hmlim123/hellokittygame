@@ -2523,3 +2523,4 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   .visit-active .account-access p { margin: .3rem 0; }
   .visit-active .visit-friends { margin: .3rem 0; }
 }
+.visit-navigation { min-height: 44px; margin: 4px 0; }

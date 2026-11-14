@@ -45,7 +45,9 @@ with (results/'visits-service.log').open('w') as log:
             host.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-cozy-v1',"+json.dumps(json.dumps(seed))+");")
             def ready(page):page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
             def snapshot(page):return page.evaluate("({cozy:JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')),story:JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1')),equipment:JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1'))})")
-            def visits(page):page.get_by_role('button',name='Private visits ♡',exact=True).click()
+            def visits(page):
+                page.bring_to_front()
+                page.get_by_role('button',name='Private visits ♡',exact=True).click()
             def back(page):page.get_by_role('button',name='Back to the village ♡',exact=True).click()
 
             host.goto(BASE+'/adventure.html?visits='+quote(SERVICE,safe=''))
@@ -123,7 +125,14 @@ with (results/'visits-service.log').open('w') as log:
                     return send.call(this, data);
                 };
             }""")
-            guest.get_by_role('button',name='Walk to the picnic table ↗',exact=True).tap()
+            # This context represents the foreground phone. Check the visible
+            # hit target, then send an actual touch instead of waiting for
+            # Playwright's RAF stability probe on an idle, demand-rendered tab.
+            target=guest.get_by_role('button',name='Walk to the picnic table ↗',exact=True)
+            assert target.is_visible()
+            rect=target.bounding_box()
+            assert rect and rect['height']>=44 and rect['y']>=0 and rect['y']+rect['height']<=844
+            guest.touchscreen.tap(rect['x']+rect['width']/2,rect['y']+rect['height']/2)
             try:
                 arrival=guest.get_by_role('dialog',name='A picnic in the village',exact=True)
                 try:

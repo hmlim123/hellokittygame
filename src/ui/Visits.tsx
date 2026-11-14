@@ -8,7 +8,16 @@ import { useVisitsStore, parseVisitLink } from "../game/visits";
 import { useVillageMotion } from "../game/village-motion";
 import { VILLAGE_ACTIONS, villageWalkable } from "../game/village";
 
-export function SharedPicnic() {
+function WalkToPicnic() {
+  const status = useVisitsStore(s => s.status), p = useVillageMotion(s => s.position);
+  if (status !== "online" || Math.hypot(p.x + 5.5, p.z - 4.2) < 2.5) return null;
+  return <button className="visit-navigation" onClick={() => {
+    useGameStore.getState().closePanel();
+    const table = VILLAGE_ACTIONS.find(o => o.id === "picnic")!;
+    useVillageMotion.getState().walkTo(table, "picnic");
+  }}>Walk to the picnic table ↗</button>;
+}
+export function SharedPicnic({ navigation = true }: { navigation?: boolean }) {
   const status = useVisitsStore((s) => s.status),
     players = useVisitsStore((s) => s.players),
     picnic = useVisitsStore((s) => s.picnic),
@@ -47,17 +56,7 @@ export function SharedPicnic() {
           ),
         )}
       </div>
-      {!near && (
-        <button
-          onClick={() => {
-            useGameStore.getState().closePanel();
-            const table = VILLAGE_ACTIONS.find((o) => o.id === "picnic")!;
-            useVillageMotion.getState().walkTo(table, "picnic");
-          }}
-        >
-          Walk to the picnic table ↗
-        </button>
-      )}
+      {navigation && <WalkToPicnic />}
     </section>
   );
 }
@@ -255,6 +254,7 @@ export function VisitsPanel() {
               </span>
             ))}
           </div>
+          <WalkToPicnic />
           <TogetherActivities />
           <div
             className="visit-chat"
@@ -323,7 +323,7 @@ export function VisitsPanel() {
               </button>
             )}
           </div>
-          <SharedPicnic />
+          <SharedPicnic navigation={false} />
           <button
             className="primary wide"
             onClick={() => {

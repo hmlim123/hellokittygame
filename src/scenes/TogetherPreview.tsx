@@ -75,6 +75,7 @@ function Performance({
   const gltf = useGLTF(assetUrl("assets/together-motion/" + style + ".glb")),
     group = useRef<THREE.Group>(null),
     reduced = useReducedMotion();
+  const initialPosition = useRef<[number, number, number]>([actor.id === "host" ? -.85 : .85, 0, 0]);
   const moment = useVisitsStore((s) => s.together);
   const mixing = moment?.action === "stir" && actor.id === "host";
   const decorating = moment?.action === "decorate" && actor.id === "guest";
@@ -160,7 +161,7 @@ function Performance({
                 : kind === "present"
                   ? "togetherPresent"
                   : "togetherWave";
-    if (moment && elapsed < (baking ? 4.5 : 4.2)) invalidate();
+    if (moment && elapsed < (baking ? 4.5 : 4.8)) invalidate();
     const active =
       kind !== "cancel" && elapsed >= 0 && elapsed < (baking ? 4 : 3.6);
     const action = animation.clips[clip];
@@ -213,14 +214,14 @@ function Performance({
     });
     if (group.current) {
       const side = host ? -1 : 1,
-        distance = highfive
+        distance = highfive && elapsed >= 0
           ? approaching
             ? 0.85 - 0.43 * smooth(elapsed / 0.6)
             : active
               ? 0.42
               : 0.42 + 0.43 * smooth((elapsed - 3.6) / 0.6)
           : 0.85;
-      group.current.position.x = side * distance;
+      group.current.position.x = THREE.MathUtils.damp(group.current.position.x, side * distance, 22, Math.min(dt, .1));
       group.current.rotation.z =
         pose && moment?.pose === "lean" ? side * 0.08 : 0;
       group.current.rotation.y = THREE.MathUtils.damp(
@@ -233,7 +234,7 @@ function Performance({
     }
   });
   return (
-    <group ref={group}>
+    <group ref={group} position={initialPosition.current}>
       <primitive object={hero} scale={0.78} dispose={null} />
       {(mixing || decorating) && (
         <group
