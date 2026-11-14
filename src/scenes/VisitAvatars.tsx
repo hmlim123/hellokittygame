@@ -1,6 +1,6 @@
 import { Melody } from "./Melody";
 import { Suspense, useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { SceneHtml as Html } from "./SceneHtml";
 import { useVisitsStore, type VisitPlayer } from "../game/visits";
@@ -16,6 +16,7 @@ import { updateWalking, turnToward } from "./walk-animation";
 import { KittyHeld } from "./GameToys";
 import { GroundShadow } from "./GroundShadow";
 function KittyVisitor({ actor }: { actor: VisitPlayer }) {
+  const invalidate = useThree(s => s.invalidate);
   const asset = useKittyAsset(actor.appearance.plush || undefined),
     hero = useMemo(() => makeBlenderKitty(asset, 0), [asset]),
     group = useRef<THREE.Group>(null),
@@ -48,8 +49,9 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
     if (last.current !== actor.gesture.id) {
       last.current = actor.gesture.id;
       reactBlender(hero, actor.gesture.kind, reduced);
+      invalidate();
     }
-  }, [hero, actor.gesture.id, actor.gesture.kind, reduced]);
+  }, [hero, actor.gesture.id, actor.gesture.kind, reduced, invalidate]);
   useEffect(
     () => () => {
       hero.userData.blender.mixer.stopAllAction();
@@ -67,7 +69,7 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
     },
     [hero],
   );
-  useFrame(({ gl }, dt) => {
+  useFrame(({ gl, invalidate }, dt) => {
     const a = target.current;
     if (
       a.speed > 0.1 &&
@@ -77,6 +79,7 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
     )
       reactBlender(hero, null, reduced);
     updateBlender(hero, Math.min(dt, 0.1), { reduced });
+    if (hero.userData.blender.current || hero.userData.blender.fading.length) invalidate();
     updateWalking(hero, dt, a.speed, reduced);
     if (group.current) {
       group.current.position.x +=

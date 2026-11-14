@@ -1,5 +1,5 @@
 import { useEffect, useMemo, type RefObject } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import {
   readMelodyAsset,
   makeMelody,
@@ -19,14 +19,15 @@ export function Melody({
   performance?: { id: number; kind: Gesture };
   remote?: boolean;
 }) {
+  const invalidate = useThree(s => s.invalidate);
   const asset = readMelodyAsset(),
     hero = useMemo(() => makeMelody(asset), [asset]);
   const ownGesture = useGameStore((s) => s.gesture),
     gesture = performance || ownGesture,
     reduced = useReducedMotion();
   useEffect(() => {
-    if (gesture.id) reactMelody(hero, gesture.kind, reduced);
-  }, [hero, gesture.id, gesture.kind, reduced]);
+    if (gesture.id) { reactMelody(hero, gesture.kind, reduced); invalidate(); }
+  }, [hero, gesture.id, gesture.kind, reduced, invalidate]);
   useEffect(() => {
     const lifecycle = hero.userData.melody;
     lifecycle.mounted = true;
@@ -42,6 +43,7 @@ export function Melody({
   useFrame((state, dt) => {
     const speed = locomotion?.current.speed || 0;
     updateMelody(hero, dt, speed, reduced);
+    if (hero.userData.melody.active !== "idle") state.invalidate();
     const data = state.gl.domElement.dataset;
     if (remote) {
       data.remoteModel = "melody";
