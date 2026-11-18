@@ -66,7 +66,11 @@ with (results/'visits-service.log').open('w') as log:
             assert urlsplit(invitation).path.endswith('/adventure.html')
             assert not urlsplit(invitation).query
             guest.goto(invitation);ready(guest)
-            guest.get_by_label('Your name',exact=True).fill('Visitor')
+            try:
+                guest.get_by_label('Your name',exact=True).fill('Visitor')
+            except Exception:
+                print('Visit setup', guest.locator('dialog').all_text_contents(), errors, flush=True)
+                raise
             guest.get_by_role('button',name='Join the village ♡',exact=True).click()
             host.get_by_text('Visitor is visiting with you. ♡',exact=True).wait_for(timeout=25000)
             guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=25000)
@@ -86,15 +90,15 @@ with (results/'visits-service.log').open('w') as log:
             guest.keyboard.up('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)<.02",timeout=15000)
             host.wait_for_function("x=>Number(document.querySelector('#world canvas').dataset.remoteX)>x+.15",arg=start,timeout=15000)
-            visits(host);visits(guest)
+            guest.bring_to_front()
             message='Hi Nancy ♡ <b>hello</b>'
+            guest.get_by_role('button',name='Chat',exact=True).tap()
             guest.get_by_label('Message to your visitor',exact=True).fill(message)
-            guest.get_by_role('button',name='Send ♡',exact=True).click()
-            host.get_by_role('log',name='Visit messages').get_by_text(message,exact=True).wait_for(timeout=15000)
-            assert host.locator('.visit-chat b').count()==0
-            guest.get_by_role('button',name='Wave hello ♡',exact=True).click()
+            guest.get_by_role('button',name='Send',exact=True).tap()
+            host.locator('[data-speaker=guest] .village-bubble').get_by_text(message,exact=True).wait_for(timeout=15000)
+            assert host.locator('.village-bubble b').count()==0
+            guest.get_by_role('button',name='Wave',exact=True).tap()
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression==='wink'",timeout=25000)
-            back(guest)
             print('PASS synchronized movement, independent wardrobe, plain-text chat and the real Blender wave/wink',flush=True)
 
             guest.get_by_role('button',name='Places & memories',exact=True).tap()
@@ -109,6 +113,7 @@ with (results/'visits-service.log').open('w') as log:
             assert after['cozy']['cookiesGiven']==before['cozy']['cookiesGiven']
             print('PASS one shared garden, a nearby visitor’s validated watering and preservation of Nancy’s home/story progress',flush=True)
 
+            visits(host)
             host.get_by_role('button',name='Walk to the picnic table ↗',exact=True).click()
             host.get_by_role('dialog',name='A picnic in the village',exact=True).wait_for(timeout=45000)
             visits(guest)

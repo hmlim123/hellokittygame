@@ -82,6 +82,22 @@ life and one complete home/activity/reward loop → polished decorating and visi
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
 
+## In-village private interactions · v3.7.1
+
+Kitty and My Melody now wave, show expressions, exchange speech bubbles, and
+perform their Blender dances in the existing village. The compact village
+controls use one WebGL renderer. On phones, Automatic detail uses a stable
+pixel ratio so a slow frame cannot resize the village drawing buffer. Paired
+motion follows the existing server timestamp. Shared baking, photos, weather,
+and picnic navigation remain available.
+
+The client uses the existing Cloudflare account and visit protocol. The two
+account identities, stored village, save format, gift marker, outfits, and
+Nancy’s letter use their existing storage and content. The release journey
+uses two independent touch-enabled Chromium clients against local Cloudflare
+Workers and monitors the canvas through a visit. Physical mobile browser
+acceptance remains pending.
+
 ## Free private visits · v3.6.0
 
 The user asked on 2026-11-12 to meet without paying. The default hosting is now

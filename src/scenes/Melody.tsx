@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type RefObject } from "react";
+import { Suspense, useEffect, useMemo, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
   readMelodyAsset,
@@ -9,15 +9,19 @@ import {
 } from "./melody-model";
 import { useReducedMotion } from "./use-reduced-motion";
 import { useGameStore } from "../game/store";
+import { VillagePerformance } from "./VillagePerformance";
+import type { VisitPlayer } from "../game/visits";
 import type { Gesture } from "../game/types";
 export function Melody({
   locomotion,
   performance,
   remote = false,
+  villageRole,
 }: {
   locomotion?: RefObject<{ speed: number }>;
   performance?: { id: number; kind: Gesture };
   remote?: boolean;
+  villageRole?: VisitPlayer["id"];
 }) {
   const invalidate = useThree(s => s.invalidate);
   const asset = readMelodyAsset(),
@@ -42,7 +46,7 @@ export function Melody({
   }, [hero]);
   useFrame((state, dt) => {
     const speed = locomotion?.current.speed || 0;
-    updateMelody(hero, dt, speed, reduced);
+    if (!hero.userData.villagePerformance) updateMelody(hero, dt, speed, reduced);
     if (hero.userData.melody.active !== "idle") state.invalidate();
     const data = state.gl.domElement.dataset;
     if (remote) {
@@ -52,6 +56,14 @@ export function Melody({
       data.playerCharacter = "melody";
       data.playerAnimation = hero.userData.melody.active;
     }
-  });
-  return <primitive object={hero} scale={0.78} dispose={null} />;
+  }, villageRole ? -0.5 : 0);
+  return (
+    <primitive object={hero} scale={0.78} dispose={null}>
+      {villageRole && (
+        <Suspense fallback={null}>
+          <VillagePerformance hero={hero} role={villageRole} style="melody" />
+        </Suspense>
+      )}
+    </primitive>
+  );
 }

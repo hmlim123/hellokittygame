@@ -1,4 +1,3 @@
-import { TogetherActivities } from "./TogetherActivities";
 import { AccountAccess } from "./AccountAccess";
 import { useAccounts } from "../game/accounts";
 import { useEffect, useRef, useState } from "react";
@@ -68,6 +67,7 @@ export function VisitPresence() {
     other = players.find((p) => p.id !== role),
     last = chat.at(-1);
   if (!["connecting", "online", "reconnecting"].includes(status)) return null;
+  if (status === "online" && other?.connected && (!other.area || other.area === "village")) return null;
   return (
     <button
       className="visit-presence"
@@ -102,7 +102,6 @@ export function VisitsPanel() {
     [name, setName] = useState(state.invitation ? "Your friend" : "Nancy"),
     [link, setLink] = useState(""),
     [server, setServer] = useState(state.server),
-    [message, setMessage] = useState(""),
     [copied, setCopied] = useState(false),
     log = useRef<HTMLDivElement>(null);
   const active = state.status === "online" || state.status === "reconnecting",
@@ -255,7 +254,6 @@ export function VisitsPanel() {
             ))}
           </div>
           <WalkToPicnic />
-          <TogetherActivities />
           <div
             className="visit-chat"
             role="log"
@@ -265,8 +263,7 @@ export function VisitsPanel() {
           >
             {!state.chat.length ? (
               <p>
-                Say a little hello. Messages are shared only during this private
-                visit.
+                Messages sent in the village appear here.
               </p>
             ) : (
               state.chat.map((m) => (
@@ -277,36 +274,7 @@ export function VisitsPanel() {
               ))
             )}
           </div>
-          <form
-            className="visit-chat-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (message.trim()) {
-                state.sendChat(message);
-                setMessage("");
-              }
-            }}
-          >
-            <input
-              aria-label="Message to your visitor"
-              maxLength={240}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="A little hello…"
-              disabled={state.status !== "online"}
-            />
-            <button
-              type="submit"
-              disabled={state.status !== "online" || !message.trim()}
-            >
-              Send ♡
-            </button>
-          </form>
           <div className="visit-emotes">
-            <button onClick={() => state.gesture("wave")}>Wave hello ♡</button>
-            <button onClick={() => state.gesture("dance")}>
-              Happy dance ♫
-            </button>
             {other?.connected && other.area === "village" && (
               <button
                 onClick={() => {

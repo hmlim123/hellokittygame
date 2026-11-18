@@ -24,11 +24,14 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             if server.poll() is not None:raise RuntimeError('Account service did not start')
             time.sleep(.1)
         with sync_playwright() as p:
-            browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
-            host_context=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1)
-            guest_context=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1)
+            launch=dict(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,
+                args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+            host_browser=p.chromium.launch(**launch)
+            guest_browser=p.chromium.launch(**launch)
+            host_context=host_browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2)
+            guest_context=guest_browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2)
             host=host_context.new_page();guest=guest_context.new_page();errors=[]
-            sent=[]
+            sent=[]; together_received=[]
             def on_socket(ws):
                 def record(payload):
                     try:
@@ -36,9 +39,36 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                         if message.get('type')=='move':sent.append((time.monotonic(),message))
                     except (TypeError,ValueError):pass
                 ws.on('framesent',record)
+                def receive(payload):
+                    try:
+                        message=json.loads(payload)
+                        if message.get('together') or message['type']=='error':
+                            together_received.append(message.get('together') or message)
+                    except (TypeError, ValueError):pass
+                ws.on('framereceived',receive)
             for page in [host,guest]:
                 page.on('pageerror',lambda e:(errors.append(str(e)),print('PAGE ERROR',str(e),flush=True)))
                 page.on('websocket',on_socket)
+                page.add_init_script("""window.watchVillage = () => {
+                    const canvas = document.querySelector('#world canvas');
+                    const size = [canvas.width, canvas.height];
+                    const issues = [];
+                    const check = () => {
+                        if (document.querySelector('#world canvas') !== canvas) issues.push('canvas replaced');
+                        if (document.querySelectorAll('canvas').length !== 1) issues.push('second canvas');
+                        if (canvas.width !== size[0] || canvas.height !== size[1]) issues.push('back buffer resized');
+                    };
+                    const observer = new MutationObserver(check);
+                    observer.observe(document.body, {subtree: true, childList: true, attributes: true, attributeFilter: ['width', 'height']});
+                    const lost = () => issues.push('WebGL context lost');
+                    canvas.addEventListener('webglcontextlost', lost);
+                    check();
+                    return () => {
+                        observer.disconnect();
+                        canvas.removeEventListener('webglcontextlost', lost);
+                        return [...new Set(issues)];
+                    };
+                };""")
             def ready(page):page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
             def visits(page):
                 page.bring_to_front()
@@ -49,6 +79,10 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 page.get_by_role('button',name='Back to the village ♡',exact=True).click()
                 print('Village controls returned',flush=True)
             def personal(page):return page.evaluate("Object.fromEntries(Object.keys(localStorage).filter(k=>k.startsWith('kitty-')&&!k.includes('visits')).sort().map(k=>[k,localStorage.getItem(k)]))")
+            host.add_init_script("""if (!localStorage.getItem('kitty-world-v2')) {
+                localStorage.setItem('kitty-nancy-cozy-v1', JSON.stringify({village:{greeted:['momo'], flowers:[true,false,false], placed:{welcome:'nook'}}}));
+                localStorage.setItem('kitty-nancy-equipment-v1', JSON.stringify({version:1,outfit:'sailor',item:'letter'}));
+            }""")
             host.goto(BASE+'/adventure.html?visits='+quote(SERVICE,safe=''));ready(host);visits(host)
             host.get_by_label('Service setup key',exact=True).fill(setup_key)
             host.get_by_label('Password',exact=True).fill('Nancy test password')
@@ -70,50 +104,17 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             guest.get_by_role('button',name='Join Nancy’s village ♡',exact=True).click()
             host.get_by_text('My Melody is visiting with you. ♡',exact=True).wait_for(timeout=25000)
             guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=25000)
-            village_link=host.locator('#village-invitation').input_value()
-            host.get_by_text('Do something together ♡',exact=True).click()
-            guest.get_by_text('Do something together ♡',exact=True).click()
-            host.get_by_role('button',name='High-five ♡',exact=True).click()
-            guest.get_by_text('A high-five together ♡',exact=True).wait_for(timeout=15000)
-            host.wait_for_timeout(4200)
-            host.screenshot(path=str(results/'accounts-highfive-phone.png'))
-            host.get_by_text('Bake together',exact=True).click()
-            guest.get_by_text('Bake together',exact=True).click()
-            host.get_by_role('button',name='Nancy mixes',exact=True).click()
-            guest.get_by_role('button',name='Melody decorates',exact=True).wait_for(state='visible')
-            guest.wait_for_timeout(4600)
-            guest.get_by_role('button',name='Melody decorates',exact=True).click()
-            host.wait_for_timeout(4600)
-            host.get_by_role('button',name='Bring cookies to the picnic',exact=True).click()
-            host.get_by_role('button',name='✓ Bring the cookies',exact=True).wait_for(timeout=15000)
-            host.wait_for_timeout(4600)
-            host.get_by_text('A photo together',exact=True).click()
-            host.get_by_role('button',name='Take our photo',exact=True).click()
-            host.get_by_role('link',name='Download our photo PNG',exact=True).wait_for(timeout=20000)
-            with host.expect_download() as download:
-                host.get_by_role('link',name='Download our photo PNG',exact=True).click()
-            photo_path=results/'Nancy-and-Melody.png';download.value.save_as(photo_path)
-            from PIL import Image
-            with Image.open(photo_path) as photo:
-                assert photo.format=='PNG' and photo.size==(800,960), 'Download must be the framed postcard PNG'
-
-            host.get_by_role('button',name='Keep on Nancy’s wall',exact=True).click()
-            host.get_by_text('Kept on Nancy’s wall ♡',exact=True).wait_for()
-            host.get_by_label('Our atmosphere',exact=True).select_option('rain')
-            guest.wait_for_function("document.querySelector('select') && [...document.querySelectorAll('select')].some(s=>s.value==='rain')")
-            print('PASS paired Blender reactions, role-ordered baking, synchronized photo countdown, Nancy’s wall and shared weather',flush=True)
-            host.get_by_text('Do something together ♡',exact=True).click()
-            host.set_viewport_size({'width':844,'height':390})
-            host.locator('.visit-chat').scroll_into_view_if_needed()
-            preview=host.locator('.together-preview').bounding_box();chat=host.locator('.visit-chat').bounding_box()
-            assert preview['x']+preview['width'] <= chat['x']+2, 'Landscape chat must sit beside the partner view'
-            assert host.evaluate('document.documentElement.scrollWidth<=innerWidth')
-            host.screenshot(path=str(results/'accounts-conversation-landscape.png'))
-            host.set_viewport_size({'width':390,'height':844})
-            print('PASS landscape conversation keeps chat beside the actual character view',flush=True)
-
-
-            back(host);back(guest)
+            for page in [host, guest]:
+                assert page.locator('canvas').count() == 1, 'The account panel must share the village renderer'
+                back(page)
+                page.evaluate('window.finishVillageWatch = watchVillage()')
+            # Start near one another so both peer avatars and speech are in frame.
+            visits(guest)
+            guest.get_by_role('button',name='Walk to Nancy ↗',exact=True).click()
+            guest.wait_for_function("""() => {
+                const d = document.querySelector('#world canvas').dataset;
+                return d.villageRoute === '0' && Math.hypot(d.villageX-d.remoteX, d.villageZ-d.remoteZ) < 1.8;
+            }""",timeout=45000)
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteModel==='melody'",timeout=60000)
             guest.wait_for_function("document.querySelector('#world canvas').dataset.playerCharacter==='melody'",timeout=60000)
             host.wait_for_function("document.querySelector('#world canvas').dataset.playerCharacter==='kitty'",timeout=15000)
@@ -126,23 +127,108 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             idle_start=time.monotonic();host.wait_for_timeout(2100)
             assert len([row for row in sent if row[0]>=idle_start])<=2,'Idle avatars must not send ten packets per second'
             print('PASS idle connection traffic stays quiet while movement and final stops remain immediate',flush=True)
-            visits(guest)
-            guest.get_by_label('Message to your visitor',exact=True).fill('I’m here with you ♡')
-            guest.get_by_role('button',name='Send ♡',exact=True).click()
-            visits(host)
-            host.get_by_text('I’m here with you ♡',exact=True).wait_for(timeout=15000)
-            guest.get_by_role('button',name='Happy dance ♫',exact=True).click()
-            # The peer performs while chat is open; slow software rendering may
-            # take longer to close two panels than the authored dance lasts.
-            host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression==='dance'",timeout=15000)
-            back(host);back(guest)
+            def bubble(page, role):
+                return page.locator(f'[data-speaker={role}] .village-bubble')
+            for sender, recipient, role, message in [
+                (guest,host,'guest','I’m here with you ♡ <b>hi</b>'),
+                (host,guest,'host','Hello Melody ♡'),
+            ]:
+                sender.bring_to_front()
+                sender.get_by_role('button',name='Chat',exact=True).tap()
+                sender.get_by_label('Message to your visitor',exact=True).fill(message)
+                sender.get_by_role('button',name='Send',exact=True).tap()
+                for page in [sender,recipient]:
+                    bubble(page,role).get_by_text(message,exact=True).wait_for(timeout=15000)
+                    assert bubble(page,role).locator('b').count()==0
+            host.bring_to_front()
             host.screenshot(path=str(results/'accounts-together-mobile.png'))
+            bubble(host,'host').wait_for(state='hidden',timeout=10000)
+            host.get_by_role('button',name='Smile',exact=True).tap()
+            guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression==='softHappy'",timeout=15000)
+            guest.bring_to_front()
+            guest.get_by_role('button',name='Wave',exact=True).tap()
+            host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression==='wave'",timeout=15000)
+            print('PASS chat bubbles on both actual avatars, a wave and a shared facial expression',flush=True)
+
+            for page in [host, guest]:
+                page.evaluate("""() => {
+                    window.danceFrames = [];
+                    const canvas = document.querySelector('#world canvas');
+                    const observer = new MutationObserver(() => {
+                        const d = canvas.dataset;
+                        if (d.hostTogether === 'dance' && d.guestTogether === 'dance') {
+                            danceFrames.push([Date.now(), +d.hostTogetherPhase, +d.guestTogetherPhase]);
+                        }
+                    });
+                    observer.observe(canvas, {attributes: true, attributeFilter: ['data-guest-together-phase']});
+                }""")
+            host.bring_to_front()
+            host.get_by_role('button',name='Dance together',exact=True).tap()
+            try:
+                for page in [host, guest]:
+                    page.wait_for_function("danceFrames.some(frame => frame[1] > 1)",timeout=12000)
+            except Exception:
+                print('Dance diagnostics', together_received[-8:])
+                for page in [host, guest]:
+                    print(page.evaluate("({frames: danceFrames.slice(-5), scene: {...document.querySelector('#world canvas').dataset}})"))
+                raise
+            for page in [host, guest]:
+                frames=page.evaluate('danceFrames')
+                assert any(frame[1] < .9 for frame in frames), frames[:3]
+                assert all(abs(kitty-melody)<.1 for _,kitty,melody in frames), frames[-4:]
+            starts=[page.evaluate('danceFrames[0][0] - 1000 * danceFrames[0][1]') for page in [host, guest]]
+            assert abs(starts[0]-starts[1])<200, starts
+            host.wait_for_function("!document.querySelector('#world canvas').dataset.hostTogether",timeout=12000)
+            for page in [host,guest]:
+                assert page.evaluate('finishVillageWatch()') == [], 'Village renderer must remain stable throughout the visit'
+            print('PASS synchronized Blender dance on Kitty and Melody and one stable mobile WebGL canvas throughout',flush=True)
+
+            host.get_by_text('More',exact=True).tap()
+            host.get_by_role('button',name='High-five ♡',exact=True).tap()
+            guest.wait_for_function("document.querySelector('#world canvas').dataset.guestTogether==='highfive'",timeout=12000)
+            host.get_by_text('Bake together',exact=True).tap()
+            host.get_by_role('button',name='Nancy mixes',exact=True).click()
+            guest.bring_to_front()
+            guest.get_by_text('More',exact=True).tap()
+            guest.get_by_text('Bake together',exact=True).tap()
+            guest.get_by_role('button',name='Melody decorates',exact=True).click(timeout=20000)
+            host.bring_to_front()
+            host.get_by_role('button',name='Bring cookies to the picnic',exact=True).click(timeout=20000)
+            host.get_by_text('A photo together',exact=True).tap()
+            host.get_by_role('button',name='Take our photo',exact=True).click(timeout=20000)
+            host.get_by_role('link',name='Download our photo PNG',exact=True).wait_for(timeout=20000)
+            with host.expect_download() as download:
+                host.get_by_role('link',name='Download our photo PNG',exact=True).click()
+            photo_path=results/'Nancy-and-Melody.png';download.value.save_as(photo_path)
+            from PIL import Image
+            with Image.open(photo_path) as photo:
+                assert photo.format=='PNG' and photo.size==(800,960), 'Download must be the framed postcard PNG'
+            host.get_by_role('button',name='Keep on Nancy’s wall',exact=True).click()
+            host.get_by_text('Kept on Nancy’s wall ♡',exact=True).wait_for()
+            host.get_by_label('Our atmosphere',exact=True).select_option('rain')
+            guest.wait_for_function("[...document.querySelectorAll('select')].some(s=>s.value==='rain')")
+            for page in [host,guest]:
+                page.get_by_text('More',exact=True).tap()
+            host.set_viewport_size({'width':844,'height':390})
+            assert host.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            host.get_by_role('button',name='Dance together',exact=True).wait_for(state='visible')
+            host.screenshot(path=str(results/'accounts-village-landscape.png'))
+            host.set_viewport_size({'width':390,'height':844})
+            print('PASS in-village high-five, shared baking, postcard, wall save, weather and landscape controls',flush=True)
             guest.keyboard.down('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)>.5",timeout=20000)
             guest.keyboard.up('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)<.02",timeout=15000)
             assert personal(guest)==before, 'Visiting must not overwrite personal progress'
-            print('PASS private chat, synchronized authored dance, responsive movement and visitor save isolation',flush=True)
+            saved = host.evaluate("""() => ({
+                cozy: JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')),
+                equipment: JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1'))
+            })""")
+            assert saved['cozy']['village']['placed']['welcome']=='nook'
+            assert saved['cozy']['village']['greeted']==['momo']
+            assert saved['equipment']['outfit']=='sailor' and saved['equipment']['item']=='letter'
+
+            print('PASS responsive movement and both personal saves, including Nancy’s outfit and equipped letter',flush=True)
             visits(guest)
             guest.get_by_role('button',name='Sign out',exact=True).click()
             guest.get_by_role('button',name='You · My Melody',exact=True).click()
@@ -159,7 +245,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             guest.get_by_text('Signed in as My Melody · My Melody ♡',exact=True).wait_for(timeout=30000)
             assert not errors, errors
             print('PASS refresh reconnect, server sign-out, wrong-password feedback and a new authenticated visit',flush=True)
-            browser.close()
+            host_browser.close();guest_browser.close()
     finally:
         server.terminate()
         try:server.wait(timeout=5)

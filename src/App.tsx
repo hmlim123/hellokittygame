@@ -3,6 +3,7 @@ import { useHomeMotion, homeGesture } from "./game/home-motion";
 import { FriendTalesPanel } from "./ui/FriendTales";
 import { VillageControls, VillageGuide, VillagePanel } from "./ui/Village";
 import { VisitsPanel, VisitPresence } from "./ui/Visits";
+import { VillageSocial } from "./ui/VillageSocial";
 import { useVisitLifecycle, useVisitsStore } from "./game/visits";
 import { isGuestSession } from "./game/guest-session";
 import { useVillageMotion, giveVillageGift } from "./game/village-motion";
@@ -627,6 +628,7 @@ export default function App() {
           {mode === "village" && (
             <>
               <VisitPresence />
+              <VillageSocial />
               <VillageControls />
             </>
           )}

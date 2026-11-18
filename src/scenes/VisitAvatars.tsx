@@ -15,6 +15,8 @@ import { applyHeroEquipment } from "./AdventureTools";
 import { updateWalking, turnToward } from "./walk-animation";
 import { KittyHeld } from "./GameToys";
 import { GroundShadow } from "./GroundShadow";
+import { VillagePerformance } from "./VillagePerformance";
+import { VillageSpeech } from "./VillageSpeech";
 function KittyVisitor({ actor }: { actor: VisitPlayer }) {
   const invalidate = useThree(s => s.invalidate);
   const asset = useKittyAsset(actor.appearance.plush || undefined),
@@ -78,9 +80,9 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       )
     )
       reactBlender(hero, null, reduced);
-    updateBlender(hero, Math.min(dt, 0.1), { reduced });
+    if (!hero.userData.villagePerformance) updateBlender(hero, Math.min(dt, 0.1), { reduced });
     if (hero.userData.blender.current || hero.userData.blender.fading.length) invalidate();
-    updateWalking(hero, dt, a.speed, reduced);
+    updateWalking(hero, dt, a.speed, reduced, hero.userData.villagePerformance);
     if (group.current) {
       group.current.position.x +=
         (a.x - group.current.position.x) *
@@ -100,7 +102,7 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       gl.domElement.dataset.remoteExpression = blenderExpression(hero);
       gl.domElement.dataset.remoteModel = hero.userData.source;
     }
-  });
+  }, -0.5);
   return (
     <group
       ref={group}
@@ -117,7 +119,11 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       </mesh>
       <GroundShadow />
       <group scale={0.78}>
-        <primitive object={hero} dispose={null} />
+        <primitive object={hero} dispose={null}>
+          <Suspense fallback={null}>
+            <VillagePerformance hero={hero} role={actor.id} style={actor.appearance.plush || "classic"} />
+          </Suspense>
+        </primitive>
         {actor.holding && <KittyHeld hero={hero} holding={actor.holding} />}
       </group>
       <Html
@@ -125,7 +131,7 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
         position={[0, hero.userData.blender.modelHeight * 0.78 + 0.25, 0]}
         zIndexRange={[4, 0]}
       >
-        <span className={"visitor-name " + actor.id}>{actor.name} ♡</span>
+        <VillageSpeech role={actor.id} name={actor.name} />
       </Html>
     </group>
   );
@@ -136,12 +142,14 @@ function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
     rotation: [0, actor.yaw, 0] as [number, number, number],
   });
   const group = useRef<THREE.Group>(null),
+    target = useMemo(() => new THREE.Vector3(), []),
     locomotion = useRef({ speed: 0 }),
     reduced = useReducedMotion();
+  locomotion.current.speed = actor.speed;
   useFrame((state, dt) => {
     if (!group.current) return;
     group.current.position.lerp(
-      new THREE.Vector3(actor.x, 0, actor.z),
+      target.set(actor.x, 0, actor.z),
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 12),
     );
     group.current.rotation.y = turnToward(
@@ -150,7 +158,6 @@ function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
       dt,
       reduced,
     );
-    locomotion.current.speed = actor.speed;
     Object.assign(state.gl.domElement.dataset, {
       remoteX: String(group.current.position.x),
       remoteZ: String(group.current.position.z),
@@ -164,9 +171,9 @@ function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
       rotation={initial.current.rotation}
     >
       <GroundShadow />
-      <Melody remote locomotion={locomotion} performance={actor.gesture} />
+      <Melody remote locomotion={locomotion} performance={actor.gesture} villageRole={actor.id} />
       <Html center position={[0, 2.27 * 0.78 + 0.25, 0]} zIndexRange={[4, 0]}>
-        <span className="visitor-name guest">{actor.name} ♡</span>
+        <VillageSpeech role={actor.id} name={actor.name} />
       </Html>
     </group>
   );

@@ -30,6 +30,8 @@ import {
 import { VisitAvatars } from "./VisitAvatars";
 import { useVisitsStore } from "../game/visits";
 import { GroundShadow } from "./GroundShadow";
+import { VillageSpeech } from "./VillageSpeech";
+import { togetherElapsed, villagePhoto } from "../game/village-together";
 
 function Blob({
   at,
@@ -527,6 +529,9 @@ function Player() {
   const playerCharacter = useVisitsStore(
     (s) => s.players.find((p) => p.id === s.role)?.character,
   );
+  const ownRole = useVisitsStore(s => s.role);
+  const sharedRole = useVisitsStore(s => s.togetherAvailable &&
+    s.players.some(p => p.id !== s.role && p.connected) ? s.role : null);
   const equipment = useGameStore((s) => s.equipment),
     packed = useGameStore((s) => !!s.cozy.cookie.packed),
     effect = useGameStore((s) => s.effect),
@@ -576,7 +581,12 @@ function Player() {
       });
       return;
     }
+    const visit = useVisitsStore.getState();
+    const moment = visit.together;
+    const danceElapsed = moment?.action === "celebrate" && visit.role
+      ? togetherElapsed(moment, visit.clockOffset) : Infinity;
     if (
+      danceElapsed >= 0 && danceElapsed < 3 ||
       !state.sceneReady ||
       state.panel ||
       state.dialogue ||
@@ -650,8 +660,7 @@ function Player() {
         dt,
         reduced,
       );
-    const target = new THREE.Vector3(p.x, 0.9, p.z),
-      desired = target.clone().add(new THREE.Vector3(0, 7.2, 10.2));
+    const target = new THREE.Vector3(p.x, 0.9, p.z);
     follow.current.lerp(
       target,
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 8),
@@ -687,7 +696,7 @@ function Player() {
       <group ref={anchor} rotation={[0, spawn.yaw, 0]}>
         <Suspense fallback={null}>
           {playerCharacter === "melody" ? (
-            <Melody locomotion={locomotion} />
+            <Melody locomotion={locomotion} villageRole={sharedRole || undefined} />
           ) : (
             <Kitty
               equipment={
@@ -700,10 +709,16 @@ function Player() {
               holding={packed || giving ? "parcel" : picnic ? "cup" : undefined}
               animate
               scale={0.78}
+              villageRole={sharedRole || undefined}
               locomotion={locomotion}
             />
           )}
         </Suspense>
+        {ownRole && (
+          <Html center position={[0, 2.02, 0]} zIndexRange={[5, 1]}>
+            <VillageSpeech role={ownRole} />
+          </Html>
+        )}
       </group>
     </RigidBody>
   );
@@ -718,12 +733,58 @@ function Destination() {
     </mesh>
   ) : null;
 }
+function VillageRain() {
+  const rain = useRef<THREE.InstancedMesh>(null);
+  const drop = useMemo(() => new THREE.Object3D(), []);
+  const reduced = useReducedMotion();
+  useFrame(({ clock }) => {
+    const mesh = rain.current;
+    if (!mesh) return;
+    mesh.position.set(villageRender.x, 0, villageRender.z);
+    for (let i = 0; i < mesh.count; i++) {
+      const fall = reduced ? 0 : clock.elapsedTime * 0.45;
+      drop.position.set(
+        ((i * 29 % 101) / 101 - 0.5) * 9,
+        5 - ((i * 47 / 103 + fall) % 1) * 5,
+        ((i * 13 % 89) / 89 - 0.5) * 8,
+      );
+      drop.updateMatrix();
+      mesh.setMatrixAt(i, drop.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <instancedMesh ref={rain} args={[undefined, undefined, 40]} frustumCulled={false}>
+      <cylinderGeometry args={[0.007, 0.007, 0.14, 4]} />
+      <meshBasicMaterial color="#91aabd" transparent opacity={0.65} />
+    </instancedMesh>
+  );
+}
+
+function VillagePhotoCapture() {
+  const { gl, scene } = useThree();
+  const camera = useThree(s => s.camera);
+  useEffect(() => {
+    const capture = () => {
+      gl.render(scene, camera);
+      return gl.domElement.toDataURL("image/png");
+    };
+    villagePhoto.capture = capture;
+    return () => { villagePhoto.capture = null; };
+  }, [gl, scene, camera]);
+  return null;
+}
+
 export function VillageScene() {
+  const weather = useVisitsStore(s => s.role ? s.together?.weather : null);
+  const sky = weather === "sunset" ? "#edc4c7" : weather === "rain" ? "#cdd7e5" : "#e9eddd";
   return (
     <>
-      <color attach="background" args={["#e9eddd"]} />
-      <fog attach="fog" args={["#e9eddd", 28, 65]} />
-      <CozyLights />
+      <color attach="background" args={[sky]} />
+      <fog attach="fog" args={[sky, 28, 65]} />
+      <CozyLights evening={weather === "sunset"} rainy={weather === "rain"} />
+      <VillagePhotoCapture />
+      {weather === "rain" && <VillageRain />}
       <OrthographicCamera
         makeDefault
         position={[0, 13, 15]}

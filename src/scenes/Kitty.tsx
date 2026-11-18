@@ -2,7 +2,7 @@ import { useReducedMotion } from "./use-reduced-motion";
 import { KittyHeld, type Holding } from "./GameToys";
 import { updateWalking, walkingRig } from "./walk-animation";
 import { effectTime } from "./effect-motion";
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { readKittyAsset } from "./kitty-assets";
 import * as THREE from "three";
@@ -22,6 +22,8 @@ import { playHeldItem, updateHeldItem } from "../../dist/gifts.js";
 import type { Equipment, Gesture } from "../game/types";
 import { useGameStore } from "../game/store";
 import { assetUrl } from "../game/assets";
+import { VillagePerformance } from "./VillagePerformance";
+import type { VisitPlayer } from "../game/visits";
 export { assetUrl } from "../game/assets";
 export function useKittyAsset(plush?: string) {
   return readKittyAsset(plush);
@@ -50,6 +52,7 @@ interface KittyProps {
   onTouch?: (part: string) => void;
   performance?: { id: number; kind: Gesture };
   locomotion?: RefObject<{ speed: number }>;
+  villageRole?: VisitPlayer["id"];
   photoPose?: import("./PhotoCorner").PhotoPose;
 }
 export function Kitty({
@@ -70,6 +73,7 @@ export function Kitty({
   homeClip,
   homeGrip,
   heroRef,
+  villageRole,
 }: KittyProps) {
   const asset = useKittyAsset(equipment?.plush),
     hero = useMemo(
@@ -332,7 +336,7 @@ export function Kitty({
       ["dance", "danceHeld"].includes(rig.current?.getClip().name)
     )
       reactBlender(hero, null, reduced);
-    updateBlender(
+    if (!hero.userData.villagePerformance) updateBlender(
       hero,
       homeClip ? (homePaused ? 0 : Math.min(dt, 0.1)) : Math.min(dt, 0.25),
       {
@@ -388,7 +392,7 @@ export function Kitty({
     }
     if (locomotion) {
       if (
-        updateWalking(hero, dt, locomotion.current.speed, reduced, !!homeClip)
+        updateWalking(hero, dt, locomotion.current.speed, reduced, !!homeClip || hero.userData.villagePerformance)
       )
         useGameStore.getState().footstep();
       const rig = walkingRig(hero);
@@ -423,7 +427,7 @@ export function Kitty({
       }
     }
     hero.userData.blender.normalize.position.y = baseY;
-  });
+  }, villageRole ? -0.5 : 0);
   const touch = (e: ThreeEvent<MouseEvent>) => {
     if (!interactive || petMode) return;
     e.stopPropagation();
@@ -480,6 +484,11 @@ export function Kitty({
       dispose={null}
     >
       {holding && <KittyHeld hero={hero} holding={holding} />}
+      {villageRole && (
+        <Suspense fallback={null}>
+          <VillagePerformance hero={hero} role={villageRole} style={equipment?.plush || "classic"} />
+        </Suspense>
+      )}
     </primitive>
   );
 }

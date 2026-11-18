@@ -2467,53 +2467,102 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 
 .notification .dismiss-notice{pointer-events:auto;width:44px;height:44px;min-height:44px}.village-notice{padding-right:52px}
 
-.together-preview {
-  width: 100%;
-  height: 210px;
-  border-radius: 20px;
-  overflow: hidden;
-  background: #e3eddc;
+.village-social {
+  position: absolute;
+  top: 36px;
+  left: 10px;
+  right: 10px;
+  z-index: 7;
+  display: flex;
+  align-items: start;
+  flex-wrap: wrap;
+  gap: 4px;
+  pointer-events: none;
 }
-.together-activities {
-  margin: 1rem 0;
-  padding: 0.8rem;
-  border: 1px solid #e4cdd7;
-  border-radius: 22px;
+.village-social :is(button, summary, form, .together-options > div) {
+  pointer-events: auto;
 }
-.together-activities button,
-.together-activities select,
-.together-activities a {
+.village-social-buttons, .together-activities {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.village-social :is(button, summary) {
   min-height: 44px;
-  margin: 0.3rem;
+  padding: 8px;
+  font-size: 12px;
+  background: #fffaf4;
 }
-.together-activities details {
-  padding: 0.6rem 0;
-}
-.together-activities summary {
-  min-height: 44px;
+.village-social summary {
+  display: grid;
+  align-items: center;
   cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.together-options > div, .village-social .village-message {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: min(100%, 350px);
+  background: #fffbf6;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 8px;
+  margin: 0;
+  box-shadow: 0 4px 12px #2e172422;
+}
+.village-social .village-message { z-index: 2; }
+.together-options > div { max-height: 145px; overflow: auto; overscroll-behavior: contain; }
+.together-options .visit-emotes { margin: 0; }
+.together-options > div > label { display: block; margin-top: 8px; }
+.together-options select, .together-options a { min-height: 44px; }
+.village-social-status {
+  margin: 0;
+  padding: 8px;
+  background: #fffaf4;
+  border-radius: 10px;
+  align-self: center;
+  font-size: 12px;
+}
+.village-speech { position: relative; pointer-events: none; }
+.village-bubble {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(160px, 35vw);
+  padding: 7px 10px;
+  border: 1px solid #d6b5c5;
+  border-radius: 12px;
+  background: #fffcf7;
+  box-shadow: 0 3px 10px #50334c20;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.village-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  border-right: inherit;
+  border-bottom: inherit;
+  background: inherit;
+}
+@media (max-width: 640px) {
+  .village-social { top: 82px; }
+  .village-social :is(button, summary) { font-size: 11px; }
 }
 @media (max-height: 520px) and (orientation: landscape) {
-  .visits-dialog:has(.together-activities) {
-    width: 96vw;
-    max-width: 96vw;
-  }
-  .together-activities {
-    float: left;
-    width: 44%;
-    margin-right: 1rem;
-  }
-  .together-preview {
-    height: 210px;
-  }
-  .visits-dialog .visit-chat {
-    max-height: 130px;
-  }
-}
-@media (max-width: 360px) {
-  .together-preview {
-    height: 190px;
-  }
+  .village-social { top: 55px; }
+  .visits-dialog .visit-chat { max-height: 130px; }
 }
 
 @media (max-height: 520px) and (orientation: landscape) {

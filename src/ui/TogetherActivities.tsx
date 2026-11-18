@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { TogetherPreview } from "../scenes/TogetherPreview";
+import { togetherDuration, villagePhoto } from "../game/village-together";
+import { useVillageMotion } from "../game/village-motion";
 import { useVisitsStore } from "../game/visits";
 import { useGameStore } from "../game/store";
 
@@ -29,78 +30,70 @@ async function framedPhoto(source: string) {
   return canvas.toDataURL("image/png");
 }
 export function TogetherActivities() {
-  const s = useVisitsStore(),
-    capture = useRef<(() => string) | null>(null),
-    [closeup, setCloseup] = useState(true),
+  const moment = useVisitsStore((s) => s.together),
+    role = useVisitsStore((s) => s.role),
+    clockOffset = useVisitsStore((s) => s.clockOffset),
+    status = useVisitsStore((s) => s.status),
+    available = useVisitsStore((s) => s.togetherAvailable),
+    togetherAction = useVisitsStore((s) => s.togetherAction),
     [pose, setPose] = useState("wave"),
     [now, setNow] = useState(Date.now()),
     [photo, setPhoto] = useState(""),
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
-  const captured = useRef(-1);
+  const captured = useRef<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
-    if (!s.together) return;
-    const end = s.together.at - s.clockOffset + 7000;
-    const id = setInterval(() => {
+    if (!moment) return;
+    const end =
+      moment.at -
+      useVisitsStore.getState().clockOffset +
+      togetherDuration(moment.action) * 1000 +
+      150;
+    if (Date.now() >= end) return;
+    const timer = setInterval(() => {
       setNow(Date.now());
-      if (Date.now() > end) clearInterval(id);
-    }, 200);
-    return () => clearInterval(id);
-  }, [s.together?.id]);
-  const moment = s.together,
-    elapsed = moment ? now + s.clockOffset - moment.at : 10000,
-    countdown =
-      moment?.action === "photo" && elapsed < 3000
-        ? Math.max(1, Math.ceil((3000 - elapsed) / 1000))
-        : 0,
-    busy =
-      !!moment &&
-      elapsed <
-        (moment.action === "stir" || moment.action === "decorate"
-          ? 4000
-          : 3600) &&
-      moment.action !== "cancel",
-    both = s.players.filter((p) => p.connected).length === 2,
-    disabled = s.status !== "online" || !both;
+      if (Date.now() >= end) clearInterval(timer);
+    }, 100);
+    return () => clearInterval(timer);
+  }, [moment?.at, moment?.action]);
+  const elapsed = moment ? (now + clockOffset - moment.at) / 1000 : Infinity;
+  const countdown =
+    moment?.action === "photo" && elapsed < 3
+      ? Math.min(3, Math.max(1, Math.ceil(3 - elapsed)))
+      : 0;
+  const busy =
+    !!moment &&
+    moment.action !== "cancel" &&
+    elapsed < togetherDuration(moment.action);
+  const disabled = status !== "online";
   useEffect(() => {
     if (
-      moment &&
-      Date.now() + s.clockOffset - moment.at < 4500 &&
-      moment.action !== "cancel"
+      moment?.action !== "photo" ||
+      elapsed < 3 ||
+      elapsed >= 6 ||
+      captured.current === moment.at ||
+      !villagePhoto.capture
     )
-      setCloseup(false);
-  }, [moment?.id]);
-  useEffect(() => {
-    if (moment?.action !== "photo" || elapsed >= 6000) return;
-    setCloseup(false);
+      return;
+    const capturePhoto = villagePhoto.capture;
+    captured.current = moment.at;
     setPose(moment.pose);
-    if (
-      elapsed >= 3000 &&
-      elapsed < 6000 &&
-      captured.current !== moment.id &&
-      capture.current
-    ) {
-      captured.current = moment.id;
+    async function capture() {
       try {
-        void framedPhoto(capture.current())
-          .then((image) => {
-            setPhoto(image);
-            setNotice(
-              "Your photo is ready. Download it or keep it on Nancy’s wall.",
-            );
-          })
-          .catch(() =>
-            setNotice("The photo could not be made. Please try again."),
-          );
+        setPhoto(await framedPhoto(capturePhoto()));
+        setNotice(
+          "Your photo is ready. Download it or keep it on Nancy’s wall.",
+        );
       } catch {
         setNotice("The photo could not be made. Please try again.");
       }
     }
+    void capture();
   }, [moment, elapsed]);
   const action = (kind: string) => {
-    setCloseup(false);
-    s.togetherAction(kind, pose);
+    useVillageMotion.getState().stop();
+    togetherAction(kind, pose);
   };
   const keep = async () => {
     const image = new Image();
@@ -147,160 +140,158 @@ export function TogetherActivities() {
   };
   return (
     <section className="together-activities" aria-label="Time together">
-      <TogetherPreview capture={capture} closeup={closeup} />
-      <button onClick={() => setCloseup(!closeup)}>
-        {closeup ? "See both of us" : "Look at my partner"}
-      </button>
-      {moment && ["wave", "highfive", "celebrate"].includes(moment.action) && (
-        <p role="status">
-          {moment.action === "highfive"
-            ? "A high-five together ♡"
-            : moment.action === "celebrate"
-              ? "A celebration together ♡"
-              : "A wave together ♡"}
-        </p>
+      <div className="village-social-buttons">
+        <button
+          disabled={disabled || busy || !available}
+          onClick={() => action("celebrate")}
+        >
+          Dance together
+        </button>
+        {busy && (
+          <button disabled={disabled} onClick={() => action("cancel")}>
+            Stop
+          </button>
+        )}
+      </div>
+      {busy && moment?.action === "highfive" && (
+        <span className="village-social-status" role="status">
+          High-five!
+        </span>
+      )}
+      {countdown > 0 && (
+        <span className="village-social-status" role="status">
+          Photo in {countdown}…
+        </span>
       )}
       <details className="together-options">
-        <summary>Do something together ♡</summary>
-        {!s.togetherAvailable ? (
-          <p>
-            The village service needs the together update before shared
-            activities are available. Chat and invitations still work.
-          </p>
-        ) : (
-          <>
-            <div className="visit-emotes">
-              <button
-                disabled={disabled || busy}
-                onClick={() => action("wave")}
-              >
-                Wave together
-              </button>
-              <button
-                disabled={disabled || busy}
-                onClick={() => action("highfive")}
-              >
-                High-five ♡
-              </button>
-              <button
-                disabled={disabled || busy}
-                onClick={() => action("celebrate")}
-              >
-                Celebrate together
-              </button>
-              {busy && (
-                <button disabled={disabled} onClick={() => action("cancel")}>
-                  Cancel reaction
-                </button>
-              )}
-            </div>
-            <details>
-              <summary>Bake together</summary>
-              <p>
-                {moment?.baking === "decorate"
-                  ? "My Melody decorates the cookies."
-                  : moment?.baking === "ready"
-                    ? "Nancy, bring your cookies to the picnic."
-                    : "Nancy mixes, then My Melody decorates. No timer, no rush."}
-              </p>
-              <button
-                disabled={
-                  disabled ||
-                  busy ||
-                  s.role !== "host" ||
-                  (!!moment && moment.baking !== "mix")
-                }
-                onClick={() => action("stir")}
-              >
-                Nancy mixes
-              </button>
-              <button
-                disabled={
-                  disabled ||
-                  busy ||
-                  s.role !== "guest" ||
-                  moment?.baking !== "decorate"
-                }
-                onClick={() => action("decorate")}
-              >
-                Melody decorates
-              </button>
-              <button
-                disabled={
-                  disabled ||
-                  busy ||
-                  s.role !== "host" ||
-                  moment?.baking !== "ready"
-                }
-                onClick={() => action("present")}
-              >
-                Bring cookies to the picnic
-              </button>
-            </details>
-            <details>
-              <summary>A photo together</summary>
-              <label>
-                Our pose{" "}
-                <select
-                  aria-label="Our pose"
-                  value={pose}
-                  disabled={busy}
-                  onChange={(e) => setPose(e.target.value)}
+        <summary>More</summary>
+        <div>
+          {!available ? (
+            <p>
+              The village service needs the together update before shared
+              activities are available. Chat and invitations still work.
+            </p>
+          ) : (
+            <>
+              <div className="visit-emotes">
+                <button
+                  disabled={disabled || busy}
+                  onClick={() => action("wave")}
                 >
-                  <option value="wave">Wave</option>
-                  <option value="lean">Lean together</option>
-                  <option value="still">Stand together</option>
+                  Wave together
+                </button>
+                <button
+                  disabled={disabled || busy}
+                  onClick={() => action("highfive")}
+                >
+                  High-five ♡
+                </button>
+              </div>
+              <details>
+                <summary>Bake together</summary>
+                <p>
+                  {moment?.baking === "decorate"
+                    ? "My Melody decorates the cookies."
+                    : moment?.baking === "ready"
+                      ? "Nancy, bring your cookies to the picnic."
+                      : "Nancy mixes, then My Melody decorates. No timer, no rush."}
+                </p>
+                <button
+                  disabled={
+                    disabled ||
+                    busy ||
+                    role !== "host" ||
+                    (!!moment && moment.baking !== "mix")
+                  }
+                  onClick={() => action("stir")}
+                >
+                  Nancy mixes
+                </button>
+                <button
+                  disabled={
+                    disabled ||
+                    busy ||
+                    role !== "guest" ||
+                    moment?.baking !== "decorate"
+                  }
+                  onClick={() => action("decorate")}
+                >
+                  Melody decorates
+                </button>
+                <button
+                  disabled={
+                    disabled ||
+                    busy ||
+                    role !== "host" ||
+                    moment?.baking !== "ready"
+                  }
+                  onClick={() => action("present")}
+                >
+                  Bring cookies to the picnic
+                </button>
+              </details>
+              <details>
+                <summary>A photo together</summary>
+                <label>
+                  Our pose{" "}
+                  <select
+                    aria-label="Our pose"
+                    value={pose}
+                    disabled={busy}
+                    onChange={(e) => setPose(e.target.value)}
+                  >
+                    <option value="wave">Wave</option>
+                    <option value="lean">Lean together</option>
+                    <option value="still">Stand together</option>
+                  </select>
+                </label>
+                <button
+                  disabled={disabled || busy}
+                  onClick={() => action("photo")}
+                >
+                  Take our photo
+                </button>
+                {photo && (
+                  <>
+                    <a href={photo} download="Nancy-and-Melody.png">
+                      Download our photo PNG
+                    </a>
+                    {role === "host" && (
+                      <button onClick={() => void keep()}>
+                        Keep on Nancy’s wall
+                      </button>
+                    )}
+                  </>
+                )}
+              </details>
+              <label>
+                Our atmosphere{" "}
+                <select
+                  aria-label="Our atmosphere"
+                  value={moment?.weather || "sunshine"}
+                  disabled={disabled}
+                  onChange={(e) => togetherAction(e.target.value)}
+                >
+                  <option value="sunshine">Sunshine</option>
+                  <option value="sunset">Sunset</option>
+                  <option value="rain">Gentle rain</option>
                 </select>
               </label>
-              <button
-                disabled={disabled || busy}
-                onClick={() => action("photo")}
-              >
-                Take our photo
-              </button>
-              {countdown > 0 && (
-                <p role="status">Look at the camera… {countdown}</p>
-              )}
-              {photo && (
-                <>
-                  <a href={photo} download="Nancy-and-Melody.png">
-                    Download our photo PNG
-                  </a>
-                  {s.role === "host" && (
-                    <button onClick={() => void keep()}>
-                      Keep on Nancy’s wall
-                    </button>
-                  )}
-                </>
-              )}
-            </details>
-            <label>
-              Our atmosphere{" "}
-              <select
-                aria-label="Our atmosphere"
-                value={moment?.weather || "sunshine"}
-                disabled={disabled}
-                onChange={(e) => s.togetherAction(e.target.value)}
-              >
-                <option value="sunshine">Sunshine</option>
-                <option value="sunset">Sunset</option>
-                <option value="rain">Gentle rain</option>
-              </select>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={rainSound}
-                onChange={(e) => {
-                  const g = useGameStore.getState();
-                  g.setWeather(g.cozy.weather, e.target.checked);
-                }}
-              />{" "}
-              Gentle rain sounds (turn Sound on)
-            </label>
-            {notice && <p role="status">{notice}</p>}
-          </>
-        )}
+              <label>
+                <input
+                  type="checkbox"
+                  checked={rainSound}
+                  onChange={(e) => {
+                    const g = useGameStore.getState();
+                    g.setWeather(g.cozy.weather, e.target.checked);
+                  }}
+                />{" "}
+                Gentle rain sounds (turn Sound on)
+              </label>
+              {notice && <p role="status">{notice}</p>}
+            </>
+          )}
+        </div>
       </details>
     </section>
   );

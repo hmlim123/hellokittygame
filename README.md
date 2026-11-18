@@ -8,6 +8,13 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## In-village private interactions · v3.7.1
+
+Open a private visit and return to the village together. Tap **Wave** or
+**Smile**, send a message above your avatar with **Chat**, or start a synchronized
+**Dance together**. **More** opens paired activities and photo options. The
+existing Cloudflare accounts and Nancy’s local progress carry over.
+
 ## Together activities · v3.7.0
 
 The visit panel integrates the seven existing Blender together-motion libraries:
