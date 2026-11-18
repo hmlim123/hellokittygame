@@ -8,7 +8,7 @@ BASE=os.environ.get('KITTY_BASE_URL','http://127.0.0.1:8053').rstrip('/')
 START={'map':'glade','accepted':True,'x':5,'z':6,'facing':'down','chapter':{'butterflyStep':3},'charms':[]}
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
- page=b.new_page(viewport={'width':1100,'height':1060},reduced_motion='no-preference',accept_downloads=True);errors=[];page.on('pageerror',lambda e:errors.append(e.stack or str(e)));page.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-adventure-v1',"+json.dumps(json.dumps(START))+");")
+ page=b.new_page(viewport={'width':900,'height':850},reduced_motion='no-preference',accept_downloads=True);errors=[];page.on('pageerror',lambda e:errors.append(e.stack or str(e)));page.add_init_script("if(!localStorage.getItem('kitty-world-v2'))localStorage.setItem('kitty-nancy-adventure-v1',"+json.dumps(json.dumps(START))+");")
  def ready():page.wait_for_function("!document.querySelector('#openWardrobe').disabled",timeout=60000)
  def saved():return page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-adventure-v1'))")
  def observe_motion(field):
@@ -28,11 +28,25 @@ with sync_playwright() as p:
  assert page.get_by_role('button',name='Use watering can',exact=True).is_visible()
  observe_motion('petalSpread');page.get_by_role('button',name='Use watering can',exact=True).click();page.wait_for_function("document.querySelector('#world canvas').dataset.discoveryEffect==='water'");assert saved()['chapter']['flowersRevived'];assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-equipment-v1')).item")=='watering'
  saw_motion(.065,.119);page.screenshot(path='/tmp/kitty-pouring-water.png',full_page=True);page.wait_for_function("Number(document.querySelector('#world canvas').dataset.petalSpread)===.12",timeout=6000)
- # Observe before input and hold through a walk, so a slow software renderer
- # cannot finish a 250ms tap before Playwright attaches its pose assertion.
- page.evaluate("""()=>{window.walkPoseSamples=[];window.recordWalkPose=true;function sample(){const d=document.querySelector('#world canvas').dataset;walkPoseSamples.push({weight:Number(d.walkWeight),lift:Number(d.footLift),yaw:Number(d.playerYaw)});if(recordWalkPose)requestAnimationFrame(sample)}requestAnimationFrame(sample)}""")
- page.keyboard.down('ArrowLeft');page.wait_for_function("walkPoseSamples.some(s=>s.weight>.1&&s.lift>.001)",timeout=15000);page.keyboard.up('ArrowLeft');page.wait_for_function("document.querySelector('#world canvas').dataset.moving==='false'",timeout=15000)
- page.evaluate('recordWalkPose=false');poses=page.evaluate('walkPoseSamples');assert any(-1.58<s['yaw']<-.01 for s in poses),poses
+ # Record each rendered pose while walking two open tiles. The saved tile
+ # confirms that the keyboard input reached the game even on a slow renderer.
+ page.bring_to_front()
+ page.evaluate("""() => {
+     window.walkPoseSamples = [];
+     const canvas = document.querySelector('#world canvas');
+     const observer = new MutationObserver(() => {
+         const d = canvas.dataset;
+         walkPoseSamples.push({weight: +d.walkWeight, lift: +d.footLift, yaw: +d.playerYaw});
+     });
+     observer.observe(canvas, {attributes: true, attributeFilter: ['data-foot-lift']});
+     window.finishWalkPose = () => { observer.disconnect(); return walkPoseSamples; };
+ }""")
+ step('ArrowLeft',4,6)
+ step('ArrowLeft',3,6)
+ page.wait_for_function("document.querySelector('#world canvas').dataset.moving==='false'",timeout=15000)
+ poses=page.evaluate('finishWalkPose()')
+ assert any(p['weight']>.1 and p['lift']>.001 for p in poses), poses
+ assert any(-1.58<p['yaw']<-.01 for p in poses), poses
  for x in range(saved()['x']+1,5):step('ArrowRight',x,6)
  page.wait_for_function("Number(document.querySelector('#world canvas').dataset.walkWeight)<.01",timeout=5000)
  print('PASS quick watering, gradual bloom, alternating feet and smooth turn',flush=True)
