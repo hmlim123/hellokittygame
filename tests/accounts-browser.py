@@ -108,13 +108,6 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 assert page.locator('canvas').count() == 1, 'The account panel must share the village renderer'
                 back(page)
                 page.evaluate('window.finishVillageWatch = watchVillage()')
-            # Start near one another so both peer avatars and speech are in frame.
-            visits(guest)
-            guest.get_by_role('button',name='Walk to Nancy ↗',exact=True).click()
-            guest.wait_for_function("""() => {
-                const d = document.querySelector('#world canvas').dataset;
-                return d.villageRoute === '0' && Math.hypot(d.villageX-d.remoteX, d.villageZ-d.remoteZ) < 1.8;
-            }""",timeout=45000)
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteModel==='melody'",timeout=60000)
             guest.wait_for_function("document.querySelector('#world canvas').dataset.playerCharacter==='melody'",timeout=60000)
             host.wait_for_function("document.querySelector('#world canvas').dataset.playerCharacter==='kitty'",timeout=15000)
@@ -127,6 +120,13 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             idle_start=time.monotonic();host.wait_for_timeout(2100)
             assert len([row for row in sent if row[0]>=idle_start])<=2,'Idle avatars must not send ten packets per second'
             print('PASS idle connection traffic stays quiet while movement and final stops remain immediate',flush=True)
+            # Walk over after measuring the quiet connection.
+            visits(guest)
+            guest.get_by_role('button',name='Walk to Nancy ↗',exact=True).click()
+            guest.wait_for_function("""() => {
+                const d = document.querySelector('#world canvas').dataset;
+                return d.villageRoute === '0' && Math.hypot(d.villageX-d.remoteX, d.villageZ-d.remoteZ) < 1.8;
+            }""",timeout=45000)
             def bubble(page, role):
                 return page.locator(f'[data-speaker={role}] .village-bubble')
             for sender, recipient, role, message in [
