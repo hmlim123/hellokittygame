@@ -82,6 +82,20 @@ life and one complete home/activity/reward loop → polished decorating and visi
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
 
+## iPhone village canvas stability · v3.7.2
+
+An iPhone report identified flicker during walking and scrolling. The live
+v3.7.1 page reproduced repeated drawing-buffer resets using Playwright WebKit
+with the iPhone 15 profile. React Three Fiber reapplied the canvas’s 1.5×
+default while the village’s quality controller restored 1×, clearing the
+buffer at each change. The mobile village now supplies its chosen pixel ratio
+when creating the canvas and measures its size independently of page scroll.
+
+The release regression checks for every canvas width and height write during
+walking, scrolling and visits, including writes that previously reversed before
+the same frame was observed. WebKit uses Linux browser emulation. Confirmation
+on the user’s physical iPhone remains pending.
+
 ## In-village private interactions · v3.7.1
 
 Kitty and My Melody now wave, show expressions, exchange speech bubbles, and

@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ErrorInfo,
   type ReactNode,
 } from "react";
@@ -20,6 +21,7 @@ import { RoomScene } from "./RoomScene";
 import { AdventureScene } from "./AdventureScene";
 import { VillageScene } from "./VillageScene";
 import type { Mode } from "../game/types";
+import { qualityCap } from "../game/render-quality";
 import { assetUrl } from "./Kitty";
 class SceneBoundary extends Component<
   { children: ReactNode; onError: () => void },
@@ -67,6 +69,18 @@ function Loader() {
     </div>
   );
 }
+const PHONE_VIEW = "(max-width: 640px), (pointer: coarse)";
+
+function subscribePhoneView(onChange: () => void) {
+  const query = window.matchMedia(PHONE_VIEW);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function isPhoneView() {
+  return window.matchMedia(PHONE_VIEW).matches;
+}
+
 export function Stage() {
   const revision = useGameStore((s) => s.worldRevision);
   const plush = useGameStore((s) => s.equipment.plush);
@@ -76,6 +90,18 @@ export function Stage() {
   const mode = useGameStore((s) => s.mode),
     ready = useGameStore((s) => s.sceneReady),
     [error, setError] = useState(false);
+  const phoneView = useSyncExternalStore(subscribePhoneView, isPhoneView);
+  const quality = useGameStore((s) => s.preferences.quality);
+  // Canvas re-applies its dpr prop on configuration. Give the phone village
+  // its final value here so scrolling and React updates cannot clear the buffer
+  // by temporarily restoring the default ratio.
+  const fixedDpr =
+    mode === "village" && phoneView
+      ? Math.min(
+          qualityCap(quality === "auto" ? "gentle" : quality, true),
+          Math.max(1, window.devicePixelRatio || 1),
+        )
+      : undefined;
   useEffect(() => setError(false), [mode, revision, plush]);
   const camera = useMemo(
     () => ({
@@ -96,7 +122,8 @@ export function Stage() {
           key={`${mode}-${revision}-${plush || "classic"}`}
           shadows={false}
           frameloop={previewOpen ? "demand" : "always"}
-          dpr={[1, 1.5]}
+          dpr={fixedDpr ?? [1, 1.5]}
+          resize={fixedDpr !== undefined ? { scroll: false, offsetSize: true } : undefined}
           orthographic
           camera={camera}
           gl={{
@@ -125,7 +152,7 @@ export function Stage() {
           }
         >
           <Suspense fallback={null}>
-            <AdaptiveQuality continuousVillage={mode === "village"} />
+            <AdaptiveQuality fixedDpr={fixedDpr} />
             <Physics
               paused={previewOpen}
               gravity={[0, 0, 0]}

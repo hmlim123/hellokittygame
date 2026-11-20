@@ -8,6 +8,12 @@ panels. Clothes, items, keepsakes and existing story progress stay shared.
 The agreed upgrade sequence and verification are tracked in
 [Nancy's production plan](docs/production-plan.md).
 
+## Mobile village rendering · v3.7.2
+
+The village keeps one drawing-buffer size while walking or scrolling on a
+phone. The fix addresses canvas resets reproduced on the live site in WebKit
+with an iPhone 15 profile.
+
 ## In-village private interactions · v3.7.1
 
 Open a private visit and return to the village together. Tap **Wave** or

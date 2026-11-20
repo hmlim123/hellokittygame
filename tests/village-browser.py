@@ -77,11 +77,33 @@ with sync_playwright() as p:
     page.close()
 
     for width, height in [(320, 568), (390, 844), (844, 390)]:
-        phone = browser.new_page(viewport={'width': width, 'height': height}, is_mobile=True, has_touch=True, reduced_motion='reduce')
+        phone = browser.new_page(viewport={'width': width, 'height': height}, is_mobile=True, has_touch=True, device_scale_factor=3, reduced_motion='reduce')
         phone.on('pageerror', lambda e: errors.append(str(e)))
         phone.goto(BASE + '/adventure.html')
         village(phone)
         assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        phone.evaluate("""() => {
+            const canvas = document.querySelector('#world canvas');
+            const writes = [];
+            // Setting width or height clears the buffer even if the same frame
+            // sets it straight back to the original value.
+            const record = (mutations) => writes.push(...mutations.map(m => m.attributeName));
+            const observer = new MutationObserver(record);
+            observer.observe(canvas, {attributes: true, attributeFilter: ['width', 'height']});
+            window.stopVillageCanvasWatch = () => {
+                record(observer.takeRecords());
+                observer.disconnect();
+                return {writes, sameCanvas: document.querySelector('#world canvas') === canvas};
+            };
+        }""")
+        scroll_range = phone.evaluate('document.documentElement.scrollHeight - innerHeight')
+        if height > width:
+            assert scroll_range > 0
+            phone.evaluate('scrollTo(0, document.documentElement.scrollHeight)')
+            phone.wait_for_function('scrollY > 0')
+            phone.wait_for_timeout(200)
+            phone.evaluate('scrollTo(0, 0)')
+            phone.wait_for_function('scrollY === 0')
         pad = phone.locator('.village-thumb')
         pad.scroll_into_view_if_needed()
         rect = pad.bounding_box()
@@ -109,8 +131,10 @@ with sync_playwright() as p:
         # Wait for the visible state so a slow CI frame cannot race showModal().
         phone.get_by_role('dialog', name='Your village', exact=True).wait_for(state='visible', timeout=10000)
         phone.get_by_role('button', name='Close Your village', exact=True).tap()
+        canvas = phone.evaluate('stopVillageCanvasWatch()')
+        assert canvas == {'writes': [], 'sameCanvas': True}, (width, height, canvas)
         phone.screenshot(path=f'/tmp/kitty-village-touch-{width}.png', full_page=True)
         phone.close()
     assert not errors, errors
-    print('PASS 320px, 390px and landscape touch, diagonal steering, release/blur stops and menus; physical Safari untested', flush=True)
+    print('PASS 320px, 390px and landscape touch, diagonal steering, release/blur stops and menus, with no back buffer writes while scrolling or walking; physical Safari untested', flush=True)
     browser.close()

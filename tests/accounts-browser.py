@@ -58,7 +58,11 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                         if (document.querySelectorAll('canvas').length !== 1) issues.push('second canvas');
                         if (canvas.width !== size[0] || canvas.height !== size[1]) issues.push('back buffer resized');
                     };
-                    const observer = new MutationObserver(check);
+                    const observer = new MutationObserver(records => {
+                        if (records.some(record => record.target === canvas && record.type === 'attributes'))
+                            issues.push('back buffer reset');
+                        check();
+                    });
                     observer.observe(document.body, {subtree: true, childList: true, attributes: true, attributeFilter: ['width', 'height']});
                     const lost = () => issues.push('WebGL context lost');
                     canvas.addEventListener('webglcontextlost', lost);

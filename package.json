@@ -40,7 +40,7 @@
     "wrangler": "4.161.0",
     "ws": "8.22.2"
   },
-  "version": "3.7.1",
+  "version": "3.7.2",
   "cloudflare": {
     "bindings": {
       "ACCOUNT_SETUP_KEY": {
