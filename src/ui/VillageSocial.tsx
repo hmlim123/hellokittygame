@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useVisitsStore } from "../game/visits";
 import { useVillageMotion } from "../game/village-motion";
 import { TogetherActivities } from "./TogetherActivities";
+import { WalkToPicnic } from "./Visits";
 
 export function VillageSocial() {
   const status = useVisitsStore((s) => s.status);
@@ -38,6 +39,7 @@ export function VillageSocial() {
         >
           Chat
         </button>
+        <WalkToPicnic inVillage />
       </div>
       <TogetherActivities />
       {chatOpen && (

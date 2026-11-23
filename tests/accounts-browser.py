@@ -187,6 +187,36 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 assert page.evaluate('finishVillageWatch()') == [], 'Village renderer must remain stable throughout the visit'
             print('PASS synchronized Blender dance on Kitty and Melody and one stable mobile WebGL canvas throughout',flush=True)
 
+            def open_picnic(page):
+                page.bring_to_front()
+                controls=page.get_by_role('group',name='With your visitor',exact=True)
+                button=controls.get_by_role('button',name='Picnic',exact=True)
+                button.tap()
+                picnic=page.get_by_role('dialog',name='A picnic in the village',exact=True)
+                picnic.wait_for(timeout=60000)
+                return picnic
+
+            host_picnic=open_picnic(host)
+            guest_picnic=open_picnic(guest)
+            host.bring_to_front()
+            host_picnic.get_by_role('button',name='Lay the cloth').tap()
+            guest_picnic.get_by_role('button',name='✓ Lay the cloth',exact=True).wait_for()
+
+            guest.bring_to_front()
+            guest.reload();ready(guest)
+            guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=30000)
+            back(guest)
+            guest_picnic=open_picnic(guest)
+            assert guest_picnic.get_by_role('button',name='✓ Lay the cloth',exact=True).get_attribute('aria-pressed')=='true'
+            guest_picnic.get_by_role('button',name='Bring the cookies').tap()
+            host_picnic.get_by_role('button',name='✓ Bring the cookies',exact=True).wait_for()
+            host.bring_to_front()
+            host_picnic.get_by_role('button',name='Pour the tea').tap()
+            for picnic in [host_picnic, guest_picnic]:
+                picnic.get_by_role('heading',name='A little picnic, made together ♡').wait_for()
+            back(host);back(guest)
+            print('PASS direct picnic controls, separate contributions and a refresh before the shared picnic is complete',flush=True)
+
             host.get_by_text('More',exact=True).tap()
             host.get_by_role('button',name='High-five ♡',exact=True).tap()
             guest.wait_for_function("document.querySelector('#world canvas').dataset.guestTogether==='highfive'",timeout=12000)

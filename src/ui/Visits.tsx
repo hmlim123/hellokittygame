@@ -4,26 +4,38 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { useGameStore } from "../game/store";
 import { useVisitsStore, parseVisitLink } from "../game/visits";
-import { useVillageMotion } from "../game/village-motion";
+import { useVillageMotion, type VillagePoint } from "../game/village-motion";
 import { VILLAGE_ACTIONS, villageWalkable } from "../game/village";
 
-function WalkToPicnic() {
-  const status = useVisitsStore(s => s.status), p = useVillageMotion(s => s.position);
-  if (status !== "online" || Math.hypot(p.x + 5.5, p.z - 4.2) < 2.5) return null;
-  return <button className="visit-navigation" onClick={() => {
-    useGameStore.getState().closePanel();
-    const table = VILLAGE_ACTIONS.find(o => o.id === "picnic")!;
-    useVillageMotion.getState().walkTo(table, "picnic");
-  }}>Walk to the picnic table ↗</button>;
+const picnicTable = VILLAGE_ACTIONS.find((o) => o.id === "picnic")!;
+const nearPicnic = ({ position }: { position: VillagePoint }) =>
+  Math.hypot(position.x - picnicTable.x, position.z - picnicTable.z) < 2.5;
+
+export function WalkToPicnic({ inVillage = false }: { inVillage?: boolean }) {
+  const status = useVisitsStore((s) => s.status);
+  const ready = useGameStore((s) => s.sceneReady);
+  const near = useVillageMotion(nearPicnic);
+  if (!inVillage && (status !== "online" || near)) return null;
+  return (
+    <button
+      className={inVillage ? undefined : "visit-navigation"}
+      disabled={!ready || status !== "online"}
+      onClick={() => {
+        if (!inVillage) useGameStore.getState().closePanel();
+        useVillageMotion.getState().walkTo(picnicTable, picnicTable.id);
+      }}
+    >
+      {inVillage ? "Picnic" : "Walk to the picnic table ↗"}
+    </button>
+  );
 }
 export function SharedPicnic({ navigation = true }: { navigation?: boolean }) {
   const status = useVisitsStore((s) => s.status),
     players = useVisitsStore((s) => s.players),
     picnic = useVisitsStore((s) => s.picnic),
-    p = useVillageMotion((s) => s.position);
+    near = useVillageMotion(nearPicnic);
   if (status !== "online") return null;
-  const together = players.filter((p) => p.connected).length === 2,
-    near = Math.hypot(p.x + 5.5, p.z - 4.2) < 2.5;
+  const together = players.filter((p) => p.connected).length === 2;
   return (
     <section className="shared-picnic" aria-label="Our shared picnic">
       <h3>

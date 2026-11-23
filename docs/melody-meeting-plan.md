@@ -11,6 +11,7 @@ put together.
    accounts. Choose **Meet together** if it appears. With the invitation flow,
    Nancy chooses **Open my village** and shares the private visit link with you.
    First-time My Melody registration uses the separate account invitation.
+   [Open the hosted village](https://hmlim123.github.io/hellokittygame/adventure.html?visits=https%3A%2F%2Fhellokittygame.hmbest77.workers.dev) ·
    [Private visit setup](private-visits-setup.md)
 2. Meet by the plaza. Wave, smile, and send each other a short message. Walk a
    little in different directions so you can each see the other character move.
@@ -34,10 +35,28 @@ put together.
 The repository includes a two-account browser test, an invite-and-picnic
 browser test, and a Cloudflare runtime suite. Local browser tests use temporary
 accounts and phone-sized emulation. A real two-device visit is the hosted
-acceptance check. The public Worker address is documented, but a health request
-from this workspace returned HTTP 403, so hosted capability and real account
-readiness still need verification. [Account browser test](../tests/accounts-browser.py) ·
+acceptance check. [Account browser test](../tests/accounts-browser.py) ·
 [Private visit browser test](../tests/visits-browser.py) ·
+[Hosted service setup](private-visits-setup.md#updating-an-existing-village-for-v37)
+
+## Implementation and hosted checks · November 23, 2026
+
+The draft puts a **Picnic** button beside **Wave**, **Smile**, and **Chat** once
+both players are in the village. Each player can use it to walk to their spot
+at the table and open the shared activity.
+
+The production build and all 286 rule and service checks passed. In two
+390×844 Chromium sessions against the local Worker, Nancy and My Melody signed
+in, walked, exchanged messages and gestures, and danced together. Nancy laid the
+cloth, Melody refreshed and reopened the same picnic, and both saw the finished
+table after they added the cookies and tea. [Account browser test](../tests/accounts-browser.py)
+
+The published GitHub Pages client is v3.7.2 and includes **Meet together**.
+The production Cloudflare Worker returned a healthy response and, for the
+published game origin, reported that Nancy’s account is initialized, My Melody
+is registered, and **Meet together** is supported. The new **Picnic** button is
+in the draft client. A hosted playthrough with both players on their own devices
+remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittygame/actions/runs/44675763272) ·
 [Hosted service setup](private-visits-setup.md#updating-an-existing-village-for-v37)
 
 ## Activities for repeat visits
