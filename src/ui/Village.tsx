@@ -19,18 +19,30 @@ import { SharedPicnic } from "./Visits";
 
 export function VillageGuide() {
   const guest = useVillageMotion((s) => s.guestVisit);
-  const progress = useGameStore((s) => s.cozy.village),
-    goal = villageGoal(progress),
-    packed = useGameStore((s) => !!s.cozy.cookie.packed);
+  const ready = useGameStore((s) => s.sceneReady);
+  const progress = useGameStore((s) => s.cozy.village);
+  const packed = useGameStore((s) => !!s.cozy.cookie.packed);
+  const goal = villageGoal(progress, packed);
+  const destination = !guest && VILLAGE_ACTIONS.find((o) => o.id === goal.action);
   return (
     <div className="village-guide">
-      <p>
+      <p id="village-goal">
         {guest
           ? "You’re visiting Nancy. Say hello, help her flowers, or share a little picnic. ♡"
-          : packed
-            ? "Your cookie is ready. Bring it to Momo or Pip. ♡"
-            : goal.text}
+          : goal.text}
       </p>
+      {destination && (
+        <button
+          className="village-guide-route"
+          aria-describedby="village-goal"
+          disabled={!ready}
+          onClick={() =>
+            useVillageMotion.getState().walkTo(destination, destination.id)
+          }
+        >
+          Walk there
+        </button>
+      )}
       <details>
         <summary>A gentle hint</summary>
         <p>
@@ -38,16 +50,6 @@ export function VillageGuide() {
           control below. Your home has a pink roof on the left; the café has a
           striped awning on the right.
         </p>
-        {goal.action && !guest && (
-          <button
-            onClick={() => {
-              const o = VILLAGE_ACTIONS.find((o) => o.id === goal.action);
-              if (o) useVillageMotion.getState().walkTo(o, goal.action!);
-            }}
-          >
-            Walk there ♡
-          </button>
-        )}
       </details>
     </div>
   );
@@ -65,9 +67,10 @@ export function VillageControls() {
     picnic = useVillageMotion((s) => s.picnic),
     packed = useGameStore((s) => !!s.cozy.cookie.packed),
     v = useGameStore((s) => s.cozy.village),
-    goal = villageGoal(v),
+    goal = villageGoal(v, packed),
     next = VILLAGE_ACTIONS.find((o) => o.id === (goal.action || "cafe")),
-    deliver = packed && near?.id !== "momo" && near?.id !== "pip";
+    context =
+      packed && near?.id !== "momo" && near?.id !== "pip" ? undefined : near;
   return (
     <>
       <div className="village-controls">
@@ -80,25 +83,12 @@ export function VillageControls() {
             className="primary village-context"
             disabled={!ready || picnic}
             onClick={() => {
-              if (deliver) {
-                const friend = VILLAGE_ACTIONS.find((o) => o.id === "momo")!;
-                useVillageMotion.getState().walkTo(friend, "momo");
-              } else if (near) actInVillage();
+              if (context) actInVillage();
               else if (next) useVillageMotion.getState().walkTo(next, next.id);
             }}
             aria-keyshortcuts="E"
           >
-            {deliver
-              ? "Bring your cookie to Momo"
-              : near
-                ? near.label
-                : next?.id === "momo"
-                  ? "Walk to Momo"
-                  : next?.id === "pip"
-                    ? "Walk to Pip"
-                    : next?.id === "home"
-                      ? "Walk home"
-                      : "Walk to the café"}{" "}
+            {context?.label ?? goal.label ?? "Walk to the café"}{" "}
             <span aria-hidden="true">♡</span>
           </button>
           <div className="village-small-actions">
