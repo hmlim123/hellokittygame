@@ -93,7 +93,10 @@ with sync_playwright() as p:
         phone.goto(BASE + '/adventure.html')
         village(phone)
         assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth')
-        assert phone.get_by_role('button', name='Walk there', exact=True).is_visible()
+        if height > width:
+            assert phone.get_by_role('button', name='Walk there', exact=True).is_visible()
+        else:
+            assert phone.get_by_role('button', name='Walk to Momo', exact=True).is_visible()
         phone.evaluate("""() => {
             const canvas = document.querySelector('#world canvas');
             const writes = [];
