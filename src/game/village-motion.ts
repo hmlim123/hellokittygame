@@ -6,6 +6,7 @@ import {
   VILLAGE_SPAWN,
   villagePath,
   villageApproach,
+  unplacedVillageKeepsakes,
 } from "./village";
 export interface VillagePoint {
   x: number;
@@ -146,9 +147,7 @@ export function actInVillage(id?: string) {
       return;
     }
     s.setMode("room");
-    const v = s.cozy.village;
-    if (Object.values(v.placed).length === 0 && v.greeted.length)
-      s.openPanel("village");
+    if (unplacedVillageKeepsakes(s.cozy.village).length) s.openPanel("village");
   } else if (action === "cafe") {
     if (s.cozy.cookie.stage === "served" && !s.cozy.cookie.packed)
       s.newCookie();

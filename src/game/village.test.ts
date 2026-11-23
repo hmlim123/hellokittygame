@@ -9,6 +9,8 @@ import {
   villageWalkable,
   moveVillage,
   villageKeepsakes,
+  villageGoal,
+  unplacedVillageKeepsakes,
   villageApproach,
 } from "./village";
 import { straightVillagePath } from "../../shared/village-world.mjs";
@@ -172,6 +174,28 @@ describe("village life and the trip home", () => {
       welcome: "window",
       flowers: "nook",
     });
+  });
+  it("guides the existing café outing from hello through placing a new memory", () => {
+    const village = normalizeVillage(null);
+    expect(villageGoal(village).action).toBe("momo");
+    village.greeted = ["momo"];
+    expect(villageGoal(village).action).toBe("cafe");
+    expect(villageGoal(village, true).action).toBe("momo");
+    village.gifts.momo = 1;
+    village.returned = true;
+    village.placed.welcome = "nook";
+    expect(unplacedVillageKeepsakes(village).map((item) => item.id)).toEqual(["cafe"]);
+    expect(villageGoal(village).action).toBe("home");
+    village.placed.cafe = "table";
+    expect(villageGoal(village).action).toBeNull();
+  });
+  it("guides a garden visit to the next dry bed before suggesting home", () => {
+    const village = normalizeVillage({ greeted: ["momo"], flowers: [false, true, false] });
+    expect(villageGoal(village).action).toBe("flowers0");
+    village.flowers[0] = true;
+    expect(villageGoal(village).action).toBe("flowers2");
+    village.flowers[2] = true;
+    expect(villageGoal(village).action).toBe("home");
   });
   it("includes village progress in the existing backup and restore format", () => {
     const { store } = game();

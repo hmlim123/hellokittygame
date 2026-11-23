@@ -1,3 +1,20 @@
+/* Optional directions leave the nearby action available in the village HUD. */
+.village-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+}
+.village-guide > details {
+  grid-column: 1 / -1;
+}
+.village-guide-route {
+  min-height: 44px;
+  padding: 7px 10px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
 /* Mobile play: the scene, thumb and one context action share the viewport. */
 .home-hud {
   position: absolute;

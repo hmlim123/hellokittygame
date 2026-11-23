@@ -30,14 +30,21 @@ with sync_playwright() as p:
     page.get_by_role('dialog', name='Momo', exact=True).wait_for(timeout=35000)
     assert 'welcome cushion' in page.get_by_role('dialog', name='Momo', exact=True).inner_text()
     assert saved()['greeted'] == ['momo']
-    page.get_by_role('button', name='Let’s visit the café ☕', exact=True).click()
+    page.get_by_role('button', name='Close Momo', exact=True).click()
+    page.get_by_role('button', name='Places & memories', exact=True).click()
+    page.locator('[data-village-keepsake=welcome]').get_by_role('button', name='Reading nook', exact=True).click()
+    page.get_by_role('button', name='Close Your village', exact=True).click()
+    assert saved()['placed'] == {'welcome': 'nook'}
+    route = page.get_by_role('button', name='Walk there', exact=True)
+    page.get_by_text('Bake a cookie at Momo’s café to make a gift for her.', exact=True).wait_for()
+    route.click()
     page.get_by_role('dialog', name='Bake cookies with Kitty', exact=True).wait_for(timeout=35000)
     page.get_by_role('button', name='Bake & decorate →', exact=True).click()
     page.get_by_role('button', name='Add a heart ♥', exact=True).click()
     page.get_by_role('button', name='Ready to give →', exact=True).click()
     page.get_by_role('button', name='Wrap for a village friend ♡', exact=True).click()
     page.wait_for_function("document.querySelector('#world canvas').dataset.holding==='parcel'", timeout=20000)
-    page.get_by_role('button', name='Momo ♡', exact=True).click()
+    route.click()
     page.get_by_role('dialog', name='Momo', exact=True).wait_for(timeout=35000)
     page.get_by_role('button', name='Give your wrapped cookie ♡', exact=True).click()
     page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).village.gifts.momo===1")
@@ -46,12 +53,16 @@ with sync_playwright() as p:
 
     place('Pip’s garden')
     page.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageRoute)===0", timeout=35000)
-    for index in [2, 1, 3]:
-        page.get_by_role('button', name='Water flower bed ' + str(index), exact=True).click()
+    page.get_by_role('button', name='Water flower bed 2', exact=True).click()
+    page.wait_for_function("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).village.flowers[1]", timeout=35000)
+    for index in [1, 3]:
+        page.get_by_text(f'Water flower bed {index} to help Pip’s garden bloom.', exact=True).wait_for()
+        route.click()
         page.wait_for_function("i=>JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).village.flowers[i]", arg=index - 1, timeout=35000)
     assert all(saved()['flowers'])
     page.screenshot(path='/tmp/kitty-village-garden.png', full_page=True)
-    place('Nancy’s home')
+    page.get_by_text('Take your keepsakes home and find a spot for them.', exact=True).wait_for()
+    route.click()
     page.get_by_role('dialog', name='Your village', exact=True).wait_for(timeout=35000)
     ready()
     assert page.locator('.action-bar>button').count() == 3
@@ -82,6 +93,7 @@ with sync_playwright() as p:
         phone.goto(BASE + '/adventure.html')
         village(phone)
         assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        assert phone.get_by_role('button', name='Walk there', exact=True).is_visible()
         phone.evaluate("""() => {
             const canvas = document.querySelector('#world canvas');
             const writes = [];

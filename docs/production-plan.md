@@ -82,6 +82,14 @@ life and one complete home/activity/reward loop → polished decorating and visi
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
 
+## Village directions and keepsake placement
+
+The optional village guide now offers a direct route to Momo, the café, the
+next dry flower bed, or home. It follows the existing cookie and gardening
+progress. Returning through the front door opens the keepsake panel whenever
+an earned memory still needs a spot, including after a previous decoration
+has already been placed.
+
 ## iPhone village canvas stability · v3.7.2
 
 An iPhone report identified flicker during walking and scrolling. The live

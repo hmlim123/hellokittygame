@@ -113,24 +113,49 @@ export function villageKeepsakes(v: VillageProgress) {
         : v.gifts.momo > 0,
   );
 }
-export function villageGoal(v: VillageProgress) {
+export function unplacedVillageKeepsakes(v: VillageProgress) {
+  return villageKeepsakes(v).filter(({ id }) => !v.placed[id]);
+}
+
+export function villageGoal(v: VillageProgress, packed = false) {
+  if (packed)
+    return {
+      text: "Bring your wrapped cookie to Momo to earn a café memory. ♡",
+      action: "momo",
+      label: "Bring your cookie to Momo",
+    };
   if (!v.greeted.includes("momo"))
     return {
       text: "Momo is waiting by her café. Say a little hello.",
       action: "momo",
+      label: "Walk to Momo",
     };
-  if (!v.flowers.some(Boolean) && !v.gifts.momo)
+
+  const dryBed = v.flowers.indexOf(false);
+  if (dryBed !== -1 && v.flowers.some(Boolean))
     return {
-      text: "Spend a little time at the café or help Pip’s flowers bloom.",
-      action: "pip",
+      text: `Water flower bed ${dryBed + 1} to help Pip’s garden bloom.`,
+      action: `flowers${dryBed}`,
+      label: `Walk to flower bed ${dryBed + 1}`,
     };
-  if (!v.returned)
+
+  if (!v.gifts.momo && dryBed !== -1)
     return {
-      text: "You have something lovely to bring home. Visit your little home.",
+      text: "Bake a cookie at Momo’s café to make a gift for her.",
+      action: "cafe",
+      label: "Walk to the café",
+    };
+
+  if (unplacedVillageKeepsakes(v).length)
+    return {
+      text: "Take your keepsakes home and find a spot for them.",
       action: "home",
+      label: "Walk home",
     };
+
   return {
     text: "Your village is yours to enjoy. Visit a friend, bake, or tend the garden.",
     action: null,
+    label: null,
   };
 }
