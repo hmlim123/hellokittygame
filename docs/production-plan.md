@@ -5,6 +5,13 @@ sessions. Deliver and verify one milestone at a time, with a focused release
 and a short explanation of what changed. The roadmap is not a claim that every
 stage has already shipped.
 
+## Current priority · Nancy and My Melody playing together
+
+The next milestone is a reliable private visit for Nancy as Hello Kitty and you
+as My Melody, followed by more activities you can do together. The first
+90 minutes focus on meeting, interacting, and finishing one picnic from two
+devices. [Melody meeting plan](melody-meeting-plan.md)
+
 ## Current direction: Nancy’s cozy village
 
 Agreed direction on 2026-11-09: evolve the game toward a Hello Kitty life
