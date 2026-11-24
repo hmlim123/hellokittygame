@@ -111,9 +111,9 @@ picnic while the newer activities were hidden. [GitHub service check](https://gi
 
 ## Clue trail and Petal Match verification · November 24, 2026
 
-The production build and 297 automated checks passed. In two-player Chromium
-and WebKit browser sessions, the clues stayed private until shared, the players
-could revise a wrong guess, and each could collect one visible ribbon. The
+The production build, 297 automated checks, and full two-player Chromium visit
+passed. In Chromium and WebKit, the clues stayed private until shared, the
+players could revise a wrong guess, and each could collect one visible ribbon. The
 flower choices stayed hidden through a refresh, and the pair completed both
 matching and mismatched rounds. The active clue menu stayed reachable at
 320×568 and 844×390 in WebKit. [Two-account browser test](../tests/accounts-browser.py)
@@ -121,7 +121,9 @@ matching and mismatched rounds. The active clue menu stayed reachable at
 The Cloudflare and Node tests restored in-progress rounds after a service
 restart. A separate upgrade rehearsal reopened existing accounts and village
 progress from the published Worker’s SQLite data before starting the new
-activities. [GitHub service check](https://github.com/hmlim123/hellokittygame/actions/runs/45478333092)
+activities. The published client could join, chat, and start a picnic with the
+updated Worker. The updated client could join and start a picnic with the
+published Worker. [GitHub service check](https://github.com/hmlim123/hellokittygame/actions/runs/45479608520)
 
 ## Later activities
 
