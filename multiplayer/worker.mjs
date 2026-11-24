@@ -1,5 +1,5 @@
-import { newLanternEvening } from "../shared/lantern-evening.mjs";
-import { newPostcardWalk } from "../shared/postcard-walk.mjs";
+import { newLanternEvening, normalizeLanternEvening } from "../shared/lantern-evening.mjs";
+import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.mjs";
 import { DurableObject } from "cloudflare:workers";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { createAccountState } from "../server/account-state.mjs";
@@ -141,9 +141,12 @@ export class PrivateVillage extends DurableObject {
       },
     });
     this.room = this.read("room");
-    if (this.room)
+    if (this.room) {
+      this.room.postcardWalk = normalizePostcardWalk(this.room.postcardWalk);
+      this.room.lanternEvening = normalizeLanternEvening(this.room.lanternEvening);
       for (const role of ["host", "guest"])
         if (this.room[role]) this.room[role].socket = null;
+    }
     this.connections = new Map();
     // Cloudflare restores accepted sockets and attachments after hibernation.
     for (const ws of ctx.getWebSockets()) {

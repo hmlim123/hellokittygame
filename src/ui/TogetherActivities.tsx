@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { togetherDuration, villagePhoto } from "../game/village-together";
-import { useVillageMotion } from "../game/village-motion";
-import { useVisitsStore } from "../game/visits";
+import { useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
+import { useVisitsStore, villagePartner } from "../game/visits";
 import type { PostcardMemory } from "../game/cozy";
 import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
 import { LanternEvening } from "./LanternEvening";
 import { useGameStore } from "../game/store";
 import { visitTime } from "../game/visit-clock";
+import { inVillagePhotoRange } from "../../shared/village-world.mjs";
 
 type SharedPhoto = Omit<PostcardMemory, "image" | "place"> & {
   png: string;
@@ -50,6 +51,13 @@ export function TogetherActivities() {
     [photo, setPhoto] = useState<SharedPhoto | null>(null),
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
+  const sceneReady = useGameStore((s) => s.sceneReady);
+  const photoPartner = useVisitsStore(villagePartner);
+  const nearForPhoto = useVisitsStore((s) => {
+    const visitor = villagePartner(s);
+    const own = s.players.find((p) => p.id === s.role);
+    return !!visitor && !!own && inVillagePhotoRange(own, visitor);
+  });
   const photoKept = useGameStore((s) =>
     !!photo && s.cozy.postcards.some((p) => p.id === photo.id),
   );
@@ -278,6 +286,14 @@ export function TogetherActivities() {
               </details>
               <details>
                 <summary>A photo together</summary>
+                {!nearForPhoto && photoPartner && (
+                  <button
+                    disabled={disabled || busy || !sceneReady}
+                    onClick={() => walkToVillageCompanion(photoPartner)}
+                  >
+                    Walk to {photoPartner.name} for the photo
+                  </button>
+                )}
                 <label>
                   Our pose{" "}
                   <select
@@ -292,7 +308,7 @@ export function TogetherActivities() {
                   </select>
                 </label>
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || !nearForPhoto}
                   onClick={() => action("photo")}
                 >
                   Take our photo

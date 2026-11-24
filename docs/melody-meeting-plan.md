@@ -15,12 +15,13 @@ put together.
    [Private visit setup](private-visits-setup.md)
 2. Meet by the plaza. Wave, smile, and send each other a short message. Walk a
    little in different directions so you can each see the other character move.
-3. Walk together to the picnic table. One of you lays the cloth, the other brings
-   cookies, and either can pour the tea. Both should see the same finished table.
-   For another visit, try baking the cookies together before bringing them to
-   the picnic.
-4. Take a framed photo together when the shared photo controls are available.
-   Either of you can download it. Nancy can choose to display it on her wall.
+3. Each choose **Picnic** to walk to the table. One of you lays the cloth,
+   the other brings cookies, and either can pour the tea. Choose **Enjoy the
+   picnic** to raise your cup and chat in the village. Try **Bake together**
+   under **Activities** to prepare the cookies as a pair.
+4. Under **Activities**, choose **A photo together**. Pick a pose and start
+   the countdown. Either of you can download the photo, and Nancy can keep it
+   on her wall.
    [Shared activities in the game](../src/ui/TogetherActivities.tsx)
 
 ## First 90 minutes of development
@@ -39,7 +40,7 @@ acceptance check. [Account browser test](../tests/accounts-browser.py) ·
 [Private visit browser test](../tests/visits-browser.py) ·
 [Hosted service setup](private-visits-setup.md#updating-an-existing-village-for-v37)
 
-## Implementation and hosted checks · November 23, 2026
+## First picnic check · November 23, 2026
 
 The draft puts a **Picnic** button beside **Wave**, **Smile**, and **Chat** once
 both players are in the village. Each player can use it to walk to their spot
@@ -80,31 +81,11 @@ Postcard walks and lantern evenings use new shared state from the existing
 Worker. Their controls appear when that Worker has been updated. The upgrade
 uses the existing service and SQLite data. [Updating the existing village service](private-visits-setup.md#updating-an-existing-village-for-v37)
 
-## Activities for repeat visits
+## Later activities
 
-Start with the picnic. Next, make the activities already in the code easy to
-start from the village. Add the later activities one at a time after the meeting
-and reconnect flow is dependable.
-
-| Order | Activity | What Nancy and Melody do |
-| --- | --- | --- |
-| First visit | Plaza hello | Walk freely, wave and smile at each other, chat in speech bubbles, and try the synchronized dance. |
-| First visit | Picnic for two | Meet at the table and share the cloth, cookies, and tea tasks. Stay and chat once the table is ready. |
-| Next | Pip’s garden | Split the flower beds between you. See each bloom appear for both players as it’s watered. |
-| Next | Bake together | Nancy mixes and presents while Melody decorates. Bring the finished cookies to the shared picnic. |
-| Next | Dance and high-five | Use the existing paired gestures and choose a spot in the plaza to celebrate together. |
-| Next | Village photo | Pick a pose, share a countdown, and download a framed PNG. Try sunshine or sunset for another visit. |
-| Later | Bench tea | Meet at a bench or picnic table. One player pours, the other offers a cookie, then both can sit and sip while chatting. |
-| Draft activities | Postcard walk | Pick one village landmark each. Walk to both, add a stamp from each stop, and save the two-stamp postcard. |
-| Draft activities | Lantern evening | Choose a lantern color each, light the lanterns together, and take a photo in the evening village. |
-| Later | A village clue trail | Give each player a different clue. Share the clues in chat, then meet at the landmark they point to. |
-
-Wave, smile, chat, and the shared dance are implemented in the village. The
-picnic, garden, paired gestures, cooperative baking, weather, and photos already
-have game or service support. The next pass should connect those pieces into
-easy visits on the existing map. [Village social controls](../src/ui/VillageSocial.tsx) ·
-[Shared activity rules](../shared/visit-actions.mjs) ·
-[Production plan](production-plan.md#in-village-private-interactions--v371)
+- **Bench tea** would add a separate place to sit, share a cookie, and chat.
+- **A village clue trail** would give each player a different clue. Share the
+  clues in chat, then meet at the landmark they point to.
 
 ## Ready for Nancy and Melody
 

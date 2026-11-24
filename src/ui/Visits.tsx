@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { useGameStore } from "../game/store";
 import { useVisitsStore, parseVisitLink } from "../game/visits";
-import { useVillageMotion, type VillagePoint } from "../game/village-motion";
-import { VILLAGE_PICNIC, villageWalkable } from "../game/village";
+import { useVillageMotion, walkToVillageCompanion, type VillagePoint } from "../game/village-motion";
+import { VILLAGE_PICNIC } from "../game/village";
 
 const nearPicnic = ({ position }: { position: VillagePoint }) =>
   Math.hypot(position.x - VILLAGE_PICNIC.x, position.z - VILLAGE_PICNIC.z) < 2.5;
@@ -298,12 +298,7 @@ export function VisitsPanel() {
               <button
                 onClick={() => {
                   close();
-                  const target = [
-                    { x: other.x + 1.5, z: other.z },
-                    { x: other.x - 1.5, z: other.z },
-                    { x: other.x, z: other.z + 1.5 },
-                  ].find((p) => villageWalkable(p.x, p.z));
-                  if (target) useVillageMotion.getState().walkTo(target);
+                  walkToVillageCompanion(other);
                 }}
               >
                 Walk to {other.name} ↗

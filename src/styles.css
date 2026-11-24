@@ -2518,7 +2518,17 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 .together-options > div { max-height: min(320px, 38dvh); overflow: auto; overscroll-behavior: contain; }
 .together-options .visit-emotes { margin: 0; }
 .together-options > div > label { display: block; margin-top: 8px; }
-.together-options select, .together-options a { min-height: 44px; }
+.together-options select { min-height: 44px; }
+.together-options a[download] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--accent);
+  background: #fffaf4;
+}
 .village-social-status {
   margin: 0;
   padding: 8px;

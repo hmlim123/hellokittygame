@@ -6,6 +6,7 @@ import {
   VILLAGE_SPAWN,
   villagePath,
   villageApproach,
+  villageWalkable,
 } from "./village";
 export interface VillagePoint {
   x: number;
@@ -73,6 +74,16 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
     return true;
   },
 }));
+export function walkToVillageCompanion({ x, z }: VillagePoint) {
+  const target = [
+    { x: x + 1.5, z },
+    { x: x - 1.5, z },
+    { x, z: z + 1.5 },
+    { x, z: z - 1.5 },
+  ].find((p) => villageWalkable(p.x, p.z));
+  return !!target && useVillageMotion.getState().walkTo(target);
+}
+
 export function nearbyVillageAction(position: VillagePoint) {
   return VILLAGE_ACTIONS.map((o) => ({
     ...o,

@@ -89,6 +89,20 @@ life and one complete home/activity/reward loop → polished decorating and visi
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
 
+## Nancy and My Melody’s repeat visits · November 23, 2026
+
+The draft adds a direct route to the shared picnic and Pip’s garden. Both
+players can stay at the picnic table, raise their cups, and chat. Baking shows
+whose turn it is, and shared photos keep their capture settings. During a
+postcard walk, each player chooses a landmark and both help stamp the route.
+During lantern evening, each player chooses and lights a lantern before the
+village changes to sunset. [Meeting plan](melody-meeting-plan.md)
+
+The postcard walk and lantern evening need the updated Cloudflare Worker.
+The draft uses the same two accounts, existing SQLite binding, and saved
+personal progress. The hosted visit on both players’ actual devices remains
+the acceptance check. [Existing Worker update](private-visits-setup.md#updating-an-existing-village-for-v37)
+
 ## iPhone village canvas stability · v3.7.2
 
 An iPhone report identified flicker during walking and scrolling. The live

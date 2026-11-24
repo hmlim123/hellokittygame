@@ -186,6 +186,8 @@ npx wrangler deploy --name hellokittygame
 
 No new secret or account initialization is required. On the updated service,
 an authenticated `GET /account` reports `togetherAvailable: true`. The game uses
-this flag to enable **Meet together**; room snapshots enable shared reactions,
-baking, weather and photos. Older services keep chat and invitations available.
+this flag to enable **Meet together**. Room snapshots enable shared reactions,
+baking, weather, and photos. The Postcard walk and Lantern evening controls
+appear when the Worker sends their shared state. Older services keep their
+existing activities available.
 A successful GitHub Pages deployment publishes only the client, not this Worker.

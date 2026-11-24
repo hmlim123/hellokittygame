@@ -239,6 +239,18 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
 
             for page, garden_x in [(host, 5.5), (guest, 6.5)]:
                 page.bring_to_front()
+                if page == guest:
+                    activities = guest.get_by_text('Activities',exact=True)
+                    activities.tap()
+                    guest.get_by_text('A photo together',exact=True).tap()
+                    shutter = guest.get_by_role('button',name='Take our photo',exact=True)
+                    assert shutter.is_disabled(), 'Both players need to be in frame'
+                    guest.get_by_role('button',name='Walk to Nancy for the photo',exact=True).tap()
+                    guest.wait_for_function("""() => [...document.querySelectorAll('button')]
+                        .some(button => button.textContent.trim() === 'Take our photo' && !button.disabled)
+                    """,timeout=60000)
+                    guest.get_by_text('A photo together',exact=True).tap()
+                    activities.tap()
                 page.get_by_role('button',name='Garden',exact=True).tap()
                 page.wait_for_function("""x => {
                     const d = document.querySelector('#world canvas').dataset;
@@ -272,7 +284,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.get_by_role('button',name='Take our photo',exact=True).click(timeout=20000)
             host.get_by_role('link',name='Download our photo PNG',exact=True).wait_for(timeout=20000)
             with host.expect_download() as download:
-                host.get_by_role('link',name='Download our photo PNG',exact=True).click()
+                host.get_by_role('link',name='Download our photo PNG',exact=True).tap()
             photo_path=results/'Nancy-and-Melody.png';download.value.save_as(photo_path)
             from PIL import Image
             with Image.open(photo_path) as photo:
@@ -291,7 +303,10 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             guest.bring_to_front()
             guest.get_by_text('Activities',exact=True).tap()
             guest.get_by_text('A photo together',exact=True).tap()
-            guest.get_by_role('link',name='Download our photo PNG',exact=True).wait_for(timeout=20000)
+            with guest.expect_download() as download:
+                guest.get_by_role('link',name='Download our photo PNG',exact=True).tap(timeout=20000)
+            with Image.open(download.value.path()) as photo:
+                assert photo.format=='PNG' and photo.size==(800,960)
             assert guest.get_by_role('button',name='Keep on Nancy’s wall',exact=True).count()==0
             for page in [host,guest]:
                 page.get_by_text('Activities',exact=True).tap()
@@ -342,7 +357,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                     trail.tap()
                 page.get_by_text('Your two-stamp postcard is ready.',exact=True).wait_for()
             with guest.expect_download() as download:
-                guest.get_by_role('button',name='Download village postcard',exact=True).tap()
+                guest.get_by_role('link',name='Download village postcard',exact=True).tap()
             assert download.value.suggested_filename == 'Nancy-and-Melody-village-walk.png'
             with Image.open(download.value.path()) as postcard:
                 assert postcard.format == 'PNG' and postcard.size == (800,960)

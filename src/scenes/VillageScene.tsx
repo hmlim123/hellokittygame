@@ -29,11 +29,11 @@ import {
   villageRender,
 } from "../game/village-motion";
 import { VisitAvatars } from "./VisitAvatars";
-import { useVisitsStore } from "../game/visits";
+import { useVisitsStore, villagePartner } from "../game/visits";
 import { GroundShadow } from "./GroundShadow";
 import { VillageSpeech } from "./VillageSpeech";
 import { VillageLanterns } from "./VillageLanterns";
-import { togetherElapsed, villagePhoto } from "../game/village-together";
+import { togetherDuration, togetherElapsed, villagePhoto } from "../game/village-together";
 
 function Blob({
   at,
@@ -587,10 +587,10 @@ function Player() {
     }
     const visit = useVisitsStore.getState();
     const moment = visit.together;
-    const danceElapsed = moment?.action === "celebrate" && visit.role
-      ? togetherElapsed(moment, visit.clockOffset) : Infinity;
+    const elapsed = moment && visit.role ? togetherElapsed(moment, visit.clockOffset) : Infinity;
     if (
-      danceElapsed >= 0 && danceElapsed < 3 ||
+      (moment?.action === "celebrate" && elapsed >= 0 && elapsed < 3) ||
+      (moment?.action === "photo" && elapsed < togetherDuration("photo") && villagePartner(visit)) ||
       !state.sceneReady ||
       state.panel ||
       state.dialogue ||
@@ -665,9 +665,17 @@ function Player() {
         dt,
         reduced,
       );
-    const target = atPicnic
-      ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
-      : new THREE.Vector3(p.x, 0.9, p.z);
+    const visit = useVisitsStore.getState();
+    const moment = visit.together;
+    const photoPartner = moment?.action === "photo" &&
+      togetherElapsed(moment, visit.clockOffset) < togetherDuration("photo")
+      ? villagePartner(visit)
+      : undefined;
+    const target = photoPartner
+      ? new THREE.Vector3((p.x + photoPartner.x) / 2, 0.9, (p.z + photoPartner.z) / 2)
+      : atPicnic
+        ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
+        : new THREE.Vector3(p.x, 0.9, p.z);
     follow.current.lerp(
       target,
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 8),

@@ -17,6 +17,13 @@ export const VILLAGE_PLACES = [
   { id: "garden", name: "Pip’s garden", icon: "✿", x: 6, z: 3.7 },
 ];
 export const VILLAGE_PICNIC = { id: "picnic", label: "Sit for a picnic", x: -5.5, z: 4.2 };
+const VILLAGE_PHOTO_DISTANCE = 2.5;
+
+/** @param {{x: number, z: number}} a @param {{x: number, z: number}} b */
+export function inVillagePhotoRange(a, b) {
+  return Math.hypot(a.x - b.x, a.z - b.z) <= VILLAGE_PHOTO_DISTANCE;
+}
+
 export const VILLAGE_ACTIONS = [
   { id: "home", label: "Go inside", x: -7, z: -3.1 },
   { id: "cafe", label: "Bake at the café", x: 7, z: -3.1 },

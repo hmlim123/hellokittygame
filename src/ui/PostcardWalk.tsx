@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   atPostcardStop,
   nextPostcardStop,
@@ -113,31 +114,21 @@ export function PostcardWalk() {
     ? `village-walk-${roomId}-${walk.revision}`
     : null;
   const kept = useGameStore((s) => s.cozy.postcards.some((p) => p.id === memoryId));
+  const card = useMemo(() => walk?.stamps === 2 ? drawPostcard(walk) : null, [walk]);
+  const png = useMemo(() => card?.toDataURL("image/png"), [card]);
   if (!walk || !role) return null;
   const chosen = postcardStop(walk[role]);
   const other = postcardStop(walk[role === "host" ? "guest" : "host"]);
   const { postcardWalkAction } = useVisitsStore.getState();
 
-  function download() {
-    if (!walk) return;
-    const canvas = drawPostcard(walk);
-    if (!canvas) return;
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = "Nancy-and-Melody-village-walk.png";
-    link.click();
-  }
-
   function keep() {
-    if (!walk?.completedAt || !memoryId || kept || role !== "host") return;
-    const canvas = drawPostcard(walk);
-    if (!canvas) return;
+    if (!walk?.completedAt || !memoryId || kept || role !== "host" || !card) return;
     const thumbnail = document.createElement("canvas");
     thumbnail.width = 150;
     thumbnail.height = 180;
     const c = thumbnail.getContext("2d");
     if (!c) return;
-    c.drawImage(canvas, 0, 0, thumbnail.width, thumbnail.height);
+    c.drawImage(card, 0, 0, thumbnail.width, thumbnail.height);
     const game = useGameStore.getState();
     game.keepPostcard({
       id: memoryId,
@@ -157,7 +148,11 @@ export function PostcardWalk() {
       {walk.stamps === 2 ? (
         <>
           <p role="status">Your two-stamp postcard is ready.</p>
-          <button onClick={download}>Download village postcard</button>
+          {png && (
+            <a href={png} download="Nancy-and-Melody-village-walk.png">
+              Download village postcard
+            </a>
+          )}
           {role === "host" && (
             <>
               <button disabled={kept} onClick={keep}>

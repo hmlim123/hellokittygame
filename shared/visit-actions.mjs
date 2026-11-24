@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import {
   VILLAGE_ACTIONS,
   VILLAGE_PICNIC,
+  inVillagePhotoRange,
   villageWalkable,
   moveVillage,
   villagePath,
@@ -77,6 +78,10 @@ export function applyVisitAction({
     const previous = room.together ?? newTogetherMoment();
     if (m.revision !== previous.id) {
       fail("Your shared activity changed. Try again.");
+      return;
+    }
+    if (m.action === "photo" && (!bothInVillage(room) || !inVillagePhotoRange(room.host, room.guest))) {
+      fail("Walk closer to your partner so you can both fit in the photo.");
       return;
     }
     if (["stir", "decorate", "present"].includes(m.action)) {
