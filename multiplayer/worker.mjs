@@ -1,3 +1,5 @@
+import { newLanternEvening } from "../shared/lantern-evening.mjs";
+import { newPostcardWalk } from "../shared/postcard-walk.mjs";
 import { DurableObject } from "cloudflare:workers";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { createAccountState } from "../server/account-state.mjs";
@@ -241,6 +243,8 @@ export class PrivateVillage extends DurableObject {
       picnic: room.picnic,
       garden: room.garden,
       together: room.together || null,
+      postcardWalk: room.postcardWalk ?? newPostcardWalk(),
+      lanternEvening: room.lanternEvening ?? newLanternEvening(),
       serverNow: Date.now(),
       togetherAvailable: true,
     };

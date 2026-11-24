@@ -59,6 +59,27 @@ in the draft client. A hosted playthrough with both players on their own devices
 remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittygame/actions/runs/44675763272) ·
 [Hosted service setup](private-visits-setup.md#updating-an-existing-village-for-v37)
 
+## Extended visit activities
+
+- **Garden** walks Nancy and My Melody to separate spots by Pip’s flower beds.
+  Both players see the same bloom count, and each can water a different bed.
+- **Picnic tea** keeps the village visible after the table is set. Each player
+  has their own cup and can raise it or use the village chat. Table setup stays
+  available for checking what’s been placed.
+- **Baking** brings the next player’s turn into the village controls. Nancy
+  starts mixing, Melody decorates, and Nancy presents the cookies.
+- **Photos** retain the outfit, pose, and weather captured in the image. Both
+  can download, and Nancy can keep each photo on her wall once.
+- **Postcard walk** gives each player a landmark to choose. Visit both stops
+  together, add the stamps, and download the postcard. Nancy can also keep it
+  on her wall.
+- **Lantern evening** gives each player a color and a lantern to light in the
+  plaza. Lighting both brings on the same sunset in both browsers.
+
+Postcard walks and lantern evenings use new shared state from the existing
+Worker. Their controls appear when that Worker has been updated. The upgrade
+uses the existing service and SQLite data. [Updating the existing village service](private-visits-setup.md#updating-an-existing-village-for-v37)
+
 ## Activities for repeat visits
 
 Start with the picnic. Next, make the activities already in the code easy to
@@ -74,8 +95,8 @@ and reconnect flow is dependable.
 | Next | Dance and high-five | Use the existing paired gestures and choose a spot in the plaza to celebrate together. |
 | Next | Village photo | Pick a pose, share a countdown, and download a framed PNG. Try sunshine or sunset for another visit. |
 | Later | Bench tea | Meet at a bench or picnic table. One player pours, the other offers a cookie, then both can sit and sip while chatting. |
-| Later | Postcard walk | Pick one village landmark each. Walk to both, add a stamp from each stop, and save the two-stamp postcard. |
-| Later | Lantern evening | Choose a lantern color each, light the lanterns together, and take a photo in the evening village. |
+| Draft activities | Postcard walk | Pick one village landmark each. Walk to both, add a stamp from each stop, and save the two-stamp postcard. |
+| Draft activities | Lantern evening | Choose a lantern color each, light the lanterns together, and take a photo in the evening village. |
 | Later | A village clue trail | Give each player a different clue. Share the clues in chat, then meet at the landmark they point to. |
 
 Wave, smile, chat, and the shared dance are implemented in the village. The

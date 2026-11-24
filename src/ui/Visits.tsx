@@ -5,11 +5,10 @@ import { Dialog } from "./Dialog";
 import { useGameStore } from "../game/store";
 import { useVisitsStore, parseVisitLink } from "../game/visits";
 import { useVillageMotion, type VillagePoint } from "../game/village-motion";
-import { VILLAGE_ACTIONS, villageWalkable } from "../game/village";
+import { VILLAGE_PICNIC, villageWalkable } from "../game/village";
 
-const picnicTable = VILLAGE_ACTIONS.find((o) => o.id === "picnic")!;
 const nearPicnic = ({ position }: { position: VillagePoint }) =>
-  Math.hypot(position.x - picnicTable.x, position.z - picnicTable.z) < 2.5;
+  Math.hypot(position.x - VILLAGE_PICNIC.x, position.z - VILLAGE_PICNIC.z) < 2.5;
 
 export function WalkToPicnic({ inVillage = false }: { inVillage?: boolean }) {
   const status = useVisitsStore((s) => s.status);
@@ -22,7 +21,7 @@ export function WalkToPicnic({ inVillage = false }: { inVillage?: boolean }) {
       disabled={!ready || status !== "online"}
       onClick={() => {
         if (!inVillage) useGameStore.getState().closePanel();
-        useVillageMotion.getState().walkTo(picnicTable, picnicTable.id);
+        useVillageMotion.getState().walkTo(VILLAGE_PICNIC, VILLAGE_PICNIC.id);
       }}
     >
       {inVillage ? "Picnic" : "Walk to the picnic table ↗"}
@@ -95,7 +94,11 @@ export function VisitPresence() {
             ? "Reconnecting your visit…"
             : other?.connected
               ? `${other.name}${other.area === "home" ? " is at home" : other.area === "story" ? " is reading a story" : " is here"} ♡`
-              : "Your invitation is open ♡"}
+              : other
+                ? `Waiting for ${other.name} to return…`
+                : role === "guest"
+                  ? "Waiting for Nancy…"
+                  : "Your invitation is open ♡"}
         {last && last.role !== role && (
           <small>
             {last.name}: {last.text.slice(0, 65)}
@@ -215,7 +218,11 @@ export function VisitsPanel() {
               ? "Reconnecting… You can keep exploring."
               : other?.connected
                 ? `${other.name} is visiting with you. ♡`
-                : "Your village is open. Send your invitation to your friend."}
+                : other
+                  ? `Waiting for ${other.name} to return…`
+                  : state.role === "guest"
+                    ? "Waiting for Nancy…"
+                    : "Your village is open. Send your invitation to your friend."}
           </p>
           {state.role === "host" &&
             state.link &&

@@ -69,7 +69,7 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
           : p;
     const path = villagePath(get().position, destination);
     if (!path.length) return false;
-    set({ input: { x: 0, z: 0 }, path, pending: action || null });
+    set({ input: { x: 0, z: 0 }, path, pending: action || null, picnic: false });
     return true;
   },
 }));
@@ -160,7 +160,7 @@ export function actInVillage(id?: string) {
   else if (action === "picnic") {
     useVillageMotion.setState({ picnic: true });
     s.react(
-      "sip",
+      "softHappy",
       "A little tea, a little breeze, and a place to slow down together. ♡",
     );
   }

@@ -20,6 +20,7 @@ import { useGameStore } from "../game/store";
 import {
   VILLAGE_ACTIONS,
   VILLAGE_OBSTACLES,
+  VILLAGE_PICNIC,
   moveVillage,
 } from "../game/village";
 import {
@@ -31,6 +32,7 @@ import { VisitAvatars } from "./VisitAvatars";
 import { useVisitsStore } from "../game/visits";
 import { GroundShadow } from "./GroundShadow";
 import { VillageSpeech } from "./VillageSpeech";
+import { VillageLanterns } from "./VillageLanterns";
 import { togetherElapsed, villagePhoto } from "../game/village-together";
 
 function Blob({
@@ -194,7 +196,9 @@ function GardenBed({ index }: { index: number }) {
   const player = useVillageMotion((s) => s.position);
   const ownBloom = useGameStore((s) => s.cozy.village.flowers[index]),
     sharedBloom = useVisitsStore((s) =>
-      s.status === "online" ? s.garden[index] : undefined,
+      s.status === "online" || s.status === "reconnecting"
+        ? s.garden[index]
+        : undefined,
     ),
     bloomed = sharedBloom ?? ownBloom,
     flowers = useRef<THREE.Group>(null),
@@ -395,15 +399,15 @@ function Watering() {
 }
 function PicnicTable() {
   const slots = useVisitsStore((s) => s.picnic),
-    online = useVisitsStore((s) => s.status === "online"),
-    placed = online ? slots : [true, true, true];
+    inVisit = useVisitsStore((s) => s.status === "online" || s.status === "reconnecting"),
+    placed = inVisit ? slots : [true, true, true];
   return (
     <group
       position={[-5.5, 0, 5.8]}
       onClick={(e) => {
         if (e.delta < 8) {
           e.stopPropagation();
-          useVillageMotion.getState().walkTo({ x: -5.5, z: 4.2 }, "picnic");
+          useVillageMotion.getState().walkTo(VILLAGE_PICNIC, VILLAGE_PICNIC.id);
         }
       }}
     >
@@ -628,8 +632,9 @@ function Player() {
   const latest = useRef({ x: spawn.x, z: spawn.z });
   useFrame(({ camera, size, gl }, dt) => {
     const game = useGameStore.getState();
-    if (useVillageMotion.getState().picnic) yaw.current = 0;
-    if (game.panel || game.dialogue || useVillageMotion.getState().picnic)
+    const atPicnic = useVillageMotion.getState().picnic;
+    if (atPicnic) yaw.current = 0;
+    if (game.panel || game.dialogue || atPicnic)
       locomotion.current.speed = 0;
     const p = latest.current;
     villageRender.x = p.x;
@@ -660,7 +665,9 @@ function Player() {
         dt,
         reduced,
       );
-    const target = new THREE.Vector3(p.x, 0.9, p.z);
+    const target = atPicnic
+      ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
+      : new THREE.Vector3(p.x, 0.9, p.z);
     follow.current.lerp(
       target,
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 8),
@@ -696,7 +703,7 @@ function Player() {
       <group ref={anchor} rotation={[0, spawn.yaw, 0]}>
         <Suspense fallback={null}>
           {playerCharacter === "melody" ? (
-            <Melody locomotion={locomotion} villageRole={sharedRole || undefined} />
+            <Melody locomotion={locomotion} holdingCup={picnic} villageRole={sharedRole || undefined} />
           ) : (
             <Kitty
               equipment={
@@ -793,6 +800,7 @@ export function VillageScene() {
         far={100}
       />
       <Landscape />
+      <VillageLanterns />
       <Player />
       <Destination />
       <VisitAvatars />

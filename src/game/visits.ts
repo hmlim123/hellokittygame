@@ -7,6 +7,8 @@ import { useGameStore } from "./store";
 import { useVillageMotion } from "./village-motion";
 import { villageWalkable, villagePath } from "./village";
 import type { OutfitId, PlushId, Gesture, ItemId } from "./types";
+import { normalizePostcardWalk, type PostcardWalk } from "../../shared/postcard-walk.mjs";
+import { normalizeLanternEvening, type LanternEvening, type LanternColor } from "../../shared/lantern-evening.mjs";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
@@ -64,6 +66,10 @@ interface Visits {
   chat: ChatLine[];
   picnic: boolean[];
   garden: boolean[];
+  postcardWalk: PostcardWalk | null;
+  lanternEvening: LanternEvening | null;
+  lanternAction(action: "choose" | "light" | "reset", color?: LanternColor): void;
+  postcardWalkAction(action: "choose" | "stamp" | "reset", stop?: string): void;
   error: string;
   configure(url: string): boolean;
   host(name: string): Promise<void>;
@@ -72,6 +78,11 @@ interface Visits {
   sendChat(text: string): void;
   gesture(kind: Gesture): void;
   placePicnic(slot: number): void;
+}
+export function villagePartner({ players, role }: Pick<Visits, "players" | "role">) {
+  return players.find(
+    (p) => p.id !== role && p.connected && (!p.area || p.area === "village"),
+  );
 }
 export function visitServerUrl(
   input: string,
@@ -348,9 +359,21 @@ function connect(server: string, hello: object) {
         )
       )
         return;
-      const wasReady = useVisitsStore.getState().picnic.every(Boolean),
-        picnic = [0, 1, 2].map((i) => m.picnic?.[i] === true),
-        garden = [0, 1, 2].map((i) => m.garden?.[i] === true);
+      const previous = useVisitsStore.getState();
+      const wasReady = previous.picnic.every(Boolean);
+      const picnic = [0, 1, 2].map((i) => m.picnic?.[i] === true);
+      const garden = [0, 1, 2].map((i) => m.garden?.[i] === true);
+      const sameRoom = m.roomId === previous.roomId;
+      const postcardWalk = m.postcardWalk
+        ? sameRoom && previous.postcardWalk?.revision === m.postcardWalk.revision
+          ? previous.postcardWalk
+          : normalizePostcardWalk(m.postcardWalk)
+        : null;
+      const lanternEvening = m.lanternEvening
+        ? sameRoom && previous.lanternEvening?.revision === m.lanternEvening.revision
+          ? previous.lanternEvening
+          : normalizeLanternEvening(m.lanternEvening)
+        : null;
       useVisitsStore.setState({
         together:
           m.together &&
@@ -381,6 +404,8 @@ function connect(server: string, hello: object) {
           : [],
         picnic,
         garden,
+        postcardWalk,
+        lanternEvening,
       });
       if (useVisitsStore.getState().role === "host") {
         const game = useGameStore.getState(),
@@ -417,7 +442,7 @@ function connect(server: string, hello: object) {
       stopTransport();
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -468,7 +493,7 @@ function connect(server: string, hello: object) {
     } else {
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -497,6 +522,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   chat: [],
   picnic: [false, false, false],
   garden: [false, false, false],
+  postcardWalk: null,
+  lanternEvening: null,
   error: "",
   configure(input) {
     const server = visitServerUrl(input);
@@ -578,6 +605,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       chat: [],
       together: null,
       togetherAvailable: false,
+      postcardWalk: null,
+      lanternEvening: null,
       roomId: null,
       invitation: null,
     });
@@ -648,6 +677,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       error: "",
       players: [],
       chat: [],
+      postcardWalk: null,
+      lanternEvening: null,
       link: "",
       server: invite.server,
     });
@@ -661,7 +692,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   },
   leave() {
     restorePersonalSave();
-    useVillageMotion.setState({ guestVisit: false });
+    useVillageMotion.setState({ guestVisit: false, picnic: false });
     transmit({ type: get().role === "host" ? "end" : "leave" });
     stopTransport();
     rememberTicket(null);
@@ -686,6 +717,16 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   },
   placePicnic(slot) {
     if (get().status === "online") transmit({ type: "picnic", slot });
+  },
+  lanternAction(action, color) {
+    const { status, lanternEvening } = get();
+    if (status === "online" && lanternEvening)
+      transmit({ type: "lantern-evening", action, color, revision: lanternEvening.revision });
+  },
+  postcardWalkAction(action, stop) {
+    const { status, postcardWalk } = get();
+    if (status === "online" && postcardWalk)
+      transmit({ type: "postcard-walk", action, stop, revision: postcardWalk.revision });
   },
 }));
 export function useVisitLifecycle() {

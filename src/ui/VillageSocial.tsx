@@ -1,17 +1,32 @@
 import { useState } from "react";
-import { useVisitsStore } from "../game/visits";
+import { useVisitsStore, villagePartner } from "../game/visits";
 import { useVillageMotion } from "../game/village-motion";
+import { useGameStore } from "../game/store";
+import { VILLAGE_PLACES } from "../game/village";
 import { TogetherActivities } from "./TogetherActivities";
 import { WalkToPicnic } from "./Visits";
 
+const garden = VILLAGE_PLACES.find((place) => place.id === "garden")!;
+
+function GardenProgress() {
+  const near = useVillageMotion(({ position }) =>
+    Math.hypot(position.x - garden.x, position.z - garden.z) < 3.4,
+  );
+  const blooming = useVisitsStore((s) => s.garden.filter(Boolean).length);
+  if (!near) return null;
+  return (
+    <p className="village-social-status garden-progress" role="status">
+      {blooming === 3
+        ? "All three flower beds are blooming."
+        : `${blooming} of 3 flower beds blooming. Tap a dry bed to water it.`}
+    </p>
+  );
+}
+
 export function VillageSocial() {
   const status = useVisitsStore((s) => s.status);
-  const together = useVisitsStore((s) =>
-    s.players.some(
-      (p) =>
-        p.id !== s.role && p.connected && (!p.area || p.area === "village"),
-    ),
-  );
+  const together = useVisitsStore((s) => !!villagePartner(s));
+  const ready = useGameStore((s) => s.sceneReady);
   const error = useVisitsStore((s) => s.error);
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -40,8 +55,18 @@ export function VillageSocial() {
           Chat
         </button>
         <WalkToPicnic inVillage />
+        <button
+          disabled={disabled || !ready}
+          onClick={() => {
+            const motion = useVillageMotion.getState();
+            motion.walkTo({ ...garden, x: garden.x + (motion.guestVisit ? 0.5 : -0.5) });
+          }}
+        >
+          Garden
+        </button>
       </div>
       <TogetherActivities />
+      <GardenProgress />
       {chatOpen && (
         <form
           className="visit-chat-form village-message"

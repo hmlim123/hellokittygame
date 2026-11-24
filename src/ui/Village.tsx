@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ThumbControl } from "./ThumbControl";
 import { useGameStore } from "../game/store";
 import {
@@ -16,20 +17,26 @@ import {
 } from "../game/village";
 import { Dialog } from "./Dialog";
 import { SharedPicnic } from "./Visits";
+import { useVisitsStore, villagePartner } from "../game/visits";
 
 export function VillageGuide() {
   const guest = useVillageMotion((s) => s.guestVisit);
+  const partner = useVisitsStore((s) =>
+    s.status === "online" ? villagePartner(s)?.name : undefined,
+  );
   const progress = useGameStore((s) => s.cozy.village),
     goal = villageGoal(progress),
     packed = useGameStore((s) => !!s.cozy.cookie.packed);
   return (
     <div className="village-guide">
       <p>
-        {guest
-          ? "You’re visiting Nancy. Say hello, help her flowers, or share a little picnic. ♡"
-          : packed
-            ? "Your cookie is ready. Bring it to Momo or Pip. ♡"
-            : goal.text}
+        {partner
+          ? `You’re here with ${partner}. Pick an activity together.`
+          : guest
+            ? "You’re visiting Nancy. Say hello, help her flowers, or share a little picnic. ♡"
+            : packed
+              ? "Your cookie is ready. Bring it to Momo or Pip. ♡"
+              : goal.text}
       </p>
       <details>
         <summary>A gentle hint</summary>
@@ -38,7 +45,7 @@ export function VillageGuide() {
           control below. Your home has a pink roof on the left; the café has a
           striped awning on the right.
         </p>
-        {goal.action && !guest && (
+        {goal.action && !guest && !partner && (
           <button
             onClick={() => {
               const o = VILLAGE_ACTIONS.find((o) => o.id === goal.action);
@@ -54,7 +61,9 @@ export function VillageGuide() {
 }
 export function VillageControls() {
   useVillageInput();
+  const [tableView, setTableView] = useState(false);
   const closePicnic = () => {
+    setTableView(false);
     useVillageMotion.setState({ picnic: false });
     useGameStore.getState().react("softHappy");
   };
@@ -68,53 +77,77 @@ export function VillageControls() {
     goal = villageGoal(v),
     next = VILLAGE_ACTIONS.find((o) => o.id === (goal.action || "cafe")),
     deliver = packed && near?.id !== "momo" && near?.id !== "pip";
+  const teaReady = useVisitsStore((s) =>
+    s.role ? s.status === "online" && s.picnic[2] : true,
+  );
+  useEffect(() => {
+    if (!picnic) setTableView(false);
+  }, [picnic]);
   return (
     <>
-      <div className="village-controls">
-        <div className="village-steer">
-          <ThumbControl mode="village" />
-          <span>Hold to walk</span>
-        </div>
-        <div className="village-actions">
-          <button
-            className="primary village-context"
-            disabled={!ready || picnic}
-            onClick={() => {
-              if (deliver) {
-                const friend = VILLAGE_ACTIONS.find((o) => o.id === "momo")!;
-                useVillageMotion.getState().walkTo(friend, "momo");
-              } else if (near) actInVillage();
-              else if (next) useVillageMotion.getState().walkTo(next, next.id);
-            }}
-            aria-keyshortcuts="E"
-          >
-            {deliver
-              ? "Bring your cookie to Momo"
-              : near
-                ? near.label
-                : next?.id === "momo"
-                  ? "Walk to Momo"
-                  : next?.id === "pip"
-                    ? "Walk to Pip"
-                    : next?.id === "home"
-                      ? "Walk home"
-                      : "Walk to the café"}{" "}
-            <span aria-hidden="true">♡</span>
-          </button>
-          <div className="village-small-actions">
-            <button disabled={!ready} onClick={() => open("village")}>
-              Places & memories
+      {picnic && tableView ? (
+        <div className="village-controls">
+          <div className="village-table-actions" role="group" aria-label="At the picnic table">
+            <button
+              className="primary village-context"
+              disabled={!teaReady}
+              onClick={() => useGameStore.getState().react("sip")}
+            >
+              Raise your cup
             </button>
-            <button disabled={!ready} onClick={() => open("visits")}>
-              Private visits ♡
-            </button>
+            <div className="village-small-actions">
+              <button onClick={() => setTableView(false)}>Table setup</button>
+              <button onClick={closePicnic}>Leave the table</button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="village-controls">
+          <div className="village-steer">
+            <ThumbControl mode="village" />
+            <span>Hold to walk</span>
+          </div>
+          <div className="village-actions">
+            <button
+              className="primary village-context"
+              disabled={!ready || picnic}
+              onClick={() => {
+                if (deliver) {
+                  const friend = VILLAGE_ACTIONS.find((o) => o.id === "momo")!;
+                  useVillageMotion.getState().walkTo(friend, "momo");
+                } else if (near) actInVillage();
+                else if (next) useVillageMotion.getState().walkTo(next, next.id);
+              }}
+              aria-keyshortcuts="E"
+            >
+              {deliver
+                ? "Bring your cookie to Momo"
+                : near
+                  ? near.label
+                  : next?.id === "momo"
+                    ? "Walk to Momo"
+                    : next?.id === "pip"
+                      ? "Walk to Pip"
+                      : next?.id === "home"
+                        ? "Walk home"
+                        : "Walk to the café"}{" "}
+              <span aria-hidden="true">♡</span>
+            </button>
+            <div className="village-small-actions">
+              <button disabled={!ready} onClick={() => open("village")}>
+                Places & memories
+              </button>
+              <button disabled={!ready} onClick={() => open("visits")}>
+                Private visits ♡
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <p className="village-input-note">
         Tap a place to walk there · Arrow keys / WASD also work
       </p>
-      {picnic && (
+      {picnic && !tableView && (
         <Dialog title="A picnic in the village" onClose={closePicnic}>
           <span className="eyebrow">A LITTLE TIME TOGETHER</span>
           <h2>A seat in the sunshine.</h2>
@@ -123,6 +156,9 @@ export function VillageControls() {
             long as you like.
           </p>
           <SharedPicnic />
+          <button className="wide" onClick={() => setTableView(true)}>
+            Enjoy the picnic
+          </button>
           <button className="primary wide" onClick={closePicnic}>
             Back to the village ♡
           </button>

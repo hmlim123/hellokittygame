@@ -171,7 +171,7 @@ function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
       rotation={initial.current.rotation}
     >
       <GroundShadow />
-      <Melody remote locomotion={locomotion} performance={actor.gesture} villageRole={actor.id} />
+      <Melody remote locomotion={locomotion} performance={actor.gesture} holdingCup={actor.holding === "cup"} villageRole={actor.id} />
       <Html center position={[0, 2.27 * 0.78 + 0.25, 0]} zIndexRange={[4, 0]}>
         <VillageSpeech role={actor.id} name={actor.name} />
       </Html>

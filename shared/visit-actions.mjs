@@ -1,11 +1,56 @@
 import { randomBytes } from "node:crypto";
 import {
   VILLAGE_ACTIONS,
+  VILLAGE_PICNIC,
   villageWalkable,
   moveVillage,
   villagePath,
 } from "./village-world.mjs";
 import { text, appearance, yaw } from "./visit-actors.mjs";
+import {
+  atPostcardStop,
+  nextPostcardStop,
+  newPostcardWalk,
+  postcardStop,
+} from "./postcard-walk.mjs";
+import { atLanternPlaza, lanternColor, newLanternEvening } from "./lantern-evening.mjs";
+
+const newTogetherMoment = () => ({
+  id: 0,
+  action: "wave",
+  at: 0,
+  weather: "sunshine",
+  baking: "mix",
+  pose: "wave",
+});
+
+const togetherActions = [
+  "wave", "highfive", "celebrate", "stir", "decorate", "present",
+  "photo", "cancel", "sunshine", "sunset", "rain",
+];
+export function restoreTogetherMoment(value) {
+  if (
+    !value ||
+    !Number.isSafeInteger(value.id) ||
+    value.id < 0 ||
+    !Number.isFinite(value.at) ||
+    !togetherActions.includes(value.action) ||
+    !["sunshine", "sunset", "rain"].includes(value.weather) ||
+    !["mix", "decorate", "ready"].includes(value.baking) ||
+    !["wave", "lean", "still"].includes(value.pose)
+  )
+    return null;
+  const { id, action, at, weather, baking, pose } = value;
+  return { id, action, at, weather, baking, pose };
+}
+
+function bothInVillage(room) {
+  return room.host?.socket?.readyState === 1 &&
+    room.guest?.socket?.readyState === 1 &&
+    room.host.area === "village" &&
+    room.guest.area === "village";
+}
+
 /** One authoritative action implementation for both Node and free Cloudflare hosting. */
 export function applyVisitAction({
   room,
@@ -28,28 +73,8 @@ export function applyVisitAction({
       fail("Wait until you are both here before starting together.");
       return;
     }
-    const actions = [
-      "wave",
-      "highfive",
-      "celebrate",
-      "stir",
-      "decorate",
-      "present",
-      "photo",
-      "cancel",
-      "sunshine",
-      "sunset",
-      "rain",
-    ];
-    if (!actions.includes(m.action)) return;
-    const previous = room.together || {
-      id: 0,
-      action: "wave",
-      at: 0,
-      weather: "sunshine",
-      baking: "mix",
-      pose: "wave",
-    };
+    if (!togetherActions.includes(m.action)) return;
+    const previous = room.together ?? newTogetherMoment();
     if (m.revision !== previous.id) {
       fail("Your shared activity changed. Try again.");
       return;
@@ -98,6 +123,85 @@ export function applyVisitAction({
           : previous.pose,
     };
     if (m.action === "present") room.picnic[1] = true;
+    broadcast(room);
+    dirty();
+  } else if (m.type === "postcard-walk") {
+    if (!bothInVillage(room)) {
+      fail("Come back to the village together to continue your postcard.");
+      return;
+    }
+    const walk = room.postcardWalk ?? newPostcardWalk();
+    if (m.revision !== walk.revision) {
+      fail("Your postcard changed. Check the current stop and try again.");
+      return;
+    }
+    const role = player.id;
+    if (role !== "host" && role !== "guest") return;
+
+    let next;
+    if (m.action === "choose") {
+      const stop = postcardStop(m.stop);
+      if (!stop || (walk.host && walk.guest)) return;
+      const partner = role === "host" ? walk.guest : walk.host;
+      if (stop.id === partner) {
+        fail("Choose a different stop so your postcard has two stamps.");
+        return;
+      }
+      if (stop.id === walk[role]) return;
+      next = { ...walk, [role]: stop.id };
+    } else if (m.action === "stamp") {
+      const stop = nextPostcardStop(walk);
+      if (!stop || stop.id !== m.stop) return;
+      if (![room.host, room.guest].every((actor) => atPostcardStop(actor, stop))) {
+        fail("Walk to this stop together before adding its stamp.");
+        return;
+      }
+      const stamps = walk.stamps + 1;
+      next = { ...walk, stamps, completedAt: stamps === 2 ? now() : null };
+    } else if (m.action === "reset") {
+      if (role !== "host" || walk.stamps !== 2) return;
+      next = newPostcardWalk();
+    } else return;
+
+    room.postcardWalk = { ...next, revision: walk.revision + 1 };
+    broadcast(room);
+    dirty();
+  } else if (m.type === "lantern-evening") {
+    if (!bothInVillage(room)) {
+      fail("Come back to the village together to light your lanterns.");
+      return;
+    }
+    const evening = room.lanternEvening ?? newLanternEvening();
+    if (m.revision !== evening.revision) {
+      fail("Your lanterns changed. Check the plaza and try again.");
+      return;
+    }
+    const role = player.id;
+    if (role !== "host" && role !== "guest") return;
+    const lantern = evening[role];
+    let next;
+
+    if (m.action === "choose") {
+      const color = lanternColor(m.color);
+      if (!color || lantern.lit || color === lantern.color) return;
+      next = { ...evening, [role]: { color, lit: false } };
+    } else if (m.action === "light") {
+      if (lantern.lit || !evening.host.color || !evening.guest.color) return;
+      if (![room.host, room.guest].every(atLanternPlaza)) {
+        fail("Meet your partner at the plaza before lighting the lanterns.");
+        return;
+      }
+      next = { ...evening, [role]: { ...lantern, lit: true } };
+      if (next.host.lit && next.guest.lit) {
+        const previous = room.together ?? newTogetherMoment();
+        room.together = { ...previous, id: previous.id + 1, weather: "sunset" };
+      }
+    } else if (m.action === "reset") {
+      if (role !== "host" || !evening.host.lit || !evening.guest.lit) return;
+      next = newLanternEvening();
+    } else return;
+
+    room.lanternEvening = { ...next, revision: evening.revision + 1 };
     broadcast(room);
     dirty();
   } else if (m.type === "move") {
@@ -226,7 +330,7 @@ export function applyVisitAction({
     }
     if (
       player.area !== "village" ||
-      Math.hypot(player.x + 5.5, player.z - 4.2) > 2.5
+      Math.hypot(player.x - VILLAGE_PICNIC.x, player.z - VILLAGE_PICNIC.z) > 2.5
     ) {
       fail("Walk over to the picnic table first.");
       return;

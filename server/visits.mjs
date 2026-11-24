@@ -1,5 +1,7 @@
+import { newLanternEvening, normalizeLanternEvening } from "../shared/lantern-evening.mjs";
+import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.mjs";
 import { actor, appearance, text, yaw } from "../shared/visit-actors.mjs";
-import { applyVisitAction } from "../shared/visit-actions.mjs";
+import { applyVisitAction, restoreTogetherMoment } from "../shared/visit-actions.mjs";
 import { createServer } from "node:http";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
@@ -61,6 +63,8 @@ export function createVisitService({
     picnic: room.picnic,
     garden: room.garden,
     together: room.together || null,
+    postcardWalk: room.postcardWalk ?? newPostcardWalk(),
+    lanternEvening: room.lanternEvening ?? newLanternEvening(),
     serverNow: now(),
     togetherAvailable: true,
   });
@@ -146,6 +150,9 @@ export function createVisitService({
             : [],
           picnic: [0, 1, 2].map((i) => r.picnic?.[i] === true),
           garden: [0, 1, 2].map((i) => r.garden?.[i] === true),
+          together: restoreTogetherMoment(r.together),
+          postcardWalk: normalizePostcardWalk(r.postcardWalk),
+          lanternEvening: normalizeLanternEvening(r.lanternEvening),
         });
       }
     } catch (e) {

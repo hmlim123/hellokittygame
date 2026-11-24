@@ -214,21 +214,55 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host_picnic.get_by_role('button',name='Pour the tea').tap()
             for picnic in [host_picnic, guest_picnic]:
                 picnic.get_by_role('heading',name='A little picnic, made together ♡').wait_for()
-            back(host);back(guest)
-            print('PASS direct picnic controls, separate contributions and a refresh before the shared picnic is complete',flush=True)
+            for page, picnic in [(host, host_picnic), (guest, guest_picnic)]:
+                page.bring_to_front()
+                picnic.get_by_role('button',name='Enjoy the picnic',exact=True).tap()
+                assert page.get_by_role('group',name='At the picnic table',exact=True).is_visible()
+            guest.wait_for_function("document.querySelector('#world canvas').dataset.playerHolding === 'cup'")
+            host.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'cup'")
+            guest.get_by_role('button',name='Raise your cup',exact=True).tap()
+            host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression === 'sip'")
+            host.bring_to_front()
+            host.screenshot(path=str(results/'accounts-tea-together.png'))
+            host.get_by_role('button',name='Leave the table',exact=True).tap()
+            guest.bring_to_front()
+            guest.get_by_role('button',name='Table setup',exact=True).tap()
+            guest.get_by_role('heading',name='A little picnic, made together ♡').wait_for()
+            back(guest)
+            print('PASS direct picnic controls, a mid-picnic refresh and sharing tea in the village scene',flush=True)
 
-            host.get_by_text('More',exact=True).tap()
+            for page, garden_x in [(host, 5.5), (guest, 6.5)]:
+                page.bring_to_front()
+                page.get_by_role('button',name='Garden',exact=True).tap()
+                page.wait_for_function("""x => {
+                    const d = document.querySelector('#world canvas').dataset;
+                    return d.villageRoute === '0' && Math.hypot(d.villageX-x, d.villageZ-3.7) < .15;
+                }""",arg=garden_x,timeout=60000)
+                page.get_by_text('1 of 3 flower beds blooming. Tap a dry bed to water it.',exact=True).wait_for()
+            host.bring_to_front()
+            host.get_by_role('button',name='Water flower bed 2',exact=True).tap()
+            for page in [host, guest]:
+                page.get_by_text('2 of 3 flower beds blooming. Tap a dry bed to water it.',exact=True).wait_for()
+            guest.bring_to_front()
+            guest.get_by_role('button',name='Water flower bed 3',exact=True).tap()
+            for page in [host, guest]:
+                page.get_by_text('All three flower beds are blooming.',exact=True).wait_for()
+            assert host.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).village.flowers") == [True, True, True]
+            print('PASS both players walk to Pip’s garden, water different beds and see the same blooms',flush=True)
+
+            host.get_by_text('Activities',exact=True).tap()
             host.get_by_role('button',name='High-five ♡',exact=True).tap()
             guest.wait_for_function("document.querySelector('#world canvas').dataset.guestTogether==='highfive'",timeout=12000)
             host.get_by_text('Bake together',exact=True).tap()
             host.get_by_role('button',name='Nancy mixes',exact=True).click()
             guest.bring_to_front()
-            guest.get_by_text('More',exact=True).tap()
-            guest.get_by_text('Bake together',exact=True).tap()
-            guest.get_by_role('button',name='Melody decorates',exact=True).click(timeout=20000)
+            guest.get_by_role('button',name='Decorate cookies',exact=True).click(timeout=20000)
             host.bring_to_front()
-            host.get_by_role('button',name='Bring cookies to the picnic',exact=True).click(timeout=20000)
+            host.get_by_role('button',name='Present cookies',exact=True).click(timeout=20000)
             host.get_by_text('A photo together',exact=True).tap()
+            host.get_by_label('Our pose',exact=True).select_option('still')
+            host.get_by_label('Our atmosphere',exact=True).select_option('sunset')
+            host.wait_for_function("[...document.querySelectorAll('select')].some(s=>s.value==='sunset')")
             host.get_by_role('button',name='Take our photo',exact=True).click(timeout=20000)
             host.get_by_role('link',name='Download our photo PNG',exact=True).wait_for(timeout=20000)
             with host.expect_download() as download:
@@ -237,18 +271,107 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             from PIL import Image
             with Image.open(photo_path) as photo:
                 assert photo.format=='PNG' and photo.size==(800,960), 'Download must be the framed postcard PNG'
-            host.get_by_role('button',name='Keep on Nancy’s wall',exact=True).click()
-            host.get_by_text('Kept on Nancy’s wall ♡',exact=True).wait_for()
+            host.get_by_label('Our pose',exact=True).select_option('wave')
             host.get_by_label('Our atmosphere',exact=True).select_option('rain')
             guest.wait_for_function("[...document.querySelectorAll('select')].some(s=>s.value==='rain')")
+            keep=host.get_by_role('button',name='Keep on Nancy’s wall',exact=True)
+            keep.click()
+            host.get_by_text('Kept on Nancy’s wall ♡',exact=True).wait_for()
+            assert not keep.is_enabled()
+            assert host.evaluate("""() => {
+                const [postcard] = JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).postcards;
+                return postcard.background === 'sunset' && postcard.pose === 'still';
+            }""")
+            guest.bring_to_front()
+            guest.get_by_text('Activities',exact=True).tap()
+            guest.get_by_text('A photo together',exact=True).tap()
+            guest.get_by_role('link',name='Download our photo PNG',exact=True).wait_for(timeout=20000)
+            assert guest.get_by_role('button',name='Keep on Nancy’s wall',exact=True).count()==0
             for page in [host,guest]:
-                page.get_by_text('More',exact=True).tap()
-            host.set_viewport_size({'width':844,'height':390})
-            assert host.evaluate('document.documentElement.scrollWidth<=innerWidth')
-            host.get_by_role('button',name='Dance together',exact=True).wait_for(state='visible')
-            host.screenshot(path=str(results/'accounts-village-landscape.png'))
+                page.get_by_text('Activities',exact=True).tap()
+            for width, height in [(320, 568), (844, 390)]:
+                host.set_viewport_size({'width':width,'height':height})
+                assert host.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                for name in ['Picnic', 'Garden', 'Dance together']:
+                    button = host.get_by_role('button',name=name,exact=True)
+                    button.wait_for(state='visible')
+                    box = button.bounding_box()
+                    assert box and box['height'] >= 44 and box['width'] >= 44
+                    assert box['x'] >= 0 and box['x'] + box['width'] <= width + 1
+                host.screenshot(path=str(results/f'accounts-village-{width}.png'))
             host.set_viewport_size({'width':390,'height':844})
-            print('PASS in-village high-five, shared baking, postcard, wall save, weather and landscape controls',flush=True)
+            print('PASS paired gestures, role-specific baking handoff, both photos, once-only wall save and capture metadata',flush=True)
+            for page, stop in [(host, 'Pip’s garden'), (guest, 'Little plaza')]:
+                page.bring_to_front()
+                page.get_by_text('Activities',exact=True).tap()
+                page.get_by_text('Postcard walk',exact=True).tap()
+                page.get_by_role('group',name='Your postcard stop').get_by_role('button',name=stop,exact=True).tap()
+                page.get_by_text('Activities',exact=True).tap()
+            host.bring_to_front()
+            host.get_by_role('button',name='Add stamp 1 of 2',exact=True).tap()
+
+            guest.bring_to_front()
+            guest.reload();ready(guest)
+            guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=30000)
+            back(guest)
+            for page in [host, guest]:
+                page.bring_to_front()
+                page.get_by_role('button',name='Walk to Little plaza',exact=True).tap()
+                try:
+                    page.wait_for_function("""() => {
+                        const d = document.querySelector('#world canvas').dataset;
+                        return Math.hypot(Number(d.villageX)+1.8, Number(d.villageZ)-1.6) < 2.2;
+                    }""",timeout=60000)
+                except Exception:
+                    print('Postcard route', 'Nancy' if page == host else 'Melody',
+                        page.locator('#world canvas').evaluate('(canvas) => ({...canvas.dataset})'),
+                        flush=True)
+                    raise
+            guest.get_by_role('button',name='Add stamp 2 of 2',exact=True).tap()
+            for page in [host, guest]:
+                page.bring_to_front()
+                page.get_by_text('Activities',exact=True).tap()
+                trail = page.get_by_text('Postcard walk',exact=True)
+                if trail.evaluate('(el) => !el.parentElement.open'):
+                    trail.tap()
+                page.get_by_text('Your two-stamp postcard is ready.',exact=True).wait_for()
+            with guest.expect_download() as download:
+                guest.get_by_role('button',name='Download village postcard',exact=True).tap()
+            assert download.value.suggested_filename == 'Nancy-and-Melody-village-walk.png'
+            with Image.open(download.value.path()) as postcard:
+                assert postcard.format == 'PNG' and postcard.size == (800,960)
+            host.bring_to_front()
+            host.get_by_role('button',name='Keep walk postcard',exact=True).tap()
+            assert host.get_by_role('button',name='Walk postcard kept',exact=True).is_disabled()
+            assert guest.get_by_role('button',name='Keep walk postcard',exact=True).count()==0
+            for page in [host, guest]:
+                page.get_by_text('Activities',exact=True).tap()
+            print('PASS two chosen landmarks, shared stamps across refresh, a postcard download and Nancy’s wall save',flush=True)
+
+            for page, color in [(host, 'Rose'), (guest, 'Lavender')]:
+                page.bring_to_front()
+                page.get_by_text('Activities',exact=True).tap()
+                page.get_by_text('Lantern evening',exact=True).tap()
+                page.get_by_role('group',name='Your lantern color').get_by_role('button',name=color,exact=True).tap()
+            host.bring_to_front()
+            host.get_by_role('button',name='Light my lantern',exact=True).tap()
+            guest.wait_for_function("""() => {
+                const d = document.querySelector('#world canvas').dataset;
+                return d.hostLantern === 'rose-lit' && d.guestLantern === 'lavender-paper';
+            }""")
+            guest.bring_to_front()
+            guest.get_by_role('button',name='Light my lantern',exact=True).tap()
+            for page in [host, guest]:
+                page.get_by_text('Both lanterns are glowing at sunset.',exact=True).wait_for()
+                page.wait_for_function("""() => {
+                    const d = document.querySelector('#world canvas').dataset;
+                    return d.hostLantern === 'rose-lit' && d.guestLantern === 'lavender-lit';
+                }""")
+                assert page.get_by_label('Our atmosphere',exact=True).input_value() == 'sunset'
+                page.get_by_text('Activities',exact=True).tap()
+            host.bring_to_front()
+            host.screenshot(path=str(results/'accounts-lantern-evening.png'))
+            print('PASS each partner lights their chosen lantern, both render and share the same sunset',flush=True)
             guest.keyboard.down('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)>.5",timeout=20000)
             guest.keyboard.up('ArrowRight')

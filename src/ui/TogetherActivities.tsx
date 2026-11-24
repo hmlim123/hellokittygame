@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { togetherDuration, villagePhoto } from "../game/village-together";
 import { useVillageMotion } from "../game/village-motion";
 import { useVisitsStore } from "../game/visits";
+import type { PostcardMemory } from "../game/cozy";
+import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
+import { LanternEvening } from "./LanternEvening";
 import { useGameStore } from "../game/store";
+
+type SharedPhoto = Omit<PostcardMemory, "image" | "place"> & {
+  png: string;
+};
 
 async function framedPhoto(source: string) {
   const image = new Image();
@@ -38,9 +45,12 @@ export function TogetherActivities() {
     togetherAction = useVisitsStore((s) => s.togetherAction),
     [pose, setPose] = useState("wave"),
     [now, setNow] = useState(Date.now()),
-    [photo, setPhoto] = useState(""),
+    [photo, setPhoto] = useState<SharedPhoto | null>(null),
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
+  const photoKept = useGameStore((s) =>
+    !!photo && s.cozy.postcards.some((p) => p.id === photo.id),
+  );
   const captured = useRef<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
@@ -79,25 +89,42 @@ export function TogetherActivities() {
     const capturePhoto = villagePhoto.capture;
     captured.current = moment.at;
     setPose(moment.pose);
+    const { at, pose: framePose, weather } = moment;
+    const { outfit, plush } = useGameStore.getState().equipment;
+    const frame: Omit<SharedPhoto, "png"> = {
+      id: crypto.randomUUID(),
+      outfit,
+      ...(plush ? { plush } : {}),
+      background: weather,
+      pose: framePose === "wave" ? "wave" : "still",
+      createdAt: new Date().toISOString(),
+    };
     async function capture() {
       try {
-        setPhoto(await framedPhoto(capturePhoto()));
+        const png = await framedPhoto(capturePhoto());
+        if (captured.current !== at) return;
+        setPhoto({ ...frame, png });
         setNotice(
-          "Your photo is ready. Download it or keep it on Nancy’s wall.",
+          role === "host"
+            ? "Your photo is ready to download or keep on Nancy’s wall."
+            : "Your photo is ready to download.",
         );
       } catch {
-        setNotice("The photo could not be made. Please try again.");
+        if (captured.current === at)
+          setNotice("The photo could not be made. Please try again.");
       }
     }
     void capture();
-  }, [moment, elapsed]);
+  }, [moment, elapsed, role]);
   const action = (kind: string) => {
     useVillageMotion.getState().stop();
     togetherAction(kind, pose);
   };
   const keep = async () => {
+    if (!photo || photoKept || role !== "host") return;
+    const { png, ...frame } = photo;
     const image = new Image();
-    image.src = photo;
+    image.src = png;
     try {
       await image.decode();
       const canvas = document.createElement("canvas");
@@ -124,28 +151,33 @@ export function TogetherActivities() {
       c.fillText("A little time together ♡", 10, 165);
       const game = useGameStore.getState();
       game.keepPostcard({
-        id: crypto.randomUUID(),
+        ...frame,
         image: canvas.toDataURL("image/jpeg", 0.7),
-        outfit: game.equipment.outfit,
-        ...(game.equipment.plush ? { plush: game.equipment.plush } : {}),
-        background: moment?.weather || "sunshine",
-        pose: pose === "wave" ? "wave" : "still",
         place: "Together in Nancy’s village",
-        createdAt: new Date().toISOString(),
       });
+      if (!useGameStore.getState().cozy.postcards.some((p) => p.id === frame.id))
+        throw Error("Photo could not be saved");
       setNotice("Kept on Nancy’s wall ♡");
     } catch {
       setNotice("This photo could not be kept. Please try again.");
     }
   };
+  const baking = moment?.baking;
+  const nextBakingAction =
+    role === "guest" && baking === "decorate"
+      ? "decorate"
+      : role === "host" && baking === "ready"
+        ? "present"
+        : null;
   return (
     <section className="together-activities" aria-label="Time together">
       <div className="village-social-buttons">
         <button
           disabled={disabled || busy || !available}
+          aria-label="Dance together"
           onClick={() => action("celebrate")}
         >
-          Dance together
+          Dance
         </button>
         {busy && (
           <button disabled={disabled} onClick={() => action("cancel")}>
@@ -153,6 +185,15 @@ export function TogetherActivities() {
           </button>
         )}
       </div>
+      {nextBakingAction && available && !busy && (
+        <button
+          className="baking-turn"
+          disabled={disabled}
+          onClick={() => action(nextBakingAction)}
+        >
+          {nextBakingAction === "decorate" ? "Decorate cookies" : "Present cookies"}
+        </button>
+      )}
       {busy && moment?.action === "highfive" && (
         <span className="village-social-status" role="status">
           High-five!
@@ -163,8 +204,9 @@ export function TogetherActivities() {
           Photo in {countdown}…
         </span>
       )}
+      <PostcardRoute />
       <details className="together-options">
-        <summary>More</summary>
+        <summary>Activities</summary>
         <div>
           {!available ? (
             <p>
@@ -253,17 +295,19 @@ export function TogetherActivities() {
                 </button>
                 {photo && (
                   <>
-                    <a href={photo} download="Nancy-and-Melody.png">
+                    <a href={photo.png} download="Nancy-and-Melody.png">
                       Download our photo PNG
                     </a>
                     {role === "host" && (
-                      <button onClick={() => void keep()}>
+                      <button disabled={photoKept} onClick={() => void keep()}>
                         Keep on Nancy’s wall
                       </button>
                     )}
                   </>
                 )}
               </details>
+              <PostcardWalk />
+              <LanternEvening />
               <label>
                 Our atmosphere{" "}
                 <select

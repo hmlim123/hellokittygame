@@ -16,6 +16,7 @@ export const VILLAGE_PLACES = [
   { id: "cafe", name: "Momo’s café", icon: "☕", x: 7, z: -3.1 },
   { id: "garden", name: "Pip’s garden", icon: "✿", x: 6, z: 3.7 },
 ];
+export const VILLAGE_PICNIC = { id: "picnic", label: "Sit for a picnic", x: -5.5, z: 4.2 };
 export const VILLAGE_ACTIONS = [
   { id: "home", label: "Go inside", x: -7, z: -3.1 },
   { id: "cafe", label: "Bake at the café", x: 7, z: -3.1 },
@@ -27,7 +28,7 @@ export const VILLAGE_ACTIONS = [
     x,
     z: 3.95,
   })),
-  { id: "picnic", label: "Sit for a picnic", x: -5.5, z: 4.2 },
+  VILLAGE_PICNIC,
 ];
 export function villageApproach(o) {
   return o.id === "momo"

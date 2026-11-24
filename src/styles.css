@@ -2490,6 +2490,7 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 }
 .village-social :is(button, summary) {
   min-height: 44px;
+  min-width: 44px;
   padding: 8px;
   font-size: 12px;
   background: #fffaf4;
@@ -2514,7 +2515,7 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   box-shadow: 0 4px 12px #2e172422;
 }
 .village-social .village-message { z-index: 2; }
-.together-options > div { max-height: 145px; overflow: auto; overscroll-behavior: contain; }
+.together-options > div { max-height: min(320px, 38dvh); overflow: auto; overscroll-behavior: contain; }
 .together-options .visit-emotes { margin: 0; }
 .together-options > div > label { display: block; margin-top: 8px; }
 .together-options select, .together-options a { min-height: 44px; }
@@ -2525,6 +2526,51 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   border-radius: 10px;
   align-self: center;
   font-size: 12px;
+}
+.postcard-route, .postcard-stops, .lantern-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.postcard-route {
+  padding: 3px 6px;
+  border: 1px solid #d7bbce;
+  border-radius: 12px;
+  background: #fffaf4;
+  color: #67495b;
+  font-size: 12px;
+}
+.lantern-colors button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.lantern-colors button span {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #72596a66;
+  border-radius: 50%;
+}
+.postcard-stops button[aria-pressed="true"],
+.lantern-colors button[aria-pressed="true"] {
+  border-color: #a37a91;
+  background: #f2e0eb;
+}
+.village-table-actions {
+  width: min(100%, 300px);
+  margin-left: auto;
+}
+.village-social .baking-turn {
+  background: #f8e8da;
+  border-color: #d8b69c;
+  color: #694c40;
+}
+.garden-progress {
+  border: 1px solid #dbe4cf;
+  background: #f1f5e9;
+  color: #456042;
+  margin-right: auto;
 }
 .village-speech { position: relative; pointer-events: none; }
 .village-bubble {
