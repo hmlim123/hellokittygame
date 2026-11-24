@@ -22,10 +22,12 @@ import {
   VILLAGE_OBSTACLES,
   VILLAGE_PICNIC,
   moveVillage,
+  villagePath,
 } from "../game/village";
 import {
   actInVillage,
   useVillageMotion,
+  villagePicnicSeat,
   villageRender,
 } from "../game/village-motion";
 import { VisitAvatars } from "./VisitAvatars";
@@ -588,14 +590,24 @@ function Player() {
     const visit = useVisitsStore.getState();
     const moment = visit.together;
     const elapsed = moment && visit.role ? togetherElapsed(moment, visit.clockOffset) : Infinity;
+    if (m.picnic && !m.path.length) {
+      const seat = villagePicnicSeat(m.guestVisit);
+      // A late movement correction can arrive after we opened the picnic.
+      // Keep the table view open and finish the walk to the assigned seat.
+      if (Math.hypot(p.x - seat.x, p.z - seat.z) > 0.2) {
+        const path = villagePath(p, seat);
+        if (path.length) useVillageMotion.setState({ path });
+      }
+      locomotion.current.speed = 0;
+      return;
+    }
     if (
       (moment?.action === "celebrate" && elapsed >= 0 && elapsed < 3) ||
       (moment?.action === "photo" && elapsed < togetherDuration("photo") && villagePartner(visit)) ||
       !state.sceneReady ||
       state.panel ||
       state.dialogue ||
-      state.viewOnly ||
-      m.picnic
+      state.viewOnly
     ) {
       locomotion.current.speed = 0;
       return;
@@ -632,9 +644,10 @@ function Player() {
   const latest = useRef({ x: spawn.x, z: spawn.z });
   useFrame(({ camera, size, gl }, dt) => {
     const game = useGameStore.getState();
-    const atPicnic = useVillageMotion.getState().picnic;
-    if (atPicnic) yaw.current = 0;
-    if (game.panel || game.dialogue || atPicnic)
+    const motion = useVillageMotion.getState();
+    const seated = motion.picnic && !motion.path.length;
+    if (seated) yaw.current = 0;
+    if (game.panel || game.dialogue || seated)
       locomotion.current.speed = 0;
     const p = latest.current;
     villageRender.x = p.x;
@@ -673,7 +686,7 @@ function Player() {
       : undefined;
     const target = photoPartner
       ? new THREE.Vector3((p.x + photoPartner.x) / 2, 0.9, (p.z + photoPartner.z) / 2)
-      : atPicnic
+      : motion.picnic
         ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
         : new THREE.Vector3(p.x, 0.9, p.z);
     follow.current.lerp(

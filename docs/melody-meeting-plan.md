@@ -90,6 +90,11 @@ picnic setup and refresh, tea, the shared garden, baking turns, both photo
 downloads, the stamped postcard, and the lantern sunset. Both sessions returned
 to the same visit after reconnecting. [Two-account browser test](../tests/accounts-browser.py)
 
+The Activities panel is reachable at 320×568 and 844×390. A separate picnic
+check held back the last few position updates, then applied a server correction
+after Nancy opened the picnic. The picnic dialog stayed open, both players
+reached their assigned spots, and they could enter the tea view together.
+
 An upgrade rehearsal started with the published Worker revision and one
 temporary SQLite database. The updated Worker reopened both account sessions
 with their original visit tickets and restored the shared garden and unfinished

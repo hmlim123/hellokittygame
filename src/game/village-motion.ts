@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useGameStore } from "./store";
 import {
   VILLAGE_ACTIONS,
+  VILLAGE_PICNIC,
   VILLAGE_SPAWN,
   villagePath,
   villageApproach,
@@ -29,6 +30,10 @@ interface VillageMotion {
   walkTo(p: VillagePoint, action?: string): boolean;
 }
 export const villageRender = { x: VILLAGE_SPAWN.x, z: VILLAGE_SPAWN.z };
+export function villagePicnicSeat(guest: boolean) {
+  return { x: VILLAGE_PICNIC.x + (guest ? 0.95 : -0.95), z: VILLAGE_PICNIC.z };
+}
+
 export const useVillageMotion = create<VillageMotion>((set, get) => ({
   position: { ...VILLAGE_SPAWN },
   yaw: 0,
@@ -66,7 +71,7 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
       action === "momo" || action === "pip"
         ? villageApproach({ ...p, id: action })
         : action === "picnic"
-          ? { x: p.x + (get().guestVisit ? 0.95 : -0.95), z: p.z }
+          ? villagePicnicSeat(get().guestVisit)
           : p;
     const path = villagePath(get().position, destination);
     if (!path.length) return false;
@@ -169,6 +174,11 @@ export function actInVillage(id?: string) {
   else if (action.startsWith("flowers"))
     s.villageWater(Number(action.slice(-1)));
   else if (action === "picnic") {
+    const seat = villagePicnicSeat(motion.guestVisit);
+    if (Math.hypot(motion.position.x - seat.x, motion.position.z - seat.z) > 0.2) {
+      motion.walkTo(VILLAGE_PICNIC, "picnic");
+      return;
+    }
     useVillageMotion.setState({ picnic: true });
     s.react(
       "softHappy",

@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host_context=host_browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2)
             guest_context=guest_browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2)
             host=host_context.new_page();guest=guest_context.new_page();errors=[]
-            sent=[]; together_received=[]
+            sent=[]; together_received=[]; corrections=[]
             def on_socket(ws):
                 def record(payload):
                     try:
@@ -42,6 +42,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 def receive(payload):
                     try:
                         message=json.loads(payload)
+                        if message.get('type')=='correction':corrections.append(message)
                         if message.get('together') or message['type']=='error':
                             together_received.append(message.get('together') or message)
                     except (TypeError, ValueError):pass
@@ -201,8 +202,31 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 picnic.wait_for(timeout=60000)
                 return picnic
 
+            host.evaluate("""() => {
+                const send = WebSocket.prototype.send;
+                window.picnicStepsWithheld = 0;
+                window.picnicCorrectionInjected = false;
+                WebSocket.prototype.send = function(data) {
+                    const move = JSON.parse(data);
+                    if (move.type === 'move' && !window.picnicCorrectionInjected) {
+                        window.requestPicnicCorrection = () => {
+                            window.picnicCorrectionInjected = true;
+                            send.call(this, JSON.stringify({...move, x: 999}));
+                        };
+                        if (Math.hypot(move.x + 6.45, move.z - 4.2) < .85) {
+                            window.picnicStepsWithheld++;
+                            return;
+                        }
+                    }
+                    return send.call(this, data);
+                };
+            }""")
             host_picnic=open_picnic(host)
+            host.wait_for_function('window.picnicStepsWithheld > 0',timeout=15000)
+            previous_corrections=len(corrections)
+            host.evaluate('window.requestPicnicCorrection()')
             guest_picnic=open_picnic(guest)
+            assert len(corrections)>previous_corrections
             host.bring_to_front()
             host_picnic.get_by_role('button',name='Lay the cloth').tap()
             guest_picnic.get_by_role('button',name='✓ Lay the cloth',exact=True).wait_for()
@@ -226,6 +250,11 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             guest.wait_for_function("document.querySelector('#world canvas').dataset.playerHolding === 'cup'")
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'cup'")
             guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'cup'")
+            for page, x in [(host, -6.45), (guest, -4.55)]:
+                page.wait_for_function("""x => {
+                    const d = document.querySelector('#world canvas').dataset;
+                    return Math.hypot(d.villageX-x, d.villageZ-4.2) <= .2;
+                }""",arg=x,timeout=30000)
             assert host.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).cookie.packed")
             guest.get_by_role('button',name='Raise your cup',exact=True).tap()
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression === 'sip'")
