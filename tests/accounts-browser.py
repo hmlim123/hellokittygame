@@ -130,8 +130,8 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host_context=host_browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2)
             guest_context=guest_browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2)
             host=host_context.new_page();guest=guest_context.new_page();errors=[]
-            sent=[]; together_received=[]; corrections=[]
-            def on_socket(ws):
+            sent=[]; together_received=[]; corrections=[]; dance_starts={}
+            def on_socket(ws, page):
                 def record(payload):
                     try:
                         message=json.loads(payload)
@@ -142,13 +142,16 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                     try:
                         message=json.loads(payload)
                         if message.get('type')=='correction':corrections.append(message)
-                        if message.get('together') or message['type']=='error':
-                            together_received.append(message.get('together') or message)
+                        moment=message.get('together')
+                        if moment or message['type']=='error':
+                            together_received.append(moment or message)
+                        if moment and moment['action']=='celebrate':
+                            dance_starts.setdefault(page, moment['at'])
                     except (TypeError, ValueError):pass
                 ws.on('framereceived',receive)
             for page in [host,guest]:
                 page.on('pageerror',lambda e:(errors.append(str(e)),print('PAGE ERROR',str(e),flush=True)))
-                page.on('websocket',on_socket)
+                page.on('websocket',lambda ws, page=page: on_socket(ws, page))
                 page.add_init_script("""window.watchVillage = () => {
                     const canvas = document.querySelector('#world canvas');
                     const size = [canvas.width, canvas.height];
@@ -275,18 +278,21 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.get_by_role('button',name='Dance together',exact=True).tap()
             try:
                 for page in [host, guest]:
-                    page.wait_for_function("danceFrames.some(frame => frame[1] > 1)",timeout=12000)
+                    page.wait_for_function("""danceFrames.some(frame =>
+                        frame[1] > 1 && frame[1] - danceFrames[0][1] >= .3
+                    )""",timeout=12000)
             except Exception:
                 print('Dance diagnostics', together_received[-8:])
                 for page in [host, guest]:
                     print(page.evaluate("({frames: danceFrames.slice(-5), scene: {...document.querySelector('#world canvas').dataset}})"))
                 raise
+            assert dance_starts[host] == dance_starts[guest], dance_starts
             for page in [host, guest]:
                 frames=page.evaluate('danceFrames')
-                assert any(frame[1] < .9 for frame in frames), frames[:3]
                 assert all(abs(kitty-melody)<.1 for _,kitty,melody in frames), frames[-4:]
-            starts=[page.evaluate('danceFrames[0][0] - 1000 * danceFrames[0][1]') for page in [host, guest]]
-            assert abs(starts[0]-starts[1])<200, starts
+                first=frames[0]
+                rendered_start=first[0]-1000*first[1]
+                assert abs(rendered_start-dance_starts[page])<200, (first,dance_starts[page])
             host.wait_for_function("!document.querySelector('#world canvas').dataset.hostTogether",timeout=12000)
             for page in [host,guest]:
                 assert page.evaluate('finishVillageWatch()') == [], 'Village renderer must remain stable throughout the visit'

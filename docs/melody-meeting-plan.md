@@ -79,9 +79,11 @@ remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittyga
   plaza. Lighting both brings on the same sunset in both browsers.
 - **Village clue trail** gives each player a private clue. Share your clues,
   agree on the landmark, and find a ribbon each after both arrive. Another
-  round gives the pair a different landmark.
+  round gives the pair a different landmark. A prompt opens your clue when
+  your partner shares theirs.
 - **Petal Match** lets both players secretly pick a flower. The game reveals
   the colors together and counts shared matches across rounds in the visit.
+  Look for **Pick your petal** after your partner chooses.
 
 Postcard walks, lantern evenings, the clue trail, and Petal Match use new
 shared state from the existing Worker. Their controls appear when that Worker
@@ -106,6 +108,20 @@ temporary SQLite database. The updated Worker reopened both account sessions
 with their original visit tickets and restored the shared garden and unfinished
 picnic. The draft client also joined with the published Worker and played the
 picnic while the newer activities were hidden. [GitHub service check](https://github.com/hmlim123/hellokittygame/actions/runs/45468839185)
+
+## Clue trail and Petal Match verification · November 24, 2026
+
+The production build and 297 automated checks passed. In two-player Chromium
+and WebKit browser sessions, the clues stayed private until shared, the players
+could revise a wrong guess, and each could collect one visible ribbon. The
+flower choices stayed hidden through a refresh, and the pair completed both
+matching and mismatched rounds. The active clue menu stayed reachable at
+320×568 and 844×390 in WebKit. [Two-account browser test](../tests/accounts-browser.py)
+
+The Cloudflare and Node tests restored in-progress rounds after a service
+restart. A separate upgrade rehearsal reopened existing accounts and village
+progress from the published Worker’s SQLite data before starting the new
+activities. [GitHub service check](https://github.com/hmlim123/hellokittygame/actions/runs/45478333092)
 
 ## Later activities
 
