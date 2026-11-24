@@ -27,7 +27,7 @@ test("both partners choose and light their own plaza lanterns before sunset", ()
   act(host, "choose", "rose");
   act(host, "light");
   assert.equal(room.lanternEvening.host.lit, false);
-  act(guest, "choose", "lavender");
+  act(guest, "choose", "lavender", 0);
   guest.x += 20;
   act(guest, "light");
   assert.match(errors.at(-1), /Meet your partner at the plaza/);
@@ -37,9 +37,9 @@ test("both partners choose and light their own plaza lanterns before sunset", ()
   act(guest, "choose", "mint");
   assert.deepEqual(room.lanternEvening.guest, { color: "lavender", lit: true });
   assert.equal(room.together.weather, "rain");
-  act(host, "light", undefined, 1);
+  act(host, "light", undefined, 0);
   assert.match(errors.at(-1), /lanterns changed/);
-  act(host, "light");
+  act(host, "light", undefined, 2);
   assert.deepEqual(room.lanternEvening.host, { color: "rose", lit: true });
   assert.deepEqual(restoreTogetherMoment(room.together), {
     id: 4, action: "stir", at: 500, weather: "sunset", baking: "decorate", pose: "still",
@@ -49,12 +49,15 @@ test("both partners choose and light their own plaza lanterns before sunset", ()
   assert.equal(room.lanternEvening, finished);
   act(host, "reset");
   assert.deepEqual(room.lanternEvening, newLanternEvening(finished.revision + 1));
+  act(guest, "choose", "lavender", finished.revision);
+  assert.match(errors.at(-1), /lanterns changed/);
+  assert.equal(room.lanternEvening.guest.color, null);
 });
 
 test("old and invalid lantern data restore without inventing an active light", () => {
   assert.deepEqual(normalizeLanternEvening(undefined), newLanternEvening());
   assert.deepEqual(
     normalizeLanternEvening({ revision: 2, host: { color: "unknown", lit: true }, guest: { color: "mint", lit: true } }),
-    { revision: 2, host: { color: null, lit: false }, guest: { color: "mint", lit: true } },
+    { revision: 2, roleRevisions: { host: 2, guest: 2 }, host: { color: null, lit: false }, guest: { color: "mint", lit: true } },
   );
 });

@@ -1,4 +1,5 @@
 import { VILLAGE_PLACES } from "./village-world.mjs";
+import { newActivityRevision, restoreActivityRevision } from "./visit-activity.mjs";
 
 const plaza = VILLAGE_PLACES.find((p) => p.id === "plaza");
 if (!plaza) throw Error("The village map needs a plaza for its lanterns.");
@@ -12,7 +13,7 @@ export const LANTERN_COLORS = {
 
 /** @typedef {keyof typeof LANTERN_COLORS} LanternColor */
 /** @typedef {{color: LanternColor | null, lit: boolean}} Lantern */
-/** @typedef {{revision: number, host: Lantern, guest: Lantern}} LanternEvening */
+/** @typedef {import('./visit-activity.mjs').VisitActivityRevision & {host: Lantern, guest: Lantern}} LanternEvening */
 
 /** @param {unknown} value @returns {LanternColor | null} */
 export function lanternColor(value) {
@@ -24,7 +25,7 @@ export function lanternColor(value) {
 /** @returns {LanternEvening} */
 export function newLanternEvening(revision = 0) {
   return {
-    revision,
+    ...newActivityRevision(revision),
     host: { color: null, lit: false },
     guest: { color: null, lit: false },
   };
@@ -33,15 +34,12 @@ export function newLanternEvening(revision = 0) {
 /** @param {unknown} value @returns {LanternEvening} */
 export function normalizeLanternEvening(value) {
   const saved = /** @type {Partial<LanternEvening> | null} */ (value);
-  const revision = Number.isSafeInteger(saved?.revision)
-    ? Math.max(0, saved.revision)
-    : 0;
   /** @param {Lantern | undefined} lamp */
   function restore(lamp) {
     const color = lanternColor(lamp?.color);
     return { color, lit: !!color && lamp?.lit === true };
   }
-  return { revision, host: restore(saved?.host), guest: restore(saved?.guest) };
+  return { ...restoreActivityRevision(saved), host: restore(saved?.host), guest: restore(saved?.guest) };
 }
 
 /** @param {{x: number, z: number, area?: string}} player */

@@ -38,9 +38,9 @@ test("each player chooses a different postcard stop and both must visit them in 
   play(host, "choose", "home");
   assert.equal(room.postcardWalk, undefined);
   play(guest, "choose", "garden");
-  play(host, "choose", "garden");
+  play(host, "choose", "garden", 0);
   assert.match(errors.at(-1), /different stop/);
-  play(host, "choose", "plaza");
+  play(host, "choose", "plaza", 0);
   const first = room.postcardWalk;
   assert.equal(nextPostcardStop(first).id, "plaza");
 
@@ -71,6 +71,9 @@ test("each player chooses a different postcard stop and both must visit them in 
   assert.equal(room.postcardWalk, complete);
   play(host, "reset");
   assert.deepEqual(room.postcardWalk, newPostcardWalk(complete.revision + 1));
+  play(guest, "choose", "garden", complete.revision);
+  assert.match(errors.at(-1), /postcard changed/);
+  assert.equal(room.postcardWalk.guest, null);
   assert.equal(updates.length, 5);
 });
 
@@ -78,6 +81,6 @@ test("older and invalid checkpoints load with an unstarted walk", () => {
   assert.deepEqual(normalizePostcardWalk(undefined), newPostcardWalk());
   assert.deepEqual(
     normalizePostcardWalk({ revision: -2, host: "garden", guest: "garden", stamps: 2, completedAt: 5 }),
-    { revision: 0, host: "garden", guest: null, stamps: 0, completedAt: null },
+    { revision: 0, roleRevisions: { host: 0, guest: 0 }, host: "garden", guest: null, stamps: 0, completedAt: null },
   );
 });

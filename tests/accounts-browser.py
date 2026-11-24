@@ -84,7 +84,10 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 print('Village controls returned',flush=True)
             def personal(page):return page.evaluate("Object.fromEntries(Object.keys(localStorage).filter(k=>k.startsWith('kitty-')&&!k.includes('visits')).sort().map(k=>[k,localStorage.getItem(k)]))")
             host.add_init_script("""if (!localStorage.getItem('kitty-world-v2')) {
-                localStorage.setItem('kitty-nancy-cozy-v1', JSON.stringify({village:{greeted:['momo'], flowers:[true,false,false], placed:{welcome:'nook'}}}));
+                localStorage.setItem('kitty-nancy-cozy-v1', JSON.stringify({
+                    village:{greeted:['momo'], flowers:[true,false,false], placed:{welcome:'nook'}},
+                    cookie:{stage:'served', packed:true},
+                }));
                 localStorage.setItem('kitty-nancy-equipment-v1', JSON.stringify({version:1,outfit:'sailor',item:'letter'}));
             }""")
             host.goto(BASE+'/adventure.html?visits='+quote(SERVICE,safe=''));ready(host);visits(host)
@@ -220,11 +223,14 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 assert page.get_by_role('group',name='At the picnic table',exact=True).is_visible()
             guest.wait_for_function("document.querySelector('#world canvas').dataset.playerHolding === 'cup'")
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'cup'")
+            guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'cup'")
+            assert host.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).cookie.packed")
             guest.get_by_role('button',name='Raise your cup',exact=True).tap()
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression === 'sip'")
             host.bring_to_front()
             host.screenshot(path=str(results/'accounts-tea-together.png'))
             host.get_by_role('button',name='Leave the table',exact=True).tap()
+            guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'parcel'")
             guest.bring_to_front()
             guest.get_by_role('button',name='Table setup',exact=True).tap()
             guest.get_by_role('heading',name='A little picnic, made together ♡').wait_for()

@@ -131,14 +131,20 @@ export function applyVisitAction({
       return;
     }
     const walk = room.postcardWalk ?? newPostcardWalk();
-    if (m.revision !== walk.revision) {
+    const role = player.id;
+    if (role !== "host" && role !== "guest") return;
+    // Independent choices can cross on the wire. Stamps and resets still
+    // require the exact shared state, because they advance the whole walk.
+    const firstRevision = m.action === "choose" ? walk.roleRevisions[role] : walk.revision;
+    if (
+      !Number.isSafeInteger(m.revision) || m.revision < firstRevision || m.revision > walk.revision
+    ) {
       fail("Your postcard changed. Check the current stop and try again.");
       return;
     }
-    const role = player.id;
-    if (role !== "host" && role !== "guest") return;
 
     let next;
+    const revision = walk.revision + 1;
     if (m.action === "choose") {
       const stop = postcardStop(m.stop);
       if (!stop || (walk.host && walk.guest)) return;
@@ -148,7 +154,7 @@ export function applyVisitAction({
         return;
       }
       if (stop.id === walk[role]) return;
-      next = { ...walk, [role]: stop.id };
+      next = { ...walk, [role]: stop.id, roleRevisions: { ...walk.roleRevisions, [role]: revision } };
     } else if (m.action === "stamp") {
       const stop = nextPostcardStop(walk);
       if (!stop || stop.id !== m.stop) return;
@@ -160,10 +166,10 @@ export function applyVisitAction({
       next = { ...walk, stamps, completedAt: stamps === 2 ? now() : null };
     } else if (m.action === "reset") {
       if (role !== "host" || walk.stamps !== 2) return;
-      next = newPostcardWalk();
+      next = newPostcardWalk(revision);
     } else return;
 
-    room.postcardWalk = { ...next, revision: walk.revision + 1 };
+    room.postcardWalk = { ...next, revision };
     broadcast(room);
     dirty();
   } else if (m.type === "lantern-evening") {
@@ -172,36 +178,41 @@ export function applyVisitAction({
       return;
     }
     const evening = room.lanternEvening ?? newLanternEvening();
-    if (m.revision !== evening.revision) {
+    const role = player.id;
+    if (role !== "host" && role !== "guest") return;
+    const firstRevision = m.action === "reset" ? evening.revision : evening.roleRevisions[role];
+    if (
+      !Number.isSafeInteger(m.revision) || m.revision < firstRevision || m.revision > evening.revision
+    ) {
       fail("Your lanterns changed. Check the plaza and try again.");
       return;
     }
-    const role = player.id;
-    if (role !== "host" && role !== "guest") return;
     const lantern = evening[role];
+    const revision = evening.revision + 1;
+    const roleRevisions = { ...evening.roleRevisions, [role]: revision };
     let next;
 
     if (m.action === "choose") {
       const color = lanternColor(m.color);
       if (!color || lantern.lit || color === lantern.color) return;
-      next = { ...evening, [role]: { color, lit: false } };
+      next = { ...evening, [role]: { color, lit: false }, roleRevisions };
     } else if (m.action === "light") {
       if (lantern.lit || !evening.host.color || !evening.guest.color) return;
       if (![room.host, room.guest].every(atLanternPlaza)) {
         fail("Meet your partner at the plaza before lighting the lanterns.");
         return;
       }
-      next = { ...evening, [role]: { ...lantern, lit: true } };
+      next = { ...evening, [role]: { ...lantern, lit: true }, roleRevisions };
       if (next.host.lit && next.guest.lit) {
         const previous = room.together ?? newTogetherMoment();
         room.together = { ...previous, id: previous.id + 1, weather: "sunset" };
       }
     } else if (m.action === "reset") {
       if (role !== "host" || !evening.host.lit || !evening.guest.lit) return;
-      next = newLanternEvening();
+      next = newLanternEvening(revision);
     } else return;
 
-    room.lanternEvening = { ...next, revision: evening.revision + 1 };
+    room.lanternEvening = { ...next, revision };
     broadcast(room);
     dirty();
   } else if (m.type === "move") {

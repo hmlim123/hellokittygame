@@ -6,6 +6,7 @@ import type { PostcardMemory } from "../game/cozy";
 import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
 import { LanternEvening } from "./LanternEvening";
 import { useGameStore } from "../game/store";
+import { visitTime } from "../game/visit-clock";
 
 type SharedPhoto = Omit<PostcardMemory, "image" | "place"> & {
   png: string;
@@ -39,12 +40,13 @@ async function framedPhoto(source: string) {
 export function TogetherActivities() {
   const moment = useVisitsStore((s) => s.together),
     role = useVisitsStore((s) => s.role),
+    roomId = useVisitsStore((s) => s.roomId),
     clockOffset = useVisitsStore((s) => s.clockOffset),
     status = useVisitsStore((s) => s.status),
     available = useVisitsStore((s) => s.togetherAvailable),
     togetherAction = useVisitsStore((s) => s.togetherAction),
     [pose, setPose] = useState("wave"),
-    [now, setNow] = useState(Date.now()),
+    [now, setNow] = useState(visitTime),
     [photo, setPhoto] = useState<SharedPhoto | null>(null),
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
@@ -53,17 +55,18 @@ export function TogetherActivities() {
   );
   const captured = useRef<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
+    setNow(visitTime());
     if (!moment) return;
     const end =
       moment.at -
       useVisitsStore.getState().clockOffset +
       togetherDuration(moment.action) * 1000 +
       150;
-    if (Date.now() >= end) return;
+    if (visitTime() >= end) return;
     const timer = setInterval(() => {
-      setNow(Date.now());
-      if (Date.now() >= end) clearInterval(timer);
+      const current = visitTime();
+      setNow(current);
+      if (current >= end) clearInterval(timer);
     }, 100);
     return () => clearInterval(timer);
   }, [moment?.at, moment?.action]);
@@ -80,6 +83,7 @@ export function TogetherActivities() {
   useEffect(() => {
     if (
       moment?.action !== "photo" ||
+      !roomId ||
       elapsed < 3 ||
       elapsed >= 6 ||
       captured.current === moment.at ||
@@ -92,7 +96,7 @@ export function TogetherActivities() {
     const { at, pose: framePose, weather } = moment;
     const { outfit, plush } = useGameStore.getState().equipment;
     const frame: Omit<SharedPhoto, "png"> = {
-      id: crypto.randomUUID(),
+      id: `village-photo-${roomId}-${at}`,
       outfit,
       ...(plush ? { plush } : {}),
       background: weather,
@@ -115,7 +119,7 @@ export function TogetherActivities() {
       }
     }
     void capture();
-  }, [moment, elapsed, role]);
+  }, [moment, elapsed, role, roomId]);
   const action = (kind: string) => {
     useVillageMotion.getState().stop();
     togetherAction(kind, pose);

@@ -1,12 +1,13 @@
 import { VILLAGE_PLACES } from "./village-world.mjs";
+import { newActivityRevision, restoreActivityRevision } from "./visit-activity.mjs";
 
 export const POSTCARD_STOPS = VILLAGE_PLACES.filter((place) => place.id !== "home");
 
-/** @typedef {{revision: number, host: string | null, guest: string | null, stamps: number, completedAt: number | null}} PostcardWalk */
+/** @typedef {import('./visit-activity.mjs').VisitActivityRevision & {host: string | null, guest: string | null, stamps: number, completedAt: number | null}} PostcardWalk */
 
 /** @returns {PostcardWalk} */
 export function newPostcardWalk(revision = 0) {
-  return { revision, host: null, guest: null, stamps: 0, completedAt: null };
+  return { ...newActivityRevision(revision), host: null, guest: null, stamps: 0, completedAt: null };
 }
 
 /** @param {unknown} id */
@@ -17,9 +18,6 @@ export function postcardStop(id) {
 /** @param {unknown} value @returns {PostcardWalk} */
 export function normalizePostcardWalk(value) {
   const saved = /** @type {Partial<PostcardWalk> | null} */ (value);
-  const revision = Number.isSafeInteger(saved?.revision)
-    ? Math.max(0, saved.revision)
-    : 0;
   const host = postcardStop(saved?.host)?.id ?? null;
   const guest = saved?.guest !== host ? postcardStop(saved?.guest)?.id ?? null : null;
   const stamps = host && guest && Number.isInteger(saved?.stamps)
@@ -30,7 +28,7 @@ export function normalizePostcardWalk(value) {
     Number.isFinite(new Date(saved.completedAt).getTime())
       ? saved.completedAt
       : null;
-  return { revision, host, guest, stamps, completedAt };
+  return { ...restoreActivityRevision(saved), host, guest, stamps, completedAt };
 }
 
 /** @param {PostcardWalk} walk */

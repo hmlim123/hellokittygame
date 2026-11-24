@@ -101,6 +101,7 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       gl.domElement.dataset.remoteOutfit = a.appearance.outfit;
       gl.domElement.dataset.remoteExpression = blenderExpression(hero);
       gl.domElement.dataset.remoteModel = hero.userData.source;
+      gl.domElement.dataset.remoteHolding = a.holding || "none";
     }
   }, -0.5);
   return (

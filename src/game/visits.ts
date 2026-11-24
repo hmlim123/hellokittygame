@@ -1,4 +1,5 @@
 import { VisitMovementCadence } from "./visit-movement-cadence";
+import { VisitClock, visitTime } from "./visit-clock";
 import { beginGuestSession, endGuestSession } from "./guest-session";
 import { accountSession, useAccounts } from "./accounts";
 import { create } from "zustand";
@@ -206,6 +207,7 @@ export function invitationLink(
 function connect(server: string, hello: object) {
   stopTransport();
   const epoch = generation;
+  const clock = new VisitClock();
   const ws = new WebSocket(server.replace(/^http/, "ws") + "/visit");
   socket = ws;
   const handshake = setTimeout(() => {
@@ -309,12 +311,11 @@ function connect(server: string, hello: object) {
               : g.mode === "room"
                 ? "home"
                 : "story",
-          holding:
-            g.cozy.cookie.packed || performance.now() < motion.givingUntil
+          holding: motion.picnic
+            ? "cup"
+            : g.cozy.cookie.packed || performance.now() < motion.givingUntil
               ? "parcel"
-              : motion.picnic
-                ? "cup"
-                : null,
+              : null,
           tool: g.effect?.kind === "water" ? "watering" : null,
         };
         // A final stop is sent immediately, even when the final position did not
@@ -382,9 +383,7 @@ function connect(server: string, hello: object) {
             ? m.together
             : null,
         togetherAvailable: m.togetherAvailable === true,
-        clockOffset: Number.isFinite(m.serverNow)
-          ? m.serverNow - Date.now()
-          : 0,
+        clockOffset: clock.sample(m.serverNow, visitTime()),
         players: m.players,
         chat: Array.isArray(m.chat)
           ? m.chat

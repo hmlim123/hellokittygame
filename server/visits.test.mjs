@@ -314,9 +314,8 @@ test("a checkpoint restores the same private tickets and shared state across a s
     guest.send({ type: "lantern-evening", action: "choose", color: "honey", revision: 1 });
     await host.until((m) => m.lanternEvening?.guest.color === "honey");
     host.send({ type: "lantern-evening", action: "light", revision: 2 });
-    await guest.until((m) => m.lanternEvening?.host.lit);
-    guest.send({ type: "lantern-evening", action: "light", revision: 3 });
-    await host.until((m) => m.together?.weather === "sunset");
+    guest.send({ type: "lantern-evening", action: "light", revision: 2 });
+    const lit = await host.until((m) => m.together?.weather === "sunset");
     await a.service.close();
     a = null;
     b = await setup({ storeFile: file });
@@ -330,6 +329,7 @@ test("a checkpoint restores the same private tickets and shared state across a s
     assert.equal(restored.postcardWalk.stamps, 1);
     assert.deepEqual(restored.lanternEvening, {
       revision: 4,
+      roleRevisions: lit.lanternEvening.roleRevisions,
       host: { color: "mint", lit: true },
       guest: { color: "honey", lit: true },
     });

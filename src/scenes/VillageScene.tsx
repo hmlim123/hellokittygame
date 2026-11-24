@@ -713,7 +713,7 @@ function Player() {
                     ? { ...equipment, item: "none" }
                     : equipment
               }
-              holding={packed || giving ? "parcel" : picnic ? "cup" : undefined}
+              holding={picnic ? "cup" : packed || giving ? "parcel" : undefined}
               animate
               scale={0.78}
               villageRole={sharedRole || undefined}

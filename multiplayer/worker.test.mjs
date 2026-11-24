@@ -232,17 +232,16 @@ test("SQL persistence restores accounts and private tickets after a whole runtim
   const dir = await mkdtemp(join(tmpdir(), "kitty-free-persist-"));
   const first = await pair(t, { persist: dir }, { x: -1.8, z: 1.6 });
   first.host.send({ type: "postcard-walk", action: "choose", stop: "plaza", revision: 0 });
-  await first.host.until((m) => m.postcardWalk?.host === "plaza");
-  first.guest.send({ type: "postcard-walk", action: "choose", stop: "garden", revision: 1 });
-  await first.guest.until((m) => m.postcardWalk?.guest === "garden");
+  first.guest.send({ type: "postcard-walk", action: "choose", stop: "garden", revision: 0 });
+  const chosen = await first.guest.until((m) => m.postcardWalk?.host && m.postcardWalk?.guest);
+  assert.equal(chosen.postcardWalk.revision, 2);
   first.host.send({ type: "postcard-walk", action: "stamp", stop: "plaza", revision: 2 });
   await first.guest.until((m) => m.postcardWalk?.stamps === 1);
   first.host.send({ type: "lantern-evening", action: "choose", color: "rose", revision: 0 });
-  await first.host.until((m) => m.lanternEvening?.host.color === "rose");
-  first.guest.send({ type: "lantern-evening", action: "choose", color: "lavender", revision: 1 });
-  await first.guest.until((m) => m.lanternEvening?.guest.color === "lavender");
+  first.guest.send({ type: "lantern-evening", action: "choose", color: "lavender", revision: 0 });
+  await first.guest.until((m) => m.lanternEvening?.host.color && m.lanternEvening?.guest.color);
   first.host.send({ type: "lantern-evening", action: "light", revision: 2 });
-  await first.guest.until((m) => m.lanternEvening?.host.lit);
+  const partiallyLit = await first.guest.until((m) => m.lanternEvening?.host.lit);
   first.host.ws.close(1000, "Reload");
   first.guest.ws.close(1000, "Reload");
   await new Promise((r) => setTimeout(r, 50));
@@ -268,12 +267,14 @@ test("SQL persistence restores accounts and private tickets after a whole runtim
     guest: "garden",
     stamps: 1,
     revision: 3,
+    roleRevisions: chosen.postcardWalk.roleRevisions,
     completedAt: null,
   });
   assert.deepEqual(snapshot.lanternEvening, {
     host: { color: "rose", lit: true },
     guest: { color: "lavender", lit: false },
     revision: 3,
+    roleRevisions: partiallyLit.lanternEvening.roleRevisions,
   });
   assert.equal((await second.request("/account")).body.melodyRegistered, true);
 });
