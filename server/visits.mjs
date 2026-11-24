@@ -505,6 +505,14 @@ export function createVisitService({
             ws.close(1008, "Village full");
             return;
           }
+          // An anonymous invitation can be opened by a different person.
+          // Only a ticket reconnect or the same signed-in account keeps private turns.
+          if (!identity) {
+            if (room.clueTrail?.round)
+              room.clueTrail = newClueTrail(null, 0, room.clueTrail.revision + 1);
+            if (room.petalMatch?.round)
+              room.petalMatch = newPetalMatch(0, room.petalMatch.revision + 1);
+          }
           secret = token();
           room.guestHash = hash(secret);
           const offsets = [

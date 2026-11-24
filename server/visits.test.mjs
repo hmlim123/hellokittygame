@@ -378,6 +378,12 @@ test("visitors can help the shared garden only from a nearby bed and cannot rese
 
 test("leaving deliberately frees the visitor place without exposing the old ticket", async (t) => {
   const s = await pair(t);
+  s.host.send({ type: "clue-trail", action: "start", round: 0 });
+  await s.guest.until((m) => m.clueTrail?.round === 1);
+  s.host.send({ type: "petal-match", action: "start", round: 0 });
+  await s.guest.until((m) => m.petalMatch?.round === 1);
+  s.guest.send({ type: "petal-match", action: "pick", choice: "rose", round: 1 });
+  await s.host.until((m) => m.petalMatch?.partnerReady);
   s.guest.send({ type: "leave" });
   await s.guest.until((m) => m.type === "ended");
   assert.equal(s.service.rooms.get(s.ticket.roomId).guest, null);
@@ -390,6 +396,10 @@ test("leaving deliberately frees the visitor place without exposing the old tick
   const welcome = await next.until((m) => m.type === "welcome");
   assert.equal(welcome.role, "guest");
   assert.notEqual(welcome.token, s.guestWelcome.token);
+  const fresh = await next.until((m) => m.type === "state");
+  assert.equal(fresh.clueTrail.clue, null);
+  assert.equal(fresh.petalMatch.own, null);
+  assert.equal(fresh.petalMatch.round, 0);
   const old = await client(s.base, {
     type: "hello",
     roomId: s.ticket.roomId,
