@@ -26,18 +26,19 @@ function GardenProgress() {
 export function VillageSocial() {
   const status = useVisitsStore((s) => s.status);
   const together = useVisitsStore((s) => !!villagePartner(s));
+  const hasPartner = useVisitsStore((s) => !!s.role && s.players.some((player) => player.id !== s.role));
   const ready = useGameStore((s) => s.sceneReady);
   const error = useVisitsStore((s) => s.error);
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
-  if (!together || !["online", "reconnecting"].includes(status)) return null;
+  if (!hasPartner || !["online", "reconnecting"].includes(status)) return null;
   const disabled = status !== "online";
   function gesture(kind: "wave" | "softHappy") {
     useVillageMotion.getState().stop();
     useVisitsStore.getState().gesture(kind);
   }
   return (
-    <div className="village-social" aria-label="With your visitor" role="group">
+    <div className="village-social" aria-label="With your visitor" role="group" hidden={!together}>
       <div className="village-social-buttons">
         <button disabled={disabled} onClick={() => gesture("wave")}>
           Wave

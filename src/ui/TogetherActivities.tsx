@@ -5,6 +5,8 @@ import { useVisitsStore, villagePartner } from "../game/visits";
 import type { PostcardMemory } from "../game/cozy";
 import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
 import { LanternEvening } from "./LanternEvening";
+import { ClueTrail, ClueTrailRoute } from "./ClueTrail";
+import { PetalMatch } from "./PetalMatch";
 import { useGameStore } from "../game/store";
 import { visitTime } from "../game/visit-clock";
 import { inVillagePhotoRange } from "../../shared/village-world.mjs";
@@ -51,6 +53,16 @@ export function TogetherActivities() {
     [photo, setPhoto] = useState<SharedPhoto | null>(null),
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
+  const clueWaiting = useVisitsStore((s) => {
+    const trail = s.clueTrail;
+    if (!trail?.partnerShared || trail.destination || trail.ownGuess) return null;
+    return trail.ownShared ? "Choose a clue trail landmark" : "Read your partner’s clue";
+  });
+  const petalWaiting = useVisitsStore((s) => !!s.petalMatch?.partnerReady && !s.petalMatch.own);
+  const options = useRef<HTMLDetailsElement>(null);
+  const cluePanel = useRef<HTMLDetailsElement>(null);
+  const petalPanel = useRef<HTMLDetailsElement>(null);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const sceneReady = useGameStore((s) => s.sceneReady);
   const photoPartner = useVisitsStore(villagePartner);
   const nearForPhoto = useVisitsStore((s) => {
@@ -181,6 +193,18 @@ export function TogetherActivities() {
       : role === "host" && baking === "ready"
         ? "present"
         : null;
+  function openPendingActivity() {
+    const menu = options.current;
+    const panel = clueWaiting ? cluePanel.current : petalPanel.current;
+    if (!menu || !panel) return;
+    menu.open = true;
+    panel.open = true;
+    requestAnimationFrame(() => {
+      const summary = panel.querySelector("summary");
+      summary?.focus({ preventScroll: true });
+      summary?.scrollIntoView({ block: "nearest" });
+    });
+  }
   return (
     <section className="together-activities" aria-label="Time together">
       <div className="village-social-buttons">
@@ -206,6 +230,11 @@ export function TogetherActivities() {
           {nextBakingAction === "decorate" ? "Decorate cookies" : "Present cookies"}
         </button>
       )}
+      {available && !optionsOpen && (clueWaiting || petalWaiting) && (
+        <button className="activity-turn" disabled={disabled} onClick={openPendingActivity}>
+          {clueWaiting || "Pick your petal"}
+        </button>
+      )}
       {busy && moment?.action === "highfive" && (
         <span className="village-social-status" role="status">
           High-five!
@@ -217,7 +246,10 @@ export function TogetherActivities() {
         </span>
       )}
       <PostcardRoute />
-      <details className="together-options">
+      <ClueTrailRoute />
+      <details ref={options} className="together-options" onToggle={(event) => {
+        if (event.target === event.currentTarget) setOptionsOpen(event.currentTarget.open);
+      }}>
         <summary>Activities</summary>
         <div>
           {!available ? (
@@ -328,6 +360,8 @@ export function TogetherActivities() {
               </details>
               <PostcardWalk />
               <LanternEvening />
+              <ClueTrail panelRef={cluePanel} />
+              <PetalMatch panelRef={petalPanel} />
               <label>
                 Our atmosphere{" "}
                 <select

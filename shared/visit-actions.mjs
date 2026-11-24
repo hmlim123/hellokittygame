@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 import {
   VILLAGE_ACTIONS,
   VILLAGE_PICNIC,
@@ -15,6 +15,8 @@ import {
   postcardStop,
 } from "./postcard-walk.mjs";
 import { atLanternPlaza, lanternColor, newLanternEvening } from "./lantern-evening.mjs";
+import { atClueStop, CLUE_STOPS, clueStop, newClueTrail } from "./clue-trail.mjs";
+import { newPetalMatch, petal } from "./petal-match.mjs";
 
 const newTogetherMoment = () => ({
   id: 0,
@@ -218,6 +220,65 @@ export function applyVisitAction({
     } else return;
 
     room.lanternEvening = { ...next, revision };
+    broadcast(room);
+    dirty();
+  } else if (m.type === "clue-trail") {
+    if (!bothInVillage(room)) {
+      fail("Meet in the village before continuing your clue trail.");
+      return;
+    }
+    const trail = room.clueTrail ?? newClueTrail();
+    const role = player.id;
+    if ((role !== "host" && role !== "guest") || m.round !== trail.round) return;
+    const own = trail[role];
+    const partner = trail[role === "host" ? "guest" : "host"];
+    const revision = trail.revision + 1;
+    let next;
+    if (m.action === "start") {
+      if (trail.target && !(own.searched && partner.searched)) return;
+      const available = CLUE_STOPS.filter((stop) => stop.id !== trail.target);
+      const target = available[randomInt(available.length)].id;
+      next = newClueTrail(target, trail.round + 1, revision);
+    } else {
+      if (!trail.target) return;
+      if (m.action === "share" && !own.shared) {
+        next = { ...trail, [role]: { ...own, shared: true } };
+      } else if (m.action === "guess" && own.shared && partner.shared && !trail.solved) {
+        const guess = clueStop(m.stop)?.id;
+        if (!guess || guess === own.guess) return;
+        next = {
+          ...trail, [role]: { ...own, guess },
+          solved: guess === trail.target && partner.guess === guess,
+        };
+      } else if (m.action === "search" && trail.solved && !own.searched) {
+        const stop = clueStop(trail.target);
+        if (![room.host, room.guest].every((actor) => atClueStop(actor, stop))) {
+          fail("Come to the landmark together before searching.");
+          return;
+        }
+        next = { ...trail, [role]: { ...own, searched: true } };
+      } else return;
+    }
+    room.clueTrail = { ...next, revision };
+    broadcast(room);
+    dirty();
+  } else if (m.type === "petal-match") {
+    if (!bothInVillage(room)) {
+      fail("Meet in the village before picking petals together.");
+      return;
+    }
+    const match = room.petalMatch ?? newPetalMatch();
+    const role = player.id;
+    if ((role !== "host" && role !== "guest") || m.round !== match.round) return;
+    const revision = match.revision + 1;
+    if (m.action === "start" && (!match.round || (match.host && match.guest))) {
+      room.petalMatch = newPetalMatch(match.round + 1, revision, match.matches);
+    } else if (m.action === "pick" && match.round && !match[role]) {
+      const choice = petal(m.choice);
+      if (!choice) return;
+      const other = role === "host" ? match.guest : match.host;
+      room.petalMatch = { ...match, [role]: choice, revision, matches: match.matches + Number(choice === other) };
+    } else return;
     broadcast(room);
     dirty();
   } else if (m.type === "move") {

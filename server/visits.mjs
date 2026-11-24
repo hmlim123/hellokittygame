@@ -1,5 +1,7 @@
 import { newLanternEvening, normalizeLanternEvening } from "../shared/lantern-evening.mjs";
 import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.mjs";
+import { clueTrailView, newClueTrail, restoreClueTrail } from "../shared/clue-trail.mjs";
+import { newPetalMatch, petalMatchView, restorePetalMatch } from "../shared/petal-match.mjs";
 import { actor, appearance, text, yaw } from "../shared/visit-actors.mjs";
 import { applyVisitAction, restoreTogetherMoment } from "../shared/visit-actions.mjs";
 import { createServer } from "node:http";
@@ -74,7 +76,13 @@ export function createVisitService({
   const broadcast = (room) => {
     room.revision++;
     const state = snapshot(room);
-    for (const a of [room.host, room.guest]) if (a) send(a.socket, state);
+    const trail = room.clueTrail ?? newClueTrail();
+    const match = room.petalMatch ?? newPetalMatch();
+    for (const a of [room.host, room.guest]) {
+      if (a) send(a.socket, {
+        ...state, clueTrail: clueTrailView(trail, a.id), petalMatch: petalMatchView(match, a.id),
+      });
+    }
   };
   function save() {
     clearTimeout(saveTimer);
@@ -153,6 +161,8 @@ export function createVisitService({
           together: restoreTogetherMoment(r.together),
           postcardWalk: normalizePostcardWalk(r.postcardWalk),
           lanternEvening: normalizeLanternEvening(r.lanternEvening),
+          clueTrail: restoreClueTrail(r.clueTrail),
+          petalMatch: restorePetalMatch(r.petalMatch),
         });
       }
     } catch (e) {

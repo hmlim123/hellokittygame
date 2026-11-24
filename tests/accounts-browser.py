@@ -4,6 +4,105 @@ from pathlib import Path
 from urllib.parse import urlsplit, quote
 from urllib.request import urlopen
 from playwright.sync_api import sync_playwright
+
+
+def play_minigames(host, guest, ready, back, results):
+    def open_activity(page, name):
+        page.bring_to_front()
+        for title in ['Activities', name]:
+            summary = page.get_by_text(title, exact=True)
+            if not summary.locator('..').evaluate('details => details.open'):
+                summary.tap()
+        return page.get_by_text(name, exact=True).locator('..')
+
+    def reload_guest():
+        guest.bring_to_front()
+        guest.reload()
+        ready(guest)
+        guest.get_by_text('Nancy is visiting with you. ♡', exact=True).wait_for(timeout=30000)
+        back(guest)
+
+    trail_name = 'Village clue trail'
+    host_trail = open_activity(host, trail_name)
+    host_trail.get_by_role('button', name='Start clue trail', exact=True).tap()
+    guest_trail = open_activity(guest, trail_name)
+    guest_trail.get_by_text('Your clue', exact=True).wait_for()
+    assert guest_trail.get_by_text('Your partner’s clue', exact=True).count() == 0
+    assert host_trail.get_by_text('Your partner’s clue', exact=True).count() == 0
+    host.bring_to_front()
+    host_trail.get_by_role('button', name='Share my clue', exact=True).tap()
+    reload_guest()
+    guest.get_by_role('button', name='Read your partner’s clue', exact=True).tap()
+    guest_trail = open_activity(guest, trail_name)
+    guest_trail.get_by_text('Your partner’s clue', exact=True).wait_for()
+    assert guest_trail.get_by_role('group', name='Clue trail landmarks').count() == 0
+    guest_trail.get_by_role('button', name='Share my clue', exact=True).tap()
+    host_trail.get_by_text('Your partner’s clue', exact=True).wait_for()
+
+    host_clue = host_trail.get_by_text('Your clue', exact=True).locator('..').inner_text()
+    guest_clue = guest_trail.get_by_text('Your clue', exact=True).locator('..').inner_text()
+    places = ['Little plaza', 'Momo’s café', 'Pip’s garden', 'Picnic table']
+    matching = [name for name in places if
+                ('no apostrophe' in host_clue) == ('’' not in name) and
+                ('starts with P' in guest_clue) == name.startswith('P')]
+    assert len(matching) == 1, (host_clue, guest_clue)
+    place = matching[0]
+    wrong = next(name for name in places if name != place)
+    for choice in [wrong, place]:
+        for page, trail in [(host, host_trail), (guest, guest_trail)]:
+            page.bring_to_front()
+            trail.get_by_role('group', name='Clue trail landmarks').get_by_role('button', name=choice, exact=True).tap()
+        if choice == wrong:
+            for trail in [host_trail, guest_trail]:
+                trail.get_by_text('Try another place that fits both clues.', exact=True).wait_for()
+    for page, trail in [(host, host_trail), (guest, guest_trail)]:
+        page.bring_to_front()
+        trail.get_by_text(f'You solved it! Meet at {place} and find one ribbon each.', exact=True).wait_for()
+        page.get_by_text('Activities', exact=True).tap()
+        walk = page.get_by_role('button', name=f'Walk to {place} for the clue trail', exact=True)
+        if walk.count():
+            walk.tap()
+    for page in [host, guest]:
+        page.get_by_role('button', name='Find my ribbon', exact=True).wait_for(timeout=65000)
+        page.wait_for_function("document.querySelector('#world canvas').dataset.clueRibbons === '2'")
+    host.bring_to_front()
+    host.screenshot(path=str(results/'accounts-clue-ribbons.png'))
+    host.get_by_role('button', name='Find my ribbon', exact=True).tap()
+    guest.wait_for_function("document.querySelector('#world canvas').dataset.clueRibbons === '1'")
+    guest.bring_to_front()
+    guest.get_by_role('button', name='Find my ribbon', exact=True).tap()
+    for page in [host, guest]:
+        open_activity(page, trail_name).get_by_text('You found both ribbons together. ♡', exact=True).wait_for()
+        page.wait_for_function("document.querySelector('#world canvas').dataset.clueRibbons === '0'")
+        page.get_by_text(trail_name, exact=True).tap()
+    print('PASS private clues, refresh, revised guesses, the shared walk and two visible ribbons',flush=True)
+
+    match_name = 'Petal match'
+    host_match = open_activity(host, match_name)
+    host_match.get_by_role('button', name='Play petal match', exact=True).tap()
+    host_match.get_by_role('button', name='Rose', exact=True).tap()
+    reload_guest()
+    guest.get_by_role('button', name='Pick your petal', exact=True).tap()
+    guest_match = open_activity(guest, match_name)
+    guest_match.get_by_text('Your partner has picked. Now choose your flower.', exact=True).wait_for()
+    assert guest_match.get_by_text('You matched', exact=False).count() == 0
+    guest_match.get_by_role('button', name='Rose', exact=True).tap()
+    for match in [host_match, guest_match]:
+        match.get_by_text('You matched on rose! ♡', exact=True).wait_for()
+        match.get_by_text('1 match in 1 round together', exact=True).wait_for()
+    guest_match.get_by_role('button', name='Play another round', exact=True).tap()
+    guest_match.get_by_role('button', name='Lavender', exact=True).tap()
+    host.bring_to_front()
+    host_match.get_by_role('button', name='Daisy', exact=True).tap()
+    host_match.get_by_text('You picked daisy. Your partner picked lavender.', exact=True).wait_for()
+    guest_match.get_by_text('You picked lavender. Your partner picked daisy.', exact=True).wait_for()
+    for page in [host, guest]:
+        page.bring_to_front()
+        page.get_by_text('1 match in 2 rounds together', exact=True).wait_for()
+        page.get_by_text('Activities', exact=True).tap()
+    print('PASS secret flower choices after refresh, a match and a replay with different choices',flush=True)
+
+
 ROOT=Path(__file__).resolve().parent.parent
 BASE=os.environ.get('KITTY_BASE_URL','http://127.0.0.1:8081').rstrip('/')
 with socket.socket() as probe:
@@ -435,6 +534,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.bring_to_front()
             host.screenshot(path=str(results/'accounts-lantern-evening.png'))
             print('PASS each partner lights their chosen lantern, both render and share the same sunset',flush=True)
+            play_minigames(host, guest, ready, back, results)
             guest.keyboard.down('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)>.5",timeout=20000)
             guest.keyboard.up('ArrowRight')

@@ -103,6 +103,14 @@ The draft uses the same two accounts, existing SQLite binding, and saved
 personal progress. The hosted visit on both players’ actual devices remains
 the acceptance check. [Existing Worker update](private-visits-setup.md#updating-an-existing-village-for-v37)
 
+## Clue trail and Petal Match · November 24, 2026
+
+The draft adds two replayable activities to the private village. In the clue
+trail, each player shares a different clue, agrees on the same landmark, and
+collects a ribbon after both arrive. In Petal Match, both pick secretly and
+see the result together. The room keeps the active round when either player
+reconnects. [Meeting plan](melody-meeting-plan.md)
+
 ## iPhone village canvas stability · v3.7.2
 
 An iPhone report identified flicker during walking and scrolling. The live

@@ -77,10 +77,16 @@ remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittyga
   on her wall.
 - **Lantern evening** gives each player a color and a lantern to light in the
   plaza. Lighting both brings on the same sunset in both browsers.
+- **Village clue trail** gives each player a private clue. Share your clues,
+  agree on the landmark, and find a ribbon each after both arrive. Another
+  round gives the pair a different landmark.
+- **Petal Match** lets both players secretly pick a flower. The game reveals
+  the colors together and counts shared matches across rounds in the visit.
 
-Postcard walks and lantern evenings use new shared state from the existing
-Worker. Their controls appear when that Worker has been updated. The upgrade
-uses the existing service and SQLite data. [Updating the existing village service](private-visits-setup.md#updating-an-existing-village-for-v37)
+Postcard walks, lantern evenings, the clue trail, and Petal Match use new
+shared state from the existing Worker. Their controls appear when that Worker
+has been updated. The upgrade uses the existing service and SQLite data.
+[Updating the existing village service](private-visits-setup.md#updating-an-existing-village-for-v37)
 
 ## Two-player verification · November 24, 2026
 
@@ -104,8 +110,6 @@ picnic while the newer activities were hidden. [GitHub service check](https://gi
 ## Later activities
 
 - **Bench tea** would add a separate place to sit, share a cookie, and chat.
-- **A village clue trail** would give each player a different clue. Share the
-  clues in chat, then meet at the landmark they point to.
 
 ## Ready for Nancy and Melody
 

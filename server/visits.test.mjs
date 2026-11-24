@@ -316,6 +316,14 @@ test("a checkpoint restores the same private tickets and shared state across a s
     host.send({ type: "lantern-evening", action: "light", revision: 2 });
     guest.send({ type: "lantern-evening", action: "light", revision: 2 });
     const lit = await host.until((m) => m.together?.weather === "sunset");
+    guest.send({ type: "clue-trail", action: "start", round: 0 });
+    const beforeTrail = (await host.until((m) => m.clueTrail?.round === 1)).clueTrail;
+    guest.send({ type: "clue-trail", action: "share", round: 1 });
+    const sharedTrail = (await host.until((m) => m.clueTrail?.partnerShared)).clueTrail;
+    host.send({ type: "petal-match", action: "start", round: 0 });
+    await guest.until((m) => m.petalMatch?.round === 1);
+    guest.send({ type: "petal-match", action: "pick", round: 1, choice: "lavender" });
+    const beforeMatch = (await host.until((m) => m.petalMatch?.partnerReady)).petalMatch;
     await a.service.close();
     a = null;
     b = await setup({ storeFile: file });
@@ -334,6 +342,10 @@ test("a checkpoint restores the same private tickets and shared state across a s
       guest: { color: "honey", lit: true },
     });
     assert.equal(restored.together.weather, "sunset");
+    assert.equal(beforeTrail.partnerClue, null);
+    assert.deepEqual(restored.clueTrail, sharedTrail);
+    assert.equal(beforeMatch.partner, null);
+    assert.deepEqual(restored.petalMatch, beforeMatch);
   } finally {
     await a?.service.close();
     await b?.service.close();

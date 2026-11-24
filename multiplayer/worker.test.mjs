@@ -242,6 +242,19 @@ test("SQL persistence restores accounts and private tickets after a whole runtim
   await first.guest.until((m) => m.lanternEvening?.host.color && m.lanternEvening?.guest.color);
   first.host.send({ type: "lantern-evening", action: "light", revision: 2 });
   const partiallyLit = await first.guest.until((m) => m.lanternEvening?.host.lit);
+  first.host.send({ type: "clue-trail", action: "start", round: 0 });
+  const hostClue = (await first.host.until((m) => m.clueTrail?.round === 1)).clueTrail;
+  const guestClue = (await first.guest.until((m) => m.clueTrail?.round === 1)).clueTrail;
+  assert.notEqual(guestClue.clue, hostClue.clue);
+  assert.equal(guestClue.partnerClue, null);
+  assert.equal(Object.hasOwn(guestClue, "target"), false);
+  first.host.send({ type: "clue-trail", action: "share", round: 1 });
+  await first.guest.until((m) => m.clueTrail?.partnerClue === hostClue.clue);
+  first.guest.send({ type: "petal-match", action: "start", round: 0 });
+  await first.host.until((m) => m.petalMatch?.round === 1);
+  first.host.send({ type: "petal-match", action: "pick", round: 1, choice: "rose" });
+  const hiddenPick = (await first.guest.until((m) => m.petalMatch?.partnerReady)).petalMatch;
+  assert.equal(hiddenPick.partner, null);
   first.host.ws.close(1000, "Reload");
   first.guest.ws.close(1000, "Reload");
   await new Promise((r) => setTimeout(r, 50));
@@ -276,6 +289,15 @@ test("SQL persistence restores accounts and private tickets after a whole runtim
     revision: 3,
     roleRevisions: partiallyLit.lanternEvening.roleRevisions,
   });
+  assert.equal(snapshot.clueTrail.clue, guestClue.clue);
+  assert.equal(snapshot.clueTrail.partnerClue, hostClue.clue);
+  assert.deepEqual(snapshot.petalMatch, hiddenPick);
+  const host = await client(second.mf, { type: "hello", ...first.room, accountToken: first.n.token });
+  await host.until((m) => m.type === "welcome");
+  guest.send({ type: "petal-match", action: "pick", round: 1, choice: "rose" });
+  const result = (await host.until((m) => m.petalMatch?.finished)).petalMatch;
+  assert.equal(result.partner, "rose");
+  assert.equal(result.matches, 1);
   assert.equal((await second.request("/account")).body.melodyRegistered, true);
 });
 test("sign-out revokes an active socket and a replacement login revokes the old session", async (t) => {

@@ -10,6 +10,8 @@ import { villageWalkable, villagePath } from "./village";
 import type { OutfitId, PlushId, Gesture, ItemId } from "./types";
 import { normalizePostcardWalk, type PostcardWalk } from "../../shared/postcard-walk.mjs";
 import { normalizeLanternEvening, type LanternEvening, type LanternColor } from "../../shared/lantern-evening.mjs";
+import type { ClueTrailView } from "../../shared/clue-trail.mjs";
+import type { Petal, PetalMatchView } from "../../shared/petal-match.mjs";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
@@ -69,6 +71,10 @@ interface Visits {
   garden: boolean[];
   postcardWalk: PostcardWalk | null;
   lanternEvening: LanternEvening | null;
+  clueTrail: ClueTrailView | null;
+  clueTrailAction(action: "start" | "share" | "guess" | "search", stop?: string): void;
+  petalMatch: PetalMatchView | null;
+  petalMatchAction(action: "start" | "pick", choice?: Petal): void;
   lanternAction(action: "choose" | "light" | "reset", color?: LanternColor): void;
   postcardWalkAction(action: "choose" | "stamp" | "reset", stop?: string): void;
   error: string;
@@ -255,14 +261,15 @@ function connect(server: string, hello: object) {
         token: m.token,
         role: m.role,
       });
-      const rejoining =
-        useVisitsStore.getState().status === "reconnecting" &&
-        useVisitsStore.getState().roomId === m.roomId;
+      const previous = useVisitsStore.getState();
+      const rejoining = previous.status === "reconnecting" &&
+        previous.roomId === m.roomId && previous.role === m.role && previous.server === server;
       useVisitsStore.setState({
         status: "online",
         server,
         role: m.role,
         roomId: m.roomId,
+        ...(rejoining ? {} : { clueTrail: null, petalMatch: null }),
         error: "",
         link:
           m.role === "host" && m.invite
@@ -375,6 +382,20 @@ function connect(server: string, hello: object) {
           ? previous.lanternEvening
           : normalizeLanternEvening(m.lanternEvening)
         : null;
+      const clueTrail = Number.isSafeInteger(m.clueTrail?.revision) &&
+        Number.isSafeInteger(m.clueTrail.round) &&
+        (m.clueTrail.clue === null || typeof m.clueTrail.clue === "string") &&
+        (m.clueTrail.partnerClue === null || typeof m.clueTrail.partnerClue === "string")
+        ? sameRoom && previous.clueTrail?.revision === m.clueTrail.revision
+          ? previous.clueTrail
+          : m.clueTrail
+        : null;
+      const petalMatch = Number.isSafeInteger(m.petalMatch?.revision) &&
+        Number.isSafeInteger(m.petalMatch.round) && Number.isSafeInteger(m.petalMatch.matches)
+        ? sameRoom && previous.petalMatch?.revision === m.petalMatch.revision
+          ? previous.petalMatch
+          : m.petalMatch
+        : null;
       useVisitsStore.setState({
         together:
           m.together &&
@@ -405,6 +426,8 @@ function connect(server: string, hello: object) {
         garden,
         postcardWalk,
         lanternEvening,
+        clueTrail,
+        petalMatch,
       });
       if (useVisitsStore.getState().role === "host") {
         const game = useGameStore.getState(),
@@ -422,6 +445,12 @@ function connect(server: string, hello: object) {
             "softHappy",
             "Your picnic is ready. A little moment made together. ♡",
           );
+      const priorTrail = previous.clueTrail;
+      if (clueTrail && priorTrail && priorTrail.round === clueTrail.round &&
+          clueTrail.ownSearched && clueTrail.partnerSearched &&
+          !(priorTrail.ownSearched && priorTrail.partnerSearched)) {
+        useGameStore.getState().react("softHappy", "You found both ribbons together. ♡");
+      }
     } else if (m.type === "correction" && villageWalkable(m.x, m.z)) {
       // A server correction settles the position, but a tapped destination
       // should still be reached. Replan from the accepted position instead of
@@ -523,6 +552,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   garden: [false, false, false],
   postcardWalk: null,
   lanternEvening: null,
+  clueTrail: null,
+  petalMatch: null,
   error: "",
   configure(input) {
     const server = visitServerUrl(input);
@@ -606,6 +637,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       togetherAvailable: false,
       postcardWalk: null,
       lanternEvening: null,
+      clueTrail: null,
+      petalMatch: null,
       roomId: null,
       invitation: null,
     });
@@ -678,6 +711,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       chat: [],
       postcardWalk: null,
       lanternEvening: null,
+      clueTrail: null,
+      petalMatch: null,
       link: "",
       server: invite.server,
     });
@@ -726,6 +761,16 @@ export const useVisitsStore = create<Visits>((set, get) => ({
     const { status, postcardWalk } = get();
     if (status === "online" && postcardWalk)
       transmit({ type: "postcard-walk", action, stop, revision: postcardWalk.revision });
+  },
+  clueTrailAction(action, stop) {
+    const { status, clueTrail } = get();
+    if (status === "online" && clueTrail)
+      transmit({ type: "clue-trail", action, stop, round: clueTrail.round });
+  },
+  petalMatchAction(action, choice) {
+    const { status, petalMatch } = get();
+    if (status === "online" && petalMatch)
+      transmit({ type: "petal-match", action, choice, round: petalMatch.round });
   },
 }));
 export function useVisitLifecycle() {

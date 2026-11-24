@@ -35,6 +35,7 @@ import { useVisitsStore, villagePartner } from "../game/visits";
 import { GroundShadow } from "./GroundShadow";
 import { VillageSpeech } from "./VillageSpeech";
 import { VillageLanterns } from "./VillageLanterns";
+import { VillageClueRibbons } from "./VillageClueRibbons";
 import { togetherDuration, togetherElapsed, villagePhoto } from "../game/village-together";
 
 function Blob({
@@ -822,6 +823,7 @@ export function VillageScene() {
       />
       <Landscape />
       <VillageLanterns />
+      <VillageClueRibbons />
       <Player />
       <Destination />
       <VisitAvatars />

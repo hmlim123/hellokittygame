@@ -2482,6 +2482,9 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 .village-social :is(button, summary, form, .together-options > div) {
   pointer-events: auto;
 }
+.village-social[hidden] {
+  display: none;
+}
 .village-social:has(.together-options[open]) {
   z-index: 13;
 }
@@ -2578,6 +2581,11 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   background: #f8e8da;
   border-color: #d8b69c;
   color: #694c40;
+}
+.village-social .activity-turn {
+  background: #eef3e5;
+  border-color: #c9d8ba;
+  color: #456042;
 }
 .garden-progress {
   border: 1px solid #dbe4cf;
