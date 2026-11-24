@@ -120,6 +120,8 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.wait_for_function("document.querySelector('#world canvas').dataset.playerCharacter==='kitty'",timeout=15000)
             assert guest.get_by_role('button',name='← Her room',exact=True).count()==0
             assert guest.get_by_role('button',name='Our visit ♡',exact=True).count()==1
+            assert host.get_by_role('button',name='Walk to My Melody',exact=True).is_visible()
+            assert guest.get_by_role('button',name='Walk to Nancy',exact=True).is_visible()
             assert guest.evaluate('document.documentElement.scrollWidth<=innerWidth')
             guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteModel!=='melody'&&document.querySelector('.visitor-name.host')?.textContent.includes('Nancy')",timeout=30000)
             assert host_context.request.get(SERVICE+'/health').json()['provider']=='cloudflare'
@@ -278,7 +280,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.bring_to_front()
             host.get_by_role('button',name='Present cookies',exact=True).click(timeout=20000)
             host.get_by_text('A photo together',exact=True).tap()
-            host.get_by_label('Our pose',exact=True).select_option('still')
+            host.get_by_label('Our pose',exact=True).select_option('lean')
             host.get_by_label('Our atmosphere',exact=True).select_option('sunset')
             host.wait_for_function("[...document.querySelectorAll('select')].some(s=>s.value==='sunset')")
             host.get_by_role('button',name='Take our photo',exact=True).click(timeout=20000)
@@ -298,7 +300,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             assert not keep.is_enabled()
             assert host.evaluate("""() => {
                 const [postcard] = JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).postcards;
-                return postcard.background === 'sunset' && postcard.pose === 'still';
+                return postcard.background === 'sunset' && postcard.pose === 'lean';
             }""")
             guest.bring_to_front()
             guest.get_by_text('Activities',exact=True).tap()
@@ -319,6 +321,17 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                     box = button.bounding_box()
                     assert box and box['height'] >= 44 and box['width'] >= 44
                     assert box['x'] >= 0 and box['x'] + box['width'] <= width + 1
+                activities = host.get_by_text('Activities',exact=True)
+                activities.tap()
+                weather = host.get_by_label('Our atmosphere',exact=True)
+                weather.scroll_into_view_if_needed()
+                assert weather.evaluate("""control => {
+                    const rect = control.getBoundingClientRect();
+                    return control.contains(document.elementFromPoint(
+                        (rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2,
+                    ));
+                }"""), 'The activity controls must sit above the walk controls'
+                activities.tap()
                 host.screenshot(path=str(results/f'accounts-village-{width}.png'))
             host.set_viewport_size({'width':390,'height':844})
             print('PASS paired gestures, role-specific baking handoff, both photos, once-only wall save and capture metadata',flush=True)

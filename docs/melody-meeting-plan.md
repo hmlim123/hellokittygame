@@ -70,7 +70,8 @@ remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittyga
 - **Baking** brings the next player’s turn into the village controls. Nancy
   starts mixing, Melody decorates, and Nancy presents the cookies.
 - **Photos** retain the outfit, pose, and weather captured in the image. Both
-  can download, and Nancy can keep each photo on her wall once.
+  can download, and Nancy can keep each photo on her wall once. If the other
+  player is too far away, the photo menu offers a route to them.
 - **Postcard walk** gives each player a landmark to choose. Visit both stops
   together, add the stamps, and download the postcard. Nancy can also keep it
   on her wall.
@@ -80,6 +81,20 @@ remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittyga
 Postcard walks and lantern evenings use new shared state from the existing
 Worker. Their controls appear when that Worker has been updated. The upgrade
 uses the existing service and SQLite data. [Updating the existing village service](private-visits-setup.md#updating-an-existing-village-for-v37)
+
+## Two-player verification · November 24, 2026
+
+The production build and 294 automated checks passed. Two phone-sized Chromium
+sessions and two WebKit sessions using the iPhone 15 profile played through
+picnic setup and refresh, tea, the shared garden, baking turns, both photo
+downloads, the stamped postcard, and the lantern sunset. Both sessions returned
+to the same visit after reconnecting. [Two-account browser test](../tests/accounts-browser.py)
+
+An upgrade rehearsal started with the published Worker revision and one
+temporary SQLite database. The updated Worker reopened both account sessions
+with their original visit tickets and restored the shared garden and unfinished
+picnic. The draft client also joined with the published Worker and played the
+picnic while the newer activities were hidden. [GitHub service check](https://github.com/hmlim123/hellokittygame/actions/runs/45468839185)
 
 ## Later activities
 

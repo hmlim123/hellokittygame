@@ -6,6 +6,7 @@ import {
   nearbyVillageAction,
   useVillageInput,
   useVillageMotion,
+  walkToVillageCompanion,
 } from "../game/village-motion";
 import {
   VILLAGE_ACTIONS,
@@ -67,6 +68,7 @@ export function VillageControls() {
     useVillageMotion.setState({ picnic: false });
     useGameStore.getState().react("softHappy");
   };
+  const partner = useVisitsStore((s) => s.status === "online" ? villagePartner(s) : undefined);
   const p = useVillageMotion((s) => s.position),
     near = nearbyVillageAction(p),
     ready = useGameStore((s) => s.sceneReady),
@@ -76,7 +78,7 @@ export function VillageControls() {
     v = useGameStore((s) => s.cozy.village),
     goal = villageGoal(v),
     next = VILLAGE_ACTIONS.find((o) => o.id === (goal.action || "cafe")),
-    deliver = packed && near?.id !== "momo" && near?.id !== "pip";
+    deliver = !partner && packed && near?.id !== "momo" && near?.id !== "pip";
   const teaReady = useVisitsStore((s) =>
     s.role ? s.status === "online" && s.picnic[2] : true,
   );
@@ -116,6 +118,7 @@ export function VillageControls() {
                   const friend = VILLAGE_ACTIONS.find((o) => o.id === "momo")!;
                   useVillageMotion.getState().walkTo(friend, "momo");
                 } else if (near) actInVillage();
+                else if (partner) walkToVillageCompanion(partner);
                 else if (next) useVillageMotion.getState().walkTo(next, next.id);
               }}
               aria-keyshortcuts="E"
@@ -124,13 +127,15 @@ export function VillageControls() {
                 ? "Bring your cookie to Momo"
                 : near
                   ? near.label
-                  : next?.id === "momo"
-                    ? "Walk to Momo"
-                    : next?.id === "pip"
-                      ? "Walk to Pip"
-                      : next?.id === "home"
-                        ? "Walk home"
-                        : "Walk to the café"}{" "}
+                  : partner
+                    ? `Walk to ${partner.name}`
+                    : next?.id === "momo"
+                      ? "Walk to Momo"
+                      : next?.id === "pip"
+                        ? "Walk to Pip"
+                        : next?.id === "home"
+                          ? "Walk home"
+                          : "Walk to the café"}{" "}
               <span aria-hidden="true">♡</span>
             </button>
             <div className="village-small-actions">

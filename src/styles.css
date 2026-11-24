@@ -2482,6 +2482,9 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 .village-social :is(button, summary, form, .together-options > div) {
   pointer-events: auto;
 }
+.village-social:has(.together-options[open]) {
+  z-index: 13;
+}
 .village-social-buttons, .together-activities {
   display: flex;
   gap: 4px;

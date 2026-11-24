@@ -108,7 +108,7 @@ export function TogetherActivities() {
       outfit,
       ...(plush ? { plush } : {}),
       background: weather,
-      pose: framePose === "wave" ? "wave" : "still",
+      pose: framePose,
       createdAt: new Date().toISOString(),
     };
     async function capture() {
