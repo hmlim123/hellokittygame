@@ -163,6 +163,12 @@ keepsakes after three orders. A refresh preserved the parcel already on the
 counter. A Cloudflare Worker restart also preserved the ticket and parcel.
 [Two-account browser test](../tests/accounts-browser.py)
 
+Two WebKit sessions using the iPhone 15 profile completed the same shift and
+both downloads. The market controls stayed reachable at 320×568 and 844×390.
+The full Chromium visit passed through the previous activities, market, both
+personal saves, sign-out, and rejoin. The draft client joined the published
+Worker and played a picnic with the market control hidden.
+
 ## Ready for Nancy and Melody
 
 - Both accounts join the same invite-only village with the correct Blender
