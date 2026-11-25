@@ -19,8 +19,8 @@ function marketGesture(visit: ReturnType<typeof useVisitsStore.getState>, role: 
   if (!at || visit.players.length !== 2) return null;
   const duration = handing ? MARKET_HANDOFF_MS : MARKET_WRAP_MS;
   const elapsed = visitTime() + visit.clockOffset - at;
-  if (elapsed < 0 || elapsed >= duration || !visit.players.every((player) =>
-    player.connected && atMarketSpot(player, player.id) && (player.id !== role || player.speed <= 0.1))) return null;
+  if (elapsed < 0 || elapsed >= duration ||
+      !visit.players.every((player) => player.connected && atMarketSpot(player, player.id))) return null;
   return { handing, progress: elapsed / duration };
 }
 

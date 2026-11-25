@@ -21,7 +21,8 @@ function parcelFrame(group: Group, role: MarketRole, now: number, delivery: Mark
   const handedAt = delivery?.[role] ?? 0;
   const finished = delivery?.completedAt ?? 0;
   const collection = finished ? now - finished - MARKET_COLLECTION_DELAY_MS : -Infinity;
-  const useDelivery = handedAt > 0 && collection < MARKET_COLLECTION_MS;
+  // A fresh wrap takes over this spot even if the previous parcel is still being collected.
+  const useDelivery = handedAt > 0 && (!finished || !wrapped) && collection < MARKET_COLLECTION_MS;
   group.visible = wrapped || useDelivery;
   group.scale.setScalar(1);
   group.rotation.set(0, 0, 0);
