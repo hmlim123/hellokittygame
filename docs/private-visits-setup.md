@@ -184,7 +184,7 @@ commit to that same Worker. If deploying from an authenticated local checkout:
 
 ```sh
 npm ci
-npx wrangler deploy --name hellokittygame
+npx wrangler deploy --name hellokittygame --keep-vars
 ```
 
 No new secret or account initialization is required. On the updated service,

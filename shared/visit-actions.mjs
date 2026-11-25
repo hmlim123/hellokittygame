@@ -18,7 +18,7 @@ import { atLanternPlaza, lanternColor, newLanternEvening } from "./lantern-eveni
 import { atClueStop, CLUE_STOPS, clueStop, newClueTrail } from "./clue-trail.mjs";
 import { newPetalMatch, petal } from "./petal-match.mjs";
 import { atTeaBenchSeat, BENCH_TOAST_MS, newBenchTea, standAtTeaBench } from "./bench-tea.mjs";
-import { atMarketSpot, newVillageMarket, playVillageMarket } from "./village-market.mjs";
+import { atMarketSpot, newVillageMarket, playVillageMarket, updateMarketInvitation } from "./village-market.mjs";
 
 const newTogetherMoment = () => ({
   id: 0,
@@ -290,13 +290,18 @@ export function applyVisitAction({
   } else if (m.type === "village-market") {
     const role = player.id;
     if (role !== "host" && role !== "guest") return;
-    if (!bothInVillage(room) || !atMarketSpot(room.host, "host") || !atMarketSpot(room.guest, "guest")) {
+    const inviting = m.action === "invite" || m.action === "answer-invite";
+    const bothAtStall = atMarketSpot(room.host, "host") && room.guest && atMarketSpot(room.guest, "guest");
+    if (!inviting && (!bothInVillage(room) || !bothAtStall)) {
       fail("Take your places at the market stall together first.");
       return;
     }
+    if (m.action === "invite" && (!bothInVillage(room) || bothAtStall)) return;
     const market = room.villageMarket ?? newVillageMarket();
-    const next = playVillageMarket(market, role, m);
+    const next = inviting ? updateMarketInvitation(market, role, m) : playVillageMarket(market, role, m, now(), randomInt);
     if (next === market) return;
+    // A market gesture supersedes any inferred speed left over from the walk to the stall.
+    if (m.action === "wrap" || m.action === "hand-over") player.speed = 0;
     room.villageMarket = next;
     broadcast(room);
     dirty();
@@ -474,6 +479,8 @@ export function applyVisitAction({
     dirty();
   } else if (m.type === "leave") {
     if (player.id !== "guest") return;
+    if (room.villageMarket?.invitedBy)
+      room.villageMarket = { ...room.villageMarket, invitedBy: null, revision: room.villageMarket.revision + 1 };
     if (room.benchTea) room.benchTea = standAtTeaBench(room.benchTea, "guest");
     room.guest = null;
     room.guestHash = null;

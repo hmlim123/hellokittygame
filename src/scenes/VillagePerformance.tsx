@@ -4,8 +4,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { assetUrl } from "../game/assets";
 import { useVisitsStore, type VisitPlayer } from "../game/visits";
+import { visitTime } from "../game/visit-clock";
 import { togetherDuration, togetherElapsed } from "../game/village-together";
+import { atMarketSpot, MARKET_HANDOFF_MS, MARKET_WRAP_MS } from "../../shared/village-market.mjs";
 import { useReducedMotion } from "./use-reduced-motion";
+
+function marketGesture(visit: ReturnType<typeof useVisitsStore.getState>, role: VisitPlayer["id"]) {
+  const market = visit.villageMarket;
+  if (!market || !visit.role) return null;
+  const wrappedAt = (role === visit.role ? market.own.wrappedAt : market.partnerWrappedAt) ?? 0;
+  const handedAt = market.delivery?.[role] ?? 0;
+  const handing = handedAt > wrappedAt;
+  const at = handing ? handedAt : wrappedAt;
+  if (!at || visit.players.length !== 2) return null;
+  // Let the paw return to rest after the parcel lands.
+  const duration = handing ? MARKET_HANDOFF_MS + 220 : MARKET_WRAP_MS;
+  const elapsed = visitTime() + visit.clockOffset - at;
+  if (elapsed < 0 || elapsed >= duration ||
+      !visit.players.every((player) => player.connected && atMarketSpot(player, player.id))) return null;
+  return { handing, progress: elapsed / duration };
+}
 
 export function VillagePerformance({
   hero,
@@ -20,6 +38,7 @@ export function VillagePerformance({
   const reduced = useReducedMotion();
   const canvas = useThree(s => s.gl.domElement);
   const attribute = `${role}Together`;
+  const marketAttribute = `${role}MarketGesture`;
   const host = role === "host",
     melody = style === "melody";
   const [propAction, setPropAction] = useState("");
@@ -76,14 +95,15 @@ export function VillagePerformance({
       delete hero.userData.villagePerformance;
       delete canvas.dataset[attribute];
       delete canvas.dataset[`${attribute}Phase`];
+      delete canvas.dataset[marketAttribute];
       hero.rotation.set(0, 0, 0);
     },
-    [animation, model, hero, canvas, attribute],
+    [animation, model, hero, canvas, attribute, marketAttribute],
   );
 
   // Run after each avatar's normal pose update. The village still owns movement
   // and outfits, and both browsers sample the same server-started performance.
-  useFrame(({ camera }) => {
+  useFrame(({ camera, invalidate }) => {
     const visit = useVisitsStore.getState();
     const moment = visit.together;
     const partner = visit.players.find((player) => player.id !== role);
@@ -97,6 +117,7 @@ export function VillagePerformance({
       elapsed >= 0 &&
       elapsed < togetherDuration(kind);
     const baking = kind === "stir" || kind === "decorate" || kind === "present";
+    const market = !active && !reduced ? marketGesture(visit, role) : null;
     const nextProp = active && baking ? kind : "";
     if (prop.current !== nextProp) {
       prop.current = nextProp;
@@ -126,7 +147,9 @@ export function VillagePerformance({
             : kind === "present" && host
               ? "togetherPresent"
               : "togetherWave";
-    const action = !active
+    const action = market
+      ? animation.clips[market.handing ? "togetherPresent" : melody ? "togetherDecorate" : "togetherStir"]
+      : !active
       ? null
       : dance && danceClip
         ? animation.mixer.clipAction(danceClip)
@@ -142,6 +165,20 @@ export function VillagePerformance({
         hero.rotation.set(0, 0, 0);
       }
     }
+    if (market && action) {
+      const reach = Math.sin(market.progress * Math.PI) ** 2;
+      action.paused = true;
+      action.time = reach * (market.handing ? 1.15 : 1.4);
+      animation.mixer.update(0);
+      const phase = market.handing ? "handing" : "wrapping";
+      if (canvas.dataset[marketAttribute] !== phase) canvas.dataset[marketAttribute] = phase;
+      delete canvas.dataset[attribute];
+      delete canvas.dataset[`${attribute}Phase`];
+      hero.rotation.set(0, 0, 0);
+      invalidate();
+      return;
+    }
+    if (canvas.dataset[marketAttribute]) delete canvas.dataset[marketAttribute];
     if (!action || !kind) return;
     const duration = action.getClip().duration;
     const time = dance

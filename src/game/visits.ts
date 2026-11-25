@@ -13,7 +13,7 @@ import { normalizeLanternEvening, type LanternEvening, type LanternColor } from 
 import type { ClueTrailView } from "../../shared/clue-trail.mjs";
 import type { Petal, PetalMatchView } from "../../shared/petal-match.mjs";
 import { restoreBenchTea, type BenchTea } from "../../shared/bench-tea.mjs";
-import type { MarketAction, MarketItem, VillageMarketView } from "../../shared/village-market.mjs";
+import { atMarketSpot, type MarketAction, type MarketItem, type VillageMarketView } from "../../shared/village-market.mjs";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
@@ -96,6 +96,10 @@ export function villagePartner({ players, role }: Pick<Visits, "players" | "role
   return players.find(
     (p) => p.id !== role && p.connected && (!p.area || p.area === "village"),
   );
+}
+export function atOwnMarketSpot({ players, role }: Pick<Visits, "players" | "role">) {
+  const own = players.find((player) => player.id === role);
+  return !!own && atMarketSpot(own, own.id);
 }
 export function visitServerUrl(
   input: string,
@@ -290,6 +294,7 @@ function connect(server: string, hello: object) {
       if (m.role === "host")
         game.saveVillagePosition(m.you.x, m.you.z, m.you.yaw);
       useVillageMotion.setState({
+        marketPanel: rejoining ? previousMotion.marketPanel : "closed",
         position: { x: m.you.x, z: m.you.z },
         yaw: m.you.yaw,
         relocate: { x: m.you.x, z: m.you.z, yaw: m.you.yaw },
@@ -488,7 +493,7 @@ function connect(server: string, hello: object) {
       stopTransport();
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false, picnic: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false, marketPanel: "closed" });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -539,7 +544,7 @@ function connect(server: string, hello: object) {
     } else {
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false, picnic: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false, marketPanel: "closed" });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -750,7 +755,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   },
   leave() {
     restorePersonalSave();
-    useVillageMotion.setState({ guestVisit: false, picnic: false });
+    useVillageMotion.setState({ guestVisit: false, picnic: false, marketPanel: "closed" });
     transmit({ type: get().role === "host" ? "end" : "leave" });
     stopTransport();
     rememberTicket(null);
@@ -804,8 +809,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   marketAction(action, item) {
     const { status, villageMarket } = get();
     if (status !== "online" || !villageMarket) return;
-    const { shift, served, attempt } = villageMarket;
-    transmit({ type: "village-market", action, shift, served, attempt, item });
+    const { shift, served, attempt, inviteSerial } = villageMarket;
+    transmit({ type: "village-market", action, shift, served, attempt, inviteSerial, item });
   },
 }));
 export function useVisitLifecycle() {

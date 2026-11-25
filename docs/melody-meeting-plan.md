@@ -169,6 +169,61 @@ The full Chromium visit passed through the previous activities, market, both
 personal saves, sign-out, and rejoin. The draft client joined the published
 Worker and played a picnic with the market control hidden.
 
+## Published game client · November 25, 2026
+
+GitHub Pages published the earlier shared activities and the original Little
+Village Market from `66b4e40`. The build and all five browser groups passed.
+The separate private village Worker still requires an authorized Cloudflare
+deployment. Activities that need new room state appear when that Worker
+provides it. [GitHub Pages release](https://github.com/hmlim123/hellokittygame/actions/runs/45676093988)
+
+## Market stall improvements · November 25, 2026
+
+Open **Activities → Little Village Market** and choose **Invite to the market**.
+Your partner can join from the village controls or choose **Not now**. Joining
+sets a walking route to their spot and opens the workbench on arrival. An
+unanswered invitation stays available through a refresh.
+
+The workbench keeps the village in view. One player gets the order ticket and
+the other gets the stock shelf. Both see the wrapping, the parcel landing on
+the counter, and the customer collecting the order. Kitty and Melody use their
+Blender paw motions as they wrap and hand over the parcels. A mix-up returns
+them so the pair can try again. A new wrap appears as soon as a player retries.
+Stall chat and the one-tap drink request stay beside the order controls.
+
+Each new shift ends with a special from six treat-and-drink combinations. The
+next shift draws a different special. An order already under way keeps its
+recipe if either player refreshes or the Worker is updated. Each completed
+shift still gives both players the same downloadable keepsake.
+
+### Verification
+
+The production build and all 307 automated checks passed. The full Chromium
+visit reached the market after the earlier activities, preserved both personal
+saves, and completed sign-out and rejoin. Initial headless runs sometimes
+skipped a brief handoff pose. After extending the follow-through, both browsers
+showed Kitty's and Melody's handoffs. The players finished the same order after
+one player refreshed during an invite, then left and returned to the stall.
+
+Linux WebKit with an iPhone 15 profile completed the three orders and both
+downloads. The layout checks passed at 320×568 and 844×390, including restoring
+the workbench after Hide Interface. Extra large reading size kept the controls
+reachable. Reduce Motion left the order flow available with the paw animations
+disabled. [Two-account browser test](../tests/accounts-browser.py)
+
+One Chromium player and one WebKit player completed three orders in one visit.
+Both downloads showed the same stall illustration, stamps, and shift text. The
+browsers used different fonts. An immediate retry after a wrong order showed
+the new wrapping animation. Adding 360 ms of delay to one player still let
+both browsers see the customer collect the parcels.
+
+The original market client completed a shift against the updated Worker. The
+new client completed a shift against the earlier market Worker. A SQLite upgrade
+kept both accounts, the original recipe, and a parcel already on the counter.
+Restarting again preserved a new special and its private ticket. The players
+could finish the saved order after a ten-minute pause with no unsolicited room
+updates.
+
 ## Ready for Nancy and Melody
 
 - Both accounts join the same invite-only village with the correct Blender

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useEffect } from "react";
 import { useGameStore } from "./store";
+import { marketSpot, type MarketRole } from "../../shared/village-market.mjs";
 import {
   VILLAGE_ACTIONS,
   VILLAGE_PICNIC,
@@ -21,6 +22,7 @@ interface VillageMotion {
   path: VillagePoint[];
   pending: string | null;
   picnic: boolean;
+  marketPanel: "closed" | "approaching" | "open";
   givingUntil: number;
   guestName: string;
   guestVisit: boolean;
@@ -42,6 +44,7 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
   path: [],
   pending: null,
   picnic: false,
+  marketPanel: "closed",
   relocate: null,
   givingUntil: 0,
   guestName: "Your friend",
@@ -52,10 +55,13 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
       input: length > 1 ? { x: x / length, z: z / length } : { x, z },
       path: [],
       pending: null,
+      ...(get().marketPanel === "approaching" ? { marketPanel: "closed" } : {}),
     });
   },
   stop() {
-    set({ input: { x: 0, z: 0 }, path: [], pending: null, speed: 0 });
+    set({ input: { x: 0, z: 0 }, path: [], pending: null, speed: 0,
+      ...(get().marketPanel === "approaching" ? { marketPanel: "closed" } : {}),
+    });
   },
   walkTo(p, action) {
     const s = useGameStore.getState();
@@ -75,10 +81,21 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
           : p;
     const path = villagePath(get().position, destination);
     if (!path.length) return false;
-    set({ input: { x: 0, z: 0 }, path, pending: action || null, picnic: false });
+    set({ input: { x: 0, z: 0 }, path, pending: action || null, picnic: false, marketPanel: "closed" });
     return true;
   },
 }));
+export function openVillageMarket() {
+  useVillageMotion.getState().stop();
+  useVillageMotion.setState({ marketPanel: "open" });
+}
+
+export function walkToMarket(role: MarketRole) {
+  if (!useVillageMotion.getState().walkTo(marketSpot(role))) return false;
+  useVillageMotion.setState({ marketPanel: "approaching" });
+  return true;
+}
+
 export function walkToVillageCompanion({ x, z }: VillagePoint) {
   const target = [
     { x: x + 1.5, z },

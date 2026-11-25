@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { togetherDuration, villagePhoto } from "../game/village-together";
-import { useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
-import { useVisitsStore, villagePartner } from "../game/visits";
+import { openVillageMarket, useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
+import { atOwnMarketSpot, useVisitsStore, villagePartner } from "../game/visits";
 import type { PostcardMemory } from "../game/cozy";
 import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
 import { LanternEvening } from "./LanternEvening";
 import { ClueTrail, ClueTrailRoute } from "./ClueTrail";
 import { PetalMatch } from "./PetalMatch";
 import { BenchTea } from "./BenchTea";
-import { VillageMarket } from "./VillageMarket";
+import { MarketInvitation } from "./VillageMarket";
 import { useGameStore } from "../game/store";
 import { visitTime } from "../game/visit-clock";
 import { inVillagePhotoRange } from "../../shared/village-world.mjs";
-import { atMarketSpot } from "../../shared/village-market.mjs";
 
 type SharedPhoto = Omit<PostcardMemory, "image" | "place"> & {
   png: string;
@@ -64,15 +63,13 @@ export function TogetherActivities() {
   });
   const petalWaiting = useVisitsStore((s) => !!s.petalMatch?.partnerReady && !s.petalMatch.own);
   const marketAvailable = useVisitsStore((s) => !!s.villageMarket);
-  const atStall = useVisitsStore((s) => {
-    const player = s.players.find((p) => p.id === s.role);
-    return !!player && atMarketSpot(player, player.id);
-  });
+  const atStall = useVisitsStore(atOwnMarketSpot);
   const options = useRef<HTMLDetailsElement>(null);
   const cluePanel = useRef<HTMLDetailsElement>(null);
   const petalPanel = useRef<HTMLDetailsElement>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
-  const [marketOpen, setMarketOpen] = useState(false);
+  const marketPanel = useVillageMotion((s) => s.marketPanel);
+  const marketOpen = marketPanel === "open";
   const sceneReady = useGameStore((s) => s.sceneReady);
   const photoPartner = useVisitsStore(villagePartner);
   const nearForPhoto = useVisitsStore((s) => {
@@ -245,10 +242,12 @@ export function TogetherActivities() {
           {clueWaiting || "Pick your petal"}
         </button>
       )}
-      {marketAvailable && atStall && !optionsOpen && (
-        <button className="activity-turn" onClick={() => setMarketOpen(true)}>Open market stall</button>
+      {marketAvailable && atStall && !optionsOpen && !marketOpen && (
+        <button id="openMarketStall" className="activity-turn" aria-controls="village-market-workbench"
+          onClick={openVillageMarket}>Open market stall</button>
       )}
-      {marketOpen && <VillageMarket onClose={() => setMarketOpen(false)} />}
+      {marketPanel === "approaching" && <span className="village-social-status" role="status">Walking to the market…</span>}
+      {!marketOpen && !optionsOpen && <MarketInvitation />}
       {busy && moment?.action === "highfive" && (
         <span className="village-social-status" role="status">
           High-five!
@@ -264,7 +263,7 @@ export function TogetherActivities() {
       <details ref={options} className="together-options" onToggle={(event) => {
         if (event.target === event.currentTarget) setOptionsOpen(event.currentTarget.open);
       }}>
-        <summary>Activities</summary>
+        <summary id="visitActivities">Activities</summary>
         <div>
           {!available ? (
             <p>
@@ -273,10 +272,11 @@ export function TogetherActivities() {
             </p>
           ) : (
             <>
+              {optionsOpen && !marketOpen && <MarketInvitation />}
               {marketAvailable && (
-                <button onClick={() => {
+                <button aria-controls="village-market-workbench" onClick={() => {
                   if (options.current) options.current.open = false;
-                  setMarketOpen(true);
+                  openVillageMarket();
                 }}>Little Village Market</button>
               )}
               {benchOccupied && <p>Stand up from the bench together to dance, bake, or take a photo.</p>}

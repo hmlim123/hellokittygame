@@ -4,6 +4,7 @@ import { useGameStore } from "../game/store";
 import {
   actInVillage,
   nearbyVillageAction,
+  openVillageMarket,
   useVillageInput,
   useVillageMotion,
   walkToVillageCompanion,
@@ -19,7 +20,8 @@ import {
 import { Dialog } from "./Dialog";
 import { SharedPicnic } from "./Visits";
 import { BenchTeaControls } from "./BenchTea";
-import { useVisitsStore, villagePartner } from "../game/visits";
+import { VillageMarket } from "./VillageMarket";
+import { atOwnMarketSpot, useVisitsStore, villagePartner } from "../game/visits";
 
 export function VillageGuide() {
   const guest = useVillageMotion((s) => s.guestVisit);
@@ -71,6 +73,11 @@ export function VillageControls() {
   };
   const partner = useVisitsStore((s) => s.status === "online" ? villagePartner(s) : undefined);
   const benchSeated = useVisitsStore((s) => !!s.role && !!s.benchTea?.seated[s.role]);
+  const marketAvailable = useVisitsStore((s) => !!s.villageMarket);
+  const marketPanel = useVillageMotion((s) => s.marketPanel);
+  const routeDone = useVillageMotion((s) => s.path.length === 0);
+  const atStall = useVisitsStore(atOwnMarketSpot);
+  const marketOpen = marketAvailable && marketPanel === "open";
   const p = useVillageMotion((s) => s.position),
     near = nearbyVillageAction(p),
     ready = useGameStore((s) => s.sceneReady),
@@ -87,9 +94,17 @@ export function VillageControls() {
   useEffect(() => {
     if (!picnic) setTableView(false);
   }, [picnic]);
+  useEffect(() => {
+    if (marketPanel !== "approaching" || !marketAvailable || !routeDone || !atStall) return;
+    const visit = useVisitsStore.getState();
+    if (visit.villageMarket?.invitedBy && visit.villageMarket.invitedBy !== visit.role)
+      visit.marketAction("answer-invite");
+    openVillageMarket();
+  }, [marketPanel, marketAvailable, routeDone, atStall]);
   return (
     <>
-      {benchSeated ? <BenchTeaControls /> : picnic && tableView ? (
+      {marketOpen ? <VillageMarket onClose={() => useVillageMotion.setState({ marketPanel: "closed" })} /> :
+      benchSeated ? <BenchTeaControls /> : picnic && tableView ? (
         <div className="village-controls">
           <div className="village-table-actions" role="group" aria-label="At the picnic table">
             <button
@@ -151,9 +166,9 @@ export function VillageControls() {
           </div>
         </div>
       )}
-      <p className="village-input-note">
+      {!marketOpen && <p className="village-input-note">
         Tap a place to walk there · Arrow keys / WASD also work
-      </p>
+      </p>}
       {picnic && !tableView && (
         <Dialog title="A picnic in the village" onClose={closePicnic}>
           <span className="eyebrow">A LITTLE TIME TOGETHER</span>
