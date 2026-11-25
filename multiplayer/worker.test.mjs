@@ -327,7 +327,7 @@ test("the tea bench keeps both seats and readiness across a Worker restart", asy
   assert.equal(hostToast.benchTea.toastAt, guestToast.benchTea.toastAt);
 });
 
-test("the market keeps the ticket private and restores a handed parcel after a Worker restart", async (t) => {
+test("market tickets and parcels survive hibernation and a Worker restart", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "kitty-market-persist-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const first = await pair(t, { persist: dir }, marketSpot("host"));
@@ -344,6 +344,16 @@ test("the market keeps the ticket private and restores a handed parcel after a W
   const handed = (await first.guest.until((m) => m.villageMarket?.partnerHanded)).villageMarket;
   assert.equal(handed.own.item, null);
   assert.equal(handed.ticket, null);
+  await first.mf.unsafeEvictDurableObject("nancy-village-free", "PrivateVillage", {
+    name: "nancy-and-melody", webSockets: "hibernate",
+  });
+  play(first.guest, "wrap", order.drink);
+  const afterWake = (await first.host.until((m) => m.villageMarket?.partnerWrapped)).villageMarket;
+  assert.deepEqual(afterWake.ticket, order);
+  assert.equal(afterWake.delivery.host, handed.delivery.host);
+  const guestWrapped = (await first.guest.until((m) => m.villageMarket?.own.item === order.drink)).villageMarket;
+  assert.equal(guestWrapped.own.wrappedAt, afterWake.partnerWrappedAt);
+  assert.equal(guestWrapped.ticket, null);
   first.host.ws.close(1000, "Reload");
   first.guest.ws.close(1000, "Reload");
   await first.mf.dispose();
@@ -356,7 +366,9 @@ test("the market keeps the ticket private and restores a handed parcel after a W
   const resumed = (await host.until((m) => m.villageMarket?.own.handed)).villageMarket;
   assert.deepEqual(resumed.ticket, order);
   assert.equal(resumed.own.item, order.treat);
-  play(guest, "wrap", order.drink);
+  assert.equal(resumed.delivery.host, handed.delivery.host);
+  const shelf = (await guest.until((m) => m.villageMarket?.own.item === order.drink)).villageMarket;
+  assert.equal(shelf.ticket, null);
   play(guest, "hand-over", order.drink);
   await host.until((m) => m.villageMarket?.servedCustomer === order.customer && m.villageMarket?.served === 1);
 });

@@ -169,6 +169,14 @@ The full Chromium visit passed through the previous activities, market, both
 personal saves, sign-out, and rejoin. The draft client joined the published
 Worker and played a picnic with the market control hidden.
 
+## Published game client · November 25, 2026
+
+GitHub Pages published the earlier shared activities and the original Little
+Village Market from `66b4e40`. The build and all five browser groups passed.
+The separate private village Worker still requires an authorized Cloudflare
+deployment. Activities that need new room state appear when that Worker
+provides it. [GitHub Pages release](https://github.com/hmlim123/hellokittygame/actions/runs/45676093988)
+
 ## Market stall improvements · November 25, 2026
 
 Open **Activities → Little Village Market** and choose **Invite to the market**.
