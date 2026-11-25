@@ -17,7 +17,8 @@ function marketGesture(visit: ReturnType<typeof useVisitsStore.getState>, role: 
   const handing = handedAt > wrappedAt;
   const at = handing ? handedAt : wrappedAt;
   if (!at || visit.players.length !== 2) return null;
-  const duration = handing ? MARKET_HANDOFF_MS : MARKET_WRAP_MS;
+  // Let the paw return to rest after the parcel lands.
+  const duration = handing ? MARKET_HANDOFF_MS + 220 : MARKET_WRAP_MS;
   const elapsed = visitTime() + visit.clockOffset - at;
   if (elapsed < 0 || elapsed >= duration ||
       !visit.players.every((player) => player.connected && atMarketSpot(player, player.id))) return null;
