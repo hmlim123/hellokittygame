@@ -301,7 +301,11 @@ def play_market(host, guest, ready, back, results):
     assert host_market.get_by_role('link', name='Download market keepsake').is_visible()
     for page, market in [(host, host_market), (guest, guest_market)]:
         page.bring_to_front()
-        market.get_by_role('button', name='Close Little Village Market', exact=True).tap()
+        if page == host:
+            market.press('Escape')
+        else:
+            market.get_by_role('button', name='Close Little Village Market', exact=True).tap()
+        expect(page.get_by_role('button', name='Open market stall', exact=True)).to_be_focused()
     print('PASS three market orders, private ticket and stock, chat, correction, refresh, job swaps and both keepsake downloads',flush=True)
     print('PASS the stall view showed the parcel on the counter after a refresh and the customer collecting it',flush=True)
 

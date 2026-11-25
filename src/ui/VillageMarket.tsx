@@ -4,7 +4,7 @@ import {
 } from "../../shared/village-market.mjs";
 import { useGameStore } from "../game/store";
 import { useVillageMotion, walkToMarket } from "../game/village-motion";
-import { useVisitsStore, villagePartner } from "../game/visits";
+import { atOwnMarketSpot, useVisitsStore, villagePartner } from "../game/visits";
 
 export function MarketInvitation() {
   const market = useVisitsStore((s) => s.villageMarket);
@@ -153,10 +153,7 @@ export function VillageMarket({ onClose }: { onClose: () => void }) {
   const error = useVisitsStore((s) => s.error);
   const ready = useGameStore((s) => s.sceneReady);
   const partner = useVisitsStore(villagePartner);
-  const atStall = useVisitsStore((s) => {
-    const own = s.players.find((player) => player.id === s.role);
-    return !!own && atMarketSpot(own, own.id);
-  });
+  const atStall = useVisitsStore(atOwnMarketSpot);
   const bothAtStall = online && atStall && !!partner && atMarketSpot(partner, partner.id);
   const completed = market?.completedShifts ?? 0;
   const keepsake = useMemo(() => completed ? marketKeepsake(completed) : undefined, [completed]);
@@ -165,11 +162,18 @@ export function VillageMarket({ onClose }: { onClose: () => void }) {
   if (!market || !role) return null;
   const act = useVisitsStore.getState().marketAction;
   const closed = market.served === MARKET_ORDERS_PER_SHIFT;
+  function closeWorkbench() {
+    onClose();
+    requestAnimationFrame(() => {
+      const entry = document.getElementById("openMarketStall") ?? document.getElementById("visitActivities");
+      entry?.focus({ preventScroll: true });
+    });
+  }
 
   return (
-    <section className="market-workbench" data-at-stall={atStall} aria-label="Little Village Market"
+    <section id="village-market-workbench" className="market-workbench" data-at-stall={atStall} aria-label="Little Village Market"
       ref={panel} tabIndex={-1} onKeyDown={(event) => {
-        if (event.key === "Escape") { event.stopPropagation(); onClose(); }
+        if (event.key === "Escape") { event.stopPropagation(); closeWorkbench(); }
       }}>
       <div className="market-heading">
         <div>
@@ -178,7 +182,7 @@ export function VillageMarket({ onClose }: { onClose: () => void }) {
             {market.served} of {MARKET_ORDERS_PER_SHIFT} orders served
           </p>}
         </div>
-        <button aria-label="Close Little Village Market" onClick={onClose}>Done</button>
+        <button aria-label="Close Little Village Market" onClick={closeWorkbench}>Done</button>
       </div>
       <MarketInvitation />
       {!atStall && (

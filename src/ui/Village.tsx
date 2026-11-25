@@ -21,8 +21,7 @@ import { Dialog } from "./Dialog";
 import { SharedPicnic } from "./Visits";
 import { BenchTeaControls } from "./BenchTea";
 import { VillageMarket } from "./VillageMarket";
-import { useVisitsStore, villagePartner } from "../game/visits";
-import { atMarketSpot } from "../../shared/village-market.mjs";
+import { atOwnMarketSpot, useVisitsStore, villagePartner } from "../game/visits";
 
 export function VillageGuide() {
   const guest = useVillageMotion((s) => s.guestVisit);
@@ -77,10 +76,7 @@ export function VillageControls() {
   const marketAvailable = useVisitsStore((s) => !!s.villageMarket);
   const marketPanel = useVillageMotion((s) => s.marketPanel);
   const routeDone = useVillageMotion((s) => s.path.length === 0);
-  const atStall = useVisitsStore((s) => {
-    const own = s.players.find((player) => player.id === s.role);
-    return !!own && atMarketSpot(own, own.id);
-  });
+  const atStall = useVisitsStore(atOwnMarketSpot);
   const marketOpen = marketAvailable && marketPanel === "open";
   const p = useVillageMotion((s) => s.position),
     near = nearbyVillageAction(p),

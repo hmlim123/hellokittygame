@@ -13,7 +13,7 @@ import { normalizeLanternEvening, type LanternEvening, type LanternColor } from 
 import type { ClueTrailView } from "../../shared/clue-trail.mjs";
 import type { Petal, PetalMatchView } from "../../shared/petal-match.mjs";
 import { restoreBenchTea, type BenchTea } from "../../shared/bench-tea.mjs";
-import type { MarketAction, MarketItem, VillageMarketView } from "../../shared/village-market.mjs";
+import { atMarketSpot, type MarketAction, type MarketItem, type VillageMarketView } from "../../shared/village-market.mjs";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
@@ -96,6 +96,10 @@ export function villagePartner({ players, role }: Pick<Visits, "players" | "role
   return players.find(
     (p) => p.id !== role && p.connected && (!p.area || p.area === "village"),
   );
+}
+export function atOwnMarketSpot({ players, role }: Pick<Visits, "players" | "role">) {
+  const own = players.find((player) => player.id === role);
+  return !!own && atMarketSpot(own, own.id);
 }
 export function visitServerUrl(
   input: string,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { togetherDuration, villagePhoto } from "../game/village-together";
 import { openVillageMarket, useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
-import { useVisitsStore, villagePartner } from "../game/visits";
+import { atOwnMarketSpot, useVisitsStore, villagePartner } from "../game/visits";
 import type { PostcardMemory } from "../game/cozy";
 import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
 import { LanternEvening } from "./LanternEvening";
@@ -12,7 +12,6 @@ import { MarketInvitation } from "./VillageMarket";
 import { useGameStore } from "../game/store";
 import { visitTime } from "../game/visit-clock";
 import { inVillagePhotoRange } from "../../shared/village-world.mjs";
-import { atMarketSpot } from "../../shared/village-market.mjs";
 
 type SharedPhoto = Omit<PostcardMemory, "image" | "place"> & {
   png: string;
@@ -64,10 +63,7 @@ export function TogetherActivities() {
   });
   const petalWaiting = useVisitsStore((s) => !!s.petalMatch?.partnerReady && !s.petalMatch.own);
   const marketAvailable = useVisitsStore((s) => !!s.villageMarket);
-  const atStall = useVisitsStore((s) => {
-    const player = s.players.find((p) => p.id === s.role);
-    return !!player && atMarketSpot(player, player.id);
-  });
+  const atStall = useVisitsStore(atOwnMarketSpot);
   const options = useRef<HTMLDetailsElement>(null);
   const cluePanel = useRef<HTMLDetailsElement>(null);
   const petalPanel = useRef<HTMLDetailsElement>(null);
@@ -247,7 +243,8 @@ export function TogetherActivities() {
         </button>
       )}
       {marketAvailable && atStall && !optionsOpen && !marketOpen && (
-        <button className="activity-turn" onClick={openVillageMarket}>Open market stall</button>
+        <button id="openMarketStall" className="activity-turn" aria-controls="village-market-workbench"
+          onClick={openVillageMarket}>Open market stall</button>
       )}
       {marketPanel === "approaching" && <span className="village-social-status" role="status">Walking to the market…</span>}
       {!marketOpen && !optionsOpen && <MarketInvitation />}
@@ -266,7 +263,7 @@ export function TogetherActivities() {
       <details ref={options} className="together-options" onToggle={(event) => {
         if (event.target === event.currentTarget) setOptionsOpen(event.currentTarget.open);
       }}>
-        <summary>Activities</summary>
+        <summary id="visitActivities">Activities</summary>
         <div>
           {!available ? (
             <p>
@@ -277,7 +274,7 @@ export function TogetherActivities() {
             <>
               {optionsOpen && !marketOpen && <MarketInvitation />}
               {marketAvailable && (
-                <button onClick={() => {
+                <button aria-controls="village-market-workbench" onClick={() => {
                   if (options.current) options.current.open = false;
                   openVillageMarket();
                 }}>Little Village Market</button>
