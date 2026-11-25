@@ -16,30 +16,31 @@ test("both partners must take separate reachable places at the stall", () => {
   }]));
   const failures = [];
   let saves = 0;
-  const attempt = () => applyVisitAction({
-    room, player: room.host, m: { type: "village-market", action: "start", shift: 0, served: 0, attempt: 0 },
+  const send = (action, shift, item) => applyVisitAction({
+    room, player: room.host, m: { type: "village-market", action, shift, served: 0, attempt: 0, item },
     now: () => 1000, broadcast() {}, dirty() { saves++; }, fail: (message) => failures.push(message),
   });
   for (const role of ["host", "guest"]) assert.ok(villagePath(VILLAGE_SPAWN, marketSpot(role)).length);
   Object.assign(room.guest, marketSpot("host"));
   assert.equal(atMarketSpot(room.guest, "guest"), false);
-  attempt();
+  send("start", 0);
   assert.equal(room.villageMarket, undefined);
   assert.match(failures.at(-1), /stall together/);
   Object.assign(room.guest, marketSpot("guest"));
-  attempt();
-  attempt();
+  send("start", 0);
+  send("start", 0);
   assert.equal(room.villageMarket.shift, 1);
   assert.equal(saves, 1);
   const active = room.villageMarket;
   Object.assign(room.guest, VILLAGE_SPAWN);
-  applyVisitAction({
-    room, player: room.host,
-    m: { type: "village-market", action: "wrap", shift: 1, served: 0, attempt: 0, item: "shortcake" },
-    now: () => 2000, broadcast() {}, dirty() { saves++; }, fail: (message) => failures.push(message),
-  });
+  send("wrap", 1, "shortcake");
   assert.strictEqual(room.villageMarket, active);
   assert.equal(saves, 1);
+  Object.assign(room.guest, marketSpot("guest"));
+  room.host.speed = 2.6;
+  send("wrap", 1, "shortcake");
+  assert.equal(room.host.speed, 0);
+  assert.equal(room.villageMarket.parcels.host.item, "shortcake");
 });
 
 test("a market invitation reaches the partner before either player walks to the stall", () => {

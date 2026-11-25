@@ -300,6 +300,8 @@ export function applyVisitAction({
     const market = room.villageMarket ?? newVillageMarket();
     const next = inviting ? updateMarketInvitation(market, role, m) : playVillageMarket(market, role, m, now(), randomInt);
     if (next === market) return;
+    // A market gesture supersedes any inferred speed left over from the walk to the stall.
+    if (m.action === "wrap" || m.action === "hand-over") player.speed = 0;
     room.villageMarket = next;
     broadcast(room);
     dirty();

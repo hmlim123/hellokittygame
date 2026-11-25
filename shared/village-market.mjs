@@ -1,6 +1,6 @@
 export const MARKET_STALL = { x: -0.45, z: -8.85 };
 export const MARKET_ORDERS_PER_SHIFT = 3;
-export const MARKET_WRAP_MS = 450;
+export const MARKET_WRAP_MS = 600;
 export const MARKET_HANDOFF_MS = 540;
 export const MARKET_COLLECTION_DELAY_MS = 650;
 export const MARKET_COLLECTION_MS = 680;

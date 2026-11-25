@@ -186,8 +186,9 @@ unanswered invitation stays available through a refresh.
 
 The workbench keeps the village in view. One player gets the order ticket and
 the other gets the stock shelf. Both see the wrapping, the parcel landing on
-the counter, and the customer collecting the order. A mix-up returns the
-parcels so the pair can try again. Stall chat and the one-tap drink request stay
+the counter, and the customer collecting the order. Kitty and Melody use their
+Blender paw motions as they wrap and hand over the parcels. A mix-up returns
+them so the pair can try again. Stall chat and the one-tap drink request stay
 beside the order controls.
 
 Each new shift ends with a special from six treat-and-drink combinations. The
