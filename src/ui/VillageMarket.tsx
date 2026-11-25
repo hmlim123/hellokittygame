@@ -19,7 +19,11 @@ export function MarketInvitation() {
   return (
     <div className="market-invitation" role="group" aria-label="Market invitation">
       <span role="status">{partner.name} invited you to the market.</span>
-      <button disabled={!online || !ready} onClick={() => walkToMarket(role)}>Join the market</button>
+      <button disabled={!online || !ready} onClick={(event) => {
+        if (!walkToMarket(role)) return;
+        const activities = event.currentTarget.closest<HTMLDetailsElement>("details.together-options");
+        if (activities) activities.open = false;
+      }}>Join the market</button>
       <button disabled={!online} onClick={() => act("answer-invite")}>Not now</button>
     </div>
   );
@@ -202,7 +206,7 @@ export function VillageMarket({ onClose }: { onClose: () => void }) {
       {atStall && !bothAtStall && <p className="market-feedback" role="status">Waiting for your partner at the stall.</p>}
       {keepsake && <a className="market-keepsake" href={keepsake} download={`little-village-market-${completed}.png`}>Download market keepsake</a>}
       {error && <p className="market-feedback" role="status">{error}</p>}
-      {atStall && market.shift > 0 && <StallChat online={online && !!partner} ticket={market.ticket} />}
+      {atStall && <StallChat online={online && !!partner} ticket={market.ticket} />}
     </section>
   );
 }
