@@ -3,7 +3,7 @@ import json, os, socket, subprocess, tempfile, time
 from pathlib import Path
 from urllib.parse import urlsplit, quote
 from urllib.request import urlopen
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 
 def play_minigames(host, guest, ready, back, results):
@@ -168,8 +168,7 @@ def play_bench_tea(host, guest, ready, back, results):
     host_bench.get_by_text('There’s a seat for your partner.',exact=True).wait_for()
     host.bring_to_front()
     host_bench.get_by_role('button',name='Stand up',exact=True).tap()
-    host.get_by_role('button',name='Dance together',exact=True).wait_for()
-    assert host.get_by_role('button',name='Dance together',exact=True).is_enabled()
+    expect(host.get_by_role('button',name='Dance together',exact=True)).to_be_enabled(timeout=15000)
     print('PASS separate seated tea poses, readiness across refresh, synchronized cup raise and standing up',flush=True)
 
 
