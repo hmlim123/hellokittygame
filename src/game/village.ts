@@ -4,6 +4,7 @@ export {
   VILLAGE_LIMIT,
   VILLAGE_OBSTACLES,
   VILLAGE_PLACES,
+  VILLAGE_PICNIC,
   VILLAGE_ACTIONS,
   villageWalkable,
   moveVillage,

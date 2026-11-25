@@ -5,6 +5,13 @@ sessions. Deliver and verify one milestone at a time, with a focused release
 and a short explanation of what changed. The roadmap is not a claim that every
 stage has already shipped.
 
+## Current priority · Nancy and My Melody playing together
+
+The next milestone is a reliable private visit for Nancy as Hello Kitty and you
+as My Melody, followed by more activities you can do together. The first
+90 minutes focus on meeting, interacting, and finishing one picnic from two
+devices. [Melody meeting plan](melody-meeting-plan.md)
+
 ## Current direction: Nancy’s cozy village
 
 Agreed direction on 2026-11-09: evolve the game toward a Hello Kitty life
@@ -81,6 +88,44 @@ Agreed delivery order: clear village navigation and mobile controls → NPC
 life and one complete home/activity/reward loop → polished decorating and visits
 within the village → private two-person online visits. Validate each milestone
 before increasing the map, activity count or multiplayer scope.
+
+## Nancy and My Melody’s repeat visits · November 23, 2026
+
+The draft adds a direct route to the shared picnic and Pip’s garden. Both
+players can stay at the picnic table, raise their cups, and chat. Baking shows
+whose turn it is, and shared photos keep their capture settings. During a
+postcard walk, each player chooses a landmark and both help stamp the route.
+During lantern evening, each player chooses and lights a lantern before the
+village changes to sunset. [Meeting plan](melody-meeting-plan.md)
+
+The postcard walk and lantern evening need the updated Cloudflare Worker.
+The draft uses the same two accounts, existing SQLite binding, and saved
+personal progress. The hosted visit on both players’ actual devices remains
+the acceptance check. [Existing Worker update](private-visits-setup.md#updating-an-existing-village-for-v37)
+
+## Clue trail and Petal Match · November 24, 2026
+
+The draft adds two replayable activities to the private village. In the clue
+trail, each player shares a different clue, agrees on the same landmark, and
+collects a ribbon after both arrive. In Petal Match, both pick secretly and
+see the result together. The room keeps the active round when either player
+reconnects. [Meeting plan](melody-meeting-plan.md)
+
+## Bench tea · November 24, 2026
+
+The private village draft adds a separate bench west of the plaza. Kitty and
+My Melody take their own seats and raise their cups together after each chooses
+**Ready to toast**. The Worker keeps an occupied seat and readiness through a
+refresh. Shared dances and photos are available again when both players stand.
+[Meeting plan and verification](melody-meeting-plan.md#bench-tea-verification--november-24-2026)
+
+## Little Village Market · November 25, 2026
+
+The private village draft adds a market stall for Kitty and My Melody. The pair
+serves three orders, switches jobs after each customer, and earns a matching
+keepsake to download. The Worker sends the order ticket only to its reader and
+keeps the active round and packed parcels through a refresh. A wrong order gives
+both players another try. [Meeting plan and verification](melody-meeting-plan.md#little-village-market-verification--november-25-2026)
 
 ## iPhone village canvas stability · v3.7.2
 

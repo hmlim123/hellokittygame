@@ -289,11 +289,41 @@ test("a checkpoint restores the same private tickets and shared state across a s
   try {
     const file = join(directory, "visits.json");
     a = await setup({ storeFile: file });
-    const ticket = await a.room({ name: "Nancy" }),
+    const ticket = await a.room({ name: "Nancy", position: { x: -1.8, z: 1.6 } }),
       host = await client(a.base, { type: "hello", ...ticket });
     await host.until((m) => m.type === "welcome");
+    const guest = await client(a.base, {
+      type: "join",
+      roomId: ticket.roomId,
+      invite: ticket.invite,
+      name: "My Melody",
+    });
+    await guest.until((m) => m.type === "welcome");
     host.send({ type: "chat", text: "A little memory" });
     await host.until((m) => m.type === "state" && m.chat.length === 1);
+
+    host.send({ type: "postcard-walk", action: "choose", stop: "plaza", revision: 0 });
+    await guest.until((m) => m.postcardWalk?.host === "plaza");
+    guest.send({ type: "postcard-walk", action: "choose", stop: "garden", revision: 1 });
+    await host.until((m) => m.postcardWalk?.guest === "garden");
+    host.send({ type: "postcard-walk", action: "stamp", stop: "plaza", revision: 2 });
+    await guest.until((m) => m.postcardWalk?.stamps === 1);
+
+    host.send({ type: "lantern-evening", action: "choose", color: "mint", revision: 0 });
+    await guest.until((m) => m.lanternEvening?.host.color === "mint");
+    guest.send({ type: "lantern-evening", action: "choose", color: "honey", revision: 1 });
+    await host.until((m) => m.lanternEvening?.guest.color === "honey");
+    host.send({ type: "lantern-evening", action: "light", revision: 2 });
+    guest.send({ type: "lantern-evening", action: "light", revision: 2 });
+    const lit = await host.until((m) => m.together?.weather === "sunset");
+    guest.send({ type: "clue-trail", action: "start", round: 0 });
+    const beforeTrail = (await host.until((m) => m.clueTrail?.round === 1)).clueTrail;
+    guest.send({ type: "clue-trail", action: "share", round: 1 });
+    const sharedTrail = (await host.until((m) => m.clueTrail?.partnerShared)).clueTrail;
+    host.send({ type: "petal-match", action: "start", round: 0 });
+    await guest.until((m) => m.petalMatch?.round === 1);
+    guest.send({ type: "petal-match", action: "pick", round: 1, choice: "lavender" });
+    const beforeMatch = (await host.until((m) => m.petalMatch?.partnerReady)).petalMatch;
     await a.service.close();
     a = null;
     b = await setup({ storeFile: file });
@@ -302,10 +332,20 @@ test("a checkpoint restores the same private tickets and shared state across a s
       (await resumed.until((m) => m.type === "welcome")).role,
       "host",
     );
-    assert.equal(
-      (await resumed.until((m) => m.type === "state")).chat[0].text,
-      "A little memory",
-    );
+    const restored = await resumed.until((m) => m.type === "state");
+    assert.equal(restored.chat[0].text, "A little memory");
+    assert.equal(restored.postcardWalk.stamps, 1);
+    assert.deepEqual(restored.lanternEvening, {
+      revision: 4,
+      roleRevisions: lit.lanternEvening.roleRevisions,
+      host: { color: "mint", lit: true },
+      guest: { color: "honey", lit: true },
+    });
+    assert.equal(restored.together.weather, "sunset");
+    assert.equal(beforeTrail.partnerClue, null);
+    assert.deepEqual(restored.clueTrail, sharedTrail);
+    assert.equal(beforeMatch.partner, null);
+    assert.deepEqual(restored.petalMatch, beforeMatch);
   } finally {
     await a?.service.close();
     await b?.service.close();
@@ -338,6 +378,12 @@ test("visitors can help the shared garden only from a nearby bed and cannot rese
 
 test("leaving deliberately frees the visitor place without exposing the old ticket", async (t) => {
   const s = await pair(t);
+  s.host.send({ type: "clue-trail", action: "start", round: 0 });
+  await s.guest.until((m) => m.clueTrail?.round === 1);
+  s.host.send({ type: "petal-match", action: "start", round: 0 });
+  await s.guest.until((m) => m.petalMatch?.round === 1);
+  s.guest.send({ type: "petal-match", action: "pick", choice: "rose", round: 1 });
+  await s.host.until((m) => m.petalMatch?.partnerReady);
   s.guest.send({ type: "leave" });
   await s.guest.until((m) => m.type === "ended");
   assert.equal(s.service.rooms.get(s.ticket.roomId).guest, null);
@@ -350,6 +396,10 @@ test("leaving deliberately frees the visitor place without exposing the old tick
   const welcome = await next.until((m) => m.type === "welcome");
   assert.equal(welcome.role, "guest");
   assert.notEqual(welcome.token, s.guestWelcome.token);
+  const fresh = await next.until((m) => m.type === "state");
+  assert.equal(fresh.clueTrail.clue, null);
+  assert.equal(fresh.petalMatch.own, null);
+  assert.equal(fresh.petalMatch.round, 0);
   const old = await client(s.base, {
     type: "hello",
     roomId: s.ticket.roomId,

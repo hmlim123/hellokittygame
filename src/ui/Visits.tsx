@@ -4,26 +4,37 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { useGameStore } from "../game/store";
 import { useVisitsStore, parseVisitLink } from "../game/visits";
-import { useVillageMotion } from "../game/village-motion";
-import { VILLAGE_ACTIONS, villageWalkable } from "../game/village";
+import { useVillageMotion, walkToVillageCompanion, type VillagePoint } from "../game/village-motion";
+import { VILLAGE_PICNIC } from "../game/village";
 
-function WalkToPicnic() {
-  const status = useVisitsStore(s => s.status), p = useVillageMotion(s => s.position);
-  if (status !== "online" || Math.hypot(p.x + 5.5, p.z - 4.2) < 2.5) return null;
-  return <button className="visit-navigation" onClick={() => {
-    useGameStore.getState().closePanel();
-    const table = VILLAGE_ACTIONS.find(o => o.id === "picnic")!;
-    useVillageMotion.getState().walkTo(table, "picnic");
-  }}>Walk to the picnic table ↗</button>;
+const nearPicnic = ({ position }: { position: VillagePoint }) =>
+  Math.hypot(position.x - VILLAGE_PICNIC.x, position.z - VILLAGE_PICNIC.z) < 2.5;
+
+export function WalkToPicnic({ inVillage = false }: { inVillage?: boolean }) {
+  const status = useVisitsStore((s) => s.status);
+  const ready = useGameStore((s) => s.sceneReady);
+  const near = useVillageMotion(nearPicnic);
+  if (!inVillage && (status !== "online" || near)) return null;
+  return (
+    <button
+      className={inVillage ? undefined : "visit-navigation"}
+      disabled={!ready || status !== "online"}
+      onClick={() => {
+        if (!inVillage) useGameStore.getState().closePanel();
+        useVillageMotion.getState().walkTo(VILLAGE_PICNIC, VILLAGE_PICNIC.id);
+      }}
+    >
+      {inVillage ? "Picnic" : "Walk to the picnic table ↗"}
+    </button>
+  );
 }
 export function SharedPicnic({ navigation = true }: { navigation?: boolean }) {
   const status = useVisitsStore((s) => s.status),
     players = useVisitsStore((s) => s.players),
     picnic = useVisitsStore((s) => s.picnic),
-    p = useVillageMotion((s) => s.position);
+    near = useVillageMotion(nearPicnic);
   if (status !== "online") return null;
-  const together = players.filter((p) => p.connected).length === 2,
-    near = Math.hypot(p.x + 5.5, p.z - 4.2) < 2.5;
+  const together = players.filter((p) => p.connected).length === 2;
   return (
     <section className="shared-picnic" aria-label="Our shared picnic">
       <h3>
@@ -83,7 +94,11 @@ export function VisitPresence() {
             ? "Reconnecting your visit…"
             : other?.connected
               ? `${other.name}${other.area === "home" ? " is at home" : other.area === "story" ? " is reading a story" : " is here"} ♡`
-              : "Your invitation is open ♡"}
+              : other
+                ? `Waiting for ${other.name} to return…`
+                : role === "guest"
+                  ? "Waiting for Nancy…"
+                  : "Your invitation is open ♡"}
         {last && last.role !== role && (
           <small>
             {last.name}: {last.text.slice(0, 65)}
@@ -203,7 +218,11 @@ export function VisitsPanel() {
               ? "Reconnecting… You can keep exploring."
               : other?.connected
                 ? `${other.name} is visiting with you. ♡`
-                : "Your village is open. Send your invitation to your friend."}
+                : other
+                  ? `Waiting for ${other.name} to return…`
+                  : state.role === "guest"
+                    ? "Waiting for Nancy…"
+                    : "Your village is open. Send your invitation to your friend."}
           </p>
           {state.role === "host" &&
             state.link &&
@@ -279,12 +298,7 @@ export function VisitsPanel() {
               <button
                 onClick={() => {
                   close();
-                  const target = [
-                    { x: other.x + 1.5, z: other.z },
-                    { x: other.x - 1.5, z: other.z },
-                    { x: other.x, z: other.z + 1.5 },
-                  ].find((p) => villageWalkable(p.x, p.z));
-                  if (target) useVillageMotion.getState().walkTo(target);
+                  walkToVillageCompanion(other);
                 }}
               >
                 Walk to {other.name} ↗

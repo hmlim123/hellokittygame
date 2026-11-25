@@ -20,18 +20,25 @@ import { useGameStore } from "../game/store";
 import {
   VILLAGE_ACTIONS,
   VILLAGE_OBSTACLES,
+  VILLAGE_PICNIC,
   moveVillage,
+  villagePath,
 } from "../game/village";
 import {
   actInVillage,
   useVillageMotion,
+  villagePicnicSeat,
   villageRender,
 } from "../game/village-motion";
 import { VisitAvatars } from "./VisitAvatars";
-import { useVisitsStore } from "../game/visits";
+import { useVisitsStore, villagePartner } from "../game/visits";
 import { GroundShadow } from "./GroundShadow";
 import { VillageSpeech } from "./VillageSpeech";
-import { togetherElapsed, villagePhoto } from "../game/village-together";
+import { VillageLanterns } from "./VillageLanterns";
+import { VillageClueRibbons } from "./VillageClueRibbons";
+import { TEA_BENCH, teaBenchSeat } from "../../shared/bench-tea.mjs";
+import { MARKET_STALL, marketSpot } from "../../shared/village-market.mjs";
+import { togetherDuration, togetherElapsed, villagePhoto } from "../game/village-together";
 
 function Blob({
   at,
@@ -194,7 +201,9 @@ function GardenBed({ index }: { index: number }) {
   const player = useVillageMotion((s) => s.position);
   const ownBloom = useGameStore((s) => s.cozy.village.flowers[index]),
     sharedBloom = useVisitsStore((s) =>
-      s.status === "online" ? s.garden[index] : undefined,
+      s.status === "online" || s.status === "reconnecting"
+        ? s.garden[index]
+        : undefined,
     ),
     bloomed = sharedBloom ?? ownBloom,
     flowers = useRef<THREE.Group>(null),
@@ -395,15 +404,15 @@ function Watering() {
 }
 function PicnicTable() {
   const slots = useVisitsStore((s) => s.picnic),
-    online = useVisitsStore((s) => s.status === "online"),
-    placed = online ? slots : [true, true, true];
+    inVisit = useVisitsStore((s) => s.status === "online" || s.status === "reconnecting"),
+    placed = inVisit ? slots : [true, true, true];
   return (
     <group
       position={[-5.5, 0, 5.8]}
       onClick={(e) => {
         if (e.delta < 8) {
           e.stopPropagation();
-          useVillageMotion.getState().walkTo({ x: -5.5, z: 4.2 }, "picnic");
+          useVillageMotion.getState().walkTo(VILLAGE_PICNIC, VILLAGE_PICNIC.id);
         }
       }}
     >
@@ -443,6 +452,79 @@ function PicnicTable() {
       )}
       {placed[2] && <Toy name="Cup" position={[-0.75, 0.95, 0]} scale={0.65} />}
       <Toy name="Flowers" position={[0.7, 0.95, 0]} scale={0.38} />
+    </group>
+  );
+}
+
+function VillageTeaBench() {
+  const available = useVisitsStore((s) => !!s.role && !!s.benchTea);
+  if (!available) return null;
+  return (
+    <group position={[TEA_BENCH.x, 0, TEA_BENCH.z]}>
+      <RoundedBox args={[3.05, 0.13, 0.87]} radius={0.055} position={[0, 0.55, -0.08]}>
+        <meshStandardMaterial color="#e5bd9f" />
+      </RoundedBox>
+      {[0.83, 1.07].map((y) => (
+        <RoundedBox key={y} args={[3.05, 0.16, 0.11]} radius={0.045} position={[0, y, -0.47]}>
+          <meshStandardMaterial color="#e2ad9b" />
+        </RoundedBox>
+      ))}
+      {[-1.31, 1.31].map((x) => (
+        <group key={x} position={[x, 0, 0]}>
+          <mesh position={[0, 0.57, -0.43]}>
+            <boxGeometry args={[0.115, 1.14, 0.14]} />
+            <meshStandardMaterial color="#b58c78" />
+          </mesh>
+          <mesh position={[0, 0.27, 0.22]}>
+            <boxGeometry args={[0.115, 0.54, 0.14]} />
+            <meshStandardMaterial color="#b58c78" />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+function VillageMarketStall() {
+  const market = useVisitsStore((s) => s.villageMarket);
+  const role = useVisitsStore((s) => s.role);
+  if (!market || !role) return null;
+  const parcels = role === "host" ? [market.partnerHanded, market.own.handed] : [market.own.handed, market.partnerHanded];
+  return (
+    <group position={[MARKET_STALL.x, 0, MARKET_STALL.z]} onClick={(event) => {
+      if (event.delta >= 8) return;
+      event.stopPropagation();
+      useVillageMotion.getState().walkTo(marketSpot(role));
+    }}>
+      <RoundedBox args={[2.65, 0.15, 0.78]} radius={0.06} position={[0, 0.9, 0]}>
+        <meshStandardMaterial color="#bf8f78" />
+      </RoundedBox>
+      <RoundedBox args={[2.45, 0.79, 0.58]} radius={0.07} position={[0, 0.42, 0]}>
+        <meshStandardMaterial color="#e7b3b8" />
+      </RoundedBox>
+      {[-1.16, 1.16].map((x) => (
+        <mesh key={x} position={[x, 1.53, -0.24]}>
+          <boxGeometry args={[0.11, 1.28, 0.12]} />
+          <meshStandardMaterial color="#bf8f78" />
+        </mesh>
+      ))}
+      {Array.from({ length: 7 }, (_, i) => (
+        <RoundedBox key={i} args={[0.42, 0.12, 0.95]} radius={0.045}
+          position={[(i - 3) * 0.41, 2.13, 0.025]} rotation={[0.2, 0, 0]}>
+          <meshStandardMaterial color={i % 2 ? "#fff3df" : "#d891ae"} />
+        </RoundedBox>
+      ))}
+      <Label text="LITTLE VILLAGE MARKET" at={[0, 2.49, 0]} />
+      {parcels.map((handed, i) => handed && (
+        <group key={i} position={[i ? 0.65 : -0.65, 1.09, 0.12]}>
+          <RoundedBox args={[0.42, 0.23, 0.38]} radius={0.035}>
+            <meshStandardMaterial color="#efe0b8" />
+          </RoundedBox>
+          <mesh position={[0, 0.005, 0]}>
+            <boxGeometry args={[0.08, 0.245, 0.4]} />
+            <meshStandardMaterial color={i ? "#b394c6" : "#cc87a0"} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
@@ -501,6 +583,8 @@ function Landscape() {
       <Neighbour id="momo" />
       <Neighbour id="pip" />
       <PicnicTable />
+      <VillageTeaBench />
+      <VillageMarketStall />
       <RigidBody type="fixed" colliders={false}>
         {VILLAGE_OBSTACLES.map((o, i) => (
           <CuboidCollider
@@ -530,6 +614,9 @@ function Player() {
     (s) => s.players.find((p) => p.id === s.role)?.character,
   );
   const ownRole = useVisitsStore(s => s.role);
+  const benchRole = useVisitsStore((s) => s.role && s.benchTea?.seated[s.role] ? s.role : undefined);
+  const onRoute = useVillageMotion((s) => s.path.length > 0);
+  const seatedRole = onRoute ? undefined : benchRole;
   const sharedRole = useVisitsStore(s => s.togetherAvailable &&
     s.players.some(p => p.id !== s.role && p.connected) ? s.role : null);
   const equipment = useGameStore((s) => s.equipment),
@@ -583,15 +670,29 @@ function Player() {
     }
     const visit = useVisitsStore.getState();
     const moment = visit.together;
-    const danceElapsed = moment?.action === "celebrate" && visit.role
-      ? togetherElapsed(moment, visit.clockOffset) : Infinity;
+    const elapsed = moment && visit.role ? togetherElapsed(moment, visit.clockOffset) : Infinity;
+    if (visit.role && visit.benchTea?.seated[visit.role] && !m.path.length) {
+      locomotion.current.speed = 0;
+      return;
+    }
+    if (m.picnic && !m.path.length) {
+      const seat = villagePicnicSeat(m.guestVisit);
+      // A late movement correction can arrive after we opened the picnic.
+      // Keep the table view open and finish the walk to the assigned seat.
+      if (Math.hypot(p.x - seat.x, p.z - seat.z) > 0.2) {
+        const path = villagePath(p, seat);
+        if (path.length) useVillageMotion.setState({ path });
+      }
+      locomotion.current.speed = 0;
+      return;
+    }
     if (
-      danceElapsed >= 0 && danceElapsed < 3 ||
+      (moment?.action === "celebrate" && elapsed >= 0 && elapsed < 3) ||
+      (moment?.action === "photo" && elapsed < togetherDuration("photo") && villagePartner(visit)) ||
       !state.sceneReady ||
       state.panel ||
       state.dialogue ||
-      state.viewOnly ||
-      m.picnic
+      state.viewOnly
     ) {
       locomotion.current.speed = 0;
       return;
@@ -628,8 +729,10 @@ function Player() {
   const latest = useRef({ x: spawn.x, z: spawn.z });
   useFrame(({ camera, size, gl }, dt) => {
     const game = useGameStore.getState();
-    if (useVillageMotion.getState().picnic) yaw.current = 0;
-    if (game.panel || game.dialogue || useVillageMotion.getState().picnic)
+    const motion = useVillageMotion.getState();
+    const seated = motion.picnic && !motion.path.length;
+    if (seated || seatedRole) yaw.current = 0;
+    if (game.panel || game.dialogue || seated || seatedRole)
       locomotion.current.speed = 0;
     const p = latest.current;
     villageRender.x = p.x;
@@ -653,14 +756,29 @@ function Player() {
       pending.current = null;
       actInVillage(action);
     }
-    if (anchor.current)
+    if (anchor.current) {
+      const benchSpot = seatedRole && teaBenchSeat(seatedRole);
+      anchor.current.position.set(benchSpot ? benchSpot.x - p.x : 0, 0, benchSpot ? benchSpot.z - p.z : 0);
       anchor.current.rotation.y = turnToward(
         anchor.current.rotation.y,
         yaw.current,
         dt,
         reduced,
       );
-    const target = new THREE.Vector3(p.x, 0.9, p.z);
+    }
+    const visit = useVisitsStore.getState();
+    const moment = visit.together;
+    const photoPartner = moment?.action === "photo" &&
+      togetherElapsed(moment, visit.clockOffset) < togetherDuration("photo")
+      ? villagePartner(visit)
+      : undefined;
+    const target = photoPartner
+      ? new THREE.Vector3((p.x + photoPartner.x) / 2, 0.9, (p.z + photoPartner.z) / 2)
+      : seatedRole
+        ? new THREE.Vector3(TEA_BENCH.x, 1.02, TEA_BENCH.z + 0.12)
+        : motion.picnic
+          ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
+          : new THREE.Vector3(p.x, 0.9, p.z);
     follow.current.lerp(
       target,
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 8),
@@ -696,26 +814,27 @@ function Player() {
       <group ref={anchor} rotation={[0, spawn.yaw, 0]}>
         <Suspense fallback={null}>
           {playerCharacter === "melody" ? (
-            <Melody locomotion={locomotion} villageRole={sharedRole || undefined} />
+            <Melody locomotion={locomotion} holdingCup={picnic || !!seatedRole} villageRole={sharedRole || undefined} benchRole={seatedRole} />
           ) : (
             <Kitty
               equipment={
                 effect?.kind === "water"
                   ? { ...equipment, item: "watering" }
-                  : packed || giving
+                  : packed || giving || seatedRole
                     ? { ...equipment, item: "none" }
                     : equipment
               }
-              holding={packed || giving ? "parcel" : picnic ? "cup" : undefined}
+              holding={picnic || seatedRole ? "cup" : packed || giving ? "parcel" : undefined}
               animate
               scale={0.78}
               villageRole={sharedRole || undefined}
+              benchRole={seatedRole}
               locomotion={locomotion}
             />
           )}
         </Suspense>
         {ownRole && (
-          <Html center position={[0, 2.02, 0]} zIndexRange={[5, 1]}>
+          <Html center position={[0, seatedRole ? 2.45 : 2.02, 0]} zIndexRange={[5, 1]}>
             <VillageSpeech role={ownRole} />
           </Html>
         )}
@@ -793,6 +912,8 @@ export function VillageScene() {
         far={100}
       />
       <Landscape />
+      <VillageLanterns />
+      <VillageClueRibbons />
       <Player />
       <Destination />
       <VisitAvatars />

@@ -1,8 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { togetherDuration, villagePhoto } from "../game/village-together";
-import { useVillageMotion } from "../game/village-motion";
-import { useVisitsStore } from "../game/visits";
+import { useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
+import { useVisitsStore, villagePartner } from "../game/visits";
+import type { PostcardMemory } from "../game/cozy";
+import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
+import { LanternEvening } from "./LanternEvening";
+import { ClueTrail, ClueTrailRoute } from "./ClueTrail";
+import { PetalMatch } from "./PetalMatch";
+import { BenchTea } from "./BenchTea";
+import { VillageMarket } from "./VillageMarket";
 import { useGameStore } from "../game/store";
+import { visitTime } from "../game/visit-clock";
+import { inVillagePhotoRange } from "../../shared/village-world.mjs";
+import { atMarketSpot } from "../../shared/village-market.mjs";
+
+type SharedPhoto = Omit<PostcardMemory, "image" | "place"> & {
+  png: string;
+};
 
 async function framedPhoto(source: string) {
   const image = new Image();
@@ -32,28 +46,57 @@ async function framedPhoto(source: string) {
 export function TogetherActivities() {
   const moment = useVisitsStore((s) => s.together),
     role = useVisitsStore((s) => s.role),
+    roomId = useVisitsStore((s) => s.roomId),
     clockOffset = useVisitsStore((s) => s.clockOffset),
     status = useVisitsStore((s) => s.status),
     available = useVisitsStore((s) => s.togetherAvailable),
     togetherAction = useVisitsStore((s) => s.togetherAction),
     [pose, setPose] = useState("wave"),
-    [now, setNow] = useState(Date.now()),
-    [photo, setPhoto] = useState(""),
+    [now, setNow] = useState(visitTime),
+    [photo, setPhoto] = useState<SharedPhoto | null>(null),
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
+  const benchOccupied = useVisitsStore((s) => !!(s.benchTea?.seated.host || s.benchTea?.seated.guest));
+  const clueWaiting = useVisitsStore((s) => {
+    const trail = s.clueTrail;
+    if (!trail?.partnerShared || trail.destination || trail.ownGuess) return null;
+    return trail.ownShared ? "Choose a clue trail landmark" : "Read your partner’s clue";
+  });
+  const petalWaiting = useVisitsStore((s) => !!s.petalMatch?.partnerReady && !s.petalMatch.own);
+  const marketAvailable = useVisitsStore((s) => !!s.villageMarket);
+  const atStall = useVisitsStore((s) => {
+    const player = s.players.find((p) => p.id === s.role);
+    return !!player && atMarketSpot(player, player.id);
+  });
+  const options = useRef<HTMLDetailsElement>(null);
+  const cluePanel = useRef<HTMLDetailsElement>(null);
+  const petalPanel = useRef<HTMLDetailsElement>(null);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
+  const sceneReady = useGameStore((s) => s.sceneReady);
+  const photoPartner = useVisitsStore(villagePartner);
+  const nearForPhoto = useVisitsStore((s) => {
+    const visitor = villagePartner(s);
+    const own = s.players.find((p) => p.id === s.role);
+    return !!visitor && !!own && inVillagePhotoRange(own, visitor);
+  });
+  const photoKept = useGameStore((s) =>
+    !!photo && s.cozy.postcards.some((p) => p.id === photo.id),
+  );
   const captured = useRef<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
+    setNow(visitTime());
     if (!moment) return;
     const end =
       moment.at -
       useVisitsStore.getState().clockOffset +
       togetherDuration(moment.action) * 1000 +
       150;
-    if (Date.now() >= end) return;
+    if (visitTime() >= end) return;
     const timer = setInterval(() => {
-      setNow(Date.now());
-      if (Date.now() >= end) clearInterval(timer);
+      const current = visitTime();
+      setNow(current);
+      if (current >= end) clearInterval(timer);
     }, 100);
     return () => clearInterval(timer);
   }, [moment?.at, moment?.action]);
@@ -70,6 +113,7 @@ export function TogetherActivities() {
   useEffect(() => {
     if (
       moment?.action !== "photo" ||
+      !roomId ||
       elapsed < 3 ||
       elapsed >= 6 ||
       captured.current === moment.at ||
@@ -79,25 +123,42 @@ export function TogetherActivities() {
     const capturePhoto = villagePhoto.capture;
     captured.current = moment.at;
     setPose(moment.pose);
+    const { at, pose: framePose, weather } = moment;
+    const { outfit, plush } = useGameStore.getState().equipment;
+    const frame: Omit<SharedPhoto, "png"> = {
+      id: `village-photo-${roomId}-${at}`,
+      outfit,
+      ...(plush ? { plush } : {}),
+      background: weather,
+      pose: framePose,
+      createdAt: new Date().toISOString(),
+    };
     async function capture() {
       try {
-        setPhoto(await framedPhoto(capturePhoto()));
+        const png = await framedPhoto(capturePhoto());
+        if (captured.current !== at) return;
+        setPhoto({ ...frame, png });
         setNotice(
-          "Your photo is ready. Download it or keep it on Nancy’s wall.",
+          role === "host"
+            ? "Your photo is ready to download or keep on Nancy’s wall."
+            : "Your photo is ready to download.",
         );
       } catch {
-        setNotice("The photo could not be made. Please try again.");
+        if (captured.current === at)
+          setNotice("The photo could not be made. Please try again.");
       }
     }
     void capture();
-  }, [moment, elapsed]);
+  }, [moment, elapsed, role, roomId]);
   const action = (kind: string) => {
     useVillageMotion.getState().stop();
     togetherAction(kind, pose);
   };
   const keep = async () => {
+    if (!photo || photoKept || role !== "host") return;
+    const { png, ...frame } = photo;
     const image = new Image();
-    image.src = photo;
+    image.src = png;
     try {
       await image.decode();
       const canvas = document.createElement("canvas");
@@ -124,28 +185,45 @@ export function TogetherActivities() {
       c.fillText("A little time together ♡", 10, 165);
       const game = useGameStore.getState();
       game.keepPostcard({
-        id: crypto.randomUUID(),
+        ...frame,
         image: canvas.toDataURL("image/jpeg", 0.7),
-        outfit: game.equipment.outfit,
-        ...(game.equipment.plush ? { plush: game.equipment.plush } : {}),
-        background: moment?.weather || "sunshine",
-        pose: pose === "wave" ? "wave" : "still",
         place: "Together in Nancy’s village",
-        createdAt: new Date().toISOString(),
       });
+      if (!useGameStore.getState().cozy.postcards.some((p) => p.id === frame.id))
+        throw Error("Photo could not be saved");
       setNotice("Kept on Nancy’s wall ♡");
     } catch {
       setNotice("This photo could not be kept. Please try again.");
     }
   };
+  const baking = moment?.baking;
+  const nextBakingAction =
+    role === "guest" && baking === "decorate"
+      ? "decorate"
+      : role === "host" && baking === "ready"
+        ? "present"
+        : null;
+  function openPendingActivity() {
+    const menu = options.current;
+    const panel = clueWaiting ? cluePanel.current : petalPanel.current;
+    if (!menu || !panel) return;
+    menu.open = true;
+    panel.open = true;
+    requestAnimationFrame(() => {
+      const summary = panel.querySelector("summary");
+      summary?.focus({ preventScroll: true });
+      summary?.scrollIntoView({ block: "nearest" });
+    });
+  }
   return (
     <section className="together-activities" aria-label="Time together">
       <div className="village-social-buttons">
         <button
-          disabled={disabled || busy || !available}
+          disabled={disabled || busy || !available || benchOccupied}
+          aria-label="Dance together"
           onClick={() => action("celebrate")}
         >
-          Dance together
+          Dance
         </button>
         {busy && (
           <button disabled={disabled} onClick={() => action("cancel")}>
@@ -153,6 +231,24 @@ export function TogetherActivities() {
           </button>
         )}
       </div>
+      {nextBakingAction && available && !busy && !benchOccupied && (
+        <button
+          className="baking-turn"
+          disabled={disabled}
+          onClick={() => action(nextBakingAction)}
+        >
+          {nextBakingAction === "decorate" ? "Decorate cookies" : "Present cookies"}
+        </button>
+      )}
+      {available && !optionsOpen && (clueWaiting || petalWaiting) && (
+        <button className="activity-turn" disabled={disabled} onClick={openPendingActivity}>
+          {clueWaiting || "Pick your petal"}
+        </button>
+      )}
+      {marketAvailable && atStall && !optionsOpen && (
+        <button className="activity-turn" onClick={() => setMarketOpen(true)}>Open market stall</button>
+      )}
+      {marketOpen && <VillageMarket onClose={() => setMarketOpen(false)} />}
       {busy && moment?.action === "highfive" && (
         <span className="village-social-status" role="status">
           High-five!
@@ -163,8 +259,12 @@ export function TogetherActivities() {
           Photo in {countdown}…
         </span>
       )}
-      <details className="together-options">
-        <summary>More</summary>
+      <PostcardRoute />
+      <ClueTrailRoute />
+      <details ref={options} className="together-options" onToggle={(event) => {
+        if (event.target === event.currentTarget) setOptionsOpen(event.currentTarget.open);
+      }}>
+        <summary>Activities</summary>
         <div>
           {!available ? (
             <p>
@@ -173,15 +273,22 @@ export function TogetherActivities() {
             </p>
           ) : (
             <>
+              {marketAvailable && (
+                <button onClick={() => {
+                  if (options.current) options.current.open = false;
+                  setMarketOpen(true);
+                }}>Little Village Market</button>
+              )}
+              {benchOccupied && <p>Stand up from the bench together to dance, bake, or take a photo.</p>}
               <div className="visit-emotes">
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || benchOccupied}
                   onClick={() => action("wave")}
                 >
                   Wave together
                 </button>
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || benchOccupied}
                   onClick={() => action("highfive")}
                 >
                   High-five ♡
@@ -200,6 +307,7 @@ export function TogetherActivities() {
                   disabled={
                     disabled ||
                     busy ||
+                    benchOccupied ||
                     role !== "host" ||
                     (!!moment && moment.baking !== "mix")
                   }
@@ -211,6 +319,7 @@ export function TogetherActivities() {
                   disabled={
                     disabled ||
                     busy ||
+                    benchOccupied ||
                     role !== "guest" ||
                     moment?.baking !== "decorate"
                   }
@@ -222,6 +331,7 @@ export function TogetherActivities() {
                   disabled={
                     disabled ||
                     busy ||
+                    benchOccupied ||
                     role !== "host" ||
                     moment?.baking !== "ready"
                   }
@@ -232,6 +342,14 @@ export function TogetherActivities() {
               </details>
               <details>
                 <summary>A photo together</summary>
+                {!nearForPhoto && photoPartner && (
+                  <button
+                    disabled={disabled || busy || !sceneReady || benchOccupied}
+                    onClick={() => walkToVillageCompanion(photoPartner)}
+                  >
+                    Walk to {photoPartner.name} for the photo
+                  </button>
+                )}
                 <label>
                   Our pose{" "}
                   <select
@@ -246,24 +364,29 @@ export function TogetherActivities() {
                   </select>
                 </label>
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || !nearForPhoto || benchOccupied}
                   onClick={() => action("photo")}
                 >
                   Take our photo
                 </button>
                 {photo && (
                   <>
-                    <a href={photo} download="Nancy-and-Melody.png">
+                    <a href={photo.png} download="Nancy-and-Melody.png">
                       Download our photo PNG
                     </a>
                     {role === "host" && (
-                      <button onClick={() => void keep()}>
+                      <button disabled={photoKept} onClick={() => void keep()}>
                         Keep on Nancy’s wall
                       </button>
                     )}
                   </>
                 )}
               </details>
+              <PostcardWalk />
+              <LanternEvening />
+              <ClueTrail panelRef={cluePanel} />
+              <PetalMatch panelRef={petalPanel} />
+              <BenchTea busy={busy} />
               <label>
                 Our atmosphere{" "}
                 <select

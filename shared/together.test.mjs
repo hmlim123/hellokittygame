@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { applyVisitAction } from "./visit-actions.mjs";
 function fixture() {
-  const host = { id: "host", socket: { readyState: 1 } },
-    guest = { id: "guest", socket: { readyState: 1 } };
+  const host = { id: "host", socket: { readyState: 1 }, area: "village", x: -1, z: 2 },
+    guest = { id: "guest", socket: { readyState: 1 }, area: "village", x: 0, z: 2 };
   const room = { host, guest, picnic: [false, false, false] };
   let time = 10000,
     errors = [];
@@ -68,6 +68,20 @@ test("cancelling frees the shared moment for an immediate new reaction", () => {
   f.action(f.host, "wave");
   assert.equal(f.room.together.action, "wave");
   assert.deepEqual(f.errors, []);
+});
+
+test("a shared photo starts only when both players can fit in the village frame", () => {
+  const f = fixture();
+  f.guest.x = 3;
+  f.action(f.host, "photo");
+  assert.match(f.errors.at(-1), /Walk closer/);
+  f.guest.x = 0;
+  f.guest.area = "home";
+  f.action(f.host, "photo");
+  assert.equal(f.room.together, undefined);
+  f.guest.area = "village";
+  f.action(f.host, "photo");
+  assert.equal(f.room.together.action, "photo");
 });
 
 test("a new gesture supersedes stale walking speed without moving the player", () => {

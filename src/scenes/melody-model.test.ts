@@ -7,6 +7,8 @@ import {
   updateMelody,
   reactMelody,
   disposeMelody,
+  melodyBenchClips,
+  MELODY_CUP_GRIP,
 } from "./melody-model";
 const bytes = await readFile(
   new URL("../../dist/assets/friends/melody.glb", import.meta.url),
@@ -71,6 +73,24 @@ describe("My Melody’s actual Blender model", () => {
     expect(hero.userData.blender.walkRig.amount).toBe(0);
     disposeMelody(hero);
   });
+  it("raises her actual grip and settles it back while her shoulder remains attached", () => {
+    const hero = makeMelody(asset);
+    const arm = hero.userData.blender.model.getObjectByName("CTRL_Arm_R");
+    const shoulder = arm.getWorldPosition(new THREE.Vector3());
+    const grip = () => arm.localToWorld(new THREE.Vector3().fromArray(MELODY_CUP_GRIP));
+    const resting = grip();
+    reactMelody(hero, "sip");
+    for (let frame = 0; frame < 54; frame++) updateMelody(hero, 1 / 60, 0);
+    const raised = grip();
+    expect(hero.userData.melody.active).toBe("sip");
+    expect(raised.y - resting.y).toBeGreaterThan(0.2);
+    expect(raised.z - resting.z).toBeGreaterThan(0.06);
+    expect(arm.getWorldPosition(new THREE.Vector3()).distanceTo(shoulder)).toBeLessThan(0.06);
+    for (let frame = 0; frame < 120; frame++) updateMelody(hero, 1 / 60, 0);
+    expect(hero.userData.melody.active).toBe("idle");
+    expect(grip().distanceTo(resting)).toBeLessThan(0.10);
+    disposeMelody(hero);
+  });
   it("uses independent expression morphs and respects reduced motion", () => {
     const a = makeMelody(asset),
       b = makeMelody(asset);
@@ -90,5 +110,28 @@ describe("My Melody’s actual Blender model", () => {
     expect(b.userData.blender.walkRig.amount).toBe(0);
     disposeMelody(a);
     disposeMelody(b);
+  });
+  it("keeps Melody’s seated feet in place while her cup rises and settles", () => {
+    const hero = makeMelody(asset);
+    const model = hero.userData.blender.model as THREE.Group;
+    const foot = model.getObjectByName("CTRL_Foot_R")!;
+    const arm = model.getObjectByName("CTRL_Arm_R")!;
+    const grip = () => arm.localToWorld(new THREE.Vector3().fromArray(MELODY_CUP_GRIP));
+    const standing = foot.getWorldPosition(new THREE.Vector3());
+    hero.userData.melody.mixer.stopAllAction();
+    const { rest, toast } = melodyBenchClips(hero);
+    const mixer = new THREE.AnimationMixer(model);
+    const idle = mixer.clipAction(rest).play();
+    mixer.update(0);
+    const seated = foot.getWorldPosition(new THREE.Vector3());
+    const cupAtRest = grip();
+    expect(seated.z - standing.z).toBeGreaterThan(0.24);
+    idle.stop();
+    mixer.clipAction(toast).play();
+    mixer.setTime(0.9);
+    expect(foot.getWorldPosition(new THREE.Vector3()).distanceTo(seated)).toBeLessThan(0.001);
+    expect(grip().y - cupAtRest.y).toBeGreaterThan(0.2);
+    mixer.stopAllAction();
+    disposeMelody(hero);
   });
 });

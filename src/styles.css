@@ -2482,6 +2482,12 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 .village-social :is(button, summary, form, .together-options > div) {
   pointer-events: auto;
 }
+.village-social[hidden] {
+  display: none;
+}
+.village-social:has(.together-options[open]) {
+  z-index: 13;
+}
 .village-social-buttons, .together-activities {
   display: flex;
   gap: 4px;
@@ -2490,6 +2496,7 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
 }
 .village-social :is(button, summary) {
   min-height: 44px;
+  min-width: 44px;
   padding: 8px;
   font-size: 12px;
   background: #fffaf4;
@@ -2514,10 +2521,20 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   box-shadow: 0 4px 12px #2e172422;
 }
 .village-social .village-message { z-index: 2; }
-.together-options > div { max-height: 145px; overflow: auto; overscroll-behavior: contain; }
+.together-options > div { max-height: min(320px, 38dvh); overflow: auto; overscroll-behavior: contain; }
 .together-options .visit-emotes { margin: 0; }
 .together-options > div > label { display: block; margin-top: 8px; }
-.together-options select, .together-options a { min-height: 44px; }
+.together-options select { min-height: 44px; }
+.together-options a[download] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--accent);
+  background: #fffaf4;
+}
 .village-social-status {
   margin: 0;
   padding: 8px;
@@ -2525,6 +2542,96 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   border-radius: 10px;
   align-self: center;
   font-size: 12px;
+}
+.postcard-route, .postcard-stops, .lantern-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.postcard-route {
+  padding: 3px 6px;
+  border: 1px solid #d7bbce;
+  border-radius: 12px;
+  background: #fffaf4;
+  color: #67495b;
+  font-size: 12px;
+}
+.lantern-colors button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.lantern-colors button span {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #72596a66;
+  border-radius: 50%;
+}
+.postcard-stops button[aria-pressed="true"],
+.lantern-colors button[aria-pressed="true"] {
+  border-color: #a37a91;
+  background: #f2e0eb;
+}
+.village-table-actions {
+  width: min(100%, 300px);
+  margin-left: auto;
+}
+.bench-tea-status {
+  margin-bottom: 5px;
+  text-align: center;
+}
+.market-dialog {
+  max-width: 460px;
+  padding: clamp(16px, 4vw, 28px);
+}
+.market-dialog h2 { margin: 4px 42px 8px 0; }
+.market-dialog p { margin: 8px 0; line-height: 1.45; }
+.market-dialog button { min-height: 44px; }
+.market-dialog .close-dialog { margin: 0 -5px 0 4px; min-width: 44px; }
+.market-dialog .market-order-count { color: #69556a; font-weight: 700; }
+.market-ticket {
+  padding: 12px 14px;
+  border: 1px solid #e3c8cd;
+  border-radius: 14px;
+  background: #faebed;
+}
+.market-ticket h3 { margin: 0; font-size: 20px; }
+.market-ticket p { margin: 5px 0 0; font-size: 14px; }
+.market-stock { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.market-stock button { display: inline-flex; gap: 6px; align-items: center; padding: 7px 9px; }
+.market-stock button[aria-pressed="true"] { background: #efe0ea; border-color: #9d6d8b; }
+.market-stock button span { width: 11px; height: 11px; border: 1px solid #765e6b66; border-radius: 50%; }
+.market-dialog .market-feedback { color: #6c5366; }
+.market-chat { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
+.market-chat [role="log"] { overflow-wrap: anywhere; font-size: 13px; }
+.market-chat [role="log"] p { margin: 6px 0; }
+.market-chat .visit-chat-form { margin-bottom: 0; }
+.market-keepsake {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--accent);
+  background: #f3ead8;
+  border: 1px solid #dfc9a7;
+  border-radius: 12px;
+}
+.village-social .baking-turn {
+  background: #f8e8da;
+  border-color: #d8b69c;
+  color: #694c40;
+}
+.village-social .activity-turn {
+  background: #eef3e5;
+  border-color: #c9d8ba;
+  color: #456042;
+}
+.garden-progress {
+  border: 1px solid #dbe4cf;
+  background: #f1f5e9;
+  color: #456042;
+  margin-right: auto;
 }
 .village-speech { position: relative; pointer-events: none; }
 .village-bubble {

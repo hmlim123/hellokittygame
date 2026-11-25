@@ -4,6 +4,27 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { assetUrl } from "../game/assets";
 import { updateWalking, walkingRig } from "./walk-animation";
 import type { Gesture } from "../game/types";
+import togetherSource from "../../dist/assets/together-motion/melody.json";
+
+export const MELODY_CUP_GRIP = togetherSource.grips.R.local_y_up;
+
+function cupRaiseClip(arm: THREE.Object3D) {
+  const rest = arm.quaternion.clone();
+  const palm = new THREE.Vector3().fromArray(MELODY_CUP_GRIP).normalize();
+  const towardCup = new THREE.Vector3(-0.5, 0.4, 0.65).normalize();
+  const raised = new THREE.Quaternion().setFromUnitVectors(
+    palm.applyQuaternion(rest),
+    towardCup,
+  ).multiply(rest);
+  return new THREE.AnimationClip("sip", 1.85, [
+    new THREE.QuaternionKeyframeTrack(
+      arm.name + ".quaternion",
+      [0, 0.45, 1.25, 1.85],
+      [...rest.toArray(), ...raised.toArray(), ...raised.toArray(), ...rest.toArray()],
+    ),
+  ]);
+}
+
 interface Asset {
   scene: THREE.Group;
   animations: THREE.AnimationClip[];
@@ -82,6 +103,7 @@ export function makeMelody(asset: Asset) {
     }
     return clip;
   });
+  clips.push(cupRaiseClip(model.getObjectByName("CTRL_Arm_R")!));
   const actions = Object.fromEntries(
     clips.map((clip) => [clip.name, mixer.clipAction(clip)]),
   );
@@ -109,7 +131,7 @@ const gestureClips: Partial<Record<Gesture, string>> = {
   celebrate: "celebrate",
   bow: "bow",
   hug: "cuddle",
-  sip: "happy",
+  sip: "sip",
   present: "celebrate",
   handoff: "bow",
   shy: "shy",
@@ -175,4 +197,19 @@ export function disposeMelody(hero: THREE.Group) {
         : [o.material])
         material.dispose();
   });
+}
+
+export function melodyBenchClips(hero: THREE.Group) {
+  // Controllers are relative to the same additive pivots used for walking.
+  const root = new THREE.VectorKeyframeTrack("CTRL_Root.position", [0], [0, 0.94, 0]);
+  const footTilt = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.3);
+  const feet = ["L", "R"].flatMap((side) => [
+    new THREE.VectorKeyframeTrack(`CTRL_Foot_${side}.position`, [0], [0, -0.16, 0.42]),
+    new THREE.QuaternionKeyframeTrack(`CTRL_Foot_${side}.quaternion`, [0], footTilt.toArray()),
+  ]);
+  const sip = hero.userData.melody.actions.sip.getClip() as THREE.AnimationClip;
+  return {
+    rest: new THREE.AnimationClip("benchIdle", 1, [root, ...feet]),
+    toast: new THREE.AnimationClip("benchToast", sip.duration, [root, ...feet, ...sip.tracks]),
+  };
 }

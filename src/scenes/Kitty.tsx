@@ -23,6 +23,7 @@ import type { Equipment, Gesture } from "../game/types";
 import { useGameStore } from "../game/store";
 import { assetUrl } from "../game/assets";
 import { VillagePerformance } from "./VillagePerformance";
+import { VillageBenchPose } from "./VillageBenchPose";
 import type { VisitPlayer } from "../game/visits";
 export { assetUrl } from "../game/assets";
 export function useKittyAsset(plush?: string) {
@@ -53,6 +54,7 @@ interface KittyProps {
   performance?: { id: number; kind: Gesture };
   locomotion?: RefObject<{ speed: number }>;
   villageRole?: VisitPlayer["id"];
+  benchRole?: VisitPlayer["id"];
   photoPose?: import("./PhotoCorner").PhotoPose;
 }
 export function Kitty({
@@ -74,6 +76,7 @@ export function Kitty({
   homeGrip,
   heroRef,
   villageRole,
+  benchRole,
 }: KittyProps) {
   const asset = useKittyAsset(equipment?.plush),
     hero = useMemo(
@@ -176,7 +179,7 @@ export function Kitty({
   } | null>(null);
   const hadHome = useRef(false);
   useEffect(() => {
-    if (homeClip) {
+    if (homeClip || benchRole) {
       seenGesture.current = { hero, gesture, animate, reduced };
       return;
     }
@@ -200,7 +203,7 @@ export function Kitty({
       if (played.accepted)
         reactBlender(hero, equipment.item === "teddy" ? "hug" : "pet", reduced);
     } else reactBlender(hero, gesture.kind, reduced);
-  }, [hero, gesture, animate, reduced, homeClip]);
+  }, [hero, gesture, animate, reduced, homeClip, benchRole]);
   useEffect(() => {
     if (!homeClip) {
       const b = hero.userData.blender;
@@ -336,7 +339,7 @@ export function Kitty({
       ["dance", "danceHeld"].includes(rig.current?.getClip().name)
     )
       reactBlender(hero, null, reduced);
-    if (!hero.userData.villagePerformance) updateBlender(
+    if (!hero.userData.villagePerformance && !hero.userData.benchPose) updateBlender(
       hero,
       homeClip ? (homePaused ? 0 : Math.min(dt, 0.1)) : Math.min(dt, 0.25),
       {
@@ -392,7 +395,7 @@ export function Kitty({
     }
     if (locomotion) {
       if (
-        updateWalking(hero, dt, locomotion.current.speed, reduced, !!homeClip || hero.userData.villagePerformance)
+        updateWalking(hero, dt, locomotion.current.speed, reduced, !!homeClip || hero.userData.villagePerformance || hero.userData.benchPose)
       )
         useGameStore.getState().footstep();
       const rig = walkingRig(hero);
@@ -484,7 +487,11 @@ export function Kitty({
       dispose={null}
     >
       {holding && <KittyHeld hero={hero} holding={holding} />}
-      {villageRole && (
+      {benchRole ? (
+        <Suspense fallback={null}>
+          <VillageBenchPose hero={hero} role={benchRole} style={equipment?.plush || "classic"} />
+        </Suspense>
+      ) : villageRole && (
         <Suspense fallback={null}>
           <VillagePerformance hero={hero} role={villageRole} style={equipment?.plush || "classic"} />
         </Suspense>

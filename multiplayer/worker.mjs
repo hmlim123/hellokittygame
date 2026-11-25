@@ -1,3 +1,9 @@
+import { newLanternEvening, normalizeLanternEvening } from "../shared/lantern-evening.mjs";
+import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.mjs";
+import { clueTrailView, newClueTrail, restoreClueTrail } from "../shared/clue-trail.mjs";
+import { newPetalMatch, petalMatchView, restorePetalMatch } from "../shared/petal-match.mjs";
+import { newBenchTea, restoreBenchTea } from "../shared/bench-tea.mjs";
+import { newVillageMarket, restoreVillageMarket, villageMarketView } from "../shared/village-market.mjs";
 import { DurableObject } from "cloudflare:workers";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { createAccountState } from "../server/account-state.mjs";
@@ -139,9 +145,16 @@ export class PrivateVillage extends DurableObject {
       },
     });
     this.room = this.read("room");
-    if (this.room)
+    if (this.room) {
+      this.room.postcardWalk = normalizePostcardWalk(this.room.postcardWalk);
+      this.room.lanternEvening = normalizeLanternEvening(this.room.lanternEvening);
+      this.room.clueTrail = restoreClueTrail(this.room.clueTrail);
+      this.room.petalMatch = restorePetalMatch(this.room.petalMatch);
+      this.room.benchTea = restoreBenchTea(this.room.benchTea);
+      this.room.villageMarket = restoreVillageMarket(this.room.villageMarket);
       for (const role of ["host", "guest"])
         if (this.room[role]) this.room[role].socket = null;
+    }
     this.connections = new Map();
     // Cloudflare restores accepted sockets and attachments after hibernation.
     for (const ws of ctx.getWebSockets()) {
@@ -241,9 +254,15 @@ export class PrivateVillage extends DurableObject {
       picnic: room.picnic,
       garden: room.garden,
       together: room.together || null,
+      postcardWalk: room.postcardWalk ?? newPostcardWalk(),
+      lanternEvening: room.lanternEvening ?? newLanternEvening(),
+      benchTea: room.benchTea ?? newBenchTea(),
       serverNow: Date.now(),
       togetherAvailable: true,
     };
+    const trail = room.clueTrail ?? newClueTrail();
+    const match = room.petalMatch ?? newPetalMatch();
+    const market = room.villageMarket ?? newVillageMarket();
     for (const p of [room.host, room.guest]) {
       if (!p?.socket) continue;
       const c = this.connections.get(p.socket);
@@ -251,7 +270,10 @@ export class PrivateVillage extends DurableObject {
         c.player = { ...p, socket: null };
         p.socket.serializeAttachment(c);
       }
-      send(p.socket, snapshot);
+      send(p.socket, {
+        ...snapshot, clueTrail: clueTrailView(trail, p.id), petalMatch: petalMatchView(match, p.id),
+        villageMarket: villageMarketView(market, p.id),
+      });
     }
   }
   closeRoom() {
@@ -583,8 +605,8 @@ export class PrivateVillage extends DurableObject {
       connection: c,
       send,
       broadcast: (r) => this.broadcast(r),
-      dirty: () => {
-        if (m.type !== "move") this.saveRoom();
+      dirty: (sharedStateChanged) => {
+        if (m.type !== "move" || sharedStateChanged) this.saveRoom();
       },
       fail,
       ws,

@@ -1,4 +1,5 @@
 import { VisitMovementCadence } from "./visit-movement-cadence";
+import { VisitClock, visitTime } from "./visit-clock";
 import { beginGuestSession, endGuestSession } from "./guest-session";
 import { accountSession, useAccounts } from "./accounts";
 import { create } from "zustand";
@@ -7,6 +8,12 @@ import { useGameStore } from "./store";
 import { useVillageMotion } from "./village-motion";
 import { villageWalkable, villagePath } from "./village";
 import type { OutfitId, PlushId, Gesture, ItemId } from "./types";
+import { normalizePostcardWalk, type PostcardWalk } from "../../shared/postcard-walk.mjs";
+import { normalizeLanternEvening, type LanternEvening, type LanternColor } from "../../shared/lantern-evening.mjs";
+import type { ClueTrailView } from "../../shared/clue-trail.mjs";
+import type { Petal, PetalMatchView } from "../../shared/petal-match.mjs";
+import { restoreBenchTea, type BenchTea } from "../../shared/bench-tea.mjs";
+import type { MarketAction, MarketItem, VillageMarketView } from "../../shared/village-market.mjs";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
@@ -64,6 +71,18 @@ interface Visits {
   chat: ChatLine[];
   picnic: boolean[];
   garden: boolean[];
+  postcardWalk: PostcardWalk | null;
+  lanternEvening: LanternEvening | null;
+  clueTrail: ClueTrailView | null;
+  clueTrailAction(action: "start" | "share" | "guess" | "search", stop?: string): void;
+  petalMatch: PetalMatchView | null;
+  petalMatchAction(action: "start" | "pick", choice?: Petal): void;
+  benchTea: BenchTea | null;
+  benchTeaAction(action: "sit" | "stand" | "ready"): void;
+  villageMarket: VillageMarketView | null;
+  marketAction(action: MarketAction, item?: MarketItem): void;
+  lanternAction(action: "choose" | "light" | "reset", color?: LanternColor): void;
+  postcardWalkAction(action: "choose" | "stamp" | "reset", stop?: string): void;
   error: string;
   configure(url: string): boolean;
   host(name: string): Promise<void>;
@@ -72,6 +91,11 @@ interface Visits {
   sendChat(text: string): void;
   gesture(kind: Gesture): void;
   placePicnic(slot: number): void;
+}
+export function villagePartner({ players, role }: Pick<Visits, "players" | "role">) {
+  return players.find(
+    (p) => p.id !== role && p.connected && (!p.area || p.area === "village"),
+  );
 }
 export function visitServerUrl(
   input: string,
@@ -195,6 +219,7 @@ export function invitationLink(
 function connect(server: string, hello: object) {
   stopTransport();
   const epoch = generation;
+  const clock = new VisitClock();
   const ws = new WebSocket(server.replace(/^http/, "ws") + "/visit");
   socket = ws;
   const handshake = setTimeout(() => {
@@ -242,14 +267,15 @@ function connect(server: string, hello: object) {
         token: m.token,
         role: m.role,
       });
-      const rejoining =
-        useVisitsStore.getState().status === "reconnecting" &&
-        useVisitsStore.getState().roomId === m.roomId;
+      const previous = useVisitsStore.getState();
+      const rejoining = previous.status === "reconnecting" &&
+        previous.roomId === m.roomId && previous.role === m.role && previous.server === server;
       useVisitsStore.setState({
         status: "online",
         server,
         role: m.role,
         roomId: m.roomId,
+        ...(rejoining ? {} : { clueTrail: null, petalMatch: null, benchTea: null, villageMarket: null }),
         error: "",
         link:
           m.role === "host" && m.invite
@@ -298,12 +324,11 @@ function connect(server: string, hello: object) {
               : g.mode === "room"
                 ? "home"
                 : "story",
-          holding:
-            g.cozy.cookie.packed || performance.now() < motion.givingUntil
+          holding: motion.picnic
+            ? "cup"
+            : g.cozy.cookie.packed || performance.now() < motion.givingUntil
               ? "parcel"
-              : motion.picnic
-                ? "cup"
-                : null,
+              : null,
           tool: g.effect?.kind === "water" ? "watering" : null,
         };
         // A final stop is sent immediately, even when the final position did not
@@ -348,9 +373,45 @@ function connect(server: string, hello: object) {
         )
       )
         return;
-      const wasReady = useVisitsStore.getState().picnic.every(Boolean),
-        picnic = [0, 1, 2].map((i) => m.picnic?.[i] === true),
-        garden = [0, 1, 2].map((i) => m.garden?.[i] === true);
+      const previous = useVisitsStore.getState();
+      const wasReady = previous.picnic.every(Boolean);
+      const picnic = [0, 1, 2].map((i) => m.picnic?.[i] === true);
+      const garden = [0, 1, 2].map((i) => m.garden?.[i] === true);
+      const sameRoom = m.roomId === previous.roomId;
+      const postcardWalk = m.postcardWalk
+        ? sameRoom && previous.postcardWalk?.revision === m.postcardWalk.revision
+          ? previous.postcardWalk
+          : normalizePostcardWalk(m.postcardWalk)
+        : null;
+      const lanternEvening = m.lanternEvening
+        ? sameRoom && previous.lanternEvening?.revision === m.lanternEvening.revision
+          ? previous.lanternEvening
+          : normalizeLanternEvening(m.lanternEvening)
+        : null;
+      const clueTrail = Number.isSafeInteger(m.clueTrail?.revision) &&
+        Number.isSafeInteger(m.clueTrail.round) &&
+        (m.clueTrail.clue === null || typeof m.clueTrail.clue === "string") &&
+        (m.clueTrail.partnerClue === null || typeof m.clueTrail.partnerClue === "string")
+        ? sameRoom && previous.clueTrail?.revision === m.clueTrail.revision
+          ? previous.clueTrail
+          : m.clueTrail
+        : null;
+      const petalMatch = Number.isSafeInteger(m.petalMatch?.revision) &&
+        Number.isSafeInteger(m.petalMatch.round) && Number.isSafeInteger(m.petalMatch.matches)
+        ? sameRoom && previous.petalMatch?.revision === m.petalMatch.revision
+          ? previous.petalMatch
+          : m.petalMatch
+        : null;
+      const benchTea = Number.isSafeInteger(m.benchTea?.revision)
+        ? sameRoom && previous.benchTea?.revision === m.benchTea.revision
+          ? previous.benchTea
+          : restoreBenchTea(m.benchTea)
+        : null;
+      const villageMarket = Number.isSafeInteger(m.villageMarket?.revision) && Array.isArray(m.villageMarket.choices)
+        ? sameRoom && previous.villageMarket?.revision === m.villageMarket.revision
+          ? previous.villageMarket
+          : m.villageMarket
+        : null;
       useVisitsStore.setState({
         together:
           m.together &&
@@ -359,9 +420,7 @@ function connect(server: string, hello: object) {
             ? m.together
             : null,
         togetherAvailable: m.togetherAvailable === true,
-        clockOffset: Number.isFinite(m.serverNow)
-          ? m.serverNow - Date.now()
-          : 0,
+        clockOffset: clock.sample(m.serverNow, visitTime()),
         players: m.players,
         chat: Array.isArray(m.chat)
           ? m.chat
@@ -381,6 +440,12 @@ function connect(server: string, hello: object) {
           : [],
         picnic,
         garden,
+        postcardWalk,
+        lanternEvening,
+        clueTrail,
+        petalMatch,
+        benchTea,
+        villageMarket,
       });
       if (useVisitsStore.getState().role === "host") {
         const game = useGameStore.getState(),
@@ -398,6 +463,12 @@ function connect(server: string, hello: object) {
             "softHappy",
             "Your picnic is ready. A little moment made together. ♡",
           );
+      const priorTrail = previous.clueTrail;
+      if (clueTrail && priorTrail && priorTrail.round === clueTrail.round &&
+          clueTrail.ownSearched && clueTrail.partnerSearched &&
+          !(priorTrail.ownSearched && priorTrail.partnerSearched)) {
+        useGameStore.getState().react("softHappy", "You found both ribbons together. ♡");
+      }
     } else if (m.type === "correction" && villageWalkable(m.x, m.z)) {
       // A server correction settles the position, but a tapped destination
       // should still be reached. Replan from the accepted position instead of
@@ -417,7 +488,7 @@ function connect(server: string, hello: object) {
       stopTransport();
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -468,7 +539,7 @@ function connect(server: string, hello: object) {
     } else {
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -497,6 +568,12 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   chat: [],
   picnic: [false, false, false],
   garden: [false, false, false],
+  postcardWalk: null,
+  lanternEvening: null,
+  clueTrail: null,
+  petalMatch: null,
+  benchTea: null,
+  villageMarket: null,
   error: "",
   configure(input) {
     const server = visitServerUrl(input);
@@ -578,6 +655,12 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       chat: [],
       together: null,
       togetherAvailable: false,
+      postcardWalk: null,
+      lanternEvening: null,
+      clueTrail: null,
+      petalMatch: null,
+      benchTea: null,
+      villageMarket: null,
       roomId: null,
       invitation: null,
     });
@@ -648,6 +731,12 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       error: "",
       players: [],
       chat: [],
+      postcardWalk: null,
+      lanternEvening: null,
+      clueTrail: null,
+      petalMatch: null,
+      benchTea: null,
+      villageMarket: null,
       link: "",
       server: invite.server,
     });
@@ -661,7 +750,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   },
   leave() {
     restorePersonalSave();
-    useVillageMotion.setState({ guestVisit: false });
+    useVillageMotion.setState({ guestVisit: false, picnic: false });
     transmit({ type: get().role === "host" ? "end" : "leave" });
     stopTransport();
     rememberTicket(null);
@@ -686,6 +775,37 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   },
   placePicnic(slot) {
     if (get().status === "online") transmit({ type: "picnic", slot });
+  },
+  lanternAction(action, color) {
+    const { status, lanternEvening } = get();
+    if (status === "online" && lanternEvening)
+      transmit({ type: "lantern-evening", action, color, revision: lanternEvening.revision });
+  },
+  postcardWalkAction(action, stop) {
+    const { status, postcardWalk } = get();
+    if (status === "online" && postcardWalk)
+      transmit({ type: "postcard-walk", action, stop, revision: postcardWalk.revision });
+  },
+  clueTrailAction(action, stop) {
+    const { status, clueTrail } = get();
+    if (status === "online" && clueTrail)
+      transmit({ type: "clue-trail", action, stop, round: clueTrail.round });
+  },
+  petalMatchAction(action, choice) {
+    const { status, petalMatch } = get();
+    if (status === "online" && petalMatch)
+      transmit({ type: "petal-match", action, choice, round: petalMatch.round });
+  },
+  benchTeaAction(action) {
+    const { status, benchTea } = get();
+    if (status === "online" && benchTea)
+      transmit({ type: "bench-tea", action, toastAt: benchTea.toastAt });
+  },
+  marketAction(action, item) {
+    const { status, villageMarket } = get();
+    if (status !== "online" || !villageMarket) return;
+    const { shift, served, attempt } = villageMarket;
+    transmit({ type: "village-market", action, shift, served, attempt, item });
   },
 }));
 export function useVisitLifecycle() {

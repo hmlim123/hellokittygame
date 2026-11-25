@@ -1,5 +1,11 @@
+import { newLanternEvening, normalizeLanternEvening } from "../shared/lantern-evening.mjs";
+import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.mjs";
+import { clueTrailView, newClueTrail, restoreClueTrail } from "../shared/clue-trail.mjs";
+import { newPetalMatch, petalMatchView, restorePetalMatch } from "../shared/petal-match.mjs";
+import { newBenchTea, restoreBenchTea, standAtTeaBench } from "../shared/bench-tea.mjs";
+import { newVillageMarket, restoreVillageMarket, villageMarketView } from "../shared/village-market.mjs";
 import { actor, appearance, text, yaw } from "../shared/visit-actors.mjs";
-import { applyVisitAction } from "../shared/visit-actions.mjs";
+import { applyVisitAction, restoreTogetherMoment } from "../shared/visit-actions.mjs";
 import { createServer } from "node:http";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
@@ -61,6 +67,9 @@ export function createVisitService({
     picnic: room.picnic,
     garden: room.garden,
     together: room.together || null,
+    postcardWalk: room.postcardWalk ?? newPostcardWalk(),
+    lanternEvening: room.lanternEvening ?? newLanternEvening(),
+    benchTea: room.benchTea ?? newBenchTea(),
     serverNow: now(),
     togetherAvailable: true,
   });
@@ -70,7 +79,15 @@ export function createVisitService({
   const broadcast = (room) => {
     room.revision++;
     const state = snapshot(room);
-    for (const a of [room.host, room.guest]) if (a) send(a.socket, state);
+    const trail = room.clueTrail ?? newClueTrail();
+    const match = room.petalMatch ?? newPetalMatch();
+    const market = room.villageMarket ?? newVillageMarket();
+    for (const a of [room.host, room.guest]) {
+      if (a) send(a.socket, {
+        ...state, clueTrail: clueTrailView(trail, a.id), petalMatch: petalMatchView(match, a.id),
+        villageMarket: villageMarketView(market, a.id),
+      });
+    }
   };
   function save() {
     clearTimeout(saveTimer);
@@ -146,6 +163,13 @@ export function createVisitService({
             : [],
           picnic: [0, 1, 2].map((i) => r.picnic?.[i] === true),
           garden: [0, 1, 2].map((i) => r.garden?.[i] === true),
+          together: restoreTogetherMoment(r.together),
+          postcardWalk: normalizePostcardWalk(r.postcardWalk),
+          lanternEvening: normalizeLanternEvening(r.lanternEvening),
+          clueTrail: restoreClueTrail(r.clueTrail),
+          petalMatch: restorePetalMatch(r.petalMatch),
+          benchTea: restoreBenchTea(r.benchTea),
+          villageMarket: restoreVillageMarket(r.villageMarket),
         });
       }
     } catch (e) {
@@ -487,6 +511,18 @@ export function createVisitService({
             );
             ws.close(1008, "Village full");
             return;
+          }
+          // An anonymous invitation can be opened by a different person.
+          // Only a ticket reconnect or the same signed-in account keeps private turns.
+          if (!identity) {
+            if (room.clueTrail?.round)
+              room.clueTrail = newClueTrail(null, 0, room.clueTrail.revision + 1);
+            if (room.petalMatch?.round)
+              room.petalMatch = newPetalMatch(0, room.petalMatch.revision + 1);
+            if (room.benchTea)
+              room.benchTea = standAtTeaBench(room.benchTea, "guest");
+            if (room.villageMarket?.shift)
+              room.villageMarket = newVillageMarket(0, room.villageMarket.revision + 1);
           }
           secret = token();
           room.guestHash = hash(secret);

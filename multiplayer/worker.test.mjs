@@ -5,6 +5,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTestWorker } from "./test-runtime.mjs";
+import { teaBenchSeat } from "../shared/bench-tea.mjs";
+import { marketSpot } from "../shared/village-market.mjs";
 const origin = "https://hmlim123.github.io",
   setupKey = "local-worker-fixture-private-owner-setup-key";
 async function setup(t, options = {}) {
@@ -230,7 +232,31 @@ test("a nearby pair can complete one shared picnic and only Nancy can end it", a
 });
 test("SQL persistence restores accounts and private tickets after a whole runtime restart", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "kitty-free-persist-"));
-  const first = await pair(t, { persist: dir });
+  const first = await pair(t, { persist: dir }, { x: -1.8, z: 1.6 });
+  first.host.send({ type: "postcard-walk", action: "choose", stop: "plaza", revision: 0 });
+  first.guest.send({ type: "postcard-walk", action: "choose", stop: "garden", revision: 0 });
+  const chosen = await first.guest.until((m) => m.postcardWalk?.host && m.postcardWalk?.guest);
+  assert.equal(chosen.postcardWalk.revision, 2);
+  first.host.send({ type: "postcard-walk", action: "stamp", stop: "plaza", revision: 2 });
+  await first.guest.until((m) => m.postcardWalk?.stamps === 1);
+  first.host.send({ type: "lantern-evening", action: "choose", color: "rose", revision: 0 });
+  first.guest.send({ type: "lantern-evening", action: "choose", color: "lavender", revision: 0 });
+  await first.guest.until((m) => m.lanternEvening?.host.color && m.lanternEvening?.guest.color);
+  first.host.send({ type: "lantern-evening", action: "light", revision: 2 });
+  const partiallyLit = await first.guest.until((m) => m.lanternEvening?.host.lit);
+  first.host.send({ type: "clue-trail", action: "start", round: 0 });
+  const hostClue = (await first.host.until((m) => m.clueTrail?.round === 1)).clueTrail;
+  const guestClue = (await first.guest.until((m) => m.clueTrail?.round === 1)).clueTrail;
+  assert.notEqual(guestClue.clue, hostClue.clue);
+  assert.equal(guestClue.partnerClue, null);
+  assert.equal(Object.hasOwn(guestClue, "target"), false);
+  first.host.send({ type: "clue-trail", action: "share", round: 1 });
+  await first.guest.until((m) => m.clueTrail?.partnerClue === hostClue.clue);
+  first.guest.send({ type: "petal-match", action: "start", round: 0 });
+  await first.host.until((m) => m.petalMatch?.round === 1);
+  first.host.send({ type: "petal-match", action: "pick", round: 1, choice: "rose" });
+  const hiddenPick = (await first.guest.until((m) => m.petalMatch?.partnerReady)).petalMatch;
+  assert.equal(hiddenPick.partner, null);
   first.host.ws.close(1000, "Reload");
   first.guest.ws.close(1000, "Reload");
   await new Promise((r) => setTimeout(r, 50));
@@ -250,8 +276,91 @@ test("SQL persistence restores accounts and private tickets after a whole runtim
   });
   const ready = await guest.until((m) => m.type === "welcome");
   assert.equal(ready.you.character, "melody");
+  const snapshot = await guest.until((m) => m.type === "state");
+  assert.deepEqual(snapshot.postcardWalk, {
+    host: "plaza",
+    guest: "garden",
+    stamps: 1,
+    revision: 3,
+    roleRevisions: chosen.postcardWalk.roleRevisions,
+    completedAt: null,
+  });
+  assert.deepEqual(snapshot.lanternEvening, {
+    host: { color: "rose", lit: true },
+    guest: { color: "lavender", lit: false },
+    revision: 3,
+    roleRevisions: partiallyLit.lanternEvening.roleRevisions,
+  });
+  assert.equal(snapshot.clueTrail.clue, guestClue.clue);
+  assert.equal(snapshot.clueTrail.partnerClue, hostClue.clue);
+  assert.deepEqual(snapshot.petalMatch, hiddenPick);
+  const host = await client(second.mf, { type: "hello", ...first.room, accountToken: first.n.token });
+  await host.until((m) => m.type === "welcome");
+  guest.send({ type: "petal-match", action: "pick", round: 1, choice: "rose" });
+  const result = (await host.until((m) => m.petalMatch?.finished)).petalMatch;
+  assert.equal(result.partner, "rose");
+  assert.equal(result.matches, 1);
   assert.equal((await second.request("/account")).body.melodyRegistered, true);
 });
+test("the tea bench keeps both seats and readiness across a Worker restart", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "kitty-bench-persist-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const first = await pair(t, { persist: dir }, teaBenchSeat("host"));
+  first.host.send({ type: "bench-tea", action: "sit" });
+  first.guest.send({ type: "bench-tea", action: "sit" });
+  await first.host.until((m) => m.benchTea?.seated.host && m.benchTea?.seated.guest);
+  first.host.send({ type: "bench-tea", action: "ready", toastAt: 0 });
+  await first.guest.until((m) => m.benchTea?.ready.host);
+  first.host.ws.close(1000, "Reload");
+  first.guest.ws.close(1000, "Reload");
+  await first.mf.dispose();
+  const second = await setup(t, { persist: dir });
+  const host = await client(second.mf, { type: "hello", ...first.room, accountToken: first.n.token });
+  const guest = await client(second.mf, {
+    type: "hello", roomId: first.room.roomId, token: first.guestTicket.token, accountToken: first.m.token,
+  });
+  const ready = await guest.until((m) => m.benchTea?.ready.host);
+  assert.deepEqual(ready.benchTea.seated, { host: true, guest: true });
+  guest.send({ type: "bench-tea", action: "ready", toastAt: 0 });
+  const hostToast = await host.until((m) => m.benchTea?.toastAt > 0);
+  const guestToast = await guest.until((m) => m.benchTea?.toastAt > 0);
+  assert.equal(hostToast.benchTea.toastAt, guestToast.benchTea.toastAt);
+});
+
+test("the market keeps the ticket private and restores a handed parcel after a Worker restart", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "kitty-market-persist-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const first = await pair(t, { persist: dir }, marketSpot("host"));
+  const play = (player, action, item) => player.send({
+    type: "village-market", action, item, shift: action === "start" ? 0 : 1, served: 0, attempt: 0,
+  });
+  play(first.host, "start");
+  const order = (await first.host.until((m) => !!m.villageMarket?.ticket)).villageMarket.ticket;
+  const stock = (await first.guest.until((m) => m.villageMarket?.shift === 1)).villageMarket;
+  assert.equal(stock.ticket, null);
+  assert.ok(stock.choices.includes(order.drink));
+  play(first.host, "wrap", order.treat);
+  play(first.host, "hand-over", order.treat);
+  const handed = (await first.guest.until((m) => m.villageMarket?.partnerHanded)).villageMarket;
+  assert.equal(handed.own.item, null);
+  assert.equal(handed.ticket, null);
+  first.host.ws.close(1000, "Reload");
+  first.guest.ws.close(1000, "Reload");
+  await first.mf.dispose();
+
+  const second = await setup(t, { persist: dir });
+  const host = await client(second.mf, { type: "hello", ...first.room, accountToken: first.n.token });
+  const guest = await client(second.mf, {
+    type: "hello", roomId: first.room.roomId, token: first.guestTicket.token, accountToken: first.m.token,
+  });
+  const resumed = (await host.until((m) => m.villageMarket?.own.handed)).villageMarket;
+  assert.deepEqual(resumed.ticket, order);
+  assert.equal(resumed.own.item, order.treat);
+  play(guest, "wrap", order.drink);
+  play(guest, "hand-over", order.drink);
+  await host.until((m) => m.villageMarket?.servedCustomer === order.customer && m.villageMarket?.served === 1);
+});
+
 test("sign-out revokes an active socket and a replacement login revokes the old session", async (t) => {
   const s = await pair(t);
   await s.request("/account/logout", {}, s.m.token);

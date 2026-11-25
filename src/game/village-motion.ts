@@ -3,9 +3,11 @@ import { useEffect } from "react";
 import { useGameStore } from "./store";
 import {
   VILLAGE_ACTIONS,
+  VILLAGE_PICNIC,
   VILLAGE_SPAWN,
   villagePath,
   villageApproach,
+  villageWalkable,
 } from "./village";
 export interface VillagePoint {
   x: number;
@@ -28,6 +30,10 @@ interface VillageMotion {
   walkTo(p: VillagePoint, action?: string): boolean;
 }
 export const villageRender = { x: VILLAGE_SPAWN.x, z: VILLAGE_SPAWN.z };
+export function villagePicnicSeat(guest: boolean) {
+  return { x: VILLAGE_PICNIC.x + (guest ? 0.95 : -0.95), z: VILLAGE_PICNIC.z };
+}
+
 export const useVillageMotion = create<VillageMotion>((set, get) => ({
   position: { ...VILLAGE_SPAWN },
   yaw: 0,
@@ -65,14 +71,24 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
       action === "momo" || action === "pip"
         ? villageApproach({ ...p, id: action })
         : action === "picnic"
-          ? { x: p.x + (get().guestVisit ? 0.95 : -0.95), z: p.z }
+          ? villagePicnicSeat(get().guestVisit)
           : p;
     const path = villagePath(get().position, destination);
     if (!path.length) return false;
-    set({ input: { x: 0, z: 0 }, path, pending: action || null });
+    set({ input: { x: 0, z: 0 }, path, pending: action || null, picnic: false });
     return true;
   },
 }));
+export function walkToVillageCompanion({ x, z }: VillagePoint) {
+  const target = [
+    { x: x + 1.5, z },
+    { x: x - 1.5, z },
+    { x, z: z + 1.5 },
+    { x, z: z - 1.5 },
+  ].find((p) => villageWalkable(p.x, p.z));
+  return !!target && useVillageMotion.getState().walkTo(target);
+}
+
 export function nearbyVillageAction(position: VillagePoint) {
   return VILLAGE_ACTIONS.map((o) => ({
     ...o,
@@ -158,9 +174,14 @@ export function actInVillage(id?: string) {
   else if (action.startsWith("flowers"))
     s.villageWater(Number(action.slice(-1)));
   else if (action === "picnic") {
+    const seat = villagePicnicSeat(motion.guestVisit);
+    if (Math.hypot(motion.position.x - seat.x, motion.position.z - seat.z) > 0.2) {
+      motion.walkTo(VILLAGE_PICNIC, "picnic");
+      return;
+    }
     useVillageMotion.setState({ picnic: true });
     s.react(
-      "sip",
+      "softHappy",
       "A little tea, a little breeze, and a place to slow down together. ♡",
     );
   }
