@@ -88,10 +88,17 @@ remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittyga
   Bench tea**, walk to your spot, and sit. Each player chooses **Ready to toast**
   to raise both cups together. You can chat at the bench and stand up whenever
   you’re ready to walk again.
+- **Little Village Market** gives you and Nancy three orders to fill at
+  the stall north of the plaza. Under **Activities → Little Village Market**,
+  walk to your spots and open the stall. One of you reads the order ticket and
+  wraps a treat. The other uses the stock shelf to choose a drink. Tell each
+  other what to wrap in the stall chat, then each choose **Hand over my parcel**.
+  Swap jobs for the next customer. At closing, both of you can download the
+  same market keepsake.
 
-Postcard walks, lantern evenings, the clue trail, Petal Match, and bench tea use new
-shared state from the existing Worker. Their controls appear when that Worker
-has been updated. The upgrade uses the existing service and SQLite data.
+Postcard walks, lantern evenings, the clue trail, Petal Match, bench tea, and the
+market use shared state from the existing Worker. Their controls appear when
+that Worker has been updated. The upgrade uses the existing service and SQLite data.
 [Updating the existing village service](private-visits-setup.md#updating-an-existing-village-for-v37)
 
 ## Two-player verification · November 24, 2026
@@ -146,6 +153,15 @@ activities, both personal saves, and sign-out and rejoin.
 The draft client also joined a private visit with the published Worker revision.
 The players could set up a picnic, and the bench tea menu stayed hidden until
 the Worker supports it.
+
+## Little Village Market verification · November 25, 2026
+
+The production build and 305 automated checks passed. Two Chromium sessions
+walked to the stall, received different views of the same order, coordinated in
+the stall chat, corrected a mix-up, swapped jobs, and downloaded identical PNG
+keepsakes after three orders. A refresh preserved the parcel already on the
+counter. A Cloudflare Worker restart also preserved the ticket and parcel.
+[Two-account browser test](../tests/accounts-browser.py)
 
 ## Ready for Nancy and Melody
 

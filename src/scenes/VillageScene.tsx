@@ -37,6 +37,7 @@ import { VillageSpeech } from "./VillageSpeech";
 import { VillageLanterns } from "./VillageLanterns";
 import { VillageClueRibbons } from "./VillageClueRibbons";
 import { TEA_BENCH, teaBenchSeat } from "../../shared/bench-tea.mjs";
+import { MARKET_STALL, marketSpot } from "../../shared/village-market.mjs";
 import { togetherDuration, togetherElapsed, villagePhoto } from "../game/village-together";
 
 function Blob({
@@ -483,6 +484,50 @@ function VillageTeaBench() {
     </group>
   );
 }
+function VillageMarketStall() {
+  const market = useVisitsStore((s) => s.villageMarket);
+  const role = useVisitsStore((s) => s.role);
+  if (!market || !role) return null;
+  const parcels = role === "host" ? [market.partnerHanded, market.own.handed] : [market.own.handed, market.partnerHanded];
+  return (
+    <group position={[MARKET_STALL.x, 0, MARKET_STALL.z]} onClick={(event) => {
+      if (event.delta >= 8) return;
+      event.stopPropagation();
+      useVillageMotion.getState().walkTo(marketSpot(role));
+    }}>
+      <RoundedBox args={[2.65, 0.15, 0.78]} radius={0.06} position={[0, 0.9, 0]}>
+        <meshStandardMaterial color="#bf8f78" />
+      </RoundedBox>
+      <RoundedBox args={[2.45, 0.79, 0.58]} radius={0.07} position={[0, 0.42, 0]}>
+        <meshStandardMaterial color="#e7b3b8" />
+      </RoundedBox>
+      {[-1.16, 1.16].map((x) => (
+        <mesh key={x} position={[x, 1.53, -0.24]}>
+          <boxGeometry args={[0.11, 1.28, 0.12]} />
+          <meshStandardMaterial color="#bf8f78" />
+        </mesh>
+      ))}
+      {Array.from({ length: 7 }, (_, i) => (
+        <RoundedBox key={i} args={[0.42, 0.12, 0.95]} radius={0.045}
+          position={[(i - 3) * 0.41, 2.13, 0.025]} rotation={[0.2, 0, 0]}>
+          <meshStandardMaterial color={i % 2 ? "#fff3df" : "#d891ae"} />
+        </RoundedBox>
+      ))}
+      <Label text="LITTLE VILLAGE MARKET" at={[0, 2.49, 0]} />
+      {parcels.map((handed, i) => handed && (
+        <group key={i} position={[i ? 0.65 : -0.65, 1.09, 0.12]}>
+          <RoundedBox args={[0.42, 0.23, 0.38]} radius={0.035}>
+            <meshStandardMaterial color="#efe0b8" />
+          </RoundedBox>
+          <mesh position={[0, 0.005, 0]}>
+            <boxGeometry args={[0.08, 0.245, 0.4]} />
+            <meshStandardMaterial color={i ? "#b394c6" : "#cc87a0"} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
 function Landscape() {
   return (
     <>
@@ -539,6 +584,7 @@ function Landscape() {
       <Neighbour id="pip" />
       <PicnicTable />
       <VillageTeaBench />
+      <VillageMarketStall />
       <RigidBody type="fixed" colliders={false}>
         {VILLAGE_OBSTACLES.map((o, i) => (
           <CuboidCollider

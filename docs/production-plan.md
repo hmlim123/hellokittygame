@@ -119,6 +119,14 @@ My Melody take their own seats and raise their cups together after each chooses
 refresh. Shared dances and photos are available again when both players stand.
 [Meeting plan and verification](melody-meeting-plan.md#bench-tea-verification--november-24-2026)
 
+## Little Village Market · November 25, 2026
+
+The private village draft adds a market stall for Kitty and My Melody. The pair
+serves three orders, switches jobs after each customer, and earns a matching
+keepsake to download. The Worker sends the order ticket only to its reader and
+keeps the active round and packed parcels through a refresh. A wrong order gives
+both players another try. [Meeting plan and verification](melody-meeting-plan.md#little-village-market-verification--november-25-2026)
+
 ## iPhone village canvas stability · v3.7.2
 
 An iPhone report identified flicker during walking and scrolling. The live

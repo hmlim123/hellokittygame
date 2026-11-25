@@ -18,6 +18,7 @@ import { atLanternPlaza, lanternColor, newLanternEvening } from "./lantern-eveni
 import { atClueStop, CLUE_STOPS, clueStop, newClueTrail } from "./clue-trail.mjs";
 import { newPetalMatch, petal } from "./petal-match.mjs";
 import { atTeaBenchSeat, BENCH_TOAST_MS, newBenchTea, standAtTeaBench } from "./bench-tea.mjs";
+import { atMarketSpot, newVillageMarket, playVillageMarket } from "./village-market.mjs";
 
 const newTogetherMoment = () => ({
   id: 0,
@@ -284,6 +285,19 @@ export function applyVisitAction({
       const other = role === "host" ? match.guest : match.host;
       room.petalMatch = { ...match, [role]: choice, revision, matches: match.matches + Number(choice === other) };
     } else return;
+    broadcast(room);
+    dirty();
+  } else if (m.type === "village-market") {
+    const role = player.id;
+    if (role !== "host" && role !== "guest") return;
+    if (!bothInVillage(room) || !atMarketSpot(room.host, "host") || !atMarketSpot(room.guest, "guest")) {
+      fail("Take your places at the market stall together first.");
+      return;
+    }
+    const market = room.villageMarket ?? newVillageMarket();
+    const next = playVillageMarket(market, role, m);
+    if (next === market) return;
+    room.villageMarket = next;
     broadcast(room);
     dirty();
   } else if (m.type === "bench-tea") {

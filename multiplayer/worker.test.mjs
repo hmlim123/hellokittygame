@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTestWorker } from "./test-runtime.mjs";
 import { teaBenchSeat } from "../shared/bench-tea.mjs";
+import { marketSpot } from "../shared/village-market.mjs";
 const origin = "https://hmlim123.github.io",
   setupKey = "local-worker-fixture-private-owner-setup-key";
 async function setup(t, options = {}) {
@@ -324,6 +325,40 @@ test("the tea bench keeps both seats and readiness across a Worker restart", asy
   const hostToast = await host.until((m) => m.benchTea?.toastAt > 0);
   const guestToast = await guest.until((m) => m.benchTea?.toastAt > 0);
   assert.equal(hostToast.benchTea.toastAt, guestToast.benchTea.toastAt);
+});
+
+test("the market keeps the ticket private and restores a handed parcel after a Worker restart", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "kitty-market-persist-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const first = await pair(t, { persist: dir }, marketSpot("host"));
+  const play = (player, action, item) => player.send({
+    type: "village-market", action, item, shift: action === "start" ? 0 : 1, served: 0, attempt: 0,
+  });
+  play(first.host, "start");
+  const order = (await first.host.until((m) => !!m.villageMarket?.ticket)).villageMarket.ticket;
+  const stock = (await first.guest.until((m) => m.villageMarket?.shift === 1)).villageMarket;
+  assert.equal(stock.ticket, null);
+  assert.ok(stock.choices.includes(order.drink));
+  play(first.host, "wrap", order.treat);
+  play(first.host, "hand-over", order.treat);
+  const handed = (await first.guest.until((m) => m.villageMarket?.partnerHanded)).villageMarket;
+  assert.equal(handed.own.item, null);
+  assert.equal(handed.ticket, null);
+  first.host.ws.close(1000, "Reload");
+  first.guest.ws.close(1000, "Reload");
+  await first.mf.dispose();
+
+  const second = await setup(t, { persist: dir });
+  const host = await client(second.mf, { type: "hello", ...first.room, accountToken: first.n.token });
+  const guest = await client(second.mf, {
+    type: "hello", roomId: first.room.roomId, token: first.guestTicket.token, accountToken: first.m.token,
+  });
+  const resumed = (await host.until((m) => m.villageMarket?.own.handed)).villageMarket;
+  assert.deepEqual(resumed.ticket, order);
+  assert.equal(resumed.own.item, order.treat);
+  play(guest, "wrap", order.drink);
+  play(guest, "hand-over", order.drink);
+  await host.until((m) => m.villageMarket?.servedCustomer === order.customer && m.villageMarket?.served === 1);
 });
 
 test("sign-out revokes an active socket and a replacement login revokes the old session", async (t) => {

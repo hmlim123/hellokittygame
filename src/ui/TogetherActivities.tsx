@@ -8,9 +8,11 @@ import { LanternEvening } from "./LanternEvening";
 import { ClueTrail, ClueTrailRoute } from "./ClueTrail";
 import { PetalMatch } from "./PetalMatch";
 import { BenchTea } from "./BenchTea";
+import { VillageMarket } from "./VillageMarket";
 import { useGameStore } from "../game/store";
 import { visitTime } from "../game/visit-clock";
 import { inVillagePhotoRange } from "../../shared/village-world.mjs";
+import { atMarketSpot } from "../../shared/village-market.mjs";
 
 type SharedPhoto = Omit<PostcardMemory, "image" | "place"> & {
   png: string;
@@ -61,10 +63,16 @@ export function TogetherActivities() {
     return trail.ownShared ? "Choose a clue trail landmark" : "Read your partner’s clue";
   });
   const petalWaiting = useVisitsStore((s) => !!s.petalMatch?.partnerReady && !s.petalMatch.own);
+  const marketAvailable = useVisitsStore((s) => !!s.villageMarket);
+  const atStall = useVisitsStore((s) => {
+    const player = s.players.find((p) => p.id === s.role);
+    return !!player && atMarketSpot(player, player.id);
+  });
   const options = useRef<HTMLDetailsElement>(null);
   const cluePanel = useRef<HTMLDetailsElement>(null);
   const petalPanel = useRef<HTMLDetailsElement>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
   const sceneReady = useGameStore((s) => s.sceneReady);
   const photoPartner = useVisitsStore(villagePartner);
   const nearForPhoto = useVisitsStore((s) => {
@@ -237,6 +245,10 @@ export function TogetherActivities() {
           {clueWaiting || "Pick your petal"}
         </button>
       )}
+      {marketAvailable && atStall && !optionsOpen && (
+        <button className="activity-turn" onClick={() => setMarketOpen(true)}>Open market stall</button>
+      )}
+      {marketOpen && <VillageMarket onClose={() => setMarketOpen(false)} />}
       {busy && moment?.action === "highfive" && (
         <span className="village-social-status" role="status">
           High-five!
@@ -261,6 +273,12 @@ export function TogetherActivities() {
             </p>
           ) : (
             <>
+              {marketAvailable && (
+                <button onClick={() => {
+                  if (options.current) options.current.open = false;
+                  setMarketOpen(true);
+                }}>Little Village Market</button>
+              )}
               {benchOccupied && <p>Stand up from the bench together to dance, bake, or take a photo.</p>}
               <div className="visit-emotes">
                 <button

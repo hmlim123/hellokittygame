@@ -173,6 +173,98 @@ def play_bench_tea(host, guest, ready, back, results):
     print('PASS separate seated tea poses, readiness across refresh, synchronized cup raise and standing up',flush=True)
 
 
+def play_market(host, guest, ready, back, results):
+    def open_market(page):
+        page.bring_to_front()
+        nearby = page.get_by_role('button', name='Open market stall', exact=True)
+        if nearby.is_visible():
+            nearby.tap()
+        else:
+            activities = page.get_by_text('Activities', exact=True)
+            if not activities.locator('..').evaluate('el => el.open'):
+                activities.tap()
+            page.get_by_role('button', name='Little Village Market', exact=True).tap()
+        return page.get_by_role('dialog', name='Little Village Market', exact=True)
+
+    def hand_over(dialog, choice):
+        item = dialog.get_by_role('button', name=choice, exact=True)
+        item.tap()
+        item.and_(dialog.locator('[aria-pressed=true]')).wait_for()
+        dialog.get_by_role('button', name='Hand over my parcel', exact=True).tap()
+
+    def close(dialog):
+        dialog.get_by_role('button', name='Close Little Village Market', exact=True).tap()
+
+    for page in [host, guest]:
+        market = open_market(page)
+        assert market.get_by_role('button', name='Open the stall', exact=True).is_disabled()
+        market.get_by_role('button', name='Walk to my stall spot', exact=True).tap()
+        page.get_by_role('button', name='Open market stall', exact=True).wait_for(timeout=65000)
+    host.bring_to_front()
+    host.screenshot(path=str(results/'accounts-market-stall.png'))
+    host_market = open_market(host)
+    guest_market = open_market(guest)
+    host.bring_to_front()
+    host_market.get_by_role('button', name='Open the stall', exact=True).tap()
+    host_market.get_by_role('region', name='Your order ticket').get_by_text('peach tea', exact=True).wait_for()
+    guest_market.get_by_role('heading', name='Your stock shelf').wait_for()
+    assert guest_market.get_by_role('region', name='Your order ticket').count() == 0
+    host_market.get_by_role('button', name='Tell partner which drink to wrap').tap()
+    guest_market.get_by_role('log').get_by_text('Could you wrap the peach tea?', exact=False).wait_for()
+    hand_over(host_market, 'Strawberry shortcake')
+    guest.bring_to_front()
+    hand_over(guest_market, 'Lavender lemonade')
+    for market in [host_market, guest_market]:
+        market.get_by_text('Something was different from the order.', exact=False).wait_for()
+        assert market.get_by_text('0 of 3 orders served', exact=True).is_visible()
+
+    host.bring_to_front()
+    hand_over(host_market, 'Strawberry shortcake')
+    host_market.get_by_text('Your parcel is on the counter.', exact=False).wait_for()
+    guest.bring_to_front()
+    guest.reload()
+    ready(guest)
+    guest.get_by_text('Nancy is visiting with you. ♡', exact=True).wait_for(timeout=30000)
+    back(guest)
+    guest_market = open_market(guest)
+    guest_market.get_by_text('Your partner’s parcel is on the counter.', exact=True).wait_for()
+    hand_over(guest_market, 'Peach tea')
+    host_market.get_by_text('1 of 3 orders served', exact=True).wait_for()
+    guest_market.get_by_role('button', name='Next customer', exact=True).tap()
+    guest_market.get_by_role('region', name='Your order ticket').get_by_text('lavender lemonade', exact=True).wait_for()
+    host_market.get_by_role('heading', name='Your stock shelf').wait_for()
+    guest_market.get_by_role('textbox', name='Message at the market').fill('Lavender lemonade, please!')
+    guest_market.get_by_role('button', name='Send', exact=True).tap()
+    host_market.get_by_role('log').get_by_text('Lavender lemonade, please!', exact=False).wait_for()
+    hand_over(guest_market, 'Honey bun')
+    host.bring_to_front()
+    hand_over(host_market, 'Lavender lemonade')
+    host_market.get_by_text('2 of 3 orders served', exact=True).wait_for()
+    host_market.get_by_role('button', name='Next customer', exact=True).tap()
+    host_market.get_by_role('region', name='Your order ticket').get_by_text('strawberry milk', exact=True).wait_for()
+    host.screenshot(path=str(results/'accounts-market-ticket.png'))
+    hand_over(host_market, 'Butter cookie')
+    guest.bring_to_front()
+    hand_over(guest_market, 'Strawberry milk')
+    images = []
+    for page, market in [(host, host_market), (guest, guest_market)]:
+        page.bring_to_front()
+        market.get_by_text('3 of 3 orders served', exact=True).wait_for()
+        with page.expect_download() as result:
+            market.get_by_role('link', name='Download market keepsake').tap()
+        download = result.value
+        assert download.suggested_filename == 'little-village-market-1.png'
+        images.append(Path(download.path()).read_bytes())
+    assert images[0] == images[1] and images[0].startswith(b'\x89PNG')
+    guest_market.get_by_role('button', name='Start another shift', exact=True).tap()
+    guest_market.get_by_role('region', name='Your order ticket').get_by_text('warm cocoa', exact=True).wait_for()
+    assert host_market.get_by_role('link', name='Download market keepsake').is_visible()
+    for page, market in [(host, host_market), (guest, guest_market)]:
+        page.bring_to_front()
+        close(market)
+    print('PASS three market orders, private ticket and stock, chat, correction, refresh, job swaps and both keepsake downloads',flush=True)
+
+
 ROOT=Path(__file__).resolve().parent.parent
 BASE=os.environ.get('KITTY_BASE_URL','http://127.0.0.1:8081').rstrip('/')
 with socket.socket() as probe:
@@ -612,6 +704,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             print('PASS each partner lights their chosen lantern, both render and share the same sunset',flush=True)
             play_minigames(host, guest, ready, back, results)
             play_bench_tea(host, guest, ready, back, results)
+            play_market(host, guest, ready, back, results)
             guest.keyboard.down('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)>.5",timeout=20000)
             guest.keyboard.up('ArrowRight')

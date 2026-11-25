@@ -13,6 +13,7 @@ import { normalizeLanternEvening, type LanternEvening, type LanternColor } from 
 import type { ClueTrailView } from "../../shared/clue-trail.mjs";
 import type { Petal, PetalMatchView } from "../../shared/petal-match.mjs";
 import { restoreBenchTea, type BenchTea } from "../../shared/bench-tea.mjs";
+import type { MarketAction, MarketItem, VillageMarketView } from "../../shared/village-market.mjs";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
@@ -78,6 +79,8 @@ interface Visits {
   petalMatchAction(action: "start" | "pick", choice?: Petal): void;
   benchTea: BenchTea | null;
   benchTeaAction(action: "sit" | "stand" | "ready"): void;
+  villageMarket: VillageMarketView | null;
+  marketAction(action: MarketAction, item?: MarketItem): void;
   lanternAction(action: "choose" | "light" | "reset", color?: LanternColor): void;
   postcardWalkAction(action: "choose" | "stamp" | "reset", stop?: string): void;
   error: string;
@@ -272,7 +275,7 @@ function connect(server: string, hello: object) {
         server,
         role: m.role,
         roomId: m.roomId,
-        ...(rejoining ? {} : { clueTrail: null, petalMatch: null, benchTea: null }),
+        ...(rejoining ? {} : { clueTrail: null, petalMatch: null, benchTea: null, villageMarket: null }),
         error: "",
         link:
           m.role === "host" && m.invite
@@ -404,6 +407,11 @@ function connect(server: string, hello: object) {
           ? previous.benchTea
           : restoreBenchTea(m.benchTea)
         : null;
+      const villageMarket = Number.isSafeInteger(m.villageMarket?.revision) && Array.isArray(m.villageMarket.choices)
+        ? sameRoom && previous.villageMarket?.revision === m.villageMarket.revision
+          ? previous.villageMarket
+          : m.villageMarket
+        : null;
       useVisitsStore.setState({
         together:
           m.together &&
@@ -437,6 +445,7 @@ function connect(server: string, hello: object) {
         clueTrail,
         petalMatch,
         benchTea,
+        villageMarket,
       });
       if (useVisitsStore.getState().role === "host") {
         const game = useGameStore.getState(),
@@ -564,6 +573,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   clueTrail: null,
   petalMatch: null,
   benchTea: null,
+  villageMarket: null,
   error: "",
   configure(input) {
     const server = visitServerUrl(input);
@@ -650,6 +660,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       clueTrail: null,
       petalMatch: null,
       benchTea: null,
+      villageMarket: null,
       roomId: null,
       invitation: null,
     });
@@ -725,6 +736,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       clueTrail: null,
       petalMatch: null,
       benchTea: null,
+      villageMarket: null,
       link: "",
       server: invite.server,
     });
@@ -788,6 +800,12 @@ export const useVisitsStore = create<Visits>((set, get) => ({
     const { status, benchTea } = get();
     if (status === "online" && benchTea)
       transmit({ type: "bench-tea", action, toastAt: benchTea.toastAt });
+  },
+  marketAction(action, item) {
+    const { status, villageMarket } = get();
+    if (status !== "online" || !villageMarket) return;
+    const { shift, served, attempt } = villageMarket;
+    transmit({ type: "village-market", action, shift, served, attempt, item });
   },
 }));
 export function useVisitLifecycle() {

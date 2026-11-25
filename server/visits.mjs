@@ -3,6 +3,7 @@ import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.
 import { clueTrailView, newClueTrail, restoreClueTrail } from "../shared/clue-trail.mjs";
 import { newPetalMatch, petalMatchView, restorePetalMatch } from "../shared/petal-match.mjs";
 import { newBenchTea, restoreBenchTea, standAtTeaBench } from "../shared/bench-tea.mjs";
+import { newVillageMarket, restoreVillageMarket, villageMarketView } from "../shared/village-market.mjs";
 import { actor, appearance, text, yaw } from "../shared/visit-actors.mjs";
 import { applyVisitAction, restoreTogetherMoment } from "../shared/visit-actions.mjs";
 import { createServer } from "node:http";
@@ -80,9 +81,11 @@ export function createVisitService({
     const state = snapshot(room);
     const trail = room.clueTrail ?? newClueTrail();
     const match = room.petalMatch ?? newPetalMatch();
+    const market = room.villageMarket ?? newVillageMarket();
     for (const a of [room.host, room.guest]) {
       if (a) send(a.socket, {
         ...state, clueTrail: clueTrailView(trail, a.id), petalMatch: petalMatchView(match, a.id),
+        villageMarket: villageMarketView(market, a.id),
       });
     }
   };
@@ -166,6 +169,7 @@ export function createVisitService({
           clueTrail: restoreClueTrail(r.clueTrail),
           petalMatch: restorePetalMatch(r.petalMatch),
           benchTea: restoreBenchTea(r.benchTea),
+          villageMarket: restoreVillageMarket(r.villageMarket),
         });
       }
     } catch (e) {
@@ -517,6 +521,8 @@ export function createVisitService({
               room.petalMatch = newPetalMatch(0, room.petalMatch.revision + 1);
             if (room.benchTea)
               room.benchTea = standAtTeaBench(room.benchTea, "guest");
+            if (room.villageMarket?.shift)
+              room.villageMarket = newVillageMarket(0, room.villageMarket.revision + 1);
           }
           secret = token();
           room.guestHash = hash(secret);
