@@ -290,6 +290,7 @@ function connect(server: string, hello: object) {
       if (m.role === "host")
         game.saveVillagePosition(m.you.x, m.you.z, m.you.yaw);
       useVillageMotion.setState({
+        marketPanel: rejoining ? previousMotion.marketPanel : "closed",
         position: { x: m.you.x, z: m.you.z },
         yaw: m.you.yaw,
         relocate: { x: m.you.x, z: m.you.z, yaw: m.you.yaw },
@@ -488,7 +489,7 @@ function connect(server: string, hello: object) {
       stopTransport();
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false, picnic: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false, marketPanel: "closed" });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -539,7 +540,7 @@ function connect(server: string, hello: object) {
     } else {
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false, picnic: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false, marketPanel: "closed" });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -750,7 +751,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   },
   leave() {
     restorePersonalSave();
-    useVillageMotion.setState({ guestVisit: false, picnic: false });
+    useVillageMotion.setState({ guestVisit: false, picnic: false, marketPanel: "closed" });
     transmit({ type: get().role === "host" ? "end" : "leave" });
     stopTransport();
     rememberTicket(null);
@@ -804,8 +805,8 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   marketAction(action, item) {
     const { status, villageMarket } = get();
     if (status !== "online" || !villageMarket) return;
-    const { shift, served, attempt } = villageMarket;
-    transmit({ type: "village-market", action, shift, served, attempt, item });
+    const { shift, served, attempt, inviteSerial } = villageMarket;
+    transmit({ type: "village-market", action, shift, served, attempt, inviteSerial, item });
   },
 }));
 export function useVisitLifecycle() {

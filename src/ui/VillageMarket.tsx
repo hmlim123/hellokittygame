@@ -1,12 +1,44 @@
-import { useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  atMarketSpot, MARKET_ITEMS, MARKET_ORDERS_PER_SHIFT, marketSpot, type VillageMarketView,
+  atMarketSpot, MARKET_ITEMS, MARKET_ORDERS_PER_SHIFT, type VillageMarketView,
 } from "../../shared/village-market.mjs";
 import { useGameStore } from "../game/store";
-import { useVillageMotion } from "../game/village-motion";
+import { useVillageMotion, walkToMarket } from "../game/village-motion";
 import { useVisitsStore, villagePartner } from "../game/visits";
-import { Dialog } from "./Dialog";
+
+export function MarketInvitation() {
+  const market = useVisitsStore((s) => s.villageMarket);
+  const role = useVisitsStore((s) => s.role);
+  const online = useVisitsStore((s) => s.status === "online");
+  const partner = useVisitsStore(villagePartner);
+  const ready = useGameStore((s) => s.sceneReady);
+  const approaching = useVillageMotion((s) => s.marketPanel === "approaching");
+  if (approaching || !role || !market?.invitedBy || market.invitedBy === role || !partner) return null;
+  const act = useVisitsStore.getState().marketAction;
+
+  return (
+    <div className="market-invitation" role="group" aria-label="Market invitation">
+      <span role="status">{partner.name} invited you to the market.</span>
+      <button disabled={!online || !ready} onClick={() => walkToMarket(role)}>Join the market</button>
+      <button disabled={!online} onClick={() => act("answer-invite")}>Not now</button>
+    </div>
+  );
+}
+
+function InviteToMarket() {
+  const market = useVisitsStore((s) => s.villageMarket);
+  const role = useVisitsStore((s) => s.role);
+  const online = useVisitsStore((s) => s.status === "online");
+  const partner = useVisitsStore(villagePartner);
+  if (market?.inviteSerial === undefined || !role || !partner || atMarketSpot(partner, partner.id)) return null;
+  if (market.invitedBy === role) return <p role="status">Market invitation sent to {partner.name}.</p>;
+  if (market.invitedBy) return null;
+  return (
+    <button disabled={!online} onClick={() => useVisitsStore.getState().marketAction("invite")}>
+      Invite to the market
+    </button>
+  );
+}
 
 function marketKeepsake(shift: number) {
   const canvas = document.createElement("canvas");
@@ -48,21 +80,25 @@ function marketKeepsake(shift: number) {
 function StallChat({ online, ticket }: { online: boolean; ticket: VillageMarketView["ticket"] }) {
   const messages = useVisitsStore((s) => s.chat);
   const [line, setLine] = useState("");
+  const [expanded, setExpanded] = useState(false);
   const send = useVisitsStore.getState().sendChat;
   const request = ticket ? `Could you wrap the ${MARKET_ITEMS[ticket.drink].name.toLowerCase()}?` : "";
   return (
     <section className="market-chat" aria-label="Chat at the stall">
-      {request && (
-        <button disabled={!online || messages.at(-1)?.text === request} onClick={() => send(request)}>
-          Tell partner which drink to wrap
-        </button>
-      )}
+      <div className="market-chat-actions">
+        {request && (
+          <button disabled={!online || messages.at(-1)?.text === request} onClick={() => send(request)}>
+            Tell partner which drink to wrap
+          </button>
+        )}
+        <button aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>Stall chat</button>
+      </div>
       <div role="log" aria-label="Market chat messages" aria-live="polite">
-        {messages.slice(-3).map((message) => (
+        {messages.slice(expanded ? -4 : -1).map((message) => (
           <p key={message.id}><strong>{message.name}</strong> {message.text}</p>
         ))}
       </div>
-      <form className="visit-chat-form" onSubmit={(event) => {
+      {expanded && <form className="visit-chat-form" onSubmit={(event) => {
         event.preventDefault();
         if (!online || !line.trim()) return;
         send(line);
@@ -71,7 +107,7 @@ function StallChat({ online, ticket }: { online: boolean; ticket: VillageMarketV
         <input aria-label="Message at the market" value={line} maxLength={240} disabled={!online}
           placeholder="Message your partner" onChange={(event) => setLine(event.target.value)} />
         <button disabled={!online || !line.trim()}>Send</button>
-      </form>
+      </form>}
     </section>
   );
 }
@@ -82,6 +118,7 @@ function MarketOrder({ market, canServe }: { market: VillageMarketView; canServe
   return (
     <>
       <section className="market-ticket" aria-label={market.reader ? "Your order ticket" : "Your stock shelf"}>
+        {market.specialOrder && <p className="market-special">Market special</p>}
         <h3>{market.reader ? `${market.customer}’s order ticket` : "Your stock shelf"}</h3>
         <p>{ticket ? (
           <>Wrap the <strong>{MARKET_ITEMS[ticket.treat].name.toLowerCase()}</strong>. Ask your partner for the <strong>{MARKET_ITEMS[ticket.drink].name.toLowerCase()}</strong>.</>
@@ -109,6 +146,7 @@ export function VillageMarket({ onClose }: { onClose: () => void }) {
   const market = useVisitsStore((s) => s.villageMarket);
   const role = useVisitsStore((s) => s.role);
   const online = useVisitsStore((s) => s.status === "online");
+  const error = useVisitsStore((s) => s.error);
   const ready = useGameStore((s) => s.sceneReady);
   const partner = useVisitsStore(villagePartner);
   const atStall = useVisitsStore((s) => {
@@ -118,27 +156,36 @@ export function VillageMarket({ onClose }: { onClose: () => void }) {
   const bothAtStall = online && atStall && !!partner && atMarketSpot(partner, partner.id);
   const completed = market?.completedShifts ?? 0;
   const keepsake = useMemo(() => completed ? marketKeepsake(completed) : undefined, [completed]);
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => panel.current?.focus({ preventScroll: true }), []);
   if (!market || !role) return null;
   const act = useVisitsStore.getState().marketAction;
   const closed = market.served === MARKET_ORDERS_PER_SHIFT;
 
-  return createPortal(
-    <Dialog title="Little Village Market" className="market-dialog" onClose={onClose}>
-      <h2>Little Village Market</h2>
-      {market.shift > 0 && (
-        <p className="market-order-count" aria-live="polite">
-          {market.served} of {MARKET_ORDERS_PER_SHIFT} orders served
-        </p>
-      )}
+  return (
+    <section className="market-workbench" data-at-stall={atStall} aria-label="Little Village Market"
+      ref={panel} tabIndex={-1} onKeyDown={(event) => {
+        if (event.key === "Escape") { event.stopPropagation(); onClose(); }
+      }}>
+      <div className="market-heading">
+        <div>
+          <h2>Little Village Market</h2>
+          {market.shift > 0 && <p className="market-order-count" aria-live="polite">
+            {market.served} of {MARKET_ORDERS_PER_SHIFT} orders served
+          </p>}
+        </div>
+        <button aria-label="Close Little Village Market" onClick={onClose}>Done</button>
+      </div>
+      <MarketInvitation />
       {!atStall && (
-        <button className="primary wide" disabled={!online || !ready} onClick={() => {
-          onClose();
-          useVillageMotion.getState().walkTo(marketSpot(role));
-        }}>Walk to my stall spot</button>
+        <button className="primary" disabled={!online || !ready} onClick={() => walkToMarket(role)}>
+          Walk to my stall spot
+        </button>
       )}
+      {!bothAtStall && <InviteToMarket />}
       {!market.shift ? (
         <>
-          <p>One of you reads the order ticket while the other checks the stock. Wrap a parcel each and send them over together.</p>
+          <p>Read the order or check the stock, then hand over one parcel each.</p>
           <button className="primary wide" disabled={!bothAtStall} onClick={() => act("start")}>Open the stall</button>
         </>
       ) : closed ? (
@@ -154,8 +201,8 @@ export function VillageMarket({ onClose }: { onClose: () => void }) {
       ) : <MarketOrder market={market} canServe={bothAtStall} />}
       {atStall && !bothAtStall && <p className="market-feedback" role="status">Waiting for your partner at the stall.</p>}
       {keepsake && <a className="market-keepsake" href={keepsake} download={`little-village-market-${completed}.png`}>Download market keepsake</a>}
-      <StallChat online={online && !!partner} ticket={market.ticket} />
-    </Dialog>,
-    document.body,
+      {error && <p className="market-feedback" role="status">{error}</p>}
+      {atStall && market.shift > 0 && <StallChat online={online && !!partner} ticket={market.ticket} />}
+    </section>
   );
 }

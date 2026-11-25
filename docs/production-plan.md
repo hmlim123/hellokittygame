@@ -127,6 +127,11 @@ keepsake to download. The Worker sends the order ticket only to its reader and
 keeps the active round and packed parcels through a refresh. A wrong order gives
 both players another try. [Meeting plan and verification](melody-meeting-plan.md#little-village-market-verification--november-25-2026)
 
+The next market draft adds a partner invitation, a scene-side workbench, and
+shared wrapping and handoff animation. The third order rotates among six
+specials while active shifts and their keepsakes stay usable.
+[Market stall improvements](melody-meeting-plan.md#market-stall-improvements--november-25-2026)
+
 ## iPhone village canvas stability · v3.7.2
 
 An iPhone report identified flicker during walking and scrolling. The live

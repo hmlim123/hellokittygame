@@ -169,6 +169,24 @@ The full Chromium visit passed through the previous activities, market, both
 personal saves, sign-out, and rejoin. The draft client joined the published
 Worker and played a picnic with the market control hidden.
 
+## Market stall improvements · November 25, 2026
+
+Open **Activities → Little Village Market** and choose **Invite to the market**.
+Your partner can join from the village controls or choose **Not now**. Joining
+sets a walking route to their spot and opens the workbench on arrival. An
+unanswered invitation stays available through a refresh.
+
+The workbench keeps the village in view. One player gets the order ticket and
+the other gets the stock shelf. Both see the wrapping, the parcel landing on
+the counter, and the customer collecting the order. A mix-up returns the
+parcels so the pair can try again. Stall chat and the one-tap drink request stay
+beside the order controls.
+
+Each new shift ends with a special from six treat-and-drink combinations. The
+next shift draws a different special. An order already under way keeps its
+recipe if either player refreshes or the Worker is updated. Each completed
+shift still gives both players the same downloadable keepsake.
+
 ## Ready for Nancy and Melody
 
 - Both accounts join the same invite-only village with the correct Blender

@@ -173,8 +173,13 @@ def play_bench_tea(host, guest, ready, back, results):
 
 
 def play_market(host, guest, ready, back, results):
+    def workbench(page):
+        return page.get_by_role('region', name='Little Village Market', exact=True)
+
     def open_market(page):
         page.bring_to_front()
+        if workbench(page).is_visible():
+            return workbench(page)
         nearby = page.get_by_role('button', name='Open market stall', exact=True)
         if nearby.is_visible():
             nearby.tap()
@@ -183,27 +188,56 @@ def play_market(host, guest, ready, back, results):
             if not activities.locator('..').evaluate('el => el.open'):
                 activities.tap()
             page.get_by_role('button', name='Little Village Market', exact=True).tap()
-        return page.get_by_role('dialog', name='Little Village Market', exact=True)
+        return workbench(page)
 
-    def hand_over(dialog, choice):
-        item = dialog.get_by_role('button', name=choice, exact=True)
+    def hand_over(market, choice):
+        item = market.get_by_role('button', name=choice, exact=True)
         item.tap()
-        item.and_(dialog.locator('[aria-pressed=true]')).wait_for()
-        dialog.get_by_role('button', name='Hand over my parcel', exact=True).tap()
+        item.and_(market.locator('[aria-pressed=true]')).wait_for()
+        market.get_by_role('button', name='Hand over my parcel', exact=True).tap()
 
-    def close(dialog):
-        dialog.get_by_role('button', name='Close Little Village Market', exact=True).tap()
+    def watch_parcels(page):
+        page.evaluate("""() => {
+            const canvas = document.querySelector('#world canvas');
+            window.marketParcelPhases = new Set();
+            new MutationObserver(() => {
+                marketParcelPhases.add(canvas.dataset.hostMarketParcel);
+                marketParcelPhases.add(canvas.dataset.guestMarketParcel);
+            }).observe(canvas, {attributes:true, attributeFilter:['data-host-market-parcel', 'data-guest-market-parcel']});
+        }""")
 
-    for page in [host, guest]:
-        market = open_market(page)
-        assert market.get_by_role('button', name='Open the stall', exact=True).is_disabled()
-        market.get_by_role('button', name='Walk to my stall spot', exact=True).tap()
-        page.get_by_role('button', name='Open market stall', exact=True).wait_for(timeout=65000)
-    host.bring_to_front()
-    host.screenshot(path=str(results/'accounts-market-stall.png'))
     host_market = open_market(host)
-    guest_market = open_market(guest)
+    guest_market = workbench(guest)
+    assert host_market.get_by_role('button', name='Open the stall', exact=True).is_disabled()
+    invite = host_market.get_by_role('button', name='Invite to the market', exact=True)
+    invite.tap()
+    host_market.get_by_text('Market invitation sent to My Melody.', exact=True).wait_for()
+    guest.bring_to_front()
+    invitation = guest.get_by_role('group', name='Market invitation', exact=True)
+    invitation.get_by_text('Nancy invited you to the market.', exact=True).wait_for()
+    invitation.get_by_role('button', name='Not now', exact=True).tap()
+    invitation.wait_for(state='hidden')
     host.bring_to_front()
+    invite.tap()
+    guest.bring_to_front()
+    invitation.get_by_text('Nancy invited you to the market.', exact=True).wait_for()
+    guest.reload()
+    ready(guest)
+    guest.get_by_text('Nancy is visiting with you. ♡', exact=True).wait_for(timeout=30000)
+    back(guest)
+    invitation.get_by_role('button', name='Join the market', exact=True).tap()
+    guest_market.wait_for(timeout=65000)
+    assert guest_market.get_attribute('data-at-stall') == 'true'
+    host.bring_to_front()
+    host_market.get_by_role('button', name='Walk to my stall spot', exact=True).tap()
+    host_market.and_(host.locator('[data-at-stall=true]')).wait_for(timeout=65000)
+    assert host.get_by_role('dialog', name='Little Village Market').count() == 0
+    assert host.locator('#world canvas').is_visible()
+    for page in [host, guest]:
+        page.wait_for_function("document.querySelector('#world canvas').dataset.marketFocus === 'true'")
+        watch_parcels(page)
+    host.screenshot(path=str(results/'accounts-market-stall.png'))
+    print('PASS invitations survive a refresh, can be declined or accepted, and open the workbench on arrival',flush=True)
     host_market.get_by_role('button', name='Open the stall', exact=True).tap()
     host_market.get_by_role('region', name='Your order ticket').get_by_text('peach tea', exact=True).wait_for()
     guest_market.get_by_role('heading', name='Your stock shelf').wait_for()
@@ -227,11 +261,15 @@ def play_market(host, guest, ready, back, results):
     back(guest)
     guest_market = open_market(guest)
     guest_market.get_by_text('Your partner’s parcel is on the counter.', exact=True).wait_for()
+    guest.wait_for_function("document.querySelector('#world canvas').dataset.hostMarketParcel === 'counter'")
+    watch_parcels(guest)
     hand_over(guest_market, 'Peach tea')
     host_market.get_by_text('1 of 3 orders served', exact=True).wait_for()
+    guest.wait_for_function("marketParcelPhases.has('collected')",timeout=15000)
     guest_market.get_by_role('button', name='Next customer', exact=True).tap()
     guest_market.get_by_role('region', name='Your order ticket').get_by_text('lavender lemonade', exact=True).wait_for()
     host_market.get_by_role('heading', name='Your stock shelf').wait_for()
+    guest_market.get_by_role('button', name='Stall chat', exact=True).tap()
     guest_market.get_by_role('textbox', name='Message at the market').fill('Lavender lemonade, please!')
     guest_market.get_by_role('button', name='Send', exact=True).tap()
     host_market.get_by_role('log').get_by_text('Lavender lemonade, please!', exact=False).wait_for()
@@ -240,11 +278,14 @@ def play_market(host, guest, ready, back, results):
     hand_over(host_market, 'Lavender lemonade')
     host_market.get_by_text('2 of 3 orders served', exact=True).wait_for()
     host_market.get_by_role('button', name='Next customer', exact=True).tap()
-    host_market.get_by_role('region', name='Your order ticket').get_by_text('strawberry milk', exact=True).wait_for()
+    special = host_market.get_by_role('region', name='Your order ticket')
+    special.get_by_text('Market special', exact=True).wait_for()
+    guest_market.get_by_role('region', name='Your stock shelf').get_by_text('Market special', exact=True).wait_for()
+    treat, drink = [text.capitalize() for text in special.locator('strong').all_inner_texts()]
     host.screenshot(path=str(results/'accounts-market-ticket.png'))
-    hand_over(host_market, 'Butter cookie')
+    hand_over(host_market, treat)
     guest.bring_to_front()
-    hand_over(guest_market, 'Strawberry milk')
+    hand_over(guest_market, drink)
     images = []
     for page, market in [(host, host_market), (guest, guest_market)]:
         page.bring_to_front()
@@ -260,8 +301,9 @@ def play_market(host, guest, ready, back, results):
     assert host_market.get_by_role('link', name='Download market keepsake').is_visible()
     for page, market in [(host, host_market), (guest, guest_market)]:
         page.bring_to_front()
-        close(market)
+        market.get_by_role('button', name='Close Little Village Market', exact=True).tap()
     print('PASS three market orders, private ticket and stock, chat, correction, refresh, job swaps and both keepsake downloads',flush=True)
+    print('PASS the stall view showed the parcel on the counter after a refresh and the customer collecting it',flush=True)
 
 
 ROOT=Path(__file__).resolve().parent.parent
