@@ -198,3 +198,18 @@ export function disposeMelody(hero: THREE.Group) {
         material.dispose();
   });
 }
+
+export function melodyBenchClips(hero: THREE.Group) {
+  // Controllers are relative to the same additive pivots used for walking.
+  const root = new THREE.VectorKeyframeTrack("CTRL_Root.position", [0], [0, 0.94, 0]);
+  const footTilt = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.3);
+  const feet = ["L", "R"].flatMap((side) => [
+    new THREE.VectorKeyframeTrack(`CTRL_Foot_${side}.position`, [0], [0, -0.16, 0.42]),
+    new THREE.QuaternionKeyframeTrack(`CTRL_Foot_${side}.quaternion`, [0], footTilt.toArray()),
+  ]);
+  const sip = hero.userData.melody.actions.sip.getClip() as THREE.AnimationClip;
+  return {
+    rest: new THREE.AnimationClip("benchIdle", 1, [root, ...feet]),
+    toast: new THREE.AnimationClip("benchToast", sip.duration, [root, ...feet, ...sip.tracks]),
+  };
+}

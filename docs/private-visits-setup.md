@@ -155,8 +155,8 @@ The browser test starts the actual local Cloudflare runtime with temporary SQLit
 storage and two independent phone-sized browser contexts. It covers signup,
 Kitty/My Melody, chat, dance, movement, quiet idle traffic, refresh reconnection,
 sign-out, incorrect passwords and preservation of the visitor’s original save.
-It also checks private clues, landmark guesses, ribbon collection, and hidden
-flower choices across refresh and replay.
+It also checks private clues, landmark guesses, ribbon collection, hidden
+flower choices, and synchronized seated tea after a refresh.
 Worker checks also exercise identity forgery, third-client rejection, shared
 picnic rules, malformed input, revocation and full runtime restart recovery.
 Physical iPhone/Android and Mac Safari verification remains separate.
@@ -190,6 +190,6 @@ No new secret or account initialization is required. On the updated service,
 an authenticated `GET /account` reports `togetherAvailable: true`. The game uses
 this flag to enable **Meet together**. Room snapshots enable shared reactions,
 baking, weather, and photos. Postcard Walk, Lantern Evening, Village Clue Trail,
-and Petal Match appear when the Worker sends the state for each activity.
+Petal Match, and Bench Tea appear when the Worker sends the state for each activity.
 Older services keep their existing activities available.
 A successful GitHub Pages deployment publishes only the client, not this Worker.

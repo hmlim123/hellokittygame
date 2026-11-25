@@ -7,6 +7,7 @@ import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
 import { LanternEvening } from "./LanternEvening";
 import { ClueTrail, ClueTrailRoute } from "./ClueTrail";
 import { PetalMatch } from "./PetalMatch";
+import { BenchTea } from "./BenchTea";
 import { useGameStore } from "../game/store";
 import { visitTime } from "../game/visit-clock";
 import { inVillagePhotoRange } from "../../shared/village-world.mjs";
@@ -53,6 +54,7 @@ export function TogetherActivities() {
     [photo, setPhoto] = useState<SharedPhoto | null>(null),
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
+  const benchOccupied = useVisitsStore((s) => !!(s.benchTea?.seated.host || s.benchTea?.seated.guest));
   const clueWaiting = useVisitsStore((s) => {
     const trail = s.clueTrail;
     if (!trail?.partnerShared || trail.destination || trail.ownGuess) return null;
@@ -209,7 +211,7 @@ export function TogetherActivities() {
     <section className="together-activities" aria-label="Time together">
       <div className="village-social-buttons">
         <button
-          disabled={disabled || busy || !available}
+          disabled={disabled || busy || !available || benchOccupied}
           aria-label="Dance together"
           onClick={() => action("celebrate")}
         >
@@ -221,7 +223,7 @@ export function TogetherActivities() {
           </button>
         )}
       </div>
-      {nextBakingAction && available && !busy && (
+      {nextBakingAction && available && !busy && !benchOccupied && (
         <button
           className="baking-turn"
           disabled={disabled}
@@ -259,15 +261,16 @@ export function TogetherActivities() {
             </p>
           ) : (
             <>
+              {benchOccupied && <p>Stand up from the bench together to dance, bake, or take a photo.</p>}
               <div className="visit-emotes">
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || benchOccupied}
                   onClick={() => action("wave")}
                 >
                   Wave together
                 </button>
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || benchOccupied}
                   onClick={() => action("highfive")}
                 >
                   High-five ♡
@@ -286,6 +289,7 @@ export function TogetherActivities() {
                   disabled={
                     disabled ||
                     busy ||
+                    benchOccupied ||
                     role !== "host" ||
                     (!!moment && moment.baking !== "mix")
                   }
@@ -297,6 +301,7 @@ export function TogetherActivities() {
                   disabled={
                     disabled ||
                     busy ||
+                    benchOccupied ||
                     role !== "guest" ||
                     moment?.baking !== "decorate"
                   }
@@ -308,6 +313,7 @@ export function TogetherActivities() {
                   disabled={
                     disabled ||
                     busy ||
+                    benchOccupied ||
                     role !== "host" ||
                     moment?.baking !== "ready"
                   }
@@ -320,7 +326,7 @@ export function TogetherActivities() {
                 <summary>A photo together</summary>
                 {!nearForPhoto && photoPartner && (
                   <button
-                    disabled={disabled || busy || !sceneReady}
+                    disabled={disabled || busy || !sceneReady || benchOccupied}
                     onClick={() => walkToVillageCompanion(photoPartner)}
                   >
                     Walk to {photoPartner.name} for the photo
@@ -340,7 +346,7 @@ export function TogetherActivities() {
                   </select>
                 </label>
                 <button
-                  disabled={disabled || busy || !nearForPhoto}
+                  disabled={disabled || busy || !nearForPhoto || benchOccupied}
                   onClick={() => action("photo")}
                 >
                   Take our photo
@@ -362,6 +368,7 @@ export function TogetherActivities() {
               <LanternEvening />
               <ClueTrail panelRef={cluePanel} />
               <PetalMatch panelRef={petalPanel} />
+              <BenchTea busy={busy} />
               <label>
                 Our atmosphere{" "}
                 <select

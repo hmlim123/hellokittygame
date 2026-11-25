@@ -36,6 +36,7 @@ import { GroundShadow } from "./GroundShadow";
 import { VillageSpeech } from "./VillageSpeech";
 import { VillageLanterns } from "./VillageLanterns";
 import { VillageClueRibbons } from "./VillageClueRibbons";
+import { TEA_BENCH, teaBenchSeat } from "../../shared/bench-tea.mjs";
 import { togetherDuration, togetherElapsed, villagePhoto } from "../game/village-together";
 
 function Blob({
@@ -453,6 +454,35 @@ function PicnicTable() {
     </group>
   );
 }
+
+function VillageTeaBench() {
+  const available = useVisitsStore((s) => !!s.role && !!s.benchTea);
+  if (!available) return null;
+  return (
+    <group position={[TEA_BENCH.x, 0, TEA_BENCH.z]}>
+      <RoundedBox args={[3.05, 0.13, 0.87]} radius={0.055} position={[0, 0.55, -0.08]}>
+        <meshStandardMaterial color="#e5bd9f" />
+      </RoundedBox>
+      {[0.83, 1.07].map((y) => (
+        <RoundedBox key={y} args={[3.05, 0.16, 0.11]} radius={0.045} position={[0, y, -0.47]}>
+          <meshStandardMaterial color="#e2ad9b" />
+        </RoundedBox>
+      ))}
+      {[-1.31, 1.31].map((x) => (
+        <group key={x} position={[x, 0, 0]}>
+          <mesh position={[0, 0.57, -0.43]}>
+            <boxGeometry args={[0.115, 1.14, 0.14]} />
+            <meshStandardMaterial color="#b58c78" />
+          </mesh>
+          <mesh position={[0, 0.27, 0.22]}>
+            <boxGeometry args={[0.115, 0.54, 0.14]} />
+            <meshStandardMaterial color="#b58c78" />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
 function Landscape() {
   return (
     <>
@@ -508,6 +538,7 @@ function Landscape() {
       <Neighbour id="momo" />
       <Neighbour id="pip" />
       <PicnicTable />
+      <VillageTeaBench />
       <RigidBody type="fixed" colliders={false}>
         {VILLAGE_OBSTACLES.map((o, i) => (
           <CuboidCollider
@@ -537,6 +568,9 @@ function Player() {
     (s) => s.players.find((p) => p.id === s.role)?.character,
   );
   const ownRole = useVisitsStore(s => s.role);
+  const benchRole = useVisitsStore((s) => s.role && s.benchTea?.seated[s.role] ? s.role : undefined);
+  const onRoute = useVillageMotion((s) => s.path.length > 0);
+  const seatedRole = onRoute ? undefined : benchRole;
   const sharedRole = useVisitsStore(s => s.togetherAvailable &&
     s.players.some(p => p.id !== s.role && p.connected) ? s.role : null);
   const equipment = useGameStore((s) => s.equipment),
@@ -591,6 +625,10 @@ function Player() {
     const visit = useVisitsStore.getState();
     const moment = visit.together;
     const elapsed = moment && visit.role ? togetherElapsed(moment, visit.clockOffset) : Infinity;
+    if (visit.role && visit.benchTea?.seated[visit.role] && !m.path.length) {
+      locomotion.current.speed = 0;
+      return;
+    }
     if (m.picnic && !m.path.length) {
       const seat = villagePicnicSeat(m.guestVisit);
       // A late movement correction can arrive after we opened the picnic.
@@ -647,8 +685,8 @@ function Player() {
     const game = useGameStore.getState();
     const motion = useVillageMotion.getState();
     const seated = motion.picnic && !motion.path.length;
-    if (seated) yaw.current = 0;
-    if (game.panel || game.dialogue || seated)
+    if (seated || seatedRole) yaw.current = 0;
+    if (game.panel || game.dialogue || seated || seatedRole)
       locomotion.current.speed = 0;
     const p = latest.current;
     villageRender.x = p.x;
@@ -672,13 +710,16 @@ function Player() {
       pending.current = null;
       actInVillage(action);
     }
-    if (anchor.current)
+    if (anchor.current) {
+      const benchSpot = seatedRole && teaBenchSeat(seatedRole);
+      anchor.current.position.set(benchSpot ? benchSpot.x - p.x : 0, 0, benchSpot ? benchSpot.z - p.z : 0);
       anchor.current.rotation.y = turnToward(
         anchor.current.rotation.y,
         yaw.current,
         dt,
         reduced,
       );
+    }
     const visit = useVisitsStore.getState();
     const moment = visit.together;
     const photoPartner = moment?.action === "photo" &&
@@ -687,9 +728,11 @@ function Player() {
       : undefined;
     const target = photoPartner
       ? new THREE.Vector3((p.x + photoPartner.x) / 2, 0.9, (p.z + photoPartner.z) / 2)
-      : motion.picnic
-        ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
-        : new THREE.Vector3(p.x, 0.9, p.z);
+      : seatedRole
+        ? new THREE.Vector3(TEA_BENCH.x, 1.02, TEA_BENCH.z + 0.12)
+        : motion.picnic
+          ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
+          : new THREE.Vector3(p.x, 0.9, p.z);
     follow.current.lerp(
       target,
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 8),
@@ -725,26 +768,27 @@ function Player() {
       <group ref={anchor} rotation={[0, spawn.yaw, 0]}>
         <Suspense fallback={null}>
           {playerCharacter === "melody" ? (
-            <Melody locomotion={locomotion} holdingCup={picnic} villageRole={sharedRole || undefined} />
+            <Melody locomotion={locomotion} holdingCup={picnic || !!seatedRole} villageRole={sharedRole || undefined} benchRole={seatedRole} />
           ) : (
             <Kitty
               equipment={
                 effect?.kind === "water"
                   ? { ...equipment, item: "watering" }
-                  : packed || giving
+                  : packed || giving || seatedRole
                     ? { ...equipment, item: "none" }
                     : equipment
               }
-              holding={picnic ? "cup" : packed || giving ? "parcel" : undefined}
+              holding={picnic || seatedRole ? "cup" : packed || giving ? "parcel" : undefined}
               animate
               scale={0.78}
               villageRole={sharedRole || undefined}
+              benchRole={seatedRole}
               locomotion={locomotion}
             />
           )}
         </Suspense>
         {ownRole && (
-          <Html center position={[0, 2.02, 0]} zIndexRange={[5, 1]}>
+          <Html center position={[0, seatedRole ? 2.45 : 2.02, 0]} zIndexRange={[5, 1]}>
             <VillageSpeech role={ownRole} />
           </Html>
         )}

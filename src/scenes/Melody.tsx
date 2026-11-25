@@ -13,6 +13,7 @@ import {
 import { useReducedMotion } from "./use-reduced-motion";
 import { useGameStore } from "../game/store";
 import { VillagePerformance } from "./VillagePerformance";
+import { VillageBenchPose } from "./VillageBenchPose";
 import type { VisitPlayer } from "../game/visits";
 import type { Gesture } from "../game/types";
 function MelodyCup({ hero }: { hero: THREE.Group }) {
@@ -41,12 +42,14 @@ export function Melody({
   remote = false,
   holdingCup = false,
   villageRole,
+  benchRole,
 }: {
   locomotion?: RefObject<{ speed: number }>;
   performance?: { id: number; kind: Gesture };
   remote?: boolean;
   holdingCup?: boolean;
   villageRole?: VisitPlayer["id"];
+  benchRole?: VisitPlayer["id"];
 }) {
   const invalidate = useThree(s => s.invalidate);
   const asset = readMelodyAsset(),
@@ -55,7 +58,7 @@ export function Melody({
     gesture = performance || ownGesture,
     reduced = useReducedMotion();
   useEffect(() => {
-    if (gesture.id) { reactMelody(hero, gesture.kind, reduced); invalidate(); }
+    if (gesture.id && !hero.userData.benchPose) { reactMelody(hero, gesture.kind, reduced); invalidate(); }
   }, [hero, gesture.id, gesture.kind, reduced, invalidate]);
   useEffect(() => {
     const lifecycle = hero.userData.melody;
@@ -71,8 +74,8 @@ export function Melody({
   }, [hero]);
   useFrame((state, dt) => {
     const speed = locomotion?.current.speed || 0;
-    if (!hero.userData.villagePerformance) updateMelody(hero, dt, speed, reduced);
-    if (hero.userData.melody.active !== "idle") state.invalidate();
+    if (!hero.userData.villagePerformance && !hero.userData.benchPose) updateMelody(hero, dt, speed, reduced);
+    if (!hero.userData.benchPose && hero.userData.melody.active !== "idle") state.invalidate();
     const data = state.gl.domElement.dataset;
     if (remote) {
       data.remoteModel = "melody";
@@ -87,7 +90,7 @@ export function Melody({
   return (
     <primitive object={hero} scale={0.78} dispose={null}>
       {holdingCup && <MelodyCup hero={hero} />}
-      {villageRole && (
+      {benchRole ? <VillageBenchPose hero={hero} role={benchRole} style="melody" /> : villageRole && (
         <Suspense fallback={null}>
           <VillagePerformance hero={hero} role={villageRole} style="melody" />
         </Suspense>

@@ -2,6 +2,7 @@ import { newLanternEvening, normalizeLanternEvening } from "../shared/lantern-ev
 import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.mjs";
 import { clueTrailView, newClueTrail, restoreClueTrail } from "../shared/clue-trail.mjs";
 import { newPetalMatch, petalMatchView, restorePetalMatch } from "../shared/petal-match.mjs";
+import { newBenchTea, restoreBenchTea, standAtTeaBench } from "../shared/bench-tea.mjs";
 import { actor, appearance, text, yaw } from "../shared/visit-actors.mjs";
 import { applyVisitAction, restoreTogetherMoment } from "../shared/visit-actions.mjs";
 import { createServer } from "node:http";
@@ -67,6 +68,7 @@ export function createVisitService({
     together: room.together || null,
     postcardWalk: room.postcardWalk ?? newPostcardWalk(),
     lanternEvening: room.lanternEvening ?? newLanternEvening(),
+    benchTea: room.benchTea ?? newBenchTea(),
     serverNow: now(),
     togetherAvailable: true,
   });
@@ -163,6 +165,7 @@ export function createVisitService({
           lanternEvening: normalizeLanternEvening(r.lanternEvening),
           clueTrail: restoreClueTrail(r.clueTrail),
           petalMatch: restorePetalMatch(r.petalMatch),
+          benchTea: restoreBenchTea(r.benchTea),
         });
       }
     } catch (e) {
@@ -512,6 +515,8 @@ export function createVisitService({
               room.clueTrail = newClueTrail(null, 0, room.clueTrail.revision + 1);
             if (room.petalMatch?.round)
               room.petalMatch = newPetalMatch(0, room.petalMatch.revision + 1);
+            if (room.benchTea)
+              room.benchTea = standAtTeaBench(room.benchTea, "guest");
           }
           secret = token();
           room.guestHash = hash(secret);

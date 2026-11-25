@@ -17,6 +17,7 @@ import {
 import { atLanternPlaza, lanternColor, newLanternEvening } from "./lantern-evening.mjs";
 import { atClueStop, CLUE_STOPS, clueStop, newClueTrail } from "./clue-trail.mjs";
 import { newPetalMatch, petal } from "./petal-match.mjs";
+import { atTeaBenchSeat, BENCH_TOAST_MS, newBenchTea, standAtTeaBench } from "./bench-tea.mjs";
 
 const newTogetherMoment = () => ({
   id: 0,
@@ -82,6 +83,11 @@ export function applyVisitAction({
       fail("Your shared activity changed. Try again.");
       return;
     }
+    const weather = ["sunshine", "sunset", "rain"].includes(m.action);
+    if (!weather && m.action !== "cancel" && (room.benchTea?.seated.host || room.benchTea?.seated.guest)) {
+      fail("Stand up from the tea bench together first.");
+      return;
+    }
     if (m.action === "photo" && (!bothInVillage(room) || !inVillagePhotoRange(room.host, room.guest))) {
       fail("Walk closer to your partner so you can both fit in the photo.");
       return;
@@ -109,7 +115,6 @@ export function applyVisitAction({
       fail("Let this little moment finish first.");
       return;
     }
-    const weather = ["sunshine", "sunset", "rain"].includes(m.action);
     room.together = {
       ...previous,
       id: previous.id + 1,
@@ -281,6 +286,36 @@ export function applyVisitAction({
     } else return;
     broadcast(room);
     dirty();
+  } else if (m.type === "bench-tea") {
+    const role = player.id;
+    if (role !== "host" && role !== "guest") return;
+    const tea = room.benchTea ?? newBenchTea();
+    const revision = tea.revision + 1;
+    if (m.action === "stand") {
+      if (!tea.seated[role]) return;
+      room.benchTea = standAtTeaBench(tea, role);
+    } else if (m.action === "sit") {
+      if (!bothInVillage(room) || tea.seated[role] || !atTeaBenchSeat(player, role)) return;
+      const moment = room.together;
+      const duration = moment?.action === "photo" ? 6000 :
+        ["stir", "decorate", "highfive"].includes(moment?.action) ? 4000 : 3000;
+      if (moment?.at && moment.action !== "cancel" && now() < moment.at + duration) {
+        fail("Let the shared activity finish before sitting down.");
+        return;
+      }
+      room.benchTea = { ...tea, revision, seated: { ...tea.seated, [role]: true } };
+    } else if (m.action === "ready") {
+      if (!bothInVillage(room) || !tea.seated.host || !tea.seated.guest ||
+          !atTeaBenchSeat(room.host, "host") || !atTeaBenchSeat(room.guest, "guest") ||
+          m.toastAt !== tea.toastAt || tea.ready[role] ||
+          (tea.toastAt > 0 && now() < tea.toastAt + BENCH_TOAST_MS)) return;
+      const ready = { ...tea.ready, [role]: true };
+      room.benchTea = ready.host && ready.guest
+        ? { ...tea, revision, ready: { host: false, guest: false }, toastAt: now() + 400 }
+        : { ...tea, revision, ready };
+    } else return;
+    broadcast(room);
+    dirty();
   } else if (m.type === "move") {
     if (
       ![m.x, m.z, m.yaw].every(
@@ -341,8 +376,12 @@ export function applyVisitAction({
     player.x = next.x;
     player.z = next.z;
     player.yaw = yaw(m.yaw);
+    const tea = room.benchTea;
+    const leftBench = tea?.seated[player.id] && !atTeaBenchSeat(player, player.id);
+    if (leftBench)
+      room.benchTea = standAtTeaBench(tea, player.id);
     broadcast(room);
-    if (distance > 0.01) dirty();
+    if (leftBench || distance > 0.01) dirty(leftBench);
   } else if (m.type === "appearance") {
     player.appearance = appearance(m.appearance);
     broadcast(room);
@@ -421,6 +460,7 @@ export function applyVisitAction({
     dirty();
   } else if (m.type === "leave") {
     if (player.id !== "guest") return;
+    if (room.benchTea) room.benchTea = standAtTeaBench(room.benchTea, "guest");
     room.guest = null;
     room.guestHash = null;
     send(ws, { type: "ended" });

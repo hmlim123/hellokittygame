@@ -12,6 +12,7 @@ import { normalizePostcardWalk, type PostcardWalk } from "../../shared/postcard-
 import { normalizeLanternEvening, type LanternEvening, type LanternColor } from "../../shared/lantern-evening.mjs";
 import type { ClueTrailView } from "../../shared/clue-trail.mjs";
 import type { Petal, PetalMatchView } from "../../shared/petal-match.mjs";
+import { restoreBenchTea, type BenchTea } from "../../shared/bench-tea.mjs";
 export interface VisitPlayer {
   id: "host" | "guest";
   name: string;
@@ -75,6 +76,8 @@ interface Visits {
   clueTrailAction(action: "start" | "share" | "guess" | "search", stop?: string): void;
   petalMatch: PetalMatchView | null;
   petalMatchAction(action: "start" | "pick", choice?: Petal): void;
+  benchTea: BenchTea | null;
+  benchTeaAction(action: "sit" | "stand" | "ready"): void;
   lanternAction(action: "choose" | "light" | "reset", color?: LanternColor): void;
   postcardWalkAction(action: "choose" | "stamp" | "reset", stop?: string): void;
   error: string;
@@ -269,7 +272,7 @@ function connect(server: string, hello: object) {
         server,
         role: m.role,
         roomId: m.roomId,
-        ...(rejoining ? {} : { clueTrail: null, petalMatch: null }),
+        ...(rejoining ? {} : { clueTrail: null, petalMatch: null, benchTea: null }),
         error: "",
         link:
           m.role === "host" && m.invite
@@ -396,6 +399,11 @@ function connect(server: string, hello: object) {
           ? previous.petalMatch
           : m.petalMatch
         : null;
+      const benchTea = Number.isSafeInteger(m.benchTea?.revision)
+        ? sameRoom && previous.benchTea?.revision === m.benchTea.revision
+          ? previous.benchTea
+          : restoreBenchTea(m.benchTea)
+        : null;
       useVisitsStore.setState({
         together:
           m.together &&
@@ -428,6 +436,7 @@ function connect(server: string, hello: object) {
         lanternEvening,
         clueTrail,
         petalMatch,
+        benchTea,
       });
       if (useVisitsStore.getState().role === "host") {
         const game = useGameStore.getState(),
@@ -554,6 +563,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   lanternEvening: null,
   clueTrail: null,
   petalMatch: null,
+  benchTea: null,
   error: "",
   configure(input) {
     const server = visitServerUrl(input);
@@ -639,6 +649,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       lanternEvening: null,
       clueTrail: null,
       petalMatch: null,
+      benchTea: null,
       roomId: null,
       invitation: null,
     });
@@ -713,6 +724,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
       lanternEvening: null,
       clueTrail: null,
       petalMatch: null,
+      benchTea: null,
       link: "",
       server: invite.server,
     });
@@ -771,6 +783,11 @@ export const useVisitsStore = create<Visits>((set, get) => ({
     const { status, petalMatch } = get();
     if (status === "online" && petalMatch)
       transmit({ type: "petal-match", action, choice, round: petalMatch.round });
+  },
+  benchTeaAction(action) {
+    const { status, benchTea } = get();
+    if (status === "online" && benchTea)
+      transmit({ type: "bench-tea", action, toastAt: benchTea.toastAt });
   },
 }));
 export function useVisitLifecycle() {

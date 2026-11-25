@@ -18,6 +18,7 @@ import {
 } from "../game/village";
 import { Dialog } from "./Dialog";
 import { SharedPicnic } from "./Visits";
+import { BenchTeaControls } from "./BenchTea";
 import { useVisitsStore, villagePartner } from "../game/visits";
 
 export function VillageGuide() {
@@ -69,6 +70,7 @@ export function VillageControls() {
     useGameStore.getState().react("softHappy");
   };
   const partner = useVisitsStore((s) => s.status === "online" ? villagePartner(s) : undefined);
+  const benchSeated = useVisitsStore((s) => !!s.role && !!s.benchTea?.seated[s.role]);
   const p = useVillageMotion((s) => s.position),
     near = nearbyVillageAction(p),
     ready = useGameStore((s) => s.sceneReady),
@@ -87,7 +89,7 @@ export function VillageControls() {
   }, [picnic]);
   return (
     <>
-      {picnic && tableView ? (
+      {benchSeated ? <BenchTeaControls /> : picnic && tableView ? (
         <div className="village-controls">
           <div className="village-table-actions" role="group" aria-label="At the picnic table">
             <button

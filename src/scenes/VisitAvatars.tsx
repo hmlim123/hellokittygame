@@ -16,8 +16,12 @@ import { updateWalking, turnToward } from "./walk-animation";
 import { KittyHeld } from "./GameToys";
 import { GroundShadow } from "./GroundShadow";
 import { VillagePerformance } from "./VillagePerformance";
+import { VillageBenchPose } from "./VillageBenchPose";
+import { teaBenchSeat } from "../../shared/bench-tea.mjs";
 import { VillageSpeech } from "./VillageSpeech";
-function KittyVisitor({ actor }: { actor: VisitPlayer }) {
+type VisitorProps = { actor: VisitPlayer; seated: boolean };
+
+function KittyVisitor({ actor, seated }: VisitorProps) {
   const invalidate = useThree(s => s.invalidate);
   const asset = useKittyAsset(actor.appearance.plush || undefined),
     hero = useMemo(() => makeBlenderKitty(asset, 0), [asset]),
@@ -30,11 +34,12 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       rotation: [0, actor.yaw, 0] as [number, number, number],
     });
   target.current = actor;
+  const holding = seated ? "cup" : actor.holding;
   useEffect(() => {
     applyHeroEquipment(hero, {
       version: 1,
       outfit: actor.appearance.outfit,
-      item: actor.tool || actor.appearance.item || "none",
+      item: seated ? "none" : actor.tool || actor.appearance.item || "none",
       ...(actor.appearance.plush ? { plush: actor.appearance.plush } : {}),
     });
   }, [
@@ -43,17 +48,18 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
     actor.appearance.plush,
     actor.appearance.item,
     actor.tool,
+    seated,
   ]);
   useEffect(() => {
-    hero.userData.blender.heldAttachment = actor.holding || null;
-  }, [hero, actor.holding]);
+    hero.userData.blender.heldAttachment = holding || null;
+  }, [hero, holding]);
   useEffect(() => {
     if (last.current !== actor.gesture.id) {
       last.current = actor.gesture.id;
-      reactBlender(hero, actor.gesture.kind, reduced);
+      if (!seated) reactBlender(hero, actor.gesture.kind, reduced);
       invalidate();
     }
-  }, [hero, actor.gesture.id, actor.gesture.kind, reduced, invalidate]);
+  }, [hero, actor.gesture.id, actor.gesture.kind, reduced, invalidate, seated]);
   useEffect(
     () => () => {
       hero.userData.blender.mixer.stopAllAction();
@@ -80,19 +86,21 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       )
     )
       reactBlender(hero, null, reduced);
-    if (!hero.userData.villagePerformance) updateBlender(hero, Math.min(dt, 0.1), { reduced });
+    if (!hero.userData.villagePerformance && !hero.userData.benchPose)
+      updateBlender(hero, Math.min(dt, 0.1), { reduced });
     if (hero.userData.blender.current || hero.userData.blender.fading.length) invalidate();
-    updateWalking(hero, dt, a.speed, reduced, hero.userData.villagePerformance);
+    updateWalking(hero, dt, a.speed, reduced, hero.userData.villagePerformance || seated);
     if (group.current) {
+      const point = seated ? teaBenchSeat(a.id) : a;
       group.current.position.x +=
-        (a.x - group.current.position.x) *
+        (point.x - group.current.position.x) *
         (1 - Math.exp(-Math.min(dt, 0.1) * 12));
       group.current.position.z +=
-        (a.z - group.current.position.z) *
+        (point.z - group.current.position.z) *
         (1 - Math.exp(-Math.min(dt, 0.1) * 12));
       group.current.rotation.y = turnToward(
         group.current.rotation.y,
-        a.yaw,
+        seated ? 0 : a.yaw,
         dt,
         reduced,
       );
@@ -101,7 +109,7 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       gl.domElement.dataset.remoteOutfit = a.appearance.outfit;
       gl.domElement.dataset.remoteExpression = blenderExpression(hero);
       gl.domElement.dataset.remoteModel = hero.userData.source;
-      gl.domElement.dataset.remoteHolding = a.holding || "none";
+      gl.domElement.dataset.remoteHolding = holding || "none";
     }
   }, -0.5);
   return (
@@ -122,14 +130,15 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
       <group scale={0.78}>
         <primitive object={hero} dispose={null}>
           <Suspense fallback={null}>
-            <VillagePerformance hero={hero} role={actor.id} style={actor.appearance.plush || "classic"} />
+            {seated ? <VillageBenchPose hero={hero} role={actor.id} style={actor.appearance.plush || "classic"} /> :
+              <VillagePerformance hero={hero} role={actor.id} style={actor.appearance.plush || "classic"} />}
           </Suspense>
         </primitive>
-        {actor.holding && <KittyHeld hero={hero} holding={actor.holding} />}
+        {holding && <KittyHeld hero={hero} holding={holding} />}
       </group>
       <Html
         center
-        position={[0, hero.userData.blender.modelHeight * 0.78 + 0.25, 0]}
+        position={[0, hero.userData.blender.modelHeight * 0.78 + (seated ? 0.65 : 0.25), 0]}
         zIndexRange={[4, 0]}
       >
         <VillageSpeech role={actor.id} name={actor.name} />
@@ -137,7 +146,7 @@ function KittyVisitor({ actor }: { actor: VisitPlayer }) {
     </group>
   );
 }
-function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
+function MelodyVisitor({ actor, seated }: VisitorProps) {
   const initial = useRef({
     position: [actor.x, 0, actor.z] as [number, number, number],
     rotation: [0, actor.yaw, 0] as [number, number, number],
@@ -146,16 +155,17 @@ function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
     target = useMemo(() => new THREE.Vector3(), []),
     locomotion = useRef({ speed: 0 }),
     reduced = useReducedMotion();
-  locomotion.current.speed = actor.speed;
+  locomotion.current.speed = seated ? 0 : actor.speed;
   useFrame((state, dt) => {
     if (!group.current) return;
+    const point = seated ? teaBenchSeat(actor.id) : actor;
     group.current.position.lerp(
-      target.set(actor.x, 0, actor.z),
+      target.set(point.x, 0, point.z),
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 12),
     );
     group.current.rotation.y = turnToward(
       group.current.rotation.y,
-      actor.yaw,
+      seated ? 0 : actor.yaw,
       dt,
       reduced,
     );
@@ -172,18 +182,19 @@ function MelodyVisitor({ actor }: { actor: VisitPlayer }) {
       rotation={initial.current.rotation}
     >
       <GroundShadow />
-      <Melody remote locomotion={locomotion} performance={actor.gesture} holdingCup={actor.holding === "cup"} villageRole={actor.id} />
-      <Html center position={[0, 2.27 * 0.78 + 0.25, 0]} zIndexRange={[4, 0]}>
+      <Melody remote locomotion={locomotion} performance={actor.gesture} holdingCup={seated || actor.holding === "cup"} villageRole={actor.id} benchRole={seated ? actor.id : undefined} />
+      <Html center position={[0, 2.27 * 0.78 + (seated ? 0.65 : 0.25), 0]} zIndexRange={[4, 0]}>
         <VillageSpeech role={actor.id} name={actor.name} />
       </Html>
     </group>
   );
 }
 function Visitor({ actor }: { actor: VisitPlayer }) {
+  const seated = useVisitsStore((s) => !!s.benchTea?.seated[actor.id]);
   return actor.character === "melody" ? (
-    <MelodyVisitor actor={actor} />
+    <MelodyVisitor actor={actor} seated={seated} />
   ) : (
-    <KittyVisitor actor={actor} />
+    <KittyVisitor actor={actor} seated={seated} />
   );
 }
 export function VisitAvatars() {

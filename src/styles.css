@@ -2577,6 +2577,10 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   width: min(100%, 300px);
   margin-left: auto;
 }
+.bench-tea-status {
+  margin-bottom: 5px;
+  text-align: center;
+}
 .village-social .baking-turn {
   background: #f8e8da;
   border-color: #d8b69c;

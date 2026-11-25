@@ -103,6 +103,76 @@ def play_minigames(host, guest, ready, back, results):
     print('PASS secret flower choices after refresh, a match and a replay with different choices',flush=True)
 
 
+def play_bench_tea(host, guest, ready, back, results):
+    def sit(page):
+        page.bring_to_front()
+        activities = page.get_by_text('Activities', exact=True)
+        if not activities.locator('..').evaluate('el => el.open'):
+            activities.tap()
+        bench = page.get_by_text('Bench tea', exact=True)
+        if not bench.locator('..').evaluate('el => el.open'):
+            bench.tap()
+        walk = page.get_by_role('button',name='Walk to my bench seat',exact=True)
+        if walk.count():
+            walk.tap()
+        chair = page.get_by_role('button',name='Sit at the tea bench',exact=True)
+        chair.wait_for(timeout=65000)
+        chair.tap()
+        controls = page.get_by_role('group',name='At the tea bench',exact=True)
+        controls.wait_for(timeout=20000)
+        return controls
+
+    host_bench = sit(host)
+    assert host_bench.get_by_role('button',name='Ready to toast',exact=True).is_disabled()
+    guest_bench = sit(guest)
+    for page in [host,guest]:
+        page.wait_for_function("""() => {
+            const d = document.querySelector('#world canvas').dataset;
+            return d.hostBench === 'seated' && d.guestBench === 'seated' && d.remoteHolding === 'cup';
+        }""",timeout=35000)
+    host.bring_to_front()
+    host.screenshot(path=str(results/'accounts-bench-tea.png'))
+    host_bench.get_by_role('button',name='Ready to toast',exact=True).tap()
+    host_bench.get_by_text('You’re ready. Waiting for your partner.',exact=True).wait_for()
+    guest.bring_to_front()
+    guest.reload()
+    ready(guest)
+    guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=30000)
+    back(guest)
+    guest_bench = guest.get_by_role('group',name='At the tea bench',exact=True)
+    guest_bench.wait_for(timeout=25000)
+    host_bench.get_by_text('You’re ready. Waiting for your partner.',exact=True).wait_for()
+    for page in [host,guest]:
+        page.wait_for_function("document.querySelector('#world canvas').dataset.guestBench === 'seated'",timeout=25000)
+        page.evaluate("""() => {
+            window.benchFrames = [];
+            const canvas = document.querySelector('#world canvas');
+            const observer = new MutationObserver(() => {
+                const d = canvas.dataset;
+                if (d.hostBench === 'toast' && d.guestBench === 'toast') {
+                    benchFrames.push([Date.now(), Number(d.hostBenchPhase), Number(d.guestBenchPhase)]);
+                }
+            });
+            observer.observe(canvas, {attributes:true, attributeFilter:['data-guest-bench-phase']});
+        }""")
+    guest.bring_to_front()
+    guest_bench.get_by_role('button',name='Ready to toast',exact=True).tap()
+    for page in [host,guest]:
+        page.wait_for_function('benchFrames.length > 0',timeout=10000)
+        frames = page.evaluate('benchFrames')
+        assert all(abs(kitty-melody) < 0.1 for _,kitty,melody in frames), frames[:3]
+        page.wait_for_function("document.querySelector('#world canvas').dataset.hostBench === 'seated'")
+    starts = [page.evaluate('benchFrames[0][0] - 1000 * benchFrames[0][1]') for page in [host,guest]]
+    assert abs(starts[0]-starts[1]) < 200, starts
+    guest_bench.get_by_role('button',name='Stand up',exact=True).tap()
+    host_bench.get_by_text('There’s a seat for your partner.',exact=True).wait_for()
+    host.bring_to_front()
+    host_bench.get_by_role('button',name='Stand up',exact=True).tap()
+    host.get_by_role('button',name='Dance together',exact=True).wait_for()
+    assert host.get_by_role('button',name='Dance together',exact=True).is_enabled()
+    print('PASS separate seated tea poses, readiness across refresh, synchronized cup raise and standing up',flush=True)
+
+
 ROOT=Path(__file__).resolve().parent.parent
 BASE=os.environ.get('KITTY_BASE_URL','http://127.0.0.1:8081').rstrip('/')
 with socket.socket() as probe:
@@ -541,6 +611,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.screenshot(path=str(results/'accounts-lantern-evening.png'))
             print('PASS each partner lights their chosen lantern, both render and share the same sunset',flush=True)
             play_minigames(host, guest, ready, back, results)
+            play_bench_tea(host, guest, ready, back, results)
             guest.keyboard.down('ArrowRight')
             guest.wait_for_function("Number(document.querySelector('#world canvas').dataset.villageSpeed)>.5",timeout=20000)
             guest.keyboard.up('ArrowRight')

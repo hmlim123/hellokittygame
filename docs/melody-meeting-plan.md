@@ -84,8 +84,12 @@ remains pending. [GitHub Pages release](https://github.com/hmlim123/hellokittyga
 - **Petal Match** lets both players secretly pick a flower. The game reveals
   the colors together and counts shared matches across rounds in the visit.
   Look for **Pick your petal** after your partner chooses.
+- **Bench tea** gives both players a seat west of the plaza. Open **Activities →
+  Bench tea**, walk to your spot, and sit. Each player chooses **Ready to toast**
+  to raise both cups together. You can chat at the bench and stand up whenever
+  you’re ready to walk again.
 
-Postcard walks, lantern evenings, the clue trail, and Petal Match use new
+Postcard walks, lantern evenings, the clue trail, Petal Match, and bench tea use new
 shared state from the existing Worker. Their controls appear when that Worker
 has been updated. The upgrade uses the existing service and SQLite data.
 [Updating the existing village service](private-visits-setup.md#updating-an-existing-village-for-v37)
@@ -124,10 +128,6 @@ progress from the published Worker’s SQLite data before starting the new
 activities. The published client could join, chat, and start a picnic with the
 updated Worker. The updated client could join and start a picnic with the
 published Worker. [GitHub service check](https://github.com/hmlim123/hellokittygame/actions/runs/45479608520)
-
-## Later activities
-
-- **Bench tea** would add a separate place to sit, share a cookie, and chat.
 
 ## Ready for Nancy and Melody
 

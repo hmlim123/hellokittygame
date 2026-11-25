@@ -2,6 +2,7 @@ import { newLanternEvening, normalizeLanternEvening } from "../shared/lantern-ev
 import { newPostcardWalk, normalizePostcardWalk } from "../shared/postcard-walk.mjs";
 import { clueTrailView, newClueTrail, restoreClueTrail } from "../shared/clue-trail.mjs";
 import { newPetalMatch, petalMatchView, restorePetalMatch } from "../shared/petal-match.mjs";
+import { newBenchTea, restoreBenchTea } from "../shared/bench-tea.mjs";
 import { DurableObject } from "cloudflare:workers";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { createAccountState } from "../server/account-state.mjs";
@@ -148,6 +149,7 @@ export class PrivateVillage extends DurableObject {
       this.room.lanternEvening = normalizeLanternEvening(this.room.lanternEvening);
       this.room.clueTrail = restoreClueTrail(this.room.clueTrail);
       this.room.petalMatch = restorePetalMatch(this.room.petalMatch);
+      this.room.benchTea = restoreBenchTea(this.room.benchTea);
       for (const role of ["host", "guest"])
         if (this.room[role]) this.room[role].socket = null;
     }
@@ -252,6 +254,7 @@ export class PrivateVillage extends DurableObject {
       together: room.together || null,
       postcardWalk: room.postcardWalk ?? newPostcardWalk(),
       lanternEvening: room.lanternEvening ?? newLanternEvening(),
+      benchTea: room.benchTea ?? newBenchTea(),
       serverNow: Date.now(),
       togetherAvailable: true,
     };
@@ -598,8 +601,8 @@ export class PrivateVillage extends DurableObject {
       connection: c,
       send,
       broadcast: (r) => this.broadcast(r),
-      dirty: () => {
-        if (m.type !== "move") this.saveRoom();
+      dirty: (sharedStateChanged) => {
+        if (m.type !== "move" || sharedStateChanged) this.saveRoom();
       },
       fail,
       ws,

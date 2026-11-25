@@ -5,6 +5,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTestWorker } from "./test-runtime.mjs";
+import { teaBenchSeat } from "../shared/bench-tea.mjs";
 const origin = "https://hmlim123.github.io",
   setupKey = "local-worker-fixture-private-owner-setup-key";
 async function setup(t, options = {}) {
@@ -300,6 +301,31 @@ test("SQL persistence restores accounts and private tickets after a whole runtim
   assert.equal(result.matches, 1);
   assert.equal((await second.request("/account")).body.melodyRegistered, true);
 });
+test("the tea bench keeps both seats and readiness across a Worker restart", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "kitty-bench-persist-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const first = await pair(t, { persist: dir }, teaBenchSeat("host"));
+  first.host.send({ type: "bench-tea", action: "sit" });
+  first.guest.send({ type: "bench-tea", action: "sit" });
+  await first.host.until((m) => m.benchTea?.seated.host && m.benchTea?.seated.guest);
+  first.host.send({ type: "bench-tea", action: "ready", toastAt: 0 });
+  await first.guest.until((m) => m.benchTea?.ready.host);
+  first.host.ws.close(1000, "Reload");
+  first.guest.ws.close(1000, "Reload");
+  await first.mf.dispose();
+  const second = await setup(t, { persist: dir });
+  const host = await client(second.mf, { type: "hello", ...first.room, accountToken: first.n.token });
+  const guest = await client(second.mf, {
+    type: "hello", roomId: first.room.roomId, token: first.guestTicket.token, accountToken: first.m.token,
+  });
+  const ready = await guest.until((m) => m.benchTea?.ready.host);
+  assert.deepEqual(ready.benchTea.seated, { host: true, guest: true });
+  guest.send({ type: "bench-tea", action: "ready", toastAt: 0 });
+  const hostToast = await host.until((m) => m.benchTea?.toastAt > 0);
+  const guestToast = await guest.until((m) => m.benchTea?.toastAt > 0);
+  assert.equal(hostToast.benchTea.toastAt, guestToast.benchTea.toastAt);
+});
+
 test("sign-out revokes an active socket and a replacement login revokes the old session", async (t) => {
   const s = await pair(t);
   await s.request("/account/logout", {}, s.m.token);

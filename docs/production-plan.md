@@ -111,6 +111,14 @@ collects a ribbon after both arrive. In Petal Match, both pick secretly and
 see the result together. The room keeps the active round when either player
 reconnects. [Meeting plan](melody-meeting-plan.md)
 
+## Bench tea · November 24, 2026
+
+The private village draft adds a separate bench west of the plaza. Kitty and
+My Melody take their own seats and raise their cups together after each chooses
+**Ready to toast**. The Worker keeps an occupied seat and readiness through a
+refresh. Shared dances and photos are available again when both players stand.
+[Meeting plan](melody-meeting-plan.md)
+
 ## iPhone village canvas stability · v3.7.2
 
 An iPhone report identified flicker during walking and scrolling. The live
