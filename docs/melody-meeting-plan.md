@@ -129,6 +129,24 @@ activities. The published client could join, chat, and start a picnic with the
 updated Worker. The updated client could join and start a picnic with the
 published Worker. [GitHub service check](https://github.com/hmlim123/hellokittygame/actions/runs/45479608520)
 
+## Bench tea verification · November 24, 2026
+
+The production build and 301 automated checks passed. Two WebKit sessions
+using the iPhone 15 profile walked to their seats, sat, and raised their cups
+together. Nancy’s readiness stayed set while Melody refreshed and returned to
+her seat. Standing restored the village controls. The Cloudflare test also
+restored both seats and Nancy’s readiness after a Worker restart. The shared
+rules test verifies that standing during a toast cancels it. The toast and
+stand controls stayed reachable in WebKit at 320×568 and 844×390.
+[Two-account browser test](../tests/accounts-browser.py)
+
+The complete two-account Chromium visit passed, including the earlier
+activities, both personal saves, and sign-out and rejoin.
+
+The draft client also joined a private visit with the published Worker revision.
+The players could set up a picnic, and the bench tea menu stayed hidden until
+the Worker supports it.
+
 ## Ready for Nancy and Melody
 
 - Both accounts join the same invite-only village with the correct Blender

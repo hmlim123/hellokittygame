@@ -48,8 +48,8 @@ test("seats are reachable and each player must reach their own spot before shari
   assert.equal(room.benchTea.ready.guest, true);
 });
 
-test("moving away or standing up frees a seat and clears the pending toast", () => {
-  const { room, act, send, errors, writes } = visit();
+test("moving away clears readiness and standing up cancels an active toast", () => {
+  const { room, act, send, errors, writes, advanceTo } = visit();
   act("host", "sit");
   act("guest", "sit");
   act("host", "ready");
@@ -63,7 +63,16 @@ test("moving away or standing up frees a seat and clears the pending toast", () 
   assert.deepEqual(room.benchTea.seated, { host: true, guest: false });
   assert.deepEqual(room.benchTea.ready, { host: false, guest: false });
   assert.equal(writes.at(-1), true);
+  Object.assign(room.guest, teaBenchSeat("guest"));
+  act("guest", "sit");
+  act("guest", "ready");
+  act("host", "ready");
+  assert.ok(room.benchTea.toastAt > 0);
+  advanceTo(room.benchTea.toastAt + BENCH_TOAST_MS / 2);
   act("host", "stand");
+  assert.deepEqual(room.benchTea.seated, { host: false, guest: true });
+  assert.equal(room.benchTea.toastAt, 0);
+  act("guest", "stand");
   assert.deepEqual(room.benchTea.seated, { host: false, guest: false });
   assert.deepEqual(restoreBenchTea(undefined), newBenchTea());
 });

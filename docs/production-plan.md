@@ -117,7 +117,7 @@ The private village draft adds a separate bench west of the plaza. Kitty and
 My Melody take their own seats and raise their cups together after each chooses
 **Ready to toast**. The Worker keeps an occupied seat and readiness through a
 refresh. Shared dances and photos are available again when both players stand.
-[Meeting plan](melody-meeting-plan.md)
+[Meeting plan and verification](melody-meeting-plan.md#bench-tea-verification--november-24-2026)
 
 ## iPhone village canvas stability · v3.7.2
 
