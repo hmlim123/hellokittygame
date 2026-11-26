@@ -23,17 +23,26 @@ with sync_playwright()as p:
    const canvas = document.querySelector('#stage canvas');
    const writes = [];
    // A write clears the WebGL buffer even if the next write restores its size.
-   const record = records => writes.push(...records.map(record => record.attributeName));
+   const record = records => writes.push(...records.map(record => [record.attributeName, record.oldValue]));
    const observer = new MutationObserver(record);
-   observer.observe(canvas, {attributes: true, attributeFilter: ['width', 'height']});
+   observer.observe(canvas, {attributes: true, attributeOldValue: true, attributeFilter: ['width', 'height']});
    window.finishRoomCanvasWatch = () => {
     record(observer.takeRecords());
     observer.disconnect();
     return {writes, sameCanvas: canvas === document.querySelector('#stage canvas')};
    };
   }""")
+  cdp=page.context.new_cdp_session(page)
+  if width>height:
+   # A landscape page can briefly report a mouse rather than a touch pointer.
+   cdp.send('Emulation.setTouchEmulationEnabled',{'enabled':False})
+   page.wait_for_function("!matchMedia('(any-pointer: coarse)').matches")
+   page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+   assert data(page)['pixelRatio']=='1',(width,height,data(page)['pixelRatio'])
+   cdp.send('Emulation.setTouchEmulationEnabled',{'enabled':True})
+   page.wait_for_function("matchMedia('(any-pointer: coarse)').matches")
   # A real captured touch steers immediately and stops on blur/cancellation.
-  thumb=page.get_by_role('group',name='Thumb control for walking at home',exact=True);thumb.scroll_into_view_if_needed();r=thumb.bounding_box();cdp=page.context.new_cdp_session(page);x=float(data(page)['homeX']);z=float(data(page)['homeZ'])
+  thumb=page.get_by_role('group',name='Thumb control for walking at home',exact=True);thumb.scroll_into_view_if_needed();r=thumb.bounding_box();x=float(data(page)['homeX']);z=float(data(page)['homeZ'])
   cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':r['x']+r['width']*.8,'y':r['y']+r['height']*.5,'id':1}]})
   page.wait_for_function("x=>Number(document.querySelector('#stage canvas').dataset.homeX)>x+.25",arg=x,timeout=15000)
   page.evaluate("dispatchEvent(new Event('blur'))");cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
@@ -68,8 +77,18 @@ with sync_playwright()as p:
   tea=page.get_by_role('button',name='A little tea ☕',exact=True)
   if not tea.is_visible():
    # Nearby furniture has a context action; its actual chair is selectable in overview.
-   page.get_by_role('button',name='Whole house ⌂',exact=True).tap();page.wait_for_function("document.querySelector('#stage canvas').dataset.homeView==='dollhouse'")
-   d=data(page);corners=json.loads(d['homeFloor']);u=(2.05+5.8)/11.6;v=(1.15+5)/10;point=[corners[0][i]+u*(corners[1][i]-corners[0][i])+v*(corners[3][i]-corners[0][i])for i in [0,1]];r=canvas.bounding_box();page.mouse.click(r['x']+point[0]*r['width'],r['y']+point[1]*r['height']);page.get_by_role('button',name='Sit for a little tea',exact=True).wait_for(timeout=25000);page.get_by_role('button',name='Sit for a little tea',exact=True).tap()
+   page.get_by_role('button',name='Whole house ⌂',exact=True).tap()
+   page.wait_for_function("""() => {
+    const d=document.querySelector('#stage canvas').dataset;
+    return d.homeCamera==='overview' && performance.now()>=Number(d.homeIgnoreTap||0);
+   }""")
+   canvas.scroll_into_view_if_needed()
+   corners=json.loads(data(page)['homeFloor'])
+   u=(2.05+5.8)/11.6;v=(1.15+5)/10
+   point=[corners[0][i]+u*(corners[1][i]-corners[0][i])+v*(corners[3][i]-corners[0][i]) for i in [0,1]]
+   r=canvas.bounding_box()
+   canvas.click(position={'x':point[0]*r['width'],'y':point[1]*r['height']})
+   page.get_by_role('button',name='Sit for a little tea',exact=True).tap(timeout=25000)
   else:tea.tap()
   page.wait_for_function("document.querySelector('#stage canvas').dataset.homePhase==='seated'",timeout=45000)
   assert not page.get_by_role('group',name='Thumb control for walking at home',exact=True).is_visible()

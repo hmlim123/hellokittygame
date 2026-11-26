@@ -69,16 +69,16 @@ function Loader() {
     </div>
   );
 }
-const PHONE_VIEW = "(max-width: 640px), (pointer: coarse)";
+const COMPACT_VIEW = "(max-width: 640px), (max-height: 640px), (any-pointer: coarse)";
 
-function subscribePhoneView(onChange: () => void) {
-  const query = window.matchMedia(PHONE_VIEW);
+function subscribeCompactView(onChange: () => void) {
+  const query = window.matchMedia(COMPACT_VIEW);
   query.addEventListener("change", onChange);
   return () => query.removeEventListener("change", onChange);
 }
 
-function isPhoneView() {
-  return window.matchMedia(PHONE_VIEW).matches;
+function isCompactView() {
+  return window.matchMedia(COMPACT_VIEW).matches;
 }
 
 export function Stage() {
@@ -90,16 +90,16 @@ export function Stage() {
   const mode = useGameStore((s) => s.mode),
     ready = useGameStore((s) => s.sceneReady),
     [error, setError] = useState(false);
-  const phoneView = useSyncExternalStore(subscribePhoneView, isPhoneView);
+  const compactView = useSyncExternalStore(subscribeCompactView, isCompactView);
   const quality = useGameStore((s) => s.preferences.quality);
   const [adaptiveDpr, setAdaptiveDpr] = useState<number>();
-  const stablePhoneCanvas = phoneView && (mode === "room" || mode === "village");
+  const stableCanvas = compactView && (mode === "room" || mode === "village");
   // Canvas owns the drawing-buffer ratio. Giving it the current target keeps
   // other React updates from briefly restoring the default and clearing it.
   const fixedDpr =
-    stablePhoneCanvas || quality !== "auto"
+    stableCanvas || quality !== "auto"
       ? Math.min(
-          qualityCap(quality === "auto" ? "gentle" : quality, phoneView),
+          qualityCap(quality === "auto" ? "gentle" : quality, compactView),
           Math.max(1, window.devicePixelRatio || 1),
         )
       : undefined;
@@ -125,7 +125,7 @@ export function Stage() {
           frameloop={previewOpen ? "demand" : "always"}
           dpr={fixedDpr ?? adaptiveDpr ?? [1, 1.5]}
           resize={
-            stablePhoneCanvas ? { scroll: false, offsetSize: true } : undefined
+            stableCanvas ? { scroll: false, offsetSize: true } : undefined
           }
           orthographic
           camera={camera}

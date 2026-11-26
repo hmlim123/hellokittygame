@@ -147,7 +147,8 @@ After a report of flicker in Kitty’s room, WebKit with an iPhone 15 profile
 showed the published room’s Automatic detail change its drawing buffer from
 1.25× to 1× during play. The room now uses a stable pixel ratio on phones, like
 the village. The canvases receive their current pixel ratio from React so menu
-updates cannot reapply a competing default.
+updates cannot reapply a competing default. Short landscape viewports keep that
+ratio even when the browser reports a different pointer type.
 
 The room browser check uses a 3× phone profile and watches canvas width and
 height during walking, pinching, scrolling, and opening the wardrobe. These
