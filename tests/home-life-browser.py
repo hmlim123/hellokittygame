@@ -10,14 +10,28 @@ with sync_playwright()as p:
   pg.wait_for_function("(()=>{const d=document.querySelector('#stage canvas').dataset;return Number(d.headX)>.1&&Number(d.headX)<.9&&Number(d.headY)>.1&&Number(d.headY)<.85})()",timeout=20000)
   assert pg.evaluate('document.documentElement.scrollWidth<=innerWidth')
  for width,height in [(390,844),(320,568),(844,390)]:
-  page=b.new_page(viewport={'width':width,'height':height},is_mobile=True,has_touch=True,reduced_motion='no-preference'if width==390 else'reduce');page.on('pageerror',lambda e:errors.append(str(e)))
+  page=b.new_page(viewport={'width':width,'height':height},is_mobile=True,has_touch=True,device_scale_factor=3,reduced_motion='no-preference'if width==390 else'reduce');page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(BASE+'/');ready(page);check_camera(page)
+  assert data(page)['pixelRatio']=='1',(width,height,data(page)['pixelRatio'])
   assert page.locator('.action-bar>button').count()==3
   page.screenshot(path=f'/tmp/nancy-home-follow-{width}.png',full_page=True)
   d=data(page);visible_height=float(d['homeKittyFoot'])-(1-float(d['modelTop']))/2
   assert .14<visible_height<.48,(width,height,visible_height)
   dismiss=page.get_by_role('button',name='Dismiss message',exact=True)
   dismiss.wait_for(state='hidden',timeout=12000)
+  page.evaluate("""() => {
+   const canvas = document.querySelector('#stage canvas');
+   const writes = [];
+   // A write clears the WebGL buffer even if the next write restores its size.
+   const record = records => writes.push(...records.map(record => record.attributeName));
+   const observer = new MutationObserver(record);
+   observer.observe(canvas, {attributes: true, attributeFilter: ['width', 'height']});
+   window.finishRoomCanvasWatch = () => {
+    record(observer.takeRecords());
+    observer.disconnect();
+    return {writes, sameCanvas: canvas === document.querySelector('#stage canvas')};
+   };
+  }""")
   # A real captured touch steers immediately and stops on blur/cancellation.
   thumb=page.get_by_role('group',name='Thumb control for walking at home',exact=True);thumb.scroll_into_view_if_needed();r=thumb.bounding_box();cdp=page.context.new_cdp_session(page);x=float(data(page)['homeX']);z=float(data(page)['homeZ'])
   cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':r['x']+r['width']*.8,'y':r['y']+r['height']*.5,'id':1}]})
@@ -38,6 +52,18 @@ with sync_playwright()as p:
   page.wait_for_function("z=>Number(document.querySelector('#stage canvas').dataset.homeZoom)>z*1.12",arg=zoom,timeout=20000)
   assert abs(float(data(page)['homeX'])-before[0])<.02 and abs(float(data(page)['homeZ'])-before[1])<.02
   page.get_by_role('button',name='Reset view ↺',exact=True).tap();ready(page)
+  # Opening the wardrobe pauses the room loop and reconfigures its Canvas.
+  page.get_by_role('button',name='Inventory ♡',exact=True).tap()
+  page.get_by_role('dialog',name='Kitty’s inventory',exact=True).wait_for(state='visible',timeout=15000)
+  page.get_by_role('button',name='Back to Kitty',exact=True).tap()
+  ready(page)
+  if height>width:
+   page.evaluate('scrollTo(0, document.documentElement.scrollHeight)')
+   page.wait_for_function('scrollY > 0')
+   page.evaluate('scrollTo(0, 0)')
+   page.wait_for_function('scrollY === 0')
+  canvas_watch=page.evaluate('finishRoomCanvasWatch()')
+  assert canvas_watch=={'writes':[], 'sameCanvas':True},(width,height,canvas_watch)
   # The contextual tea action walks to the real chair, then uses authored clips.
   tea=page.get_by_role('button',name='A little tea ☕',exact=True)
   if not tea.is_visible():
@@ -63,7 +89,7 @@ with sync_playwright()as p:
    page.get_by_role('button',name='Visit the village',exact=True).tap();page.wait_for_function("document.querySelector('#world canvas')?.dataset.village==='true'&&!document.querySelector('#openWardrobe').disabled",timeout=90000)
    page.screenshot(path='/tmp/nancy-home-life-village.png',full_page=True)
    page.get_by_role('button',name='← Her room',exact=True).tap();ready(page);page.wait_for_function("Number(document.querySelector('#stage canvas').dataset.homeZ)>4",timeout=20000);assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).home.teaMoments")==1
-  print('PASS actual touch movement/cancel, stable follow camera/pinch, real Blender chair/cup/standing, saved tea and phone controls:',width,height,flush=True);page.close()
+  print('PASS touch, follow camera, stable room buffer, Blender tea and phone controls:',width,height,flush=True);page.close()
  # A valid saved location behind the wardrobe must stay visible on reopening.
  page=b.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,reduced_motion='reduce');page.on('pageerror',lambda e:errors.append(str(e)));page.add_init_script("localStorage.setItem('kitty-nancy-cozy-v1',JSON.stringify({home:{x:4.8,z:1.1,yaw:0,teaMoments:2}}));");page.goto(BASE+'/');ready(page);page.wait_for_function("Number(document.querySelector('#stage canvas').dataset.homeOccluders)>0",timeout=20000);check_camera(page);page.screenshot(path='/tmp/nancy-home-camera-wardrobe.png',full_page=True)
  assert page.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).home.teaMoments")==2

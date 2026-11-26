@@ -1,6 +1,6 @@
 import { CozyLights, COZY_EXPOSURE } from "./CozyLights";
 import { AdaptiveQuality } from "./AdaptiveQuality";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { ACESFilmicToneMapping } from "three";
@@ -25,6 +25,7 @@ export default function WardrobePreview({
   label: string;
   performance?: { id: number; kind: Gesture };
 }) {
+  const [dpr, setDpr] = useState<number>();
   return (
     <Canvas
       camera={{
@@ -37,7 +38,7 @@ export default function WardrobePreview({
         near: 0.1,
         far: 25,
       }}
-      dpr={[1, 1.25]}
+      dpr={dpr ?? [1, 1.25]}
       gl={{ antialias: true }}
       onCreated={({ gl }) => {
         gl.toneMapping = ACESFilmicToneMapping;
@@ -49,7 +50,7 @@ export default function WardrobePreview({
       }}
     >
       <PreviewLabel label={label} />
-      <AdaptiveQuality />
+      <AdaptiveQuality onDprChange={setDpr} />
       <color attach="background" args={["#f8e9ef"]} />
       <CozyLights />
       <Suspense fallback={null}>

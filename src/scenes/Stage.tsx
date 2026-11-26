@@ -92,13 +92,14 @@ export function Stage() {
     [error, setError] = useState(false);
   const phoneView = useSyncExternalStore(subscribePhoneView, isPhoneView);
   const quality = useGameStore((s) => s.preferences.quality);
-  // Canvas re-applies its dpr prop on configuration. Give the phone village
-  // its final value here so scrolling and React updates cannot clear the buffer
-  // by temporarily restoring the default ratio.
+  const [adaptiveDpr, setAdaptiveDpr] = useState<number>();
+  const stablePhoneCanvas = phoneView && (mode === "room" || mode === "village");
+  // Canvas owns the drawing-buffer ratio. Giving it the current target keeps
+  // other React updates from briefly restoring the default and clearing it.
   const fixedDpr =
-    mode === "village" && phoneView
+    stablePhoneCanvas || quality !== "auto"
       ? Math.min(
-          qualityCap(quality === "auto" ? "gentle" : quality, true),
+          qualityCap(quality === "auto" ? "gentle" : quality, phoneView),
           Math.max(1, window.devicePixelRatio || 1),
         )
       : undefined;
@@ -122,8 +123,10 @@ export function Stage() {
           key={`${mode}-${revision}-${plush || "classic"}`}
           shadows={false}
           frameloop={previewOpen ? "demand" : "always"}
-          dpr={fixedDpr ?? [1, 1.5]}
-          resize={fixedDpr !== undefined ? { scroll: false, offsetSize: true } : undefined}
+          dpr={fixedDpr ?? adaptiveDpr ?? [1, 1.5]}
+          resize={
+            stablePhoneCanvas ? { scroll: false, offsetSize: true } : undefined
+          }
           orthographic
           camera={camera}
           gl={{
@@ -152,7 +155,10 @@ export function Stage() {
           }
         >
           <Suspense fallback={null}>
-            <AdaptiveQuality fixedDpr={fixedDpr} />
+            <AdaptiveQuality
+              enabled={fixedDpr === undefined}
+              onDprChange={setAdaptiveDpr}
+            />
             <Physics
               paused={previewOpen}
               gravity={[0, 0, 0]}
