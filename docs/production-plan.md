@@ -141,6 +141,18 @@ walking, scrolling and visits, including writes that previously reversed before
 the same frame was observed. WebKit uses Linux browser emulation. Confirmation
 on the user’s physical iPhone remains pending.
 
+## Kitty’s room canvas stability
+
+After a report of flicker in Kitty’s room, WebKit with an iPhone 15 profile
+showed the published room’s Automatic detail change its drawing buffer from
+1.25× to 1× during play. The room now uses a stable pixel ratio on phones, like
+the village. The canvases receive their current pixel ratio from React so menu
+updates cannot reapply a competing default.
+
+The room browser check uses a 3× phone profile and watches canvas width and
+height during walking, pinching, scrolling, and opening the wardrobe. These
+checks use browser emulation. A physical phone check remains pending.
+
 ## In-village private interactions · v3.7.1
 
 Kitty and My Melody now wave, show expressions, exchange speech bubbles, and
