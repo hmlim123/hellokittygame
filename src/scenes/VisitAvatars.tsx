@@ -19,9 +19,11 @@ import { VillagePerformance } from "./VillagePerformance";
 import { VillageBenchPose } from "./VillageBenchPose";
 import { teaBenchSeat } from "../../shared/bench-tea.mjs";
 import { VillageSpeech } from "./VillageSpeech";
-type VisitorProps = { actor: VisitPlayer; seated: boolean };
+import { atVillagePicnicSeat } from "../game/village-motion";
+type VisitorProps = { actor: VisitPlayer; bench: boolean; picnic: boolean };
 
-function KittyVisitor({ actor, seated }: VisitorProps) {
+function KittyVisitor({ actor, bench, picnic }: VisitorProps) {
+  const seated = bench || picnic;
   const invalidate = useThree(s => s.invalidate);
   const asset = useKittyAsset(actor.appearance.plush || undefined),
     hero = useMemo(() => makeBlenderKitty(asset, 0), [asset]),
@@ -91,7 +93,7 @@ function KittyVisitor({ actor, seated }: VisitorProps) {
     if (hero.userData.blender.current || hero.userData.blender.fading.length) invalidate();
     updateWalking(hero, dt, a.speed, reduced, hero.userData.villagePerformance || seated);
     if (group.current) {
-      const point = seated ? teaBenchSeat(a.id) : a;
+      const point = bench ? teaBenchSeat(a.id) : a;
       group.current.position.x +=
         (point.x - group.current.position.x) *
         (1 - Math.exp(-Math.min(dt, 0.1) * 12));
@@ -130,7 +132,7 @@ function KittyVisitor({ actor, seated }: VisitorProps) {
       <group scale={0.78}>
         <primitive object={hero} dispose={null}>
           <Suspense fallback={null}>
-            {seated ? <VillageBenchPose hero={hero} role={actor.id} style={actor.appearance.plush || "classic"} /> :
+            {seated ? <VillageBenchPose hero={hero} role={actor.id} picnic={picnic} style={actor.appearance.plush || "classic"} /> :
               <VillagePerformance hero={hero} role={actor.id} style={actor.appearance.plush || "classic"} />}
           </Suspense>
         </primitive>
@@ -146,7 +148,8 @@ function KittyVisitor({ actor, seated }: VisitorProps) {
     </group>
   );
 }
-function MelodyVisitor({ actor, seated }: VisitorProps) {
+function MelodyVisitor({ actor, bench, picnic }: VisitorProps) {
+  const seated = bench || picnic;
   const initial = useRef({
     position: [actor.x, 0, actor.z] as [number, number, number],
     rotation: [0, actor.yaw, 0] as [number, number, number],
@@ -158,7 +161,7 @@ function MelodyVisitor({ actor, seated }: VisitorProps) {
   locomotion.current.speed = seated ? 0 : actor.speed;
   useFrame((state, dt) => {
     if (!group.current) return;
-    const point = seated ? teaBenchSeat(actor.id) : actor;
+    const point = bench ? teaBenchSeat(actor.id) : actor;
     group.current.position.lerp(
       target.set(point.x, 0, point.z),
       reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 12),
@@ -182,7 +185,7 @@ function MelodyVisitor({ actor, seated }: VisitorProps) {
       rotation={initial.current.rotation}
     >
       <GroundShadow />
-      <Melody remote locomotion={locomotion} performance={actor.gesture} holdingCup={seated || actor.holding === "cup"} villageRole={actor.id} benchRole={seated ? actor.id : undefined} />
+      <Melody remote locomotion={locomotion} performance={actor.gesture} holdingCup={seated || actor.holding === "cup"} villageRole={actor.id} benchRole={bench ? actor.id : undefined} picnicRole={picnic ? actor.id : undefined} />
       <Html center position={[0, 2.27 * 0.78 + (seated ? 0.65 : 0.25), 0]} zIndexRange={[4, 0]}>
         <VillageSpeech role={actor.id} name={actor.name} />
       </Html>
@@ -190,11 +193,12 @@ function MelodyVisitor({ actor, seated }: VisitorProps) {
   );
 }
 function Visitor({ actor }: { actor: VisitPlayer }) {
-  const seated = useVisitsStore((s) => !!s.benchTea?.seated[actor.id]);
+  const bench = useVisitsStore((s) => !!s.benchTea?.seated[actor.id]);
+  const picnic = !bench && atVillagePicnicSeat(actor);
   return actor.character === "melody" ? (
-    <MelodyVisitor actor={actor} seated={seated} />
+    <MelodyVisitor actor={actor} bench={bench} picnic={picnic} />
   ) : (
-    <KittyVisitor actor={actor} seated={seated} />
+    <KittyVisitor actor={actor} bench={bench} picnic={picnic} />
   );
 }
 export function VisitAvatars() {

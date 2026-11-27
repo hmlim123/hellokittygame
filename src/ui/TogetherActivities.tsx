@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { togetherDuration, villagePhoto } from "../game/village-together";
-import { useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
+import { atVillageBakingSpot, openVillageBaking, useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
 import { useVisitsStore, villagePartner } from "../game/visits";
 import type { PostcardMemory } from "../game/cozy";
 import { PostcardRoute, PostcardWalk } from "./PostcardWalk";
@@ -57,6 +57,12 @@ export function TogetherActivities() {
     [notice, setNotice] = useState("");
   const rainSound = useGameStore((s) => s.cozy.rainSound);
   const benchOccupied = useVisitsStore((s) => !!(s.benchTea?.seated.host || s.benchTea?.seated.guest));
+  const picnic = useVillageMotion((s) => s.picnic);
+  const bakingOpen = useVillageMotion((s) => s.baking);
+  const partnerBaking = useVisitsStore((s) => {
+    const partner = villagePartner(s);
+    return !!partner && atVillageBakingSpot(partner);
+  });
   const clueWaiting = useVisitsStore((s) => {
     const trail = s.clueTrail;
     if (!trail?.partnerShared || trail.destination || trail.ownGuess) return null;
@@ -196,13 +202,10 @@ export function TogetherActivities() {
       setNotice("This photo could not be kept. Please try again.");
     }
   };
-  const baking = moment?.baking;
-  const nextBakingAction =
-    role === "guest" && baking === "decorate"
-      ? "decorate"
-      : role === "host" && baking === "ready"
-        ? "present"
-        : null;
+  function goBake() {
+    if (options.current) options.current.open = false;
+    openVillageBaking();
+  }
   function openPendingActivity() {
     const menu = options.current;
     const panel = clueWaiting ? cluePanel.current : petalPanel.current;
@@ -219,7 +222,7 @@ export function TogetherActivities() {
     <section className="together-activities" aria-label="Time together">
       <div className="village-social-buttons">
         <button
-          disabled={disabled || busy || !available || benchOccupied}
+          disabled={disabled || busy || !available || benchOccupied || picnic}
           aria-label="Dance together"
           onClick={() => action("celebrate")}
         >
@@ -231,14 +234,8 @@ export function TogetherActivities() {
           </button>
         )}
       </div>
-      {nextBakingAction && available && !busy && !benchOccupied && (
-        <button
-          className="baking-turn"
-          disabled={disabled}
-          onClick={() => action(nextBakingAction)}
-        >
-          {nextBakingAction === "decorate" ? "Decorate cookies" : "Present cookies"}
-        </button>
+      {partnerBaking && available && !picnic && !bakingOpen && !benchOccupied && !optionsOpen && (
+        <button className="activity-turn" disabled={disabled || !sceneReady} onClick={goBake}>Join at the café</button>
       )}
       {available && !optionsOpen && (clueWaiting || petalWaiting) && (
         <button className="activity-turn" disabled={disabled} onClick={openPendingActivity}>
@@ -249,7 +246,7 @@ export function TogetherActivities() {
         <button className="activity-turn" onClick={() => setMarketOpen(true)}>Open market stall</button>
       )}
       {marketOpen && <VillageMarket onClose={() => setMarketOpen(false)} />}
-      {busy && moment?.action === "highfive" && (
+      {busy && moment?.action === "highfive" && !picnic && (
         <span className="village-social-status" role="status">
           High-five!
         </span>
@@ -282,64 +279,19 @@ export function TogetherActivities() {
               {benchOccupied && <p>Stand up from the bench together to dance, bake, or take a photo.</p>}
               <div className="visit-emotes">
                 <button
-                  disabled={disabled || busy || benchOccupied}
+                  disabled={disabled || busy || benchOccupied || picnic}
                   onClick={() => action("wave")}
                 >
                   Wave together
                 </button>
                 <button
-                  disabled={disabled || busy || benchOccupied}
+                  disabled={disabled || busy || benchOccupied || picnic}
                   onClick={() => action("highfive")}
                 >
                   High-five ♡
                 </button>
               </div>
-              <details>
-                <summary>Bake together</summary>
-                <p>
-                  {moment?.baking === "decorate"
-                    ? "My Melody decorates the cookies."
-                    : moment?.baking === "ready"
-                      ? "Nancy, bring your cookies to the picnic."
-                      : "Nancy mixes, then My Melody decorates. No timer, no rush."}
-                </p>
-                <button
-                  disabled={
-                    disabled ||
-                    busy ||
-                    benchOccupied ||
-                    role !== "host" ||
-                    (!!moment && moment.baking !== "mix")
-                  }
-                  onClick={() => action("stir")}
-                >
-                  Nancy mixes
-                </button>
-                <button
-                  disabled={
-                    disabled ||
-                    busy ||
-                    benchOccupied ||
-                    role !== "guest" ||
-                    moment?.baking !== "decorate"
-                  }
-                  onClick={() => action("decorate")}
-                >
-                  Melody decorates
-                </button>
-                <button
-                  disabled={
-                    disabled ||
-                    busy ||
-                    benchOccupied ||
-                    role !== "host" ||
-                    moment?.baking !== "ready"
-                  }
-                  onClick={() => action("present")}
-                >
-                  Bring cookies to the picnic
-                </button>
-              </details>
+              <button disabled={disabled || benchOccupied || !sceneReady} onClick={goBake}>Bake together</button>
               <details>
                 <summary>A photo together</summary>
                 {!nearForPhoto && photoPartner && (

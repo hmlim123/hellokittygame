@@ -115,7 +115,7 @@ with (results/'visits-service.log').open('w') as log:
 
             visits(host)
             host.get_by_role('button',name='Walk to the picnic table ↗',exact=True).click()
-            host.get_by_role('dialog',name='A picnic in the village',exact=True).wait_for(timeout=45000)
+            host.get_by_role('region',name='At the picnic table',exact=True).wait_for(timeout=45000)
             visits(guest)
             # Exercise a real server correction during the tap-to-walk route.
             # One rejected movement packet must not strand the invited player.
@@ -142,7 +142,7 @@ with (results/'visits-service.log').open('w') as log:
             assert rect and rect['height']>=44 and rect['y']>=0 and rect['y']+rect['height']<=844
             guest.touchscreen.tap(rect['x']+rect['width']/2,rect['y']+rect['height']/2)
             try:
-                arrival=guest.get_by_role('dialog',name='A picnic in the village',exact=True)
+                arrival=guest.get_by_role('region',name='At the picnic table',exact=True)
                 try:
                     arrival.wait_for(timeout=45000)
                 except Exception:
@@ -160,12 +160,14 @@ with (results/'visits-service.log').open('w') as log:
             host.get_by_role('button',name='Lay the cloth',exact=True).click()
             guest.get_by_role('button',name='Bring the cookies',exact=True).tap()
             host.get_by_role('button',name='Pour the tea',exact=True).click()
-            for page in [host,guest]:page.get_by_text('A little picnic, made together ♡',exact=True).wait_for(timeout=20000)
-            back(host);back(guest)
+            for page in [host,guest]:
+                page.get_by_text('A little picnic, made together ♡',exact=True).wait_for(timeout=20000)
+                assert page.locator('dialog[open]').count()==0
             host.wait_for_function("Math.abs(Number(document.querySelector('#world canvas').dataset.villageYaw))<.15",timeout=10000)
             host.screenshot(path='/tmp/kitty-village-two-player-picnic.png',full_page=True)
             hx=float(host.locator('#world canvas').get_attribute('data-village-x'));gx=float(guest.locator('#world canvas').get_attribute('data-village-x'))
             assert abs(hx-gx)>1,'friends should take separate places at the table'
+            for page in [host,guest]:page.get_by_role('button',name='Leave the table',exact=True).tap()
             guest.reload();ready(guest)
             guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=25000)
             back(guest)

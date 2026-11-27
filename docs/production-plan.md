@@ -103,6 +103,18 @@ The draft uses the same two accounts, existing SQLite binding, and saved
 personal progress. The hosted visit on both players’ actual devices remains
 the acceptance check. [Existing Worker update](private-visits-setup.md#updating-an-existing-village-for-v37)
 
+## Picnic and baking in the village
+
+The picnic’s cloth, cookies, tea and cup controls sit below the village scene.
+Nancy and My Melody take separate seats, and either player can start **Cheers**
+once both have tea at the table. The existing shared moment sends both cup poses
+the same start time.
+
+**Activities → Bake together** sends each player to their own spot at Momo’s café
+counter. Nancy mixes, Melody decorates, and Nancy presents the cookies. Both can
+then walk to the picnic and see the cookies on the table. The existing Worker
+messages preserve shared progress and the visit’s separate personal saves.
+
 ## Clue trail and Petal Match · November 24, 2026
 
 The draft adds two replayable activities to the private village. In the clue

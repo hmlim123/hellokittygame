@@ -457,12 +457,7 @@ function connect(server: string, hello: object) {
           });
       }
       if (!wasReady && picnic.every(Boolean))
-        useGameStore
-          .getState()
-          .react(
-            "softHappy",
-            "Your picnic is ready. A little moment made together. ♡",
-          );
+        useGameStore.getState().react("softHappy");
       const priorTrail = previous.clueTrail;
       if (clueTrail && priorTrail && priorTrail.round === clueTrail.round &&
           clueTrail.ownSearched && clueTrail.partnerSearched &&
@@ -488,7 +483,7 @@ function connect(server: string, hello: object) {
       stopTransport();
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false, picnic: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false, baking: false });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -539,7 +534,7 @@ function connect(server: string, hello: object) {
     } else {
       rememberTicket(null);
       restorePersonalSave();
-      useVillageMotion.setState({ guestVisit: false, picnic: false });
+      useVillageMotion.setState({ guestVisit: false, picnic: false, baking: false });
       useVisitsStore.setState({
         status: "ended",
         players: [],
@@ -750,7 +745,7 @@ export const useVisitsStore = create<Visits>((set, get) => ({
   },
   leave() {
     restorePersonalSave();
-    useVillageMotion.setState({ guestVisit: false, picnic: false });
+    useVillageMotion.setState({ guestVisit: false, picnic: false, baking: false });
     transmit({ type: get().role === "host" ? "end" : "leave" });
     stopTransport();
     rememberTicket(null);

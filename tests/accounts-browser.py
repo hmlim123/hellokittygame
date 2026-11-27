@@ -464,8 +464,9 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 controls=page.get_by_role('group',name='With your visitor',exact=True)
                 button=controls.get_by_role('button',name='Picnic',exact=True)
                 button.tap()
-                picnic=page.get_by_role('dialog',name='A picnic in the village',exact=True)
+                picnic=page.get_by_role('region',name='At the picnic table',exact=True)
                 picnic.wait_for(timeout=60000)
+                assert page.locator('dialog[open]').count()==0
                 return picnic
 
             host.evaluate("""() => {
@@ -509,10 +510,6 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host_picnic.get_by_role('button',name='Pour the tea').tap()
             for picnic in [host_picnic, guest_picnic]:
                 picnic.get_by_role('heading',name='A little picnic, made together ♡').wait_for()
-            for page, picnic in [(host, host_picnic), (guest, guest_picnic)]:
-                page.bring_to_front()
-                picnic.get_by_role('button',name='Enjoy the picnic',exact=True).tap()
-                assert page.get_by_role('group',name='At the picnic table',exact=True).is_visible()
             guest.wait_for_function("document.querySelector('#world canvas').dataset.playerHolding === 'cup'")
             host.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'cup'")
             guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'cup'")
@@ -522,17 +519,28 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                     return Math.hypot(d.villageX-x, d.villageZ-4.2) <= .2;
                 }""",arg=x,timeout=30000)
             assert host.evaluate("JSON.parse(localStorage.getItem('kitty-nancy-cozy-v1')).cookie.packed")
-            guest.get_by_role('button',name='Raise your cup',exact=True).tap()
-            host.wait_for_function("document.querySelector('#world canvas').dataset.remoteExpression === 'sip'")
+            for page in [host,guest]:
+                page.wait_for_function("""() => {
+                    const { hostPicnic, guestPicnic } = document.querySelector('#world canvas').dataset;
+                    return hostPicnic === 'seated' && guestPicnic === 'seated';
+                }""")
+                page.evaluate("""() => {
+                    const canvas = document.querySelector('#world canvas');
+                    new MutationObserver(() => {
+                        if (canvas.dataset.hostPicnic === 'toast' && canvas.dataset.guestPicnic === 'toast')
+                            window.picnicToastSeen = true;
+                    }).observe(canvas, { attributes: true, attributeFilter: ['data-host-picnic', 'data-guest-picnic'] });
+                }""")
+            guest.get_by_role('button',name='Cheers',exact=True).tap()
+            for page in [host,guest]:
+                page.wait_for_function('window.picnicToastSeen === true',timeout=15000)
             host.bring_to_front()
             host.screenshot(path=str(results/'accounts-tea-together.png'))
             host.get_by_role('button',name='Leave the table',exact=True).tap()
             guest.wait_for_function("document.querySelector('#world canvas').dataset.remoteHolding === 'parcel'")
             guest.bring_to_front()
-            guest.get_by_role('button',name='Table setup',exact=True).tap()
-            guest.get_by_role('heading',name='A little picnic, made together ♡').wait_for()
-            back(guest)
-            print('PASS direct picnic controls, a mid-picnic refresh and sharing tea in the village scene',flush=True)
+            guest.get_by_role('button',name='Leave the table',exact=True).tap()
+            print('PASS inline picnic controls, a mid-picnic refresh, separate seats and both cups toast in one scene',flush=True)
 
             for page, garden_x in [(host, 5.5), (guest, 6.5)]:
                 page.bring_to_front()
@@ -568,12 +576,32 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             host.get_by_text('Activities',exact=True).tap()
             host.get_by_role('button',name='High-five ♡',exact=True).tap()
             guest.wait_for_function("document.querySelector('#world canvas').dataset.guestTogether==='highfive'",timeout=12000)
-            host.get_by_text('Bake together',exact=True).tap()
-            host.get_by_role('button',name='Nancy mixes',exact=True).click()
+            host.get_by_role('button',name='Bake together',exact=True).tap()
+            host_baking=host.get_by_role('region',name='Bake together at the café',exact=True)
+            host_baking.get_by_text('Waiting for your partner at the counter.',exact=True).wait_for(timeout=60000)
+            assert host_baking.get_by_role('button',name='Nancy mixes',exact=True).is_disabled()
             guest.bring_to_front()
-            guest.get_by_role('button',name='Decorate cookies',exact=True).click(timeout=20000)
+            guest.get_by_role('button',name='Join at the café',exact=True).tap()
+            guest_baking=guest.get_by_role('region',name='Bake together at the café',exact=True)
+            guest_baking.get_by_text('Nancy’s turn to mix.',exact=True).wait_for(timeout=60000)
+            for page in [host,guest]:
+                assert page.locator('dialog[open]').count()==0
+                assert page.locator('#world canvas').is_visible()
+                assert page.locator('canvas').count()==1
             host.bring_to_front()
-            host.get_by_role('button',name='Present cookies',exact=True).click(timeout=20000)
+            host_baking.get_by_role('button',name='Nancy mixes',exact=True).click(timeout=60000)
+            guest.bring_to_front()
+            guest.wait_for_function("document.querySelector('#world canvas').dataset.hostTogether === 'stir'",timeout=15000)
+            guest_baking.get_by_role('button',name='Melody decorates',exact=True).click(timeout=20000)
+            host.bring_to_front()
+            host.wait_for_function("document.querySelector('#world canvas').dataset.guestTogether === 'decorate'",timeout=15000)
+            host_baking.get_by_role('button',name='Bring cookies to the picnic',exact=True).click(timeout=20000)
+            host_baking.get_by_text('Your cookies are on the picnic table.',exact=True).wait_for()
+            assert host_baking.get_by_role('button',name='Walk to the picnic',exact=True).is_enabled()
+            for workbench in [guest_baking,host_baking]:
+                workbench.get_by_role('button',name='Leave the counter',exact=True).tap()
+            print('PASS both players walk to the café, mix and decorate with the Blender avatars, and serve cookies in one scene',flush=True)
+            host.get_by_text('Activities',exact=True).tap()
             host.get_by_text('A photo together',exact=True).tap()
             host.get_by_label('Our pose',exact=True).select_option('lean')
             host.get_by_label('Our atmosphere',exact=True).select_option('sunset')
