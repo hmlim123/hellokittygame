@@ -167,7 +167,9 @@ with (results/'visits-service.log').open('w') as log:
             host.screenshot(path='/tmp/kitty-village-two-player-picnic.png',full_page=True)
             hx=float(host.locator('#world canvas').get_attribute('data-village-x'));gx=float(guest.locator('#world canvas').get_attribute('data-village-x'))
             assert abs(hx-gx)>1,'friends should take separate places at the table'
-            for page in [host,guest]:page.get_by_role('button',name='Leave the table',exact=True).tap()
+            host.get_by_role('button',name='Leave the table',exact=True).click()
+            guest.bring_to_front()
+            guest.get_by_role('button',name='Leave the table',exact=True).tap()
             guest.reload();ready(guest)
             guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=25000)
             back(guest)
