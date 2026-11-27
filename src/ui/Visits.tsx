@@ -4,21 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { useGameStore } from "../game/store";
 import { useVisitsStore, parseVisitLink } from "../game/visits";
-import { useVillageMotion, walkToVillageCompanion, type VillagePoint } from "../game/village-motion";
+import { useVillageMotion, walkToVillageCompanion } from "../game/village-motion";
 import { VILLAGE_PICNIC } from "../game/village";
-
-const nearPicnic = ({ position }: { position: VillagePoint }) =>
-  Math.hypot(position.x - VILLAGE_PICNIC.x, position.z - VILLAGE_PICNIC.z) < 2.5;
 
 export function WalkToPicnic({ inVillage = false }: { inVillage?: boolean }) {
   const status = useVisitsStore((s) => s.status);
   const ready = useGameStore((s) => s.sceneReady);
-  const near = useVillageMotion(nearPicnic);
-  if (!inVillage && (status !== "online" || near)) return null;
+  const seated = useVillageMotion((s) => s.picnic);
+  if (!inVillage && (status !== "online" || seated)) return null;
   return (
     <button
       className={inVillage ? undefined : "visit-navigation"}
-      disabled={!ready || status !== "online"}
+      disabled={!ready || status !== "online" || seated}
       onClick={() => {
         if (!inVillage) useGameStore.getState().closePanel();
         useVillageMotion.getState().walkTo(VILLAGE_PICNIC, VILLAGE_PICNIC.id);
@@ -26,48 +23,6 @@ export function WalkToPicnic({ inVillage = false }: { inVillage?: boolean }) {
     >
       {inVillage ? "Picnic" : "Walk to the picnic table ↗"}
     </button>
-  );
-}
-export function SharedPicnic({ navigation = true }: { navigation?: boolean }) {
-  const status = useVisitsStore((s) => s.status),
-    players = useVisitsStore((s) => s.players),
-    picnic = useVisitsStore((s) => s.picnic),
-    near = useVillageMotion(nearPicnic);
-  if (status !== "online") return null;
-  const together = players.filter((p) => p.connected).length === 2;
-  return (
-    <section className="shared-picnic" aria-label="Our shared picnic">
-      <h3>
-        {picnic.every(Boolean)
-          ? "A little picnic, made together ♡"
-          : "Our little picnic"}
-      </h3>
-      <p>
-        {!together
-          ? "Invite your friend, then set the table together."
-          : !near
-            ? "The picnic table is on the left of the garden. Walk over together."
-            : picnic.every(Boolean)
-              ? "The cloth, cookies and tea are ready. Stay a little while together."
-              : "Each of you can add a little something. No timer, no rush."}
-      </p>
-      <div className="picnic-contributions">
-        {["Lay the cloth", "Bring the cookies", "Pour the tea"].map(
-          (label, i) => (
-            <button
-              key={label}
-              disabled={!together || !near || picnic[i]}
-              aria-pressed={picnic[i]}
-              onClick={() => useVisitsStore.getState().placePicnic(i)}
-            >
-              {picnic[i] ? "✓ " : ""}
-              {label}
-            </button>
-          ),
-        )}
-      </div>
-      {navigation && <WalkToPicnic />}
-    </section>
   );
 }
 export function VisitPresence() {
@@ -305,7 +260,6 @@ export function VisitsPanel() {
               </button>
             )}
           </div>
-          <SharedPicnic navigation={false} />
           <button
             className="primary wide"
             onClick={() => {

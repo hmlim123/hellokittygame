@@ -26,7 +26,10 @@ import {
 } from "../game/village";
 import {
   actInVillage,
+  openVillageBaking,
   useVillageMotion,
+  VILLAGE_BAKING,
+  villageBakingSpot,
   villagePicnicSeat,
   villageRender,
 } from "../game/village-motion";
@@ -72,6 +75,11 @@ function House({ cafe = false }: { cafe?: boolean }) {
       onClick={(e) => {
         if (e.delta < 8) {
           e.stopPropagation();
+          const visit = useVisitsStore.getState();
+          if (cafe && visit.role && visit.togetherAvailable) {
+            openVillageBaking();
+            return;
+          }
           const o = VILLAGE_ACTIONS.find((o) => o.id === id)!;
           useVillageMotion.getState().walkTo(o, id);
         }
@@ -452,6 +460,32 @@ function PicnicTable() {
       )}
       {placed[2] && <Toy name="Cup" position={[-0.75, 0.95, 0]} scale={0.65} />}
       <Toy name="Flowers" position={[0.7, 0.95, 0]} scale={0.38} />
+      {[-0.95, 0.95].map((x, i) => (
+        <RoundedBox key={x} args={[0.72, 0.15, 0.64]} radius={0.07} position={[x, 0.075, -1.6]}>
+          <meshStandardMaterial color={i ? "#c8add6" : "#eab5c1"} />
+        </RoundedBox>
+      ))}
+    </group>
+  );
+}
+
+function BakingCounter() {
+  const visible = useVisitsStore((s) => !!s.role && s.togetherAvailable);
+  if (!visible) return null;
+  return (
+    <group position={[VILLAGE_BAKING.x, 0, VILLAGE_BAKING.z]} onClick={(event) => {
+      if (event.delta >= 8) return;
+      event.stopPropagation();
+      openVillageBaking();
+    }}>
+      <RoundedBox args={[2.65, 0.15, 0.72]} radius={0.065} position={[0, 0.83, 0]}>
+        <meshStandardMaterial color="#e4baa1" />
+      </RoundedBox>
+      <RoundedBox args={[2.42, 0.71, 0.57]} radius={0.075} position={[0, 0.39, 0]}>
+        <meshStandardMaterial color="#edced2" />
+      </RoundedBox>
+      <Toy name="Cup" position={[-0.72, 0.94, 0]} scale={0.5} />
+      <Blob at={[0.65, 0.93, 0.03]} scale={[0.2, 0.065, 0.18]} color="#c99772" />
     </group>
   );
 }
@@ -583,6 +617,7 @@ function Landscape() {
       <Neighbour id="momo" />
       <Neighbour id="pip" />
       <PicnicTable />
+      <BakingCounter />
       <VillageTeaBench />
       <VillageMarketStall />
       <RigidBody type="fixed" colliders={false}>
@@ -617,6 +652,7 @@ function Player() {
   const benchRole = useVisitsStore((s) => s.role && s.benchTea?.seated[s.role] ? s.role : undefined);
   const onRoute = useVillageMotion((s) => s.path.length > 0);
   const seatedRole = onRoute ? undefined : benchRole;
+  const baking = useVillageMotion((s) => s.baking);
   const sharedRole = useVisitsStore(s => s.togetherAvailable &&
     s.players.some(p => p.id !== s.role && p.connected) ? s.role : null);
   const equipment = useGameStore((s) => s.equipment),
@@ -641,6 +677,7 @@ function Player() {
       pending: null,
       input: { x: 0, z: 0 },
       picnic: false,
+      baking: false,
     });
     return () => {
       const m = useVillageMotion.getState();
@@ -735,6 +772,10 @@ function Player() {
     if (game.panel || game.dialogue || seated || seatedRole)
       locomotion.current.speed = 0;
     const p = latest.current;
+    const bakingSpot = ownRole && baking ? villageBakingSpot(ownRole) : null;
+    const atCounter = bakingSpot && !motion.path.length &&
+      Math.hypot(p.x - bakingSpot.x, p.z - bakingSpot.z) <= 0.25;
+    if (atCounter && locomotion.current.speed < 0.05) yaw.current = 0;
     villageRender.x = p.x;
     villageRender.z = p.z;
     saveTime.current += dt;
@@ -778,6 +819,8 @@ function Player() {
         ? new THREE.Vector3(TEA_BENCH.x, 1.02, TEA_BENCH.z + 0.12)
         : motion.picnic
           ? new THREE.Vector3(VILLAGE_PICNIC.x, 0.9, VILLAGE_PICNIC.z + 0.4)
+          : atCounter
+            ? new THREE.Vector3(VILLAGE_BAKING.x, 0.95, VILLAGE_BAKING.z - 0.48)
           : new THREE.Vector3(p.x, 0.9, p.z);
     follow.current.lerp(
       target,
@@ -814,13 +857,15 @@ function Player() {
       <group ref={anchor} rotation={[0, spawn.yaw, 0]}>
         <Suspense fallback={null}>
           {playerCharacter === "melody" ? (
-            <Melody locomotion={locomotion} holdingCup={picnic || !!seatedRole} villageRole={sharedRole || undefined} benchRole={seatedRole} />
+            <Melody locomotion={locomotion} holdingCup={picnic || !!seatedRole}
+              villageRole={sharedRole || undefined} benchRole={seatedRole}
+              picnicRole={picnic && !onRoute && !seatedRole ? ownRole ?? "host" : undefined} />
           ) : (
             <Kitty
               equipment={
                 effect?.kind === "water"
                   ? { ...equipment, item: "watering" }
-                  : packed || giving || seatedRole
+                  : packed || giving || seatedRole || picnic
                     ? { ...equipment, item: "none" }
                     : equipment
               }
@@ -829,6 +874,7 @@ function Player() {
               scale={0.78}
               villageRole={sharedRole || undefined}
               benchRole={seatedRole}
+              picnicRole={picnic && !onRoute && !seatedRole ? ownRole ?? "host" : undefined}
               locomotion={locomotion}
             />
           )}

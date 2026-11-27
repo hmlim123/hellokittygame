@@ -2617,11 +2617,28 @@ main[data-view-only="true"] :is(.scene-container, .stage) {
   border: 1px solid #dfc9a7;
   border-radius: 12px;
 }
-.village-social .baking-turn {
-  background: #f8e8da;
-  border-color: #d8b69c;
-  color: #694c40;
+.village-food {
+  display: grid;
+  gap: 8px;
+  padding: 10px clamp(10px, 3vw, 24px);
+  background: #fffbf5;
+  border-top: 1px solid #ead9d2;
 }
+.village-food-heading, .village-food-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.village-food-heading { justify-content: space-between; }
+.village-food h2 { margin: 0; font: normal 1.25rem Georgia, serif; }
+.village-food p { margin: 0; font-size: 0.875rem; }
+.village-food button { min-height: 44px; }
+.village-food > .primary { justify-self: start; }
+.village-food .shared-picnic { margin: 0; padding: 0; background: transparent; }
+.village-food .shared-picnic h3 { margin-bottom: 4px; }
+.village-food .picnic-contributions { margin: 8px 0 0; }
+.village-food .picnic-contributions button { padding: 6px 10px; }
 .village-social .activity-turn {
   background: #eef3e5;
   border-color: #c9d8ba;

@@ -6,18 +6,22 @@ import { BENCH_TOAST_MS, type BenchRole } from "../../shared/bench-tea.mjs";
 import { assetUrl } from "../game/assets";
 import { visitTime } from "../game/visit-clock";
 import { useVisitsStore } from "../game/visits";
+import { useGameStore } from "../game/store";
+import { atVillagePicnicSeat } from "../game/village-motion";
 import { melodyBenchClips } from "./melody-model";
 import { useReducedMotion } from "./use-reduced-motion";
 import { updateWalking } from "./walk-animation";
 
-type SharedProps = { hero: THREE.Group; role: BenchRole };
+type SharedProps = { hero: THREE.Group; role: BenchRole; picnic?: boolean };
 type BenchClips = { rest: THREE.AnimationClip; toast: THREE.AnimationClip };
 
-function SyncedBenchPose({ hero, role, clips }: SharedProps & { clips: BenchClips }) {
+function SyncedBenchPose({ hero, role, picnic, clips }: SharedProps & { clips: BenchClips }) {
   const reduced = useReducedMotion();
   const canvas = useThree((s) => s.gl.domElement);
   const invalidate = useThree((s) => s.invalidate);
   const current = useRef<THREE.AnimationAction | null>(null);
+  const sip = useRef<{ id: number; at: number } | null>(null);
+  const attribute = picnic ? `${role}Picnic` : `${role}Bench`;
   const model = hero.userData.blender.model as THREE.Group;
   const animation = useMemo(() => {
     const mixer = new THREE.AnimationMixer(model);
@@ -36,19 +40,32 @@ function SyncedBenchPose({ hero, role, clips }: SharedProps & { clips: BenchClip
     return () => {
       animation.mixer.stopAllAction();
       current.current = null;
+      sip.current = null;
       delete hero.userData.benchPose;
-      delete canvas.dataset[`${role}Bench`];
-      delete canvas.dataset[`${role}BenchPhase`];
+      delete canvas.dataset[attribute];
+      delete canvas.dataset[`${attribute}Phase`];
       if (melody) { melody.active = "idle"; melody.actions.idle.reset().play(); }
       invalidate();
     };
-  }, [hero, animation, canvas, role, invalidate]);
+  }, [hero, animation, canvas, attribute, invalidate]);
 
   useFrame(({ invalidate }) => {
     const visit = useVisitsStore.getState();
-    const at = visit.benchTea?.toastAt ?? 0;
-    const elapsed = visitTime() + visit.clockOffset - at;
-    const toasting = at > 0 && elapsed >= 0 && elapsed < BENCH_TOAST_MS;
+    const now = visitTime();
+    const serverNow = now + visit.clockOffset;
+    let elapsed = serverNow - (visit.benchTea?.toastAt ?? 0);
+    if (picnic) {
+      const gesture = !visit.role || role === visit.role ? useGameStore.getState().gesture
+        : visit.players.find((p) => p.id === role)?.gesture;
+      if (gesture && gesture.id !== sip.current?.id)
+        sip.current = { id: gesture.id, at: sip.current && gesture.kind === "sip" ? now : 0 };
+      // Reuse the existing server-timed pair gesture when both players have cups at the table.
+      const moment = visit.together;
+      elapsed = moment?.action === "highfive" && visit.players.length === 2 &&
+        visit.picnic[2] && visit.players.every(atVillagePicnicSeat)
+        ? serverNow - moment.at : now - (sip.current?.at ?? 0);
+    }
+    const toasting = elapsed >= 0 && elapsed < BENCH_TOAST_MS;
     const action = toasting && !reduced ? animation.toast : animation.rest;
     if (current.current !== action) {
       current.current?.stop();
@@ -60,15 +77,15 @@ function SyncedBenchPose({ hero, role, clips }: SharedProps & { clips: BenchClip
       ? elapsed * action.getClip().duration / BENCH_TOAST_MS
       : 0;
     animation.mixer.update(0);
-    canvas.dataset[`${role}Bench`] = toasting ? "toast" : "seated";
-    if (toasting) canvas.dataset[`${role}BenchPhase`] = String(elapsed / 1000);
-    else delete canvas.dataset[`${role}BenchPhase`];
-    if (at > 0 && elapsed < BENCH_TOAST_MS) invalidate();
+    canvas.dataset[attribute] = toasting ? "toast" : "seated";
+    if (toasting) canvas.dataset[`${attribute}Phase`] = String(elapsed / 1000);
+    else delete canvas.dataset[`${attribute}Phase`];
+    if (elapsed < BENCH_TOAST_MS) invalidate();
   }, -0.25);
   return null;
 }
 
-function KittyBenchPose({ hero, role, style }: SharedProps & { style: string }) {
+function KittyBenchPose({ hero, role, picnic, style }: SharedProps & { style: string }) {
   const library = useGLTF(assetUrl(`assets/home-motion/${style}.glb`));
   const clips = useMemo(() => {
     const model = hero.userData.blender.model as THREE.Group;
@@ -85,15 +102,14 @@ function KittyBenchPose({ hero, role, style }: SharedProps & { style: string }) 
     }
     return { rest: get("cupIdle"), toast: get("sipSit") };
   }, [hero, library]);
-  return <SyncedBenchPose hero={hero} role={role} clips={clips} />;
+  return <SyncedBenchPose hero={hero} role={role} picnic={picnic} clips={clips} />;
 }
 
-function MelodyBenchPose({ hero, role }: SharedProps) {
+function MelodyBenchPose({ hero, role, picnic }: SharedProps) {
   const clips = useMemo(() => melodyBenchClips(hero), [hero]);
-  return <SyncedBenchPose hero={hero} role={role} clips={clips} />;
+  return <SyncedBenchPose hero={hero} role={role} picnic={picnic} clips={clips} />;
 }
 
-export function VillageBenchPose({ hero, role, style }: SharedProps & { style: string }) {
-  return style === "melody" ? <MelodyBenchPose hero={hero} role={role} /> :
-    <KittyBenchPose hero={hero} role={role} style={style} />;
+export function VillageBenchPose({ style, ...seat }: SharedProps & { style: string }) {
+  return style === "melody" ? <MelodyBenchPose {...seat} /> : <KittyBenchPose {...seat} style={style} />;
 }

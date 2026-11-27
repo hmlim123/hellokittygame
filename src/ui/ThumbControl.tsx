@@ -32,8 +32,9 @@ export function ThumbControl({ mode }: { mode: "room" | "village" }) {
   };
   const cancel = () => {
     const id = active.current;
+    if (id === null) return;
     active.current = null;
-    if (id !== null && root.current?.hasPointerCapture(id))
+    if (root.current?.hasPointerCapture(id))
       root.current.releasePointerCapture(id);
     setThumb({ x: 0, z: 0 });
     store.getState().setInput(0, 0);

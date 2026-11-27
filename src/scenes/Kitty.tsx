@@ -55,6 +55,7 @@ interface KittyProps {
   locomotion?: RefObject<{ speed: number }>;
   villageRole?: VisitPlayer["id"];
   benchRole?: VisitPlayer["id"];
+  picnicRole?: VisitPlayer["id"];
   photoPose?: import("./PhotoCorner").PhotoPose;
 }
 export function Kitty({
@@ -77,6 +78,7 @@ export function Kitty({
   heroRef,
   villageRole,
   benchRole,
+  picnicRole,
 }: KittyProps) {
   const asset = useKittyAsset(equipment?.plush),
     hero = useMemo(
@@ -91,6 +93,7 @@ export function Kitty({
     ),
     reduced = useReducedMotion();
   const homePaused = useGameStore((s) => !!s.panel || !!s.dialogue);
+  const seatRole = benchRole ?? picnicRole;
   useEffect(() => {
     if (heroRef) heroRef.current = hero;
     return () => {
@@ -179,7 +182,7 @@ export function Kitty({
   } | null>(null);
   const hadHome = useRef(false);
   useEffect(() => {
-    if (homeClip || benchRole) {
+    if (homeClip || seatRole) {
       seenGesture.current = { hero, gesture, animate, reduced };
       return;
     }
@@ -203,7 +206,7 @@ export function Kitty({
       if (played.accepted)
         reactBlender(hero, equipment.item === "teddy" ? "hug" : "pet", reduced);
     } else reactBlender(hero, gesture.kind, reduced);
-  }, [hero, gesture, animate, reduced, homeClip, benchRole]);
+  }, [hero, gesture, animate, reduced, homeClip, seatRole]);
   useEffect(() => {
     if (!homeClip) {
       const b = hero.userData.blender;
@@ -487,9 +490,9 @@ export function Kitty({
       dispose={null}
     >
       {holding && <KittyHeld hero={hero} holding={holding} />}
-      {benchRole ? (
+      {seatRole ? (
         <Suspense fallback={null}>
-          <VillageBenchPose hero={hero} role={benchRole} style={equipment?.plush || "classic"} />
+          <VillageBenchPose hero={hero} role={seatRole} picnic={!!picnicRole} style={equipment?.plush || "classic"} />
         </Suspense>
       ) : villageRole && (
         <Suspense fallback={null}>

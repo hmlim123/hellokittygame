@@ -43,6 +43,7 @@ export function Melody({
   holdingCup = false,
   villageRole,
   benchRole,
+  picnicRole,
 }: {
   locomotion?: RefObject<{ speed: number }>;
   performance?: { id: number; kind: Gesture };
@@ -50,6 +51,7 @@ export function Melody({
   holdingCup?: boolean;
   villageRole?: VisitPlayer["id"];
   benchRole?: VisitPlayer["id"];
+  picnicRole?: VisitPlayer["id"];
 }) {
   const invalidate = useThree(s => s.invalidate);
   const asset = readMelodyAsset(),
@@ -57,6 +59,7 @@ export function Melody({
   const ownGesture = useGameStore((s) => s.gesture),
     gesture = performance || ownGesture,
     reduced = useReducedMotion();
+  const seatRole = benchRole ?? picnicRole;
   useEffect(() => {
     if (gesture.id && !hero.userData.benchPose) { reactMelody(hero, gesture.kind, reduced); invalidate(); }
   }, [hero, gesture.id, gesture.kind, reduced, invalidate]);
@@ -90,7 +93,7 @@ export function Melody({
   return (
     <primitive object={hero} scale={0.78} dispose={null}>
       {holdingCup && <MelodyCup hero={hero} />}
-      {benchRole ? <VillageBenchPose hero={hero} role={benchRole} style="melody" /> : villageRole && (
+      {seatRole ? <VillageBenchPose hero={hero} role={seatRole} picnic={!!picnicRole} style="melody" /> : villageRole && (
         <Suspense fallback={null}>
           <VillagePerformance hero={hero} role={villageRole} style="melody" />
         </Suspense>

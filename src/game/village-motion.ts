@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useEffect } from "react";
 import { useGameStore } from "./store";
+import { useVisitsStore, type VisitPlayer } from "./visits";
 import {
   VILLAGE_ACTIONS,
   VILLAGE_PICNIC,
@@ -21,6 +22,7 @@ interface VillageMotion {
   path: VillagePoint[];
   pending: string | null;
   picnic: boolean;
+  baking: boolean;
   givingUntil: number;
   guestName: string;
   guestVisit: boolean;
@@ -34,6 +36,24 @@ export function villagePicnicSeat(guest: boolean) {
   return { x: VILLAGE_PICNIC.x + (guest ? 0.95 : -0.95), z: VILLAGE_PICNIC.z };
 }
 
+export const VILLAGE_BAKING = { x: 7, z: -1.94 };
+
+export function villageBakingSpot(role: VisitPlayer["id"]) {
+  return { x: VILLAGE_BAKING.x + (role === "host" ? -0.85 : 0.85), z: VILLAGE_BAKING.z - 1.1 };
+}
+
+export function atVillageBakingSpot(player: VisitPlayer) {
+  const spot = villageBakingSpot(player.id);
+  return player.connected && (!player.area || player.area === "village") &&
+    Math.hypot(player.x - spot.x, player.z - spot.z) <= 0.58;
+}
+
+export function atVillagePicnicSeat(player: VisitPlayer) {
+  const seat = villagePicnicSeat(player.id === "guest");
+  return player.connected && (!player.area || player.area === "village") && player.holding === "cup" &&
+    Math.hypot(player.x - seat.x, player.z - seat.z) <= 0.36;
+}
+
 export const useVillageMotion = create<VillageMotion>((set, get) => ({
   position: { ...VILLAGE_SPAWN },
   yaw: 0,
@@ -42,6 +62,7 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
   path: [],
   pending: null,
   picnic: false,
+  baking: false,
   relocate: null,
   givingUntil: 0,
   guestName: "Your friend",
@@ -52,6 +73,7 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
       input: length > 1 ? { x: x / length, z: z / length } : { x, z },
       path: [],
       pending: null,
+      baking: false,
     });
   },
   stop() {
@@ -75,10 +97,19 @@ export const useVillageMotion = create<VillageMotion>((set, get) => ({
           : p;
     const path = villagePath(get().position, destination);
     if (!path.length) return false;
-    set({ input: { x: 0, z: 0 }, path, pending: action || null, picnic: false });
+    set({ input: { x: 0, z: 0 }, path, pending: action || null, picnic: false, baking: false });
     return true;
   },
 }));
+
+export function openVillageBaking() {
+  const visit = useVisitsStore.getState();
+  if (visit.status !== "online" || !visit.role || !visit.togetherAvailable ||
+      visit.benchTea?.seated.host || visit.benchTea?.seated.guest) return;
+  if (useVillageMotion.getState().walkTo(villageBakingSpot(visit.role)))
+    useVillageMotion.setState({ baking: true });
+}
+
 export function walkToVillageCompanion({ x, z }: VillagePoint) {
   const target = [
     { x: x + 1.5, z },
@@ -166,6 +197,11 @@ export function actInVillage(id?: string) {
     if (Object.values(v.placed).length === 0 && v.greeted.length)
       s.openPanel("village");
   } else if (action === "cafe") {
+    const visit = useVisitsStore.getState();
+    if (visit.role && visit.togetherAvailable) {
+      openVillageBaking();
+      return;
+    }
     if (s.cozy.cookie.stage === "served" && !s.cozy.cookie.packed)
       s.newCookie();
     s.openPanel("baking");
@@ -180,10 +216,7 @@ export function actInVillage(id?: string) {
       return;
     }
     useVillageMotion.setState({ picnic: true });
-    s.react(
-      "softHappy",
-      "A little tea, a little breeze, and a place to slow down together. ♡",
-    );
+    s.react("softHappy");
   }
 }
 export function giveVillageGift(friend: "momo" | "pip") {
