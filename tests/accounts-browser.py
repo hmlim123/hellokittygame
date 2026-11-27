@@ -658,12 +658,29 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
                 host.screenshot(path=str(results/f'accounts-village-{width}.png'))
             host.set_viewport_size({'width':390,'height':844})
             print('PASS paired gestures, role-specific baking handoff, both photos, once-only wall save and capture metadata',flush=True)
+
+            def walk_to_postcard_stop(page, name, x, z):
+                page.bring_to_front()
+                page.get_by_role('button',name=f'Walk to {name}',exact=True).tap()
+                try:
+                    page.wait_for_function("""([x,z]) => {
+                        const d = document.querySelector('#world canvas').dataset;
+                        return Math.hypot(Number(d.villageX)-x, Number(d.villageZ)-z) < 2.2;
+                    }""",arg=[x,z],timeout=60000)
+                except Exception:
+                    print('Postcard route', 'Nancy' if page == host else 'Melody',
+                        page.locator('#world canvas').evaluate('(canvas) => ({...canvas.dataset})'),
+                        flush=True)
+                    raise
+
             for page, stop in [(host, 'Pip’s garden'), (guest, 'Little plaza')]:
                 page.bring_to_front()
                 page.get_by_text('Activities',exact=True).tap()
                 page.get_by_text('Postcard walk',exact=True).tap()
                 page.get_by_role('group',name='Your postcard stop').get_by_role('button',name=stop,exact=True).tap()
                 page.get_by_text('Activities',exact=True).tap()
+            for page in [host,guest]:
+                walk_to_postcard_stop(page,'Pip’s garden',6,3.7)
             host.bring_to_front()
             host.get_by_role('button',name='Add stamp 1 of 2',exact=True).tap()
 
@@ -672,18 +689,7 @@ with tempfile.TemporaryDirectory(prefix='kitty-accounts-') as data, (results/'ac
             guest.get_by_text('Nancy is visiting with you. ♡',exact=True).wait_for(timeout=30000)
             back(guest)
             for page in [host, guest]:
-                page.bring_to_front()
-                page.get_by_role('button',name='Walk to Little plaza',exact=True).tap()
-                try:
-                    page.wait_for_function("""() => {
-                        const d = document.querySelector('#world canvas').dataset;
-                        return Math.hypot(Number(d.villageX)+1.8, Number(d.villageZ)-1.6) < 2.2;
-                    }""",timeout=60000)
-                except Exception:
-                    print('Postcard route', 'Nancy' if page == host else 'Melody',
-                        page.locator('#world canvas').evaluate('(canvas) => ({...canvas.dataset})'),
-                        flush=True)
-                    raise
+                walk_to_postcard_stop(page,'Little plaza',-1.8,1.6)
             guest.get_by_role('button',name='Add stamp 2 of 2',exact=True).tap()
             for page in [host, guest]:
                 page.bring_to_front()
